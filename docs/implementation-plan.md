@@ -1,4 +1,4 @@
-# Codex Wisp implementation plan
+# petoken implementation plan
 
 Goal: deliver a double-clickable, Skirk-colored Windows usage companion and publish source and a binary to the existing GitHub repository.
 

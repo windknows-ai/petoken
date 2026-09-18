@@ -59,7 +59,7 @@ def populate(t, rows):
 class AnalyticsWindow(QDialog):
     def __init__(self,panel):
         super().__init__(panel)
-        self.setWindowTitle('Codex Wisp · Token Analytics')
+        self.setWindowTitle('petoken · Token Analytics')
         self.setWindowFlag(Qt.Window,True)
         screen=QApplication.primaryScreen().availableGeometry()
         self.resize(min(1020,screen.width()-40),min(750,screen.height()-40))

@@ -19,7 +19,7 @@ def main(output):
         reasoning_output_tokens=7000, total_tokens=138000))
     analysis = aggregate([dict(session='visual-fixture', model='gpt-6-astra',
         timestamp='2026-09-16T12:00:00Z', event_id='visual', tokens=tokens)])
-    panel.render(dict(title='开发实时用量悬浮 widget', project='Codex Wisp',
+    panel.render(dict(title='开发实时用量悬浮 widget', project='petoken',
         model='gpt-6-astra', effort='high', mode='follow', scope='task',
         tokens=tokens, available=True, analytics=analysis, usd=2.19,
         context=42, context_tokens=84000, context_window=200000,

@@ -1,4 +1,4 @@
-"""Codex Wisp — a small, local Windows desktop companion."""
+"""petoken — a small, local Windows desktop companion."""
 from __future__ import annotations
 
 import argparse
@@ -203,7 +203,7 @@ class Bridge(QObject):
 class Settings(QDialog):
     def __init__(self, panel):
         super().__init__(panel)
-        self.setWindowTitle('Codex Wisp · 设置')
+        self.setWindowTitle('petoken · 设置')
         self.setMinimumWidth(430)
         layout = QVBoxLayout(self)
         form = QFormLayout()
@@ -295,7 +295,7 @@ class Panel(QWidget):
         self.bridge.data.connect(self.render)
         self.bridge.limits.connect(self.receive_limits)
         self.bridge.fx.connect(self.receive_fx)
-        self.setWindowTitle('Codex Wisp')
+        self.setWindowTitle('petoken')
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
@@ -318,7 +318,7 @@ class Panel(QWidget):
         head.addWidget(self.spirit)
         brand = QVBoxLayout()
         brand.setSpacing(3)
-        brand.addWidget(label('CODEX WISP', 'brand'))
+        brand.addWidget(label('PETOKEN', 'brand'))
         self.connection = label('正在连接…', 'muted')
         brand.addWidget(self.connection)
         head.addLayout(brand)
@@ -431,7 +431,7 @@ class Panel(QWidget):
         self.spirit.render(pix)
         self.setWindowIcon(QIcon(pix))
         self.tray.setIcon(QIcon(pix))
-        self.tray.setToolTip('Codex Wisp · 双击显示')
+        self.tray.setToolTip('petoken · 双击显示')
         menu = QMenu()
         menu.addAction('显示 / 隐藏', self.toggle_visible)
         menu.addAction('显示 / 隐藏桌宠', self.toggle_pet)
@@ -440,7 +440,7 @@ class Panel(QWidget):
         menu.addAction('设置与数据说明', self.open_settings)
         menu.addAction('移回屏幕右侧', self.reset_position)
         menu.addSeparator()
-        menu.addAction('退出 Codex Wisp', self.shutdown)
+        menu.addAction('退出 petoken', self.shutdown)
         self.tray.setContextMenu(menu)
         self.tray.activated.connect(lambda reason:self.toggle_visible() if reason == QSystemTrayIcon.DoubleClick else None)
         self.tray.show()
@@ -710,7 +710,7 @@ def main():
     parser.add_argument('--smoke', type=Path, help='Save a local screenshot after five seconds and exit')
     args = parser.parse_args()
     app = QApplication(sys.argv)
-    app.setApplicationName('Codex Wisp')
+    app.setApplicationName('petoken')
     app.setQuitOnLastWindowClosed(False)
     PREF_DIR.mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(PREF_DIR/'widget.lock'))

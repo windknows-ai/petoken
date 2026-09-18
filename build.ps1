@@ -16,7 +16,7 @@ $originalPath = $env:PATH
 $env:PATH = (($originalPath -split ';') | Where-Object { $_ -notmatch '[\\/]\.cache[\\/]codex-runtimes[\\/]' }) -join ';'
 try {
     & $python -m PyInstaller --noconfirm --clean --windowed `
-        --name CodexWisp `
+        --name petoken `
         --icon (Join-Path $repo 'assets\skirk-pet.png') `
         --add-data "$(Join-Path $repo 'assets');assets" `
         --collect-submodules winrt `
@@ -27,7 +27,7 @@ try {
 }
 if ($pyInstallerExit -ne 0) { throw "PyInstaller failed with exit code $pyInstallerExit" }
 
-$app = Join-Path $repo 'dist\CodexWisp'
+$app = Join-Path $repo 'dist\petoken'
 $site = Join-Path $repo '.venv\Lib\site-packages'
 # Python 3.13 may contribute an older VC runtime at the bundle root. Windows
 # loads that copy before PySide6's newer runtime, causing QtCore entry-point
@@ -54,10 +54,10 @@ foreach ($pattern in $dependencyPatterns) {
 }
 
 if ($Package) {
-    $zip = Join-Path $repo 'dist\CodexWisp-Windows-x64.zip'
+    $zip = Join-Path $repo 'dist\petoken-Windows-x64.zip'
     if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
     Compress-Archive -Path $app -DestinationPath $zip -CompressionLevel Optimal
     Write-Host "Created $zip"
 }
 
-Write-Host "Built $app\CodexWisp.exe"
+Write-Host "Built $app\petoken.exe"

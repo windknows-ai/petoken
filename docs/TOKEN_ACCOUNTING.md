@@ -2,7 +2,7 @@
 
 ## Local source observed
 
-Codex Wisp incrementally reads `event_msg` records whose payload is `token_count`. On the local records audited during development, `info.total_token_usage` and `info.last_token_usage` exposed:
+petoken incrementally reads `event_msg` records whose payload is `token_count`. On the local records audited during development, `info.total_token_usage` and `info.last_token_usage` exposed:
 
 - `input_tokens`
 - `cached_input_tokens`

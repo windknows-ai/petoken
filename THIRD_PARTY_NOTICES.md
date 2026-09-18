@@ -1,6 +1,6 @@
 # Third-party notices
 
-Codex Wisp distributes or uses the following packages. Their own licenses govern those components; the repository MIT license does not replace them.
+petoken distributes or uses the following packages. Their own licenses govern those components; the repository MIT license does not replace them.
 
 | Component | Version | License | Project |
 | --- | ---: | --- | --- |

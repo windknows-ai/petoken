@@ -11,7 +11,7 @@ class DesktopPet(QWidget):
     def __init__(self,panel):
         super().__init__()
         self.panel=panel
-        self.setWindowTitle('Codex Wisp · 丝柯克桌宠')
+        self.setWindowTitle('petoken · 丝柯克桌宠')
         self.setWindowFlags(Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFixedSize(242,378)

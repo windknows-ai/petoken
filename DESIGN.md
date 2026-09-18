@@ -1,4 +1,4 @@
-# Codex Wisp design contract
+# petoken design contract
 
 The approved idle character and its default bubble are the immutable visual baseline. `assets/skirk-pet.png` must retain SHA-256 `7ce0d2fbd0eb89d2f6786c9bb1d5bada1aff7d89ea2f5dd079cce8a26483e1a0`. New behavior changes pose temporarily; it does not replace, repaint or permanently cover the idle identity.
 
