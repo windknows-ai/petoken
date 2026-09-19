@@ -75,7 +75,9 @@ class DesktopPet(QWidget):
                 self.hover_since=self.hover_since or now
                 if now-self.hover_since>.35 and not self.panel.isVisible():self.show_panel()
         monitor=getattr(self.panel,'activity',None)
-        state=self.preview_state or (monitor.state.state(usage_open=self.panel.isVisible()) if monitor else 'idle')
+        codex_working=getattr(self.panel,'app_mode',None)
+        state=self.preview_state or (monitor.state.state(usage_open=self.panel.isVisible(),
+            codex_working=bool(codex_working and codex_working.is_token)) if monitor else 'idle')
         if state!=self.current_state:
             self.current_state=state
             self.update()
@@ -87,25 +89,30 @@ class DesktopPet(QWidget):
                        f"Total {t.get('total_tokens','N/A')} · Input {t.get('input_tokens','N/A')} · Output {t.get('output_tokens','N/A')}\n点击展开用量 · 拖动移动 · 右键菜单")
         self.update()
 
+    def token_bubble_visible(self):
+        mode=getattr(self.panel,'app_mode',None)
+        return bool(mode and mode.is_token)
+
     def paintEvent(self,event):
         p=QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        p.setPen(QPen(QColor('#777AA4'),1))
-        p.setBrush(QColor(29,33,57,235))
-        p.drawRoundedRect(QRectF(1,1,240,70),16,16)
-        p.setPen(QColor('#EEF2FF'))
-        p.setFont(QFont('Microsoft YaHei UI',9,QFont.DemiBold))
-        title=self.snapshot.get('title') or '丝柯克 · 等待 Codex'
-        p.drawText(QRectF(13,8,216,22),Qt.AlignLeft|Qt.AlignVCenter,p.fontMetrics().elidedText(title,Qt.ElideRight,216))
-        p.setFont(QFont('Segoe UI',8))
-        p.setPen(QColor('#B9A7F8'))
-        project=self.snapshot.get('project','点击查看用量')
-        p.drawText(QRectF(13,30,216,16),p.fontMetrics().elidedText(project,Qt.ElideRight,216))
-        p.setPen(QColor('#91E4F2'))
-        context=self.snapshot.get('context')
-        context='—' if context is None else f'{context:.0f}%'
-        quota=self.panel.five.value.text().replace(' left','')
-        p.drawText(QRectF(13,47,220,18),f'Context {context}  ·  5h {quota} left')
+        if self.token_bubble_visible():
+            p.setPen(QPen(QColor('#777AA4'),1))
+            p.setBrush(QColor(29,33,57,235))
+            p.drawRoundedRect(QRectF(1,1,240,70),16,16)
+            p.setPen(QColor('#EEF2FF'))
+            p.setFont(QFont('Microsoft YaHei UI',9,QFont.DemiBold))
+            title=self.snapshot.get('title') or '丝柯克 · 等待 Codex'
+            p.drawText(QRectF(13,8,216,22),Qt.AlignLeft|Qt.AlignVCenter,p.fontMetrics().elidedText(title,Qt.ElideRight,216))
+            p.setFont(QFont('Segoe UI',8))
+            p.setPen(QColor('#B9A7F8'))
+            project=self.snapshot.get('project','点击查看用量')
+            p.drawText(QRectF(13,30,216,16),p.fontMetrics().elidedText(project,Qt.ElideRight,216))
+            p.setPen(QColor('#91E4F2'))
+            context=self.snapshot.get('context')
+            context='—' if context is None else f'{context:.0f}%'
+            quota=self.panel.five.value.text().replace(' left','')
+            p.drawText(QRectF(13,47,220,18),f'Context {context}  ·  5h {quota} left')
         offset=math.sin(self.phase)*3 if self.motion else 0
         p.save()
         if self.reaction:

@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — NOT started)
+`V1.1.0` (UI and interaction refinement — Daily / Token mode slice complete)
 
 ## Current Stage
 
-Pre-development cleanup completed: repository synchronized to the canonical `windknows-ai/petoken`, documentation/branding migration performed. V1.1.0 implementation has NOT started. Visual references resolved: `04_Visual_Reference_Specification.md` is the authoritative text representation of Reference Images 1, 2, and 3.
+Pre-development cleanup is committed locally at `9b7300b`. OpenCode completed V1.1.0 Step 1 architecture inspection. Codex completed and verified the approved foundation and centralized Daily / Token mode slices; this checkpoint commit records both slices without pushing them. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -23,10 +23,16 @@ Pre-development cleanup completed: repository synchronized to the canonical `win
 - Preserved `CodexWisp` persisted settings directory and other compatibility-sensitive identifiers.
 - Final verification passed: `main` at `da23495` synced to `windknows-ai/petoken`, tag `v1.0.0` present, no `C:\Users\fengz\Desktop` paths remain in docs, `python -m unittest discover -s tests` = 17 tests OK.
 - Spec context refreshed: `D:\Desktop\petoken\V1.1.0` finalized to six non-`_UPDATED` files (00, 01, 02, 03, 04, 99); `04_Visual_Reference_Specification.md` resolves the visual-reference requirement. Documentation-only corrections applied; no code changed.
+- Cleanup committed locally as `9b7300b`; it has not been pushed.
+- OpenCode completed V1.1.0 Implementation Order Step 1 (architecture inspection). No V1.1.0 implementation code existed when Codex took over.
+- Codex added one `APP_VERSION` source, settings schema version 1 with compatible default merging and atomic persistence, persistent language preference, and a centralized `zh_CN` / `en` string catalog.
+- Verification passed: 22 tests, `py_compile`, isolated live smoke, and `git diff --check`. The existing visual baseline was preserved.
+- Codex added centralized `AppModeState`, explicit Codex lifecycle detection across unarchived desktop sessions, working-state priority, and Daily-mode bubble hiding. UIA task presence plus a running lifecycle event is required; a visible idle Codex window is insufficient.
+- Daily / Token verification passed: 30 tests, `py_compile`, live Token smoke, logical/visual Daily bubble checks, and detector cold/warm timing. No visual redesign was performed.
 
 ## Current Work / Partial Work
 
-None in progress. All cleanup changes are uncommitted in the working tree (see below).
+No implementation is currently in progress. Stop point is immediately before active-project identity integration.
 
 ## Important Decisions
 
@@ -35,23 +41,27 @@ None in progress. All cleanup changes are uncommitted in the working tree (see b
 - Preserve historical `Codex Wisp` references in V1.0.0 release documentation and commits.
 - Version stays `V1.0.0`; do not increment during this cleanup.
 
-## Uncommitted Changes
+## Current Git State
 
-`AGENTS.md`, `README.md`, `PROGRESS.md`, `DESIGN.md`, `CHANGELOG.md` (new), `ROADMAP.md` (new), `HANDOFF.md` (new), `docs/implementation-plan.md`, `docs/TOKEN_ACCOUNTING.md`, `docs/RELEASE_NOTES_v1.0.0.md`, `THIRD_PARTY_NOTICES.md`, `widget.py`, `pet.py`, `analytics_view.py`, `build.ps1`, `tools/render_states.py`.
+- Branch: `main`; this checkpoint commit follows cleanup checkpoint `9b7300b` and is not pushed.
+- The checkpoint contains the approved V1.1.0 version/settings/localization foundation and Daily / Token mode work, their tests, and repository state documentation.
+- The working tree is clean at this checkpoint before active-project identity work begins.
+- External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
 
 - Visual references resolved (no blocker): `D:\Desktop\petoken\V1.1.0\04_Visual_Reference_Specification.md` provides the authoritative text visual specification for Reference Images 1, 2, and 3. Do not claim the reference images are missing.
 - GitHub release is titled "Petoken v1.0.0" and flagged Pre-release (delivery record documented a full release); confirm whether this is intended.
 - Repository visibility changed from private (per V1.0.0 PROGRESS) to public; confirm intended.
+- Working-state recovery is bounded: an unclean session with no `task_complete` can remain active for at most five minutes while a task window exists; a genuinely running tool that writes no rollout events for more than five minutes can temporarily fall back to Daily until the next event.
+- Global mode may be activated by one session while the existing UIA-followed panel displays another project. Correctly associating the detected working session with its project and live usage is the next V1.1.0 step.
 
 ## Exact Next Step
 
-1. Receive user approval of the lifecycle cleanup before committing or starting V1.1.0.
-2. Read `D:\Desktop\petoken\V1.1.0` specifications (00, 01, 02, 03, 04, 99 in order); treat `04_Visual_Reference_Specification.md` as the authoritative text visual specification.
-3. Begin `03_V1.1.0_UI_and_Interaction_Refinement.md` implementation order step 1 (inspect architecture) and continue through the ordered steps.
-4. Do not mark V1.1.0 complete until its acceptance criteria are verified; update version/CHANGELOG/PROGRESS only then.
+1. Implement V1.1.0 order step 4: expose the detected working session's project identity to Token Mode and pair the visible project name with the matching live token usage.
+2. Do not combine that slice with new scopes, currency changes, character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
+3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent
 
-OpenCode
+Codex (primary). OpenCode remains the fallback continuation agent if Codex usage is exhausted.

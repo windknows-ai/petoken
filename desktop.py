@@ -12,6 +12,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+from app_config import APP_VERSION
+
 
 def codex_executable():
     base = Path(os.environ.get('LOCALAPPDATA', ''))/'OpenAI/Codex/bin'
@@ -156,7 +158,7 @@ class RateLimits:
                     creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0, env=env)
                 self.responses = queue.Queue()
                 threading.Thread(target=self.read_responses, args=(self.process,self.responses), daemon=True).start()
-                self.request('initialize', {'clientInfo': {'name': 'codex_wisp', 'version': '1.0.0'}})
+                self.request('initialize', {'clientInfo': {'name': 'codex_wisp', 'version': APP_VERSION}})
                 self.process.stdin.write('{"method":"initialized"}\n')
                 self.process.stdin.flush()
                 while not self.stop.is_set():

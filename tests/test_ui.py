@@ -76,5 +76,16 @@ class UiTests(unittest.TestCase):
             self.assertFalse(self.panel.isVisible())
             self.assertEqual(pet.current_state,'typing')
 
+    def test_token_bubble_follows_central_app_mode(self):
+        pet=self.panel.pet
+        self.assertFalse(pet.token_bubble_visible())
+        self.panel.app_mode.update(True,True,now=1)
+        self.panel.app_mode.update(True,True,now=1.5)
+        self.assertTrue(pet.token_bubble_visible())
+        self.panel.app_mode.update(False,True,now=2)
+        self.assertTrue(pet.token_bubble_visible())
+        self.panel.app_mode.update(False,True,now=4.1)
+        self.assertFalse(pet.token_bubble_visible())
+
 
 if __name__=='__main__':unittest.main()

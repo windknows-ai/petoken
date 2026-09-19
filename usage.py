@@ -232,6 +232,95 @@ class SessionUsage:
             self.partial = True
 
 
+class CodexActivityDetector:
+    """Track explicit Codex turn lifecycle events without rescanning full logs."""
+    STALE_SECONDS = 300
+    LEGACY_TOKEN_SECONDS = 15
+    TAIL_BYTES = 2 * 1024 * 1024
+
+    def __init__(self):
+        self.files = {}
+
+    @staticmethod
+    def _event_time(value):
+        try:
+            return datetime.fromisoformat(value.replace('Z','+00:00')).timestamp()
+        except (ValueError, TypeError, AttributeError):
+            return None
+
+    def _refresh(self, path):
+        path = Path(path)
+        stat = path.stat()
+        entry = self.files.get(path)
+        if entry is None or stat.st_size < entry['offset']:
+            start = max(0, stat.st_size-self.TAIL_BYTES)
+            entry = dict(offset=start, working=None, lifecycle_at=None, token_at=None,
+                         mtime=stat.st_mtime)
+            self.files[path] = entry
+            fresh = True
+        else:
+            fresh = False
+            if stat.st_size == entry['offset']:
+                entry['mtime'] = stat.st_mtime
+                return entry
+        with path.open('rb') as stream:
+            stream.seek(entry['offset'])
+            if fresh and entry['offset']:
+                stream.readline()  # The bounded tail may begin inside a JSON line.
+                entry['offset'] = stream.tell()
+            while line := stream.readline():
+                if not line.endswith(b'\n'):
+                    break
+                entry['offset'] = stream.tell()
+                if not any(marker in line for marker in
+                           (b'"task_started"', b'"task_complete"', b'"token_count"')):
+                    continue
+                try:
+                    event = json.loads(line)
+                except (ValueError, TypeError):
+                    continue
+                payload = event.get('payload') or {}
+                if event.get('type') != 'event_msg':
+                    continue
+                kind = payload.get('type')
+                if kind == 'task_started':
+                    entry['working'] = True
+                    entry['lifecycle_at'] = event.get('timestamp')
+                elif kind == 'task_complete':
+                    entry['working'] = False
+                    entry['lifecycle_at'] = event.get('timestamp')
+                elif kind == 'token_count':
+                    entry['token_at'] = self._event_time(event.get('timestamp'))
+        entry['mtime'] = stat.st_mtime
+        return entry
+
+    def detect(self, rows, task_visible, detection_valid, now=None):
+        now = time.time() if now is None else now
+        if not detection_valid:
+            return dict(active=False, valid=False, reason='uia_unavailable')
+        if not task_visible:
+            return dict(active=False, valid=True, reason='no_task_window')
+        fallback = None
+        for row in rows:
+            path = row.get('rollout_path')
+            if not path:
+                continue
+            try:
+                if now-Path(path).stat().st_mtime > self.STALE_SECONDS:
+                    continue
+                entry = self._refresh(path)
+            except OSError:
+                continue
+            if entry['working'] is True:
+                return dict(active=True, valid=True, reason='task_started',
+                            thread=row.get('id'), sample=entry['lifecycle_at'])
+            if (entry['working'] is None and entry['token_at'] is not None
+                    and now-entry['token_at'] <= self.LEGACY_TOKEN_SECONDS):
+                fallback = dict(active=True, valid=True, reason='recent_token_legacy',
+                                thread=row.get('id'))
+        return fallback or dict(active=False, valid=True, reason='no_running_session')
+
+
 class CodexStore:
     def __init__(self, home=None, prices=None):
         self.home = Path(home or os.environ.get('CODEX_HOME') or Path.home()/'.codex')
@@ -241,8 +330,10 @@ class CodexStore:
         self.state = {}
         self.analytics_cache = {}
         self.history_cache = {}
+        self.activity = CodexActivityDetector()
 
-    def read(self, active_title='', pinned='', scope='task', include_history=False):
+    def read(self, active_title='', pinned='', scope='task', include_history=False,
+             activity_detection_valid=False):
         state_path = self.home/'.codex-global-state.json'
         try:
             stamp = state_path.stat().st_mtime_ns
@@ -253,7 +344,8 @@ class CodexStore:
             pass
         databases = list(self.home.glob('state_*.sqlite'))
         if not databases:
-            return dict(status='未找到 Codex 本地数据，请先在客户端打开一个任务。', rows=[])
+            return dict(status='未找到 Codex 本地数据，请先在客户端打开一个任务。', rows=[],
+                        codex_activity=dict(active=False,valid=False,reason='no_database'))
         db = max(databases, key=lambda p: int(p.stem.split('_')[-1]))
         try:
             with sqlite3.connect(db.as_uri()+'?mode=ro', uri=True, timeout=.2) as c:
@@ -262,11 +354,14 @@ class CodexStore:
                 fields = [x for x in ('id','name','title','cwd','rollout_path','model','reasoning_effort','source','project_id','updated_at','archived') if x in columns]
                 rows = [dict(r) for r in c.execute(f"select {','.join(fields)} from threads order by updated_at desc")]
         except sqlite3.Error:
-            return dict(status='Codex 数据库暂时不可读，下一秒重试。', rows=[])
+            return dict(status='Codex 数据库暂时不可读，下一秒重试。', rows=[],
+                        codex_activity=dict(active=False,valid=False,reason='database_unavailable'))
         desktop = [r for r in rows if r.get('source') in ('vscode','desktop') and not r.get('archived')]
+        codex_activity = self.activity.detect(desktop, bool(active_title), activity_detection_valid)
         chosen, mode = select_thread(desktop, active_title, pinned)
         if not chosen:
-            return dict(status='固定的任务已不可用，请重新选择。' if pinned else '还没有本地桌面任务。', rows=desktop)
+            return dict(status='固定的任务已不可用，请重新选择。' if pinned else '还没有本地桌面任务。',
+                        rows=desktop, codex_activity=codex_activity)
         state = self.state
         assignments = state.get('thread-project-assignments', {})
         project_id = (assignments.get(chosen['id']) or {}).get('projectId') or chosen.get('project_id')
@@ -318,7 +413,7 @@ class CodexStore:
                     excluded_forks=excluded_forks, count=len(sessions), sample=current.sample,
                     limits=current.limits, analytics=analysis, history=history, session_names=names,
                     current_session=summarize(unique_records([current])), raw_total=current.raw_total,raw_last=current.raw_last,
-                    notes=sorted(set().union(*(s.notes for s in sessions))))
+                    notes=sorted(set().union(*(s.notes for s in sessions))), codex_activity=codex_activity)
 
 
 def sample_age(timestamp):

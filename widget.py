@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import CodexStore, PRICES, quota_window, sample_age
 from analytics_view import AnalyticsWindow, HELP
+from app_config import APP_VERSION, load_preferences, save_preferences
+from app_mode import AppModeState
 
 INK = '#EEF2FF'
 MUTED = '#A7AEC8'
@@ -83,18 +85,11 @@ def compact_number(n):
 
 
 def read_preferences():
-    try:
-        data = json.loads((PREF_DIR/'settings.json').read_text(encoding='utf-8'))
-        return data if isinstance(data, dict) else {}
-    except (OSError, ValueError):
-        return {}
+    return load_preferences(PREF_DIR/'settings.json')
 
 
 def write_preferences(data):
-    PREF_DIR.mkdir(parents=True, exist_ok=True)
-    temp = PREF_DIR/'settings.tmp'
-    temp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-    temp.replace(PREF_DIR/'settings.json')
+    save_preferences(PREF_DIR/'settings.json', data)
 
 
 class Spirit(QWidget):
@@ -283,6 +278,8 @@ class Panel(QWidget):
     def __init__(self, live=True):
         super().__init__()
         self.prefs = read_preferences()
+        self.app_mode = AppModeState()
+        self.codex_activity = dict(active=False, valid=False, reason='starting')
         self.snapshot = {}
         self.analytics_window = None
         self.want_history = threading.Event()
@@ -476,8 +473,10 @@ class Panel(QWidget):
                 if store is None or self.reset_store.is_set():
                     self.reset_store.clear()
                     store = CodexStore(prices=PRICES | prefs.get('prices', {}))
-                active = self.active.title if time.time()-self.active.seen < 5 else ''
-                self.bridge.data.emit(store.read(active, prefs.get('pinned',''), prefs.get('scope','task'), self.want_history.is_set()))
+                detection_valid = time.time()-self.active.seen < 5
+                active = self.active.title if detection_valid else ''
+                self.bridge.data.emit(store.read(active, prefs.get('pinned',''), prefs.get('scope','task'),
+                                                 self.want_history.is_set(), detection_valid))
             except Exception:
                 self.bridge.data.emit(dict(status='读取暂时失败，下一秒重试。', rows=[]))
             self.stop.wait(max(0,1-(time.monotonic()-start)))
@@ -506,6 +505,8 @@ class Panel(QWidget):
 
     def render(self, data):
         self.snapshot = data
+        self.codex_activity = data.get('codex_activity') or dict(active=False,valid=False,reason='missing')
+        self.app_mode.update(self.codex_activity.get('active',False), self.codex_activity.get('valid',False))
         if hasattr(self,'pet'):
             self.pet.update_data(data)
         if data.get('status'):
@@ -711,6 +712,7 @@ def main():
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName('petoken')
+    app.setApplicationVersion(APP_VERSION)
     app.setQuitOnLastWindowClosed(False)
     PREF_DIR.mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(PREF_DIR/'widget.lock'))
@@ -732,6 +734,7 @@ def main():
             panel.analytics_window.grab().save(str(args.smoke.with_name(args.smoke.stem+'-analytics.png')))
             report = dict(visible=panel.isVisible(), task=panel.snapshot.get('title'),
                           has_usage=panel.snapshot.get('available'), mode=panel.snapshot.get('mode'),
+                          app_mode=panel.app_mode.mode, codex_activity=panel.codex_activity,
                           quota_live=bool(panel.quota.get('sampled')),
                           activity_status=panel.activity.status,
                           keyboard_hook_error=panel.activity.keyboard.error,

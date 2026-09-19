@@ -33,9 +33,10 @@ class ActivityState:
                 self.stable[name]=value
                 self.pending.pop(name,None)
 
-    def state(self,now=None,usage_open=False):
+    def state(self,now=None,usage_open=False,codex_working=False):
         now=time.monotonic() if now is None else now
         if usage_open:return 'usage'
+        if codex_working:return 'working'
         if now-self.sampled<5:
             if self.stable['microphone']:return 'microphone'
             if self.stable['music']:return 'music'
