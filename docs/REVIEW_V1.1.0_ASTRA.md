@@ -220,5 +220,12 @@ Live inspection of the running `QQMusic.exe` SMTC session: title present, artist
 Compact was a cropped expanded stack (cost/pin and status/settings stretched into detached islands, no token metric). It is now intentional: header/project/title/model rows, one divider, one metrics row (cost hero + auto-fitting token hero sharing the width), one control strip (status + pin + settings). Expanded bars lend status/pin/settings while compact (order-stable, flag-guarded); cost uses auto-fit twins so Full trillions plus large costs share a 360 px row with no overlap and no clipped values. Expanded UI untouched. Verified zh/en, Compact/Full, $17k cost, 360/420/600 widths, pinned ◆, two DPRs.
 
 ### A4 — Compact to Expanded restore: PASS
-
 Real `QTest.mouseClick` lifecycle probes on HEAD: click enters compact (420×316, `+`), click `+` restores expanded with the last valid size (520×520 and 500×460 cases), 4+ repeated cycles hold size with controls intact, restart-in-compact restores then expands on click. The reported total failure matches the stale 12:19 binary built mid-refactor (64f7fcb-era `CompanionStage` overlay / WIP tree), not current code. Hardening added: `toggle_compact` resets the pet leave-timestamp so an expand-then-anchor jump gets auto-hide grace instead of vanishing. COMPACT_HEIGHT is now 316 (fixed-height holds at every width after disabling wrap on the compact twins; the old ≤280 assertions were legitimately updated).
+
+## Final polish addendum - OpenCode, 2026-09-20 (P1-P2)
+
+P1 free resize: 8px edge/corner hit-zones with directional cursors on the frameless Expanded panel (corner grip kept); bounds 360-600x420-640 -> 420-650x400-800; drag writes debounced panel_size, release persists; resize re-docks through the existing right-first anchor without moving the pet; compact ignores edge resize. Verified by synthetic edge-drags incl. min/max clamps, persist-to-restart, and pet-immobility across all four edges plus a corner.
+
+P2 About section: dense settings_note replaced by divider + heading + four spaced cyan-numbered items in the exact approved copy. En titles 3-4 store single & because buddy-less QLabels render && literally (screenshot-proven); mnemonic guard test documents the two-key exemption. Dialog is 540x743 (fits 900p+ work areas; 768p-class is a known tight fit).
+
+Validation: 258/258 tests (13 new test_final_polish.py), py_compile, diff-check, isolated source smoke exit 0, resize/Settings QA at two DPRs (.private/polish2-qa/). Single local checkpoint (fix: polish panel resizing and settings information); AGENTS.md/ROADMAP.md excluded; not pushed/tagged/published; V1.2.0 not started.

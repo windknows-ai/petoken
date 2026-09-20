@@ -216,7 +216,7 @@ class CompactAcceptanceTests(unittest.TestCase):
         panel.show()
         self.app.processEvents()
         panel.toggle_compact()
-        for width in (360, 420, 600):
+        for width in (420, 520, 650):
             panel.resize(width, panel.height())
             self.app.processEvents()
             self.assertEqual(panel.height(), COMPACT_HEIGHT, width)

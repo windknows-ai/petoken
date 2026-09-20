@@ -295,8 +295,14 @@ class UiTests(unittest.TestCase):
 
     def test_catalog_has_no_unescaped_qt_mnemonics(self):
         import re
+        # Settings About titles render on plain buddy-less QLabels, which
+        # display a single & literally (verified in screenshots); every other
+        # catalog string must stay mnemonic-safe for menus/buttons/tabs.
+        label_only = {'about_3_title', 'about_4_title'}
         for language, catalog in STRINGS.items():
             for key, value in catalog.items():
+                if key in label_only:
+                    continue
                 self.assertIsNone(re.search(r'(?<!&)&(?!&)', value),
                     f'{language}.{key} contains a single & that Qt would swallow as a mnemonic')
 

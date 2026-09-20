@@ -36,15 +36,15 @@ Astra-6 is the primary reviewer, technical lead, acceptance reviewer, and roadma
 
 ## Current Approved Slice
 
-`Final V1.1 manual-acceptance corrections A1–A4 (OpenCode)`
+`Final V1.1 polish P1–P2 (OpenCode)`
 
-A1 Settings discoverability proof (stale-binary root cause + fresh-build evidence), A2 QQ Music SMTC verdict (honest no-subtitle PASS), A3 intentional Compact redesign (expanded untouched), A4 real-click Compact↔Expanded restore + auto-hide grace. No analytics/version change, no V1.2.0.
+P1 free edge/corner resize of the Expanded panel (420–650×400–800, persisted, pet never moves, compact stays fixed); P2 Settings About-the-Data section in the exact approved zh/en copy. No Expanded/Compact redesign, no artwork/analytics/version change, no V1.2.0.
 
 ## Implementation Status
 
 `COMPLETED — AWAITING USER ACCEPTANCE`
 
-The A1–A4 slice is implemented, verified (245 tests, real-click lifecycle probes, compact QA at two DPRs, isolated source smoke, fresh frozen build + frozen smoke with Settings-slider proof), and committed locally as one scoped checkpoint. No push, tag, GitHub Release or binary publication. V1.2.0 not started.
+The P1–P2 slice is implemented, verified (258 tests, edge-drag probes, resize QA at two DPRs, isolated source smoke), and committed locally as one scoped checkpoint. No push, tag, GitHub Release or binary publication. V1.2.0 not started.
 
 ## Last Review Verdict
 

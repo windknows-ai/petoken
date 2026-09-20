@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRect, QRectF, QSize, QLockFile
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
+from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
     QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea)
@@ -91,8 +91,8 @@ def divider():
     return w
 
 
-PANEL_MIN = (360, 420)
-PANEL_MAX = (600, 640)
+PANEL_MIN = (420, 400)
+PANEL_MAX = (650, 800)
 PANEL_DEFAULT = (420, 500)
 # Intentional compact footprint: identity + task + one metrics row + one
 # control strip. Tuned from real renders, not from the expanded stack.
@@ -327,9 +327,22 @@ class Settings(QDialog):
         self.form.addRow(self.pet_scale_label, scale_box)
         self.pet_scale.valueChanged.connect(self._preview_pet_scale)
         layout.addLayout(self.form)
-        self.note = label('', 'muted')
-        self.note.setWordWrap(True)
-        layout.addWidget(self.note)
+        layout.addWidget(divider())
+        self.about_heading = label('')
+        self.about_heading.setStyleSheet(f'color:{ICE}; font-size:13px; font-weight:600;')
+        layout.addWidget(self.about_heading)
+        self.about_titles = []
+        self.about_bodies = []
+        for _ in range(4):
+            title = label('')
+            title.setStyleSheet(f'color:{ICE}; font-weight:600;')
+            body = label('', 'muted')
+            body.setWordWrap(True)
+            layout.addWidget(title)
+            layout.addWidget(body)
+            self.about_titles.append(title)
+            self.about_bodies.append(body)
+            layout.addSpacing(6)
         self.error = label('', 'muted')
         layout.addWidget(self.error)
         self.buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
@@ -386,7 +399,10 @@ class Settings(QDialog):
         self.pet_scale.setToolTip(t('character_size'))
         self.pet_scale.setAccessibleName(t('character_size'))
         self.pet_scale_value.setText(f'{int(self.pet_scale.value())}%')
-        self.note.setText(t('settings_note'))
+        self.about_heading.setText(t('about_data'))
+        for index in range(4):
+            self.about_titles[index].setText(f"{index + 1}. {t(f'about_{index + 1}_title')}")
+            self.about_bodies[index].setText(t(f'about_{index + 1}_body'))
         self.buttons.button(QDialogButtonBox.Save).setText(t('save'))
         self.buttons.button(QDialogButtonBox.Cancel).setText(t('cancel'))
         self.reset_button.setText(t('confirm_reset' if self.reset_armed else 'reset_defaults'))
@@ -664,6 +680,7 @@ class Panel(QWidget):
         self.size_timer = QTimer(self)
         self.size_timer.setSingleShot(True)
         self.size_timer.timeout.connect(self.persist)
+        self._edge_resize = None
         self.compact = bool(self.prefs.get('compact', False))
         self.apply_language()
         self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
@@ -1096,6 +1113,76 @@ class Panel(QWidget):
         if hasattr(self, 'resize_start'):
             del self.resize_start
         self.persist()
+
+    RESIZE_MARGIN = 8
+
+    def _resize_hit(self, pos):
+        """Which window borders the point grabs: (dx, dy) in {-1, 0, 1}."""
+        w, h, m = self.width(), self.height(), self.RESIZE_MARGIN
+        dx = -1 if pos.x() < m else (1 if pos.x() > w - m else 0)
+        dy = -1 if pos.y() < m else (1 if pos.y() > h - m else 0)
+        return dx, dy
+
+    @staticmethod
+    def _resize_cursor(dx, dy):
+        if dx != 0 and dy != 0:
+            return Qt.SizeFDiagCursor if dx == dy else Qt.SizeBDiagCursor
+        if dx != 0:
+            return Qt.SizeHorCursor
+        if dy != 0:
+            return Qt.SizeVerCursor
+        return None
+
+    def mousePressEvent(self, event):
+        hit = (0, 0) if self.compact else self._resize_hit(event.position().toPoint())
+        if event.button() == Qt.LeftButton and hit != (0, 0):
+            self._edge_resize = (event.globalPosition().toPoint(), self.geometry(), hit)
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._edge_resize is not None and event.buttons() & Qt.LeftButton:
+            origin, geom, (dx, dy) = self._edge_resize
+            delta = event.globalPosition().toPoint() - origin
+            ww, hh = geom.width(), geom.height()
+            if dx == 1:
+                ww += delta.x()
+            elif dx == -1:
+                ww -= delta.x()
+            if dy == 1:
+                hh += delta.y()
+            elif dy == -1:
+                hh -= delta.y()
+            new_w = max(PANEL_MIN[0], min(ww, PANEL_MAX[0]))
+            new_h = max(PANEL_MIN[1], min(hh, PANEL_MAX[1]))
+            x, y = geom.x(), geom.y()
+            if dx == -1:
+                x = geom.right() - new_w + 1
+            if dy == -1:
+                y = geom.bottom() - new_h + 1
+            self.setGeometry(x, y, new_w, new_h)
+            self.prefs['panel_size'] = [new_w, new_h]
+            self.size_timer.start(600)
+            event.accept()
+        elif not self.compact and not (event.buttons() & Qt.LeftButton):
+            cursor = self._resize_cursor(*self._resize_hit(event.position().toPoint()))
+            self.setCursor(QCursor(cursor)) if cursor is not None else self.unsetCursor()
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self._edge_resize is not None and event.button() == Qt.LeftButton:
+            self._edge_resize = None
+            self.persist()
+            event.accept()
+        else:
+            super().mouseReleaseEvent(event)
+
+    def leaveEvent(self, event):
+        if self._edge_resize is None:
+            self.unsetCursor()
+        super().leaveEvent(event)
 
     def move_clamped(self, point):
         screen = QApplication.screenAt(point+QPoint(self.width()//2,30)) or QApplication.primaryScreen()
