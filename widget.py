@@ -24,39 +24,37 @@ from app_mode import AppModeState
 from localization import normalize_language, scope_text, text
 from pricing import (SUPPORTED_CURRENCIES, convert_usd, format_cost,
                      normalize_currency, normalize_rates)
+import theme
 from token_format import format_token_value, format_tokens, normalize_token_format
 
-INK = '#EEF2FF'
-MUTED = '#A7AEC8'
-ICE = '#91E4F2'
-VIOLET = '#B9A7F8'
-BG = '#171B32'
+INK, MUTED, ICE, VIOLET, BG = theme.INK, theme.MUTED, theme.ICE, theme.VIOLET, theme.BG
 PREF_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home()/'.local/share')))/'CodexWisp'
 STYLE = f'''
-QWidget {{ color:{INK}; font-family:"Segoe UI","Microsoft YaHei UI"; font-size:12px; }}
-QWidget#surface {{ background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #242641,stop:.5 {BG},stop:1 #22243D); border:1px solid #515473; border-radius:23px; }}
+QWidget {{ color:{theme.INK}; font-family:{theme.FONT_UI}; font-size:12px; }}
+QWidget#surface {{ background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 {theme.SURFACE_TOP},stop:.5 {theme.BG},stop:1 {theme.SURFACE_BOTTOM}); border:1px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
 QLabel {{ background:transparent; border:none; }}
-QLabel#muted {{ color:{MUTED}; font-size:11px; }}
-QLabel#brand {{ color:{INK}; font-size:15px; font-weight:600; letter-spacing:2px; }}
-QLabel#number {{ font-family:"Cascadia Mono","Consolas"; font-size:32px; font-weight:600; }}
-QLabel#smallnumber {{ font-family:"Cascadia Mono","Consolas"; font-size:17px; }}
-QLabel#cost {{ color:{ICE}; font-family:"Cascadia Mono","Consolas"; font-size:26px; font-weight:600; }}
-QLabel#badge {{ color:{VIOLET}; background:#34304F; border:1px solid #575076; border-radius:8px; padding:4px 8px; font-size:11px; }}
-QPushButton {{ background:transparent; border:1px solid transparent; border-radius:8px; padding:5px 8px; min-height:22px; }}
-QPushButton:hover {{ background:#383B57; border-color:#555A7B; }}
-QPushButton:focus {{ border-color:{ICE}; }}
-QPushButton:checked {{ background:#34344F; color:{ICE}; border-color:#515777; }}
-QFrame#divider {{ background:#3C405B; max-height:1px; border:0; }}
-QProgressBar {{ background:#33374F; border:0; border-radius:3px; min-height:5px; max-height:5px; }}
-QProgressBar::chunk {{ background:{ICE}; border-radius:3px; }}
-QMenu {{ background:#232740; border:1px solid #515777; padding:6px; }}
+QLabel#muted {{ color:{theme.MUTED}; font-size:11px; }}
+QLabel#brand {{ color:{theme.INK}; font-size:14px; font-weight:600; letter-spacing:2px; }}
+QLabel#number {{ font-family:{theme.FONT_NUM}; font-size:28px; font-weight:600; }}
+QLabel#smallnumber {{ font-family:{theme.FONT_NUM}; font-size:16px; }}
+QLabel#cost {{ color:{theme.ICE}; font-family:{theme.FONT_NUM}; font-size:22px; font-weight:600; }}
+QLabel#badge {{ color:{theme.VIOLET}; background:{theme.BADGE_BG}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_BADGE}px; padding:4px 8px; font-size:11px; }}
+QFrame#card {{ background:{theme.CARD}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_CARD}px; }}
+QPushButton {{ background:transparent; border:1px solid transparent; border-radius:{theme.RADIUS_BUTTON}px; padding:5px 8px; min-height:22px; }}
+QPushButton:hover {{ background:{theme.HOVER_BG}; border-color:{theme.HOVER_BORDER}; }}
+QPushButton:focus {{ border-color:{theme.ICE}; }}
+QPushButton:checked {{ background:{theme.CHECKED_BG}; color:{theme.ICE}; border-color:#515777; }}
+QFrame#divider {{ background:{theme.DIVIDER}; max-height:1px; border:0; }}
+QProgressBar {{ background:{theme.TRACK}; border:0; border-radius:{theme.RADIUS_BAR}px; min-height:5px; max-height:5px; }}
+QProgressBar::chunk {{ background:{theme.ICE}; border-radius:{theme.RADIUS_BAR}px; }}
+QMenu {{ background:{theme.MENU_BG}; border:1px solid #515777; padding:6px; }}
 QMenu::item {{ padding:9px 18px; border-radius:6px; }}
-QMenu::item:selected {{ background:#3D4263; }}
-QToolTip {{ background:#252B46; color:{INK}; border:1px solid #626A8C; padding:7px; }}
-QDialog {{ background:{BG}; }}
-QComboBox,QDoubleSpinBox {{ background:#282D48; border:1px solid #555C80; border-radius:6px; padding:6px; min-height:24px; }}
-QComboBox:focus,QDoubleSpinBox:focus {{ border-color:{ICE}; }}
-QComboBox QAbstractItemView {{ background:#282D48; selection-background-color:#4B527A; }}
+QMenu::item:selected {{ background:{theme.MENU_SELECTED}; }}
+QToolTip {{ background:{theme.TOOLTIP_BG}; color:{theme.INK}; border:1px solid {theme.TOOLTIP_BORDER}; padding:7px; }}
+QDialog {{ background:{theme.BG}; }}
+QComboBox {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:6px; padding:6px; min-height:24px; }}
+QComboBox:focus {{ border-color:{theme.ICE}; }}
+QComboBox QAbstractItemView {{ background:{theme.CONTROL_BG}; selection-background-color:#4B527A; }}
 QScrollArea {{ border:0; background:transparent; }}
 '''
 
@@ -317,7 +315,8 @@ class Panel(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setFixedWidth(360)
+        self.setMinimumSize(300, 250)
+        self.setMaximumSize(480, 800)
         self.setStyleSheet(STYLE)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(6, 6, 6, 6)
@@ -325,8 +324,8 @@ class Panel(QWidget):
         self.surface.setObjectName('surface')
         outer.addWidget(self.surface)
         layout = QVBoxLayout(self.surface)
-        layout.setContentsMargins(20, 14, 20, 16)
-        layout.setSpacing(14)
+        layout.setContentsMargins(16, 12, 16, 12)
+        layout.setSpacing(10)
         self.header = QWidget()
         self.header.setCursor(Qt.SizeAllCursor)
         head = QHBoxLayout(self.header)
@@ -360,7 +359,7 @@ class Panel(QWidget):
         self.body.setStyleSheet(f'background:{BG};')
         body = QVBoxLayout(self.body)
         body.setContentsMargins(0,0,0,0)
-        body.setSpacing(18)
+        body.setSpacing(10)
         model_row = QHBoxLayout()
         self.model = label('—')
         self.model.setStyleSheet(f'color:{ICE}; font-size:13px;')
@@ -369,7 +368,10 @@ class Panel(QWidget):
         self.effort = label('—', 'badge')
         model_row.addWidget(self.effort)
         body.addLayout(model_row)
-        token_box = QVBoxLayout()
+        token_card = QFrame()
+        token_card.setObjectName('card')
+        token_box = QVBoxLayout(token_card)
+        token_box.setContentsMargins(12, 10, 12, 10)
         token_box.setSpacing(6)
         token_header = QHBoxLayout()
         self.total_header = label('', 'muted')
@@ -398,16 +400,19 @@ class Panel(QWidget):
         token_box.addWidget(self.insights)
         self.details_button = button('', '', self.open_analytics)
         token_box.addWidget(self.details_button)
-        body.addLayout(token_box)
-        divider = QFrame()
-        divider.setObjectName('divider')
-        body.addWidget(divider)
+        body.addWidget(token_card)
+        quota_card = QFrame()
+        quota_card.setObjectName('card')
+        quota_box = QVBoxLayout(quota_card)
+        quota_box.setContentsMargins(12, 10, 12, 10)
+        quota_box.setSpacing(10)
         self.context = Meter('', VIOLET)
         self.five = Meter('', ICE)
-        self.week = Meter('', '#B9A7F8')
-        body.addWidget(self.context)
-        body.addWidget(self.five)
-        body.addWidget(self.week)
+        self.week = Meter('', VIOLET)
+        quota_box.addWidget(self.context)
+        quota_box.addWidget(self.five)
+        quota_box.addWidget(self.week)
+        body.addWidget(quota_card)
         self.body_scroll = QScrollArea()
         self.body_scroll.viewport().setStyleSheet(f'background:{BG};')
         self.body_scroll.setWidgetResizable(True)
@@ -435,6 +440,9 @@ class Panel(QWidget):
         bottom.addStretch()
         self.settings_button = button('⚙', '', self.open_settings)
         bottom.addWidget(self.settings_button)
+        self.size_grip = label('⋰', 'muted')
+        self.size_grip.setCursor(Qt.SizeFDiagCursor)
+        bottom.addWidget(self.size_grip)
         layout.addLayout(bottom)
         self.header.mousePressEvent = self.begin_drag
         self.header.mouseMoveEvent = self.drag
@@ -467,8 +475,19 @@ class Panel(QWidget):
         self.tray.activated.connect(lambda reason:self.toggle_visible() if reason == QSystemTrayIcon.DoubleClick else None)
         self.tray.show()
         self.tray_menu = menu
+        self.size_grip.mousePressEvent = self.begin_resize
+        self.size_grip.mouseMoveEvent = self.do_resize
+        self.size_grip.mouseReleaseEvent = self.end_resize
+        self.size_timer = QTimer(self)
+        self.size_timer.setSingleShot(True)
+        self.size_timer.timeout.connect(self.persist)
         self.compact = bool(self.prefs.get('compact', False))
         self.apply_language()
+        size = self.prefs.get('panel_size')
+        if isinstance(size, list) and len(size) == 2:
+            self.resize(max(300, min(int(size[0]), 480)), max(250, min(int(size[1]), 800)))
+        else:
+            self.resize(340, 640)
         self.apply_compact()
         if not self.pin.isChecked():
             self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
@@ -742,8 +761,16 @@ class Panel(QWidget):
     def apply_compact(self):
         self.body.setVisible(not self.compact)
         self.body_scroll.setVisible(not self.compact)
+        self.size_grip.setVisible(not self.compact)
         self.collapse_button.setText('+' if self.compact else '−')
-        self.setFixedHeight(274 if self.compact else min(730,QApplication.primaryScreen().availableGeometry().height()-24))
+        if self.compact:
+            self.setFixedHeight(250)
+        else:
+            self.setMinimumSize(300, 380)
+            self.setMaximumSize(480, 800)
+            size = self.prefs.get('panel_size')
+            if isinstance(size, list) and len(size) == 2:
+                self.resize(max(300, min(int(size[0]), 480)), max(380, min(int(size[1]), 800)))
         QTimer.singleShot(0, lambda:self.move_clamped(self.pos()))
 
     def toggle_compact(self):
@@ -762,6 +789,24 @@ class Panel(QWidget):
 
     def end_drag(self, event):
         self.prefs['position'] = [self.x(), self.y()]
+        self.persist()
+
+    def begin_resize(self, event):
+        if event.button() == Qt.LeftButton:
+            self.resize_start = (event.globalPosition().toPoint(), self.size())
+
+    def do_resize(self, event):
+        if event.buttons() & Qt.LeftButton and hasattr(self, 'resize_start'):
+            origin, size = self.resize_start
+            delta = event.globalPosition().toPoint() - origin
+            self.resize(max(300, min(size.width() + delta.x(), 480)),
+                        max(380, min(size.height() + delta.y(), 800)))
+            self.prefs['panel_size'] = [self.width(), self.height()]
+            self.size_timer.start(600)
+
+    def end_resize(self, event):
+        if hasattr(self, 'resize_start'):
+            del self.resize_start
         self.persist()
 
     def move_clamped(self, point):

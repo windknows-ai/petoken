@@ -23,12 +23,15 @@ BASELINE_SPRITE_Y = 82
 CHARACTER_SCALE = 0.5
 
 WINDOW_WIDTH = BASELINE_WINDOW[0]
-BUBBLE_RECT = (1, 1, 240, 70)
+# Compact Token card (V1.1 step 12): project + status on line one, live
+# Tokens on line two. Smaller than the V1.0 240x70 bubble.
+BUBBLE_RECT = (1, 1, 240, 58)
+BUBBLE_TEXT_WIDTH = 216
 
 SPRITE_WIDTH = int(BASELINE_SPRITE[0] * CHARACTER_SCALE)
 SPRITE_HEIGHT = int(BASELINE_SPRITE[1] * CHARACTER_SCALE)
 SPRITE_X = (WINDOW_WIDTH - SPRITE_WIDTH) // 2
-SPRITE_Y = 80
+SPRITE_Y = 64
 WINDOW_HEIGHT = SPRITE_Y + SPRITE_HEIGHT + 7
 
 # Feet/ground anchor: bottom-center of the shared sprite box. Every state

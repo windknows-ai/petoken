@@ -300,7 +300,7 @@ class UiTests(unittest.TestCase):
     def test_pet_uses_half_scale_window_and_full_res_sources(self):
         import pet_geometry as geometry
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),geometry.window_size())
-        self.assertEqual(geometry.window_size(),(242,232))
+        self.assertEqual(geometry.window_size(),(242,216))
         for state in ('idle','typing','microphone','music'):
             source=self.panel.pet.sprites[state]
             self.assertFalse(source.isNull(),state)
@@ -316,7 +316,7 @@ class UiTests(unittest.TestCase):
             image=self.panel.pet.grab().toImage()
             self.assertFalse(image.isNull(),state)
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),before)
-        self.assertEqual(geometry.sprite_rect(),(67,80,107,145))
+        self.assertEqual(geometry.sprite_rect(),(67,64,107,145))
         self.panel.pet.preview_state=None
 
     def test_pet_drag_clamp_and_saved_position_recovery(self):
@@ -353,7 +353,7 @@ class UiTests(unittest.TestCase):
             self.assertEqual(self.panel.pet.typing_phase(),phase)
             self.assertFalse(self.panel.pet.grab().toImage().isNull())
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),window_before)
-        self.assertEqual(geometry.anchor(),(121,225))
+        self.assertEqual(geometry.anchor(),(121,209))
         self.panel.pet.preview_state=None
 
     def test_pet_title_and_analytics_menu_follow_language(self):

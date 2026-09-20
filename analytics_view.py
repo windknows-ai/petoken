@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QHeader
     QLabel, QPlainTextEdit, QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from localization import scope_text, text
+import theme
 from token_format import format_ratio, format_tokens
 
 
@@ -22,7 +23,7 @@ def table(headers):
     widget.verticalHeader().hide()
     widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
     widget.horizontalHeader().setStretchLastSection(True)
-    widget.setStyleSheet('QTableWidget {background:#1C2139;alternate-background-color:#242B45;gridline-color:#3A415F;border:0;} QHeaderView::section {background:#303752;color:#EEF2FF;padding:8px;border:0;} QTableWidget::item {padding:6px;}')
+    widget.setStyleSheet(f'QTableWidget {{background:{theme.TABLE_BG};alternate-background-color:{theme.TABLE_ALT};gridline-color:{theme.GRID};border:0;}} QHeaderView::section {{background:{theme.TABLE_HEADER};color:{theme.INK};padding:8px;border:0;}} QTableWidget::item {{padding:6px;}}')
     return widget
 
 
@@ -61,13 +62,13 @@ class AnalyticsWindow(QDialog):
         self.resize(min(1020, screen.width()-40), min(750, screen.height()-40))
         layout = QVBoxLayout(self)
         self.heading = QLabel('TOKEN ANALYTICS')
-        self.heading.setStyleSheet('font-size:21px;font-weight:600;color:#91E4F2;')
+        self.heading.setStyleSheet(f'font-size:21px;font-weight:600;color:{theme.ICE};')
         layout.addWidget(self.heading)
         self.subtitle = QLabel()
         self.subtitle.setWordWrap(True)
         layout.addWidget(self.subtitle)
         self.tabs = QTabWidget()
-        self.tabs.setStyleSheet('QTabWidget::pane {border:1px solid #4C5575;} QTabBar::tab {background:#242B45;padding:11px 14px;} QTabBar::tab:selected {background:#41486C;color:#91E4F2;}')
+        self.tabs.setStyleSheet(f'QTabWidget::pane {{border:1px solid {theme.TAB_PANE_BORDER};}} QTabBar::tab {{background:{theme.TABLE_ALT};padding:11px 14px;}} QTabBar::tab:selected {{background:{theme.TAB_SELECTED_BG};color:{theme.ICE};}}')
         layout.addWidget(self.tabs)
         self.metrics = table(['', '', ''])
         self.tabs.addTab(self.metrics, '')
@@ -88,7 +89,7 @@ class AnalyticsWindow(QDialog):
         self.tabs.addTab(history, '')
         self.raw = QPlainTextEdit()
         self.raw.setReadOnly(True)
-        self.raw.setStyleSheet('background:#1C2139;color:#DDE6FC;font-family:Consolas;font-size:12px;')
+        self.raw.setStyleSheet(f'background:{theme.TABLE_BG};color:#DDE6FC;font-family:Consolas;font-size:12px;')
         self.tabs.addTab(self.raw, '')
         self.note = QLabel()
         self.note.setWordWrap(True)

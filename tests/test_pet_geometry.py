@@ -13,7 +13,7 @@ class PetGeometryTests(unittest.TestCase):
         self.assertEqual(geometry.CHARACTER_SCALE, 0.5)
         self.assertEqual((geometry.SPRITE_WIDTH, geometry.SPRITE_HEIGHT), (107, 145))
         self.assertLess(geometry.WINDOW_HEIGHT, geometry.BASELINE_WINDOW[1])
-        self.assertEqual(geometry.window_size(), (242, 232))
+        self.assertEqual(geometry.window_size(), (242, 216))
 
     def test_single_shared_sprite_box_for_all_states(self):
         first = geometry.sprite_rect()
@@ -26,7 +26,7 @@ class PetGeometryTests(unittest.TestCase):
         x, y, w, h = geometry.sprite_rect()
         ax, ay = geometry.anchor()
         self.assertEqual((ax, ay), (geometry.WINDOW_WIDTH // 2, y + h))
-        self.assertEqual(geometry.anchor(), (121, 225))
+        self.assertEqual(geometry.anchor(), (121, 209))
 
     def test_bubble_stays_inside_window_above_sprite(self):
         bx, by, bw, bh = geometry.bubble_rect()
@@ -35,7 +35,7 @@ class PetGeometryTests(unittest.TestCase):
         self.assertGreaterEqual(by, 0)
         self.assertLessEqual(bx + bw, ww)
         self.assertLessEqual(by + bh, geometry.sprite_rect()[1])
-        self.assertEqual((bw, bh), (240, 70))
+        self.assertEqual((bw, bh), (240, 58))
 
     def test_reaction_pivot_is_inside_sprite_box(self):
         x, y, w, h = geometry.sprite_rect()
@@ -45,9 +45,9 @@ class PetGeometryTests(unittest.TestCase):
 
     def test_clamp_keeps_window_on_screen(self):
         screen = (0, 0, 1919, 1079)
-        self.assertEqual(geometry.clamp_position(100, 100, 242, 232, screen), (100, 100))
-        self.assertEqual(geometry.clamp_position(-5000, -5000, 242, 232, screen), (0, 0))
-        self.assertEqual(geometry.clamp_position(5000, 5000, 242, 232, screen), (1919 - 242 + 1, 1079 - 232 + 1))
+        self.assertEqual(geometry.clamp_position(100, 100, 242, 216, screen), (100, 100))
+        self.assertEqual(geometry.clamp_position(-5000, -5000, 242, 216, screen), (0, 0))
+        self.assertEqual(geometry.clamp_position(5000, 5000, 242, 216, screen), (1919 - 242 + 1, 1079 - 216 + 1))
 
     def test_device_pixels_scale_linearly(self):
         self.assertEqual(geometry.device_pixels(107, 1.0), 107)

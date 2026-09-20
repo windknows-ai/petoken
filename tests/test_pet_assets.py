@@ -71,8 +71,8 @@ class PetAssetTests(unittest.TestCase):
             QImage(1024, 1024, QImage.Format_ARGB32).save(str(large))
             self.assertNotEqual(assets.load_path(str(small)).width(),
                                 assets.load_path(str(large)).width())
-        self.assertEqual(geometry.sprite_rect(), (67, 80, 107, 145))
-        self.assertEqual(geometry.anchor(), (121, 225))
+        self.assertEqual(geometry.sprite_rect(), (67, 64, 107, 145))
+        self.assertEqual(geometry.anchor(), (121, 209))
 
     def test_entries_carry_no_layout_geometry(self):
         for entry in assets.REGISTRY:
@@ -99,7 +99,7 @@ class PetAssetTests(unittest.TestCase):
         self.assertIn('usage', module.STATES)
 
     def test_logical_geometry_is_dpr_independent(self):
-        self.assertEqual(geometry.window_size(), (242, 232))
+        self.assertEqual(geometry.window_size(), (242, 216))
         self.assertEqual(geometry.device_pixels(107, 1.0) * 2, geometry.device_pixels(107, 2.0))
         pixmap = QPixmap(str(ROOT / 'assets/skirk-pet.png'))
         self.assertGreater(pixmap.width(), geometry.SPRITE_WIDTH * 4)

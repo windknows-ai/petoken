@@ -2,11 +2,12 @@
 import math
 import time
 from PySide6.QtCore import Qt,QTimer,QPoint,QRectF
-from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QPen,QKeySequence,QShortcut,QCursor
+from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QFontMetrics,QPen,QKeySequence,QShortcut,QCursor
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
 import pet_assets as assets
 import pet_geometry as geometry
+import theme
 from token_format import format_tokens
 
 
@@ -132,25 +133,39 @@ class DesktopPet(QWidget):
         if self.token_bubble_visible():
             context=self.working_context or {}
             tokens=context.get('tokens') or {}
-            p.setPen(QPen(QColor('#777AA4'),1))
+            style=self.panel.prefs.get('token_number_format')
+            p.setPen(QPen(QColor(theme.BORDER),1))
             p.setBrush(QColor(29,33,57,235))
             bx,by,bw,bh=geometry.bubble_rect()
-            p.drawRoundedRect(QRectF(bx,by,bw,bh),16,16)
-            p.setPen(QColor('#EEF2FF'))
-            p.setFont(QFont('Microsoft YaHei UI',9,QFont.DemiBold))
-            title=context.get('title') or self.tr_text('codex_working')
-            p.drawText(QRectF(13,8,216,22),Qt.AlignLeft|Qt.AlignVCenter,p.fontMetrics().elidedText(title,Qt.ElideRight,216))
-            p.setFont(QFont('Segoe UI',8))
-            p.setPen(QColor('#B9A7F8'))
+            p.drawRoundedRect(QRectF(bx,by,bw,bh),theme.RADIUS_CARD,theme.RADIUS_CARD)
+            width=geometry.BUBBLE_TEXT_WIDTH
             project=context.get('project') or self.tr_text('project_unavailable')
-            project_tokens=f"{project} · {format_tokens(tokens.get('total_tokens'),self.panel.prefs.get('token_number_format'))}"
-            p.drawText(QRectF(13,30,216,16),p.fontMetrics().elidedText(project_tokens,Qt.ElideRight,216))
-            p.setPen(QColor('#91E4F2'))
-            context_used=context.get('context')
-            context_used='—' if context_used is None else f'{context_used:.0f}%'
-            quota=self.panel.five.value.text().replace(' '+self.tr_text('left'),'')
-            p.drawText(QRectF(13,47,220,18),
-                       f"● {self.tr_text('working')} · {self.tr_text('context_short')} {context_used} · 5h {quota}")
+            status=self.tr_text('working')
+            used=context.get('context')
+            ctx_text=f"{self.tr_text('context_short')} {'—' if used is None else f'{used:.0f}%'}"
+            main_font=QFont('Microsoft YaHei UI',9,QFont.DemiBold)
+            p.setFont(main_font)
+            metrics=p.fontMetrics()
+            dot='● '
+            dot_w=metrics.horizontalAdvance(dot)
+            ctx_w=QFontMetrics(QFont('Segoe UI',8)).horizontalAdvance(ctx_text)
+            status_text=f' · {status}'
+            status_w=metrics.horizontalAdvance(status_text)
+            shown=metrics.elidedText(project,Qt.ElideRight,max(0,width-dot_w-status_w-ctx_w-8))
+            x=13.0
+            p.setPen(QColor(theme.ICE))
+            p.drawText(QRectF(x,7,width,20),Qt.AlignLeft|Qt.AlignVCenter,dot)
+            x+=dot_w
+            p.setPen(QColor(theme.INK))
+            p.drawText(QRectF(x,7,width,20),Qt.AlignLeft|Qt.AlignVCenter,shown+status_text)
+            p.setPen(QColor(theme.MUTED))
+            p.setFont(QFont('Segoe UI',8))
+            p.drawText(QRectF(13,7,width,20),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
+            total=format_tokens(tokens.get('total_tokens'),style)
+            p.setPen(QColor(theme.INK))
+            p.setFont(QFont('Segoe UI',12,QFont.DemiBold))
+            p.drawText(QRectF(13,30,width,22),Qt.AlignLeft|Qt.AlignVCenter,
+                       p.fontMetrics().elidedText(total,Qt.ElideRight,width))
         offset=math.sin(self.phase)*geometry.BOB_AMPLITUDE if self.motion else 0
         p.save()
         if self.reaction:

@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — through Bongo-Cat typing interaction complete; registry committed, typing slice uncommitted; not pushed)
+`V1.1.0` (UI and interaction refinement — through floating UI + expanded redesign complete; typing committed, redesign uncommitted; not pushed)
 
 ## Current Stage
 
-OpenCode is the active continuation agent (Codex at usage limit). Registry was committed as `a687cbc`; the Step 11 typing interaction (timestamp-only tap phases, registry frame hooks, subtle fallback tilt, preserved priority/geometry) is complete and verified but intentionally uncommitted. No Bongo Cat material copied; no artwork created. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). Typing was committed as `13f8892`; the Step 12 redesign (compact Token card, grouped panel, central palette, corner-drag resizing) is complete and verified but intentionally uncommitted. No data-semantics change. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -57,10 +57,13 @@ OpenCode is the active continuation agent (Codex at usage limit). Registry was c
 - Registry checkpoint `a687cbc` committed locally (7 files: registry/render/README/tests/PROGRESS/HANDOFF work; message "feat: add V1.1 pet asset registry"). `AGENTS.md` excluded again, untouched.
 - Step 11 implemented by OpenCode, uncommitted: `ActivityState` gains timestamp-only `tap_phase` (`TAP_MIN_INTERVAL = 0.12`, `TYPING_WINDOW = 1.5`); typing entry carries `frames = (typing_1, typing_2)` with `frame_for` + cache; pet renders frames when present else a subtle feet-anchored fallback tilt (±1.2°, ±2px); render tool emits neutral/tap0/tap1 shots via synthetic timestamp pulses.
 - Typing verification passed: 122 tests, `py_compile`, `git diff --check`, 100%/200% tap renders inspected, live F24 typing smoke exits 0 with visible taps and `keyboard_hook_error: null`.
+- Typing checkpoint `13f8892` committed locally (9 files: interaction/frames/tests/tool/docs work; message "feat: add reactive typing interaction"). `AGENTS.md` excluded again, untouched.
+- Step 12 implemented by OpenCode, uncommitted: new `theme.py` (one palette/radii/font source); compact Token card 240×58 (project·status + ctx right on line one, live Tokens on line two; was 240×70 three-row); window 242×216; grouped token/quota cards; smaller hierarchy type (brand 14, number 28, cost 22); corner-drag `⋰` resizing (300–480 × 380–800, compact fixed 250, debounced `panel_size` persist); Analytics palette-only swap with identical values.
+- Redesign verification passed: 136 tests, `py_compile`, `git diff --check`, full matrix inspected, no data-semantics change. One scratch render script bypassed isolation and persisted real user settings once (valid app-managed state; harnesses must stay isolated).
 
 ## Current Work / Partial Work
 
-None in progress. Step 11 typing interaction is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
+None in progress. Step 12 redesign is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
 
 ## Important Decisions
 
@@ -71,9 +74,9 @@ None in progress. Step 11 typing interaction is complete and verified but uncomm
 
 ## Current Git State
 
-- Branch: `main`, HEAD `a687cbc` ("feat: add V1.1 pet asset registry"), nine commits ahead of `origin/main`; nothing was pushed.
-- The Step 11 typing slice is intentionally uncommitted and unpushed. Modified tracked files: `activity.py`, `pet.py`, `pet_assets.py`, `assets/v1_1/README.md`, `tools/render_states.py`, `tests/test_ui.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `tests/test_typing.py`. `AGENTS.md` remains worktree-modified (excluded from `27ceb81`, `918f8cf`, `f3cf834`, and `a687cbc`).
-- Verification: 122 tests pass, `py_compile` passes, `git diff --check` passes, render QA (typing neutral/tap phases at 100%/200%) inspected, and a live isolated zh_CN typing smoke exits 0 with visible taps.
+- Branch: `main`, HEAD `13f8892` ("feat: add reactive typing interaction"), ten commits ahead of `origin/main`; nothing was pushed.
+- The Step 12 redesign slice is intentionally uncommitted and unpushed. Modified tracked files: `pet_geometry.py`, `pet.py`, `widget.py`, `analytics_view.py`, `tests/test_pet_geometry.py`, `tests/test_pet_assets.py`, `tests/test_ui.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `theme.py`, `tests/test_redesign.py`. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
+- Verification: 136 tests pass, `py_compile` passes, `git diff --check` passes, full screenshot matrix (Daily/Token/panel/Settings/Analytics × zh/en × 100%/200%, plus compact + long-name) inspected, live isolated smokes exit 0.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -87,7 +90,7 @@ None in progress. Step 11 typing interaction is complete and verified but uncomm
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 12 only when authorized: floating Token UI + expanded interface redesign.
+1. Implement V1.1.0 order step 13 only when authorized: free resizing + responsive polish (corner-drag foundation already landed).
 2. Do not combine that slice with Working-animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
