@@ -356,6 +356,41 @@ class UiTests(unittest.TestCase):
         self.assertEqual(geometry.anchor(),(121,209))
         self.panel.pet.preview_state=None
 
+    def test_music_subtitle_pill_only_with_text_and_music_visible(self):
+        self.panel.pet.preview_state='music'
+        self.panel.pet.update_activity()
+        self.assertIsNone(self.panel.pet.music_subtitle())
+        self.assertEqual(self.panel.pet.grab().toImage().pixelColor(121,29).alpha(),0)
+        self.panel.activity.status['music_text']={'text':'Test subtitle line','source':'qa',
+            'identity':('qa','T','A')}
+        self.assertEqual(self.panel.pet.music_subtitle(),'Test subtitle line')
+        self.assertGreater(self.panel.pet.grab().toImage().pixelColor(121,29).alpha(),0)
+        self.panel.pet.preview_state=None
+
+    def test_token_mode_hides_music_subtitle(self):
+        self.panel.activity.status['music_text']={'text':'Test subtitle line','source':'qa',
+            'identity':('qa','T','A')}
+        self.panel.pet.preview_state='music'
+        self.panel.pet.update_activity()
+        self.assertIsNotNone(self.panel.pet.music_subtitle())
+        self.panel.app_mode.update(True,True)
+        self.panel.app_mode.update(True,True,self.panel.app_mode.pending_since+1.0)
+        self.assertTrue(self.panel.pet.token_bubble_visible())
+        self.assertIsNone(self.panel.pet.music_subtitle())
+        self.panel.pet.preview_state=None
+
+    def test_music_subtitle_long_text_elides_and_stays_untranslated(self):
+        line='长字幕行测试 '+'very long subtitle line '*20
+        self.panel.activity.status['music_text']={'text':line,'source':'qa',
+            'identity':('qa','T','A')}
+        self.panel.pet.preview_state='music'
+        self.panel.pet.update_activity()
+        self.assertEqual(self.panel.pet.music_subtitle(),line.strip())
+        before=(self.panel.pet.width(),self.panel.pet.height())
+        self.assertFalse(self.panel.pet.grab().toImage().isNull())
+        self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),before)
+        self.panel.pet.preview_state=None
+
     def test_pet_title_and_analytics_menu_follow_language(self):
         self.panel.prefs['language']='en'
         self.panel.apply_language();self.app.processEvents()

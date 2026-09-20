@@ -15,6 +15,22 @@ TYPING_WINDOW = 1.5
 TAP_MIN_INTERVAL = .12
 
 
+def summarize_music_text(app_id, title, artist, subtitle, playing):
+    """Build the memory-only Music text state from verified session metadata.
+
+    Only the platform-exposed ``subtitle`` field is used; lyrics are never
+    scraped, guessed, generated, or transcribed. Returns None unless playback
+    is active and the field holds real text. The identity tuple lets callers
+    reason about track changes; nothing here is persisted.
+    """
+    if not playing:
+        return None
+    content = subtitle.strip() if isinstance(subtitle, str) else ''
+    if not content:
+        return None
+    return {'text': content, 'source': app_id, 'identity': (app_id, title, artist)}
+
+
 class ActivityState:
     def __init__(self):
         self.last_key=float('-inf')
@@ -130,8 +146,22 @@ class ActivityMonitor:
         self.state=ActivityState()
         self.stop=threading.Event()
         self.keyboard=KeyboardActivity(self.state)
-        self.status={'microphone':None,'music':None}
+        self.status={'microphone':None,'music':None,'music_text':None}
         self.thread=threading.Thread(target=self.run,daemon=True,name='media-activity')
+
+    @staticmethod
+    async def read_music_text(session, playing):
+        """Read the verified subtitle field of one playing session.
+
+        Returns the memory-only text state or None. Any failure degrades to
+        None without affecting Music activity detection.
+        """
+        try:
+            properties=await asyncio.wait_for(session.try_get_media_properties_async(),timeout=2)
+            return summarize_music_text(session.source_app_user_model_id,
+                properties.title,properties.artist,properties.subtitle,playing)
+        except Exception:
+            return None
 
     def start(self):
         self.keyboard.thread.start()
@@ -146,7 +176,7 @@ class ActivityMonitor:
         next_retry=0
         try:
             while not self.stop.is_set():
-                mic=music=None
+                mic=music=music_text=None
                 try:
                     mic=microphone_active()
                 except Exception:
@@ -154,11 +184,16 @@ class ActivityMonitor:
                 try:
                     if manager is None and time.monotonic()>=next_retry:
                         manager=await asyncio.wait_for(Manager.request_async(),timeout=3)
+                    playing=[]
                     if manager is not None:
-                        music=any(s.get_playback_info().playback_status==Status.PLAYING for s in manager.get_sessions())
+                        playing=[s for s in manager.get_sessions()
+                                 if s.get_playback_info().playback_status==Status.PLAYING]
+                    music=bool(playing)
+                    if music:
+                        music_text=await self.read_music_text(playing[0],True)
                 except Exception:
                     manager=None;next_retry=time.monotonic()+10
-                self.status={'microphone':mic,'music':music}
+                self.status={'microphone':mic,'music':music,'music_text':music_text}
                 self.state.sample(mic,music)
                 await asyncio.sleep(.5)
         finally:

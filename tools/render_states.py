@@ -44,7 +44,9 @@ def main(output):
     # With no V1.1 frame files present these are fallback-state renders.
     from types import SimpleNamespace
     from activity import ActivityState
-    panel.activity = SimpleNamespace(state=ActivityState(), close=lambda: None)
+    panel.activity = SimpleNamespace(state=ActivityState(), close=lambda: None,
+                                       status={'microphone': None, 'music': True,
+                                               'music_text': None})
     panel.pet.preview_state = 'typing'
     base = time.monotonic()
     panel.activity.state.key(base)
@@ -55,6 +57,15 @@ def main(output):
     panel.pet.update_activity()
     app.processEvents()
     panel.pet.grab().save(str(output / 'pet-typing-tap0.png'))
+    # Music subtitle pill with synthetic clearly-labeled test content.
+    panel.activity.status['music_text'] = {
+        'text': 'Synthetic QA subtitle line', 'source': 'qa-stub',
+        'identity': ('qa-stub', 'QA track', 'QA artist')}
+    panel.pet.preview_state = 'music'
+    panel.pet.update_activity()
+    app.processEvents()
+    panel.pet.grab().save(str(output / 'pet-music-text.png'))
+    panel.activity.status['music_text'] = None
     panel.pet.preview_state = None
     panel.app_mode.update(True, True)
     panel.app_mode.update(True, True, panel.app_mode.pending_since + 1.0)

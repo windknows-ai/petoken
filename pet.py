@@ -60,6 +60,20 @@ class DesktopPet(QWidget):
         monitor=getattr(self.panel,'activity',None)
         return getattr(getattr(monitor,'state',None),'tap_phase',0)
 
+    def music_subtitle(self):
+        """Verified media text for the Music state, or None.
+
+        Memory-only, never translated, never persisted. Shown only when Music
+        is the visible state; Token Mode and higher priorities take precedence
+        by construction (the token card branch runs first).
+        """
+        if self.token_bubble_visible() or self.current_state!='music':
+            return None
+        monitor=getattr(self.panel,'activity',None)
+        info=(getattr(monitor,'status',None) or {}).get('music_text') or {}
+        line=info.get('text')
+        return line.strip() if isinstance(line,str) and line.strip() else None
+
     def apply_language(self):
         self.setWindowTitle(self.tr_text('pet_title'))
         self.setAccessibleName(self.tr_text('pet_accessible'))
@@ -166,6 +180,18 @@ class DesktopPet(QWidget):
             p.setFont(QFont('Segoe UI',12,QFont.DemiBold))
             p.drawText(QRectF(13,30,width,22),Qt.AlignLeft|Qt.AlignVCenter,
                        p.fontMetrics().elidedText(total,Qt.ElideRight,width))
+        elif (subtitle:=self.music_subtitle()) is not None:
+            # One small secondary pill in the idle card area. No text means no
+            # box at all; Token Mode never reaches this branch.
+            p.setFont(QFont('Segoe UI',8))
+            shown=p.fontMetrics().elidedText(subtitle,Qt.ElideRight,208)
+            pill_w=min(232,p.fontMetrics().horizontalAdvance(shown)+24)
+            pill_x=(self.width()-pill_w)/2
+            p.setPen(QPen(QColor(theme.BORDER),1))
+            p.setBrush(QColor(29,33,57,235))
+            p.drawRoundedRect(QRectF(pill_x,16,pill_w,26),13,13)
+            p.setPen(QColor(theme.INK))
+            p.drawText(QRectF(pill_x,16,pill_w,26),Qt.AlignCenter,shown)
         offset=math.sin(self.phase)*geometry.BOB_AMPLITUDE if self.motion else 0
         p.save()
         if self.reaction:

@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — through responsive polish complete; redesign committed, responsive uncommitted; not pushed)
+`V1.1.0` (UI and interaction refinement — through music-text capability complete; responsive committed, music-text uncommitted; not pushed)
 
 ## Current Stage
 
-OpenCode is the active continuation agent (Codex at usage limit). Redesign was committed as `74cddea`; the Step 13 responsive polish (top-pinned tall layouts, crash-safe size restore, restart/compact persistence, min-width stress) is complete and verified but intentionally uncommitted. No data-semantics or visual-language change. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). Responsive polish was committed as `5af3a98`; the Step 14 music-text capability (verified SMTC `subtitle` field, memory-only state, Music-visible pill, honest unavailable path) is complete and verified but intentionally uncommitted. No recording/transcription/scraping; no live media text was available in this environment. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -63,10 +63,13 @@ OpenCode is the active continuation agent (Codex at usage limit). Redesign was c
 - Redesign checkpoint `74cddea` committed locally (11 files: theme/card/panel/tests/docs work; message "feat: redesign compact token interface"). `AGENTS.md` excluded again, untouched.
 - Step 13 implemented by OpenCode, uncommitted: `body.addStretch(1)` pins content top in tall windows; `PANEL_MIN/MAX/DEFAULT` + `valid_panel_size()` centralize bounds and make malformed `panel_size` uncrashable (clamp or default); grip/init/compact paths share the helper; 7 responsive tests (bounds, restore/restart, invalid recovery, compact preservation, grip clamp, 48-combo min-width stress).
 - Responsive verification passed: 143 tests, `py_compile`, `git diff --check`, matrix above, restart persistence by test, no semantics change.
+- Responsive checkpoint `5af3a98` committed locally (4 files: layout/persistence/tests/docs work; message "fix: harden responsive panel layout"). `AGENTS.md` excluded again, untouched.
+- Step 14 implemented by OpenCode, uncommitted: `summarize_music_text` + `ActivityMonitor.read_music_text` (SMTC `subtitle` field only, recomputed each 0.5 s poll, failure → None); pet `music_subtitle()` gate (Music-visible only, verbatim, memory-only) + one-line pill (elided ≤208 px, bubble styling, no box when absent); render tool `pet-music-text.png` with synthetic labeled content.
+- Music verification passed: 155 tests, `py_compile`, `git diff --check`, 100%/200% pill inspected, no-media smoke exits 0. Real `subtitle` field confirmed in the installed projection; no app populates it here (0 sessions), so live text is architecture-verified, not end-to-end observed.
 
 ## Current Work / Partial Work
 
-None in progress. Step 13 responsive polish is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
+None in progress. Step 14 music-text capability is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
 
 ## Important Decisions
 
@@ -77,9 +80,9 @@ None in progress. Step 13 responsive polish is complete and verified but uncommi
 
 ## Current Git State
 
-- Branch: `main`, HEAD `74cddea` ("feat: redesign compact token interface"), eleven commits ahead of `origin/main`; nothing was pushed.
-- The Step 13 responsive slice is intentionally uncommitted and unpushed. Modified tracked files: `widget.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `tests/test_responsive.py`. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
-- Verification: 143 tests pass, `py_compile` passes, `git diff --check` passes, min/max/typical sizes × zh/en × Full/Compact × 3 scopes × 4 currencies inspected plus Token card at 100/125/150/175/200%, live isolated smokes exit 0.
+- Branch: `main`, HEAD `5af3a98` ("fix: harden responsive panel layout"), twelve commits ahead of `origin/main`; nothing was pushed.
+- The Step 14 music-text slice is intentionally uncommitted and unpushed. Modified tracked files: `activity.py`, `pet.py`, `tools/render_states.py`, `tests/test_ui.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `tests/test_music_text.py`. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
+- Verification: 155 tests pass, `py_compile` passes, `git diff --check` passes, pill renders at 100%/200% plus music-without-text inspected, isolated zh_CN no-media smoke exits 0, 0 live SMTC sessions observed.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -93,8 +96,8 @@ None in progress. Step 13 responsive polish is complete and verified but uncommi
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 14 only when authorized: Music Mode subtitle capability (or clean feature-ready module).
-2. Do not combine that slice with Working-animation or V1.2.0.
+1. Run V1.1.0 order steps 15–16 only when authorized: edge-case testing, animation/visual polish, final acceptance review.
+2. Do not combine that with Working-animation or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent
