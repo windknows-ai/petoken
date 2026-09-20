@@ -11,6 +11,13 @@ import theme
 from token_format import format_tokens
 
 
+# Compact-card state marker: the status dot takes the live state's accent so
+# the small card reads as part of the companion, not a plain data pill.
+STATE_DOT = {'codex_working': theme.ICE, 'working': theme.ICE,
+             'typing': theme.VIOLET, 'microphone': theme.ICE,
+             'music': theme.VIOLET, 'idle': theme.MUTED, 'usage': theme.MUTED}
+
+
 class DesktopPet(QWidget):
     def __init__(self,panel):
         super().__init__()
@@ -174,7 +181,7 @@ class DesktopPet(QWidget):
             status_w=metrics.horizontalAdvance(status_text)
             shown=metrics.elidedText(project,Qt.ElideRight,max(0,width-dot_w-status_w-ctx_w-8))
             x=13.0
-            p.setPen(QColor(theme.ICE))
+            p.setPen(QColor(STATE_DOT.get(self.current_state, theme.ICE)))
             p.drawText(QRectF(x,7,width,20),Qt.AlignLeft|Qt.AlignVCenter,dot)
             x+=dot_w
             p.setPen(QColor(theme.INK))
@@ -251,8 +258,13 @@ class DesktopPet(QWidget):
         else:self.show_panel()
 
     def show_panel(self):
-        self.panel.move_clamped(QPoint(self.x()-self.panel.width()-10,self.y()))
-        self.panel.show();self.panel.raise_()
+        # Center the companion panel on the pet so the cursor that opened it
+        # lands inside the panel: the open stays stable instead of instantly
+        # counting as a leave. move_clamped keeps it on screen at the edges.
+        panel = self.panel
+        panel.move_clamped(QPoint(self.x() + self.width() // 2 - panel.width() // 2,
+                                  self.y() + self.height() // 2 - panel.height() // 2))
+        panel.show();panel.raise_()
         self.left_since=None
 
     def contextMenuEvent(self,event):

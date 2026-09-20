@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 import threading
@@ -10,15 +11,16 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRectF, QLockFile
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRect, QRectF, QLockFile
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
-    QHBoxLayout, QGridLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
+    QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
     QFormLayout, QComboBox, QCheckBox, QDialogButtonBox, QScrollArea)
 
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import CodexStore, quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
+import pet_assets as assets
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
 from localization import DEFAULT_LANGUAGE, normalize_language, scope_text, text
@@ -79,9 +81,24 @@ def button(text, tip, slot):
     return w
 
 
-PANEL_MIN = (360, 400)
-PANEL_MAX = (560, 760)
-PANEL_DEFAULT = (420, 600)
+def divider():
+    w = QFrame()
+    w.setObjectName('divider')
+    w.setFixedHeight(1)
+    return w
+
+
+PANEL_MIN = (480, 420)
+PANEL_MAX = (600, 640)
+PANEL_DEFAULT = (560, 500)
+
+# Character-led composition (companion redesign slice): the panel window
+# keeps a transparent left gutter and the surface starts at SURFACE_LEFT, so
+# the companion stage bleeds over the surface edge instead of sitting in
+# another stacked card. The sprite stays left of the data column and only
+# grazes the surface background; text always starts clear of the bleed.
+STAGE_WIDTH = 230
+SURFACE_LEFT = 180
 
 
 def valid_panel_size(value):
@@ -209,6 +226,64 @@ class Bridge(QObject):
     data = Signal(dict)
     limits = Signal(dict)
     fx = Signal(dict)
+
+
+class CompanionStage(QWidget):
+    """The panel's character anchor: one large live companion sprite.
+
+    Paints the same live state as the desktop pet (shared sprite table, tap
+    frames included) over a soft glow, bleeding over the surface edge. The
+    widget itself is mouse-transparent and paints nothing but glow + sprite,
+    so text never overlaps the gutter. Integer-aligned geometry keeps edges
+    crisp at 100% and 200% DPI.
+    """
+    SPRITE_BOX = 184
+    SPRITE_X = 12
+
+    def __init__(self, panel):
+        super().__init__(panel)
+        self.panel = panel
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setAccessibleName('')
+        self.phase = 0.0
+        self.current_state = 'idle'
+
+    def sync_from_pet(self):
+        pet = getattr(self.panel, 'pet', None)
+        if pet is None:
+            return
+        self.current_state = pet.current_state
+        self.phase = pet.phase
+
+    def sprite_table(self):
+        pet = getattr(self.panel, 'pet', None)
+        return getattr(pet, 'sprites', None) or {}
+
+    def paintEvent(self, event):
+        width, height = self.width(), self.height()
+        if width < 10 or height < 10:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        table = self.sprite_table()
+        if not table:
+            return
+        pet = getattr(self.panel, 'pet', None)
+        motion = bool(getattr(pet, 'motion', True))
+        sprite = table.get(self.current_state, table.get('idle'))
+        if self.current_state == 'typing' and motion and pet is not None:
+            framed = assets.frame_for('typing', pet.typing_phase())
+            if framed is not None:
+                sprite = framed
+        if sprite is None or sprite.isNull():
+            return
+        box = self.SPRITE_BOX
+        offset = round(math.sin(self.phase) * 2) if motion else 0
+        x = self.SPRITE_X
+        y = height - 24 - box + offset
+        p.drawPixmap(QRect(x, y, box, box), sprite)
 
 
 class Settings(QDialog):
@@ -359,6 +434,7 @@ class Panel(QWidget):
         self.fx_data = self.prefs.get('fx_cache') or dict(
             date='2026-09-15', source='Bank of Canada · bundled', rates={'CAD': 1.3917})
         self.closing = False
+        self._pet_was_visible = False
         self.stop = threading.Event()
         self.reset_store = threading.Event()
         self.bridge = Bridge()
@@ -369,24 +445,26 @@ class Panel(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setMinimumSize(300, 250)
-        self.setMaximumSize(480, 800)
+        self.setMinimumSize(480, 250)
+        self.setMaximumSize(600, 640)
         self.setStyleSheet(STYLE)
+        # Character-led composition: the window keeps a transparent left
+        # gutter where the companion stage bleeds over the surface edge. The
+        # data column on the right is deliberately card-free: typography,
+        # one token block, light quota strips, and an inline footer.
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(8, 8, 8, 8)
+        outer.setContentsMargins(SURFACE_LEFT, 8, 8, 8)
         self.surface = QWidget()
         self.surface.setObjectName('surface')
         outer.addWidget(self.surface)
         layout = QVBoxLayout(self.surface)
-        layout.setContentsMargins(20, 16, 20, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(20, 14, 20, 14)
+        layout.setSpacing(10)
         self.header = QWidget()
         self.header.setCursor(Qt.SizeAllCursor)
         head = QHBoxLayout(self.header)
         head.setContentsMargins(0,0,0,0)
         head.setSpacing(12)
-        self.spirit = Spirit()
-        head.addWidget(self.spirit)
         brand = QVBoxLayout()
         brand.setSpacing(3)
         brand.addWidget(label('PETOKEN', 'brand'))
@@ -409,24 +487,20 @@ class Panel(QWidget):
         self.title = ElidedLabel('')
         self.title.setStyleSheet('font-size:17px; font-weight:600;')
         layout.addWidget(self.title)
+        model_row = QHBoxLayout()
+        model_row.setSpacing(8)
+        self.model = label('—')
+        self.model.setStyleSheet(f'color:{ICE}; font-size:13px;')
+        model_row.addWidget(self.model)
+        self.effort = label('—', 'badge')
+        model_row.addWidget(self.effort)
+        model_row.addStretch()
+        layout.addLayout(model_row)
         self.body = QWidget()
         self.body.setStyleSheet(f'background:{BG};')
         body = QVBoxLayout(self.body)
         body.setContentsMargins(0,0,0,0)
-        body.setSpacing(12)
-        model_row = QHBoxLayout()
-        self.model = label('—')
-        self.model.setStyleSheet(f'color:{ICE}; font-size:13px;')
-        model_row.addWidget(self.model)
-        model_row.addStretch()
-        self.effort = label('—', 'badge')
-        model_row.addWidget(self.effort)
-        body.addLayout(model_row)
-        token_card = QFrame()
-        token_card.setObjectName('card')
-        token_box = QVBoxLayout(token_card)
-        token_box.setContentsMargins(16, 14, 16, 14)
-        token_box.setSpacing(8)
+        body.setSpacing(10)
         token_header = QHBoxLayout()
         self.total_header = label('', 'muted')
         token_header.addWidget(self.total_header)
@@ -434,39 +508,33 @@ class Panel(QWidget):
         self.scope_button = button('', '', self.scope_menu)
         self.scope_button.setStyleSheet(f'color:{MUTED};font-size:11px;padding:0px 3px;min-height:24px;')
         token_header.addWidget(self.scope_button)
-        token_box.addLayout(token_header)
+        body.addLayout(token_header)
         self.total = label('—', 'number')
-        token_box.addWidget(self.total)
-        io = QGridLayout()
-        io.setVerticalSpacing(5)
-        self.input = label('—', 'smallnumber')
-        self.output = label('—', 'smallnumber')
-        self.input_header = label('', 'muted')
-        self.output_header = label('', 'muted')
-        io.addWidget(self.input_header, 0,0)
-        io.addWidget(self.output_header, 0,1)
-        io.addWidget(self.input, 1,0)
-        io.addWidget(self.output, 1,1)
-        io.setColumnStretch(0,1)
-        io.setColumnStretch(1,1)
-        token_box.addLayout(io)
+        body.addWidget(self.total)
+        status_row = QHBoxLayout()
+        status_row.setSpacing(6)
+        self.status_dot = label('●')
+        status_row.addWidget(self.status_dot)
+        self.status_text = label('', 'muted')
+        status_row.addWidget(self.status_text)
+        status_row.addStretch()
+        body.addLayout(status_row)
+        self.io_line = label('', 'muted')
+        body.addWidget(self.io_line)
         self.insights = label('', 'muted')
-        token_box.addWidget(self.insights)
+        body.addWidget(self.insights)
+        details_row = QHBoxLayout()
+        details_row.addStretch()
         self.details_button = button('', '', self.open_analytics)
-        token_box.addWidget(self.details_button)
-        body.addWidget(token_card)
-        quota_card = QFrame()
-        quota_card.setObjectName('card')
-        quota_box = QVBoxLayout(quota_card)
-        quota_box.setContentsMargins(16, 14, 16, 14)
-        quota_box.setSpacing(12)
+        details_row.addWidget(self.details_button)
+        body.addLayout(details_row)
+        body.addWidget(divider())
         self.context = Meter('', VIOLET)
         self.five = Meter('', ICE)
         self.week = Meter('', VIOLET)
-        quota_box.addWidget(self.context)
-        quota_box.addWidget(self.five)
-        quota_box.addWidget(self.week)
-        body.addWidget(quota_card)
+        body.addWidget(self.context)
+        body.addWidget(self.five)
+        body.addWidget(self.week)
         # Pin content to the top so tall windows keep one compact visual
         # group instead of spreading sections apart.
         body.addStretch(1)
@@ -501,13 +569,19 @@ class Panel(QWidget):
         self.size_grip.setCursor(Qt.SizeFDiagCursor)
         bottom.addWidget(self.size_grip)
         layout.addLayout(bottom)
+        self.stage = CompanionStage(self)
+        self.stage.raise_()
+        self.position_stage()
+        self.stage_timer = QTimer(self)
+        self.stage_timer.timeout.connect(self.tick_stage)
+        self.stage_timer.setInterval(50)
         self.header.mousePressEvent = self.begin_drag
         self.header.mouseMoveEvent = self.drag
         self.header.mouseReleaseEvent = self.end_drag
-        for w in (self.spirit,):
-            w.mousePressEvent = self.begin_drag
-            w.mouseMoveEvent = self.drag
-            w.mouseReleaseEvent = self.end_drag
+        # The vector spirit no longer sits in the companion header (the live
+        # chibi owns that role now) but still draws the tray/window icon.
+        self.spirit = Spirit()
+        self.spirit.setVisible(False)
         for text, delta in [('Left',(-10,0)),('Right',(10,0)),('Up',(0,-10)),('Down',(0,10))]:
             QShortcut(QKeySequence('Alt+'+text), self, activated=lambda d=delta:self.move_clamped(self.pos()+QPoint(*d)))
         QShortcut(QKeySequence('Escape'), self, activated=self.hide_to_tray)
@@ -566,6 +640,43 @@ class Panel(QWidget):
         self.clock.timeout.connect(self.refresh_status)
         self.clock.start(1000)
 
+    def position_stage(self):
+        self.stage.setGeometry(8, 8, STAGE_WIDTH, max(10, self.height() - 16))
+
+    def tick_stage(self):
+        self.stage.sync_from_pet()
+        self.stage.update()
+
+    def showEvent(self, event):
+        # The panel IS the pet's companion interface: while it is open the
+        # desktop pet steps aside so exactly one character is ever visible.
+        super().showEvent(event)
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            self._pet_was_visible = pet.isVisible()
+            if self._pet_was_visible:
+                pet.hide()
+        self.position_stage()
+        self.stage.raise_()
+        if not self.stage_timer.isActive():
+            self.stage_timer.start()
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        if self.stage_timer.isActive():
+            self.stage_timer.stop()
+        if self.closing:
+            return
+        pet = getattr(self, 'pet', None)
+        if pet is not None and self._pet_was_visible and not pet.isVisible():
+            pet.show()
+        self._pet_was_visible = False
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, 'stage'):
+            self.position_stage()
+
     @property
     def language(self):
         return normalize_language(self.prefs.get('language'))
@@ -590,8 +701,6 @@ class Panel(QWidget):
         self.project.setText(t('waiting_codex'))
         self.title.setFullText(t('open_codex_task'))
         self.total_header.setText(t('total_tokens'))
-        self.input_header.setText(t('input'))
-        self.output_header.setText(t('output'))
         self.scope_button.setToolTip(t('switch_scope'))
         self.scope_button.setAccessibleName(t('switch_scope'))
         self.scope_button.setText(scope_text(self.snapshot.get('scope', self.prefs.get('scope')),
@@ -674,8 +783,11 @@ class Panel(QWidget):
             self.connection.setToolTip(status)
             self.title.setFullText(self.tr_text('waiting_available_task'))
             self.project.setText('CODEX')
-            for w in (self.total,self.input,self.output,self.model,self.effort,self.cost):
+            for w in (self.total,self.model,self.effort,self.cost):
                 w.setText('—')
+            self.io_line.setText('—')
+            self.status_dot.setVisible(False)
+            self.status_text.setVisible(False)
             self.context.update_value(None)
             return
         modes = {'follow':'mode_follow', 'fixed':'mode_fixed', 'recent':'mode_recent', 'working':'mode_working'}
@@ -689,13 +801,26 @@ class Panel(QWidget):
         self.effort.setToolTip(self.tr_text('effort_tip'))
         tokens = data.get('tokens', {})
         token_style = self.prefs.get('token_number_format')
-        for w,k in ((self.total,'total_tokens'),(self.input,'input_tokens'),(self.output,'output_tokens')):
-            n = tokens.get(k,0)
-            w.setText(format_token_value(n, token_style) if data.get('available') else '—')
-            w.setToolTip(format_tokens(n, 'full') if data.get('available') else self.tr_text('no_reliable_record'))
-        self.total.setToolTip(self.total.toolTip()+'\n'+help_text('total_tokens', self.language))
-        self.input.setToolTip(self.input.toolTip()+'\n'+self.tr_text('cached_input_line', value=format_tokens(tokens.get('cached_input_tokens'), token_style)))
-        self.output.setToolTip(self.output.toolTip()+'\n'+self.tr_text('output_includes_reasoning'))
+        total = tokens.get('total_tokens',0)
+        self.total.setText(format_token_value(total, token_style) if data.get('available') else '—')
+        self.total.setToolTip((format_tokens(total, 'full') if data.get('available') else self.tr_text('no_reliable_record'))+'\n'+help_text('total_tokens', self.language))
+        if data.get('available'):
+            cached = self.tr_text('cached_input_line', value=format_tokens(tokens.get('cached_input_tokens'), token_style))
+            self.io_line.setText(f"{self.tr_text('input')} {format_tokens(tokens.get('input_tokens'), token_style)} · {self.tr_text('output')} {format_tokens(tokens.get('output_tokens'), token_style)}")
+            self.io_line.setToolTip(cached+'\n'+self.tr_text('output_includes_reasoning'))
+        else:
+            self.io_line.setText('—')
+            self.io_line.setToolTip(self.tr_text('no_reliable_record'))
+        if bool(self.app_mode and self.app_mode.is_token):
+            self.status_dot.setVisible(True)
+            self.status_text.setVisible(True)
+            self.status_dot.setStyleSheet(f'color:{ICE};')
+            self.status_text.setText(self.tr_text('working'))
+        else:
+            self.status_dot.setVisible(True)
+            self.status_text.setVisible(True)
+            self.status_dot.setStyleSheet(f'color:{MUTED};')
+            self.status_text.setText(self.tr_text('idle'))
         self.scope_button.setText(scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')+' ▾')
         self.context.update_value(data.get('context'), 'used', self.tr_text('context_tip',
             used=data.get('context_tokens'), window=data.get('context_window')))
@@ -802,7 +927,14 @@ class Panel(QWidget):
 
     def toggle_pet(self):
         if hasattr(self,'pet'):
-            self.pet.hide() if self.pet.isVisible() else self.pet.show()
+            if self.pet.isVisible():
+                self.pet.hide()
+            else:
+                # One character at a time: revealing the pet while its
+                # companion interface is open first closes the panel.
+                if self.isVisible():
+                    self.hide()
+                self.pet.show()
 
     def is_pinned(self):
         """Whether the expanded panel stays open independent of hover."""
@@ -841,6 +973,7 @@ class Panel(QWidget):
     def apply_compact(self):
         self.body.setVisible(not self.compact)
         self.body_scroll.setVisible(not self.compact)
+        self.stage.setVisible(not self.compact)
         self.size_grip.setVisible(not self.compact)
         self.collapse_button.setText('+' if self.compact else '−')
         if self.compact:

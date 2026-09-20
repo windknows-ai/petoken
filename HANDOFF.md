@@ -24,15 +24,15 @@ Astra-6 is the primary reviewer, technical lead, acceptance reviewer, and roadma
 
 ## Current Approved Slice
 
-`V1.1 polish slice (user-authorized UI / usability corrections)`
+`V1.1 companion-redesign slice (user-authorized character-led correction)`
 
-Wider panel proportions, rendering crispness, cute companion redesign, user-facing always-on-top, and pinned/persistent panel — on top of the completed V1.1.0, without starting V1.2.0 and without discarding V1.1.0 functionality. OpenCode must not begin any further slice without explicit approval.
+Single-composition companion panel with a live chibi stage, landscape proportions, enlarged desktop pet, and card-free data presentation — on top of completed V1.1.0 + polish slice, without starting V1.2.0 and without discarding validated functionality. OpenCode must not begin any further slice without explicit approval.
 
 ## Implementation Status
 
 `COMPLETED — AWAITING REVIEW / PUBLICATION DECISION`
 
-The polish slice is implemented, verified (184 tests, isolated live smoke, 100%/200% screenshot matrix inspected), and committed locally as one checkpoint. V1.1.0 implementation remains complete. No push, GitHub Release, or binary publication has been authorized.
+The companion-redesign slice is implemented, verified (196 tests, isolated live smoke, 100%/200% screenshot matrix inspected), and committed locally as one checkpoint. V1.1.0 implementation and the polish slice remain complete. No push, GitHub Release, or binary publication has been authorized.
 
 ## Last Review Verdict
 
@@ -42,7 +42,7 @@ The prior OpenCode acceptance checks passed, but future roadmap/next-slice decis
 
 ## Required Corrections
 
-`None currently recorded — the user-reviewed UI/usability correction list became the authorized polish slice and is implemented (see Last Completed Step).`
+`None currently recorded — the character-led correction list became the authorized companion-redesign slice and is implemented (see Last Completed Step).`
 
 Any new correction list must come from Astra-6 review or explicit user direction.
 
@@ -54,8 +54,8 @@ Astra-6 will review the actual repository and determine the next planned slice. 
 
 ## Exact Next Action
 
-- OpenCode: STOP after the authorized polish slice is committed; do not start new work independently.
-- Codex / Astra-6: when available, review the actual completed repository state (V1.1.0 + polish slice) and recommend either publication or the next approved development slice.
+- OpenCode: STOP after the authorized companion-redesign slice is committed; do not start new work independently.
+- Codex / Astra-6: when available, review the actual completed repository state (V1.1.0 + polish + redesign slices) and recommend either publication or the next approved development slice.
 - User: explicitly authorizes any push, GitHub Release, binary publication, or next-version start.
 
 ## Last Completed Step
@@ -113,10 +113,11 @@ Astra-6 will review the actual repository and determine the next planned slice. 
 - Music checkpoint `2d3394f` committed locally (7 files: capability/tests/tool/docs work; message "feat: add music subtitle capability"). `AGENTS.md` excluded again, untouched.
 - Acceptance performed by OpenCode, uncommitted: full §26 matrix (see 99 notes), Reset to Defaults added (spec 01 §25 gap), 11 edge/combination tests, perf probe, privacy grep, DESIGN/README consistency touch-ups, PyInstaller build + frozen smoke, final screenshot set. Verdict NOT READY (artwork BLOCKED); APP_VERSION stays `1.0.0`.
 - V1.1 polish slice implemented and verified by OpenCode, committed locally as one checkpoint: panel bounds widened to 360×400–560×760 (default 420×600) with airier margins/spacing; theme lifted to a softer companion palette with rounder radii (surface 26, card 20, badge 12, button 10); surface gradient changed to a smooth vertical two-stop (less banding); pet painter gains TextAntialiasing and a theme-derived bubble fill; the ◇/◆ cost-row button now pins the panel open (`panel_pinned`, suppresses cursor-leave auto-hide, restores visible at startup, manual close still works); Always on Top is a persisted user setting (Settings checkbox + pet context-menu toggle, default on, one-time legacy `topmost` migration) applied to pet and panel via `apply_topmost`; new `always_on_top`/`panel_pin`/`panel_unpin` strings in zh_CN/en (`pin_toggle` retired). 14 new tests in `tests/test_panel_persist.py`; legitimate expectation updates in responsive/redesign/UI tests. 184 tests pass; isolated live smoke exits 0 at the new default size; 100%/200% screenshot matrix (`.private/polish-slice/`) inspected.
+- V1.1 companion-redesign slice implemented and verified by OpenCode, committed locally as one checkpoint: three mock candidates prototyped (`.private/companion-redesign-concepts/`, A character-left / B overlap / C bottom-anchor); B chosen. `CHARACTER_SCALE` 0.5→0.68 (pet 242×268); new `CompanionStage` paints the live pet state in the panel over a transparent 230 px gutter bleeding ~16 px past the surface edge (a radial glow backdrop was tried and removed after screenshots showed banding rings); landscape bounds 480×420–600×640, default 560×500; token/quota sections card-free with `io_line` + Working/Idle status line; `showEvent`/`hideEvent` coupling keeps exactly one character visible (was-visible tracking, timer start/stop); panel opens centered on the pet for flicker-free hover; compact hides stage+scroll. 12 new tests in `tests/test_companion.py`; legitimate updates across geometry/asset/UI/redesign/responsive/acceptance/persist tests. 196 tests pass; isolated live smoke exits 0 at 560×500; 100%/200% matrix (`.private/companion-qa/`) inspected. Known tradeoff: quota strips sit below the scroll fold at default size.
 
 ## Current Work / Partial Work
 
-No implementation slice is currently authorized. The V1.1 polish slice is complete locally and awaits Astra-6 review/planning and/or explicit user publication authorization.
+No implementation slice is currently authorized. The V1.1 companion-redesign slice is complete locally and awaits Astra-6 review/planning and/or explicit user publication authorization.
 
 OpenCode must not start V1.2.0 or any new feature slice until Astra-6/user approval.
 
@@ -129,10 +130,10 @@ OpenCode must not start V1.2.0 or any new feature slice until Astra-6/user appro
 
 ## Current Git State
 
-- Branch: `main`, HEAD is the local polish-slice checkpoint on top of the V1.1.0 completion commit; nothing was pushed.
-- The polish checkpoint includes: wider panel bounds, companion redesign, crispness improvements, always-on-top setting, pinned/persistent panel, 14 new tests, updated bound/checkbox expectations, and PROGRESS/HANDOFF updates. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
-- Verification: 184 tests pass, `py_compile` pass, `git diff --check` pass, isolated live smoke exit 0, 100%/200% screenshot matrix inspected.
-- External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` has a polish-slice entry outside this Git repository.
+- Branch: `main`, HEAD is the local companion-redesign checkpoint on top of the polish slice; nothing was pushed.
+- The redesign checkpoint includes: live chibi stage + landscape panel + show/hide coupling, enlarged pet, state-dot compact card, 12 new tests, legitimate geometry/bound/widget expectation updates, and PROGRESS/HANDOFF updates. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
+- Verification: 196 tests pass, `py_compile` pass, `git diff --check` pass, isolated live smoke exit 0, 100%/200% screenshot matrix inspected.
+- External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` has a redesign-slice entry outside this Git repository.
 
 ## Known Issues / Blockers
 

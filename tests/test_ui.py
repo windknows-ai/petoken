@@ -256,16 +256,15 @@ class UiTests(unittest.TestCase):
         for code in ('USD','CAD','EUR','CNY'):
             self.panel.prefs['currency']=code
             self.panel.render(data)
-            shown[code]=(self.panel.total.text(),self.panel.input.text(),
-                         self.panel.output.text(),self.panel.cost.text(),
-                         self.panel.cost_label.text())
-        totals={v[:3] for v in shown.values()}
+            shown[code]=(self.panel.total.text(),self.panel.io_line.text(),
+                         self.panel.cost.text(),self.panel.cost_label.text())
+        totals={v[:2] for v in shown.values()}
         self.assertEqual(len(totals),1)
-        self.assertTrue(shown['USD'][3].startswith('≈ $'))
-        self.assertTrue(shown['CAD'][3].startswith('≈ CA$'))
-        self.assertTrue(shown['EUR'][3].startswith('≈ \u20ac'))
-        self.assertTrue(shown['CNY'][3].startswith('≈ \u00a5'))
-        self.assertTrue(all(v[4].endswith(code) for code,v in
+        self.assertTrue(shown['USD'][2].startswith('≈ $'))
+        self.assertTrue(shown['CAD'][2].startswith('≈ CA$'))
+        self.assertTrue(shown['EUR'][2].startswith('≈ \u20ac'))
+        self.assertTrue(shown['CNY'][2].startswith('≈ \u00a5'))
+        self.assertTrue(all(v[3].endswith(code) for code,v in
                             zip(('USD','CAD','EUR','CNY'),shown.values())))
 
     def test_missing_rate_falls_back_to_usd_honestly(self):
@@ -300,10 +299,10 @@ class UiTests(unittest.TestCase):
                 self.assertIsNone(re.search(r'(?<!&)&(?!&)', value),
                     f'{language}.{key} contains a single & that Qt would swallow as a mnemonic')
 
-    def test_pet_uses_half_scale_window_and_full_res_sources(self):
+    def test_pet_uses_companion_scale_window_and_full_res_sources(self):
         import pet_geometry as geometry
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),geometry.window_size())
-        self.assertEqual(geometry.window_size(),(242,216))
+        self.assertEqual(geometry.window_size(),(242,268))
         for state in ('idle','typing','microphone','music'):
             source=self.panel.pet.sprites[state]
             self.assertFalse(source.isNull(),state)
@@ -319,7 +318,7 @@ class UiTests(unittest.TestCase):
             image=self.panel.pet.grab().toImage()
             self.assertFalse(image.isNull(),state)
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),before)
-        self.assertEqual(geometry.sprite_rect(),(67,64,107,145))
+        self.assertEqual(geometry.sprite_rect(),(48,64,145,197))
         self.panel.pet.preview_state=None
 
     def test_pet_drag_clamp_and_saved_position_recovery(self):
@@ -356,7 +355,7 @@ class UiTests(unittest.TestCase):
             self.assertEqual(self.panel.pet.typing_phase(),phase)
             self.assertFalse(self.panel.pet.grab().toImage().isNull())
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),window_before)
-        self.assertEqual(geometry.anchor(),(121,209))
+        self.assertEqual(geometry.anchor(),(121,261))
         self.panel.pet.preview_state=None
 
     def test_music_subtitle_pill_only_with_text_and_music_visible(self):
@@ -436,7 +435,7 @@ class UiTests(unittest.TestCase):
             grabs.add(image.cacheKey() if hasattr(image,'cacheKey') else image.sizeInBytes())
             self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),
                              geometry.window_size(),state)
-        self.assertEqual(geometry.anchor(),(121,209))
+        self.assertEqual(geometry.anchor(),(121,261))
         self.assertGreater(len(grabs),1)
         self.panel.pet.preview_state=None
         self.assertEqual(assets.resolve_path(assets.entry_for('idle')),'assets/v1_1/idle.png')

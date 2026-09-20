@@ -172,12 +172,12 @@ class PanelPersistTests(unittest.TestCase):
 
     # -- proportions ----------------------------------------------------------
 
-    def test_wider_proportions_stay_sane_and_clamped(self):
-        self.assertEqual(PANEL_MIN, (360, 400))
-        self.assertEqual(PANEL_MAX, (560, 760))
-        self.assertEqual(PANEL_DEFAULT, (420, 600))
-        self.assertGreater(PANEL_DEFAULT[0] / PANEL_DEFAULT[1], 0.6)
-        self.assertEqual(valid_panel_size([400, 600]), [400, 600])
+    def test_landscape_proportions_stay_sane_and_clamped(self):
+        self.assertEqual(PANEL_MIN, (480, 420))
+        self.assertEqual(PANEL_MAX, (600, 640))
+        self.assertEqual(PANEL_DEFAULT, (560, 500))
+        self.assertGreater(PANEL_DEFAULT[0], PANEL_DEFAULT[1])
+        self.assertEqual(valid_panel_size([500, 500]), [500, 500])
         self.assertEqual(valid_panel_size([10, 9999]), [PANEL_MIN[0], PANEL_MAX[1]])
 
     def test_default_and_minimum_sizes_show_without_clipping(self):

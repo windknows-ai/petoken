@@ -7,10 +7,12 @@ Separates three concerns that V1.0 tangled together:
 - physical rendering (logical size times the screen devicePixelRatio).
 
 V1.0 baseline: 242x378 window, 214x290 sprite box at y=82.
-V1.1 target: ``CHARACTER_SCALE`` (0.5) of the baseline apparent size, one
-shared sprite box and one feet/ground anchor for every state, bubble geometry
-unchanged. Future approved chibi assets only need to fill the same logical
-sprite box; no per-state offsets exist to re-tune.
+Companion redesign (V1.1 character-led slice): ``CHARACTER_SCALE`` (0.68) of
+the baseline apparent size, so the desktop pet holds its own next to the
+wider companion panel. One shared sprite box and one feet/ground anchor for
+every state, bubble geometry unchanged. Future approved chibi assets only
+need to fill the same logical sprite box; no per-state offsets exist to
+re-tune.
 """
 from __future__ import annotations
 
@@ -19,8 +21,8 @@ BASELINE_WINDOW = (242, 378)
 BASELINE_SPRITE = (214, 290)
 BASELINE_SPRITE_Y = 82
 
-# V1.1 presentation scale vs the V1.0 baseline apparent size.
-CHARACTER_SCALE = 0.5
+# Companion presentation scale vs the V1.0 baseline apparent size.
+CHARACTER_SCALE = 0.68
 
 WINDOW_WIDTH = BASELINE_WINDOW[0]
 # Compact Token card (V1.1 step 12): project + status on line one, live

@@ -251,10 +251,10 @@ class CombinationTests(unittest.TestCase):
 
     def test_resized_language_and_scope_switches(self):
         self.panel.show()
-        self.panel.resize(400, 600)
+        self.panel.resize(500, 500)
         self.render_combo('zh_CN', 'project', 'compact', 'CAD')
         self.render_combo('en', 'global', 'full', 'USD')
-        self.assertEqual((self.panel.width(), self.panel.height()), (400, 600))
+        self.assertEqual((self.panel.width(), self.panel.height()), (500, 500))
         self.assertFalse(self.panel.grab().toImage().isNull())
         self.assertIn('Global', self.panel.scope_button.text())
 

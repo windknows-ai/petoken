@@ -43,39 +43,40 @@ class ResponsiveTests(unittest.TestCase):
         return panel
 
     def test_valid_panel_size_clamps_and_rejects_garbage(self):
-        self.assertEqual(valid_panel_size([400, 600]), [400, 600])
+        self.assertEqual(valid_panel_size([500, 500]), [500, 500])
         self.assertEqual(valid_panel_size([10, 9999]), [PANEL_MIN[0], PANEL_MAX[1]])
         for bad in (None, 'big', [300], ['wide', 'tall'], {}, [None, None], 42):
             self.assertIsNone(valid_panel_size(bad), repr(bad))
 
     def test_supported_bounds_are_sane(self):
-        self.assertEqual(PANEL_MIN, (360, 400))
-        self.assertEqual(PANEL_MAX, (560, 760))
-        self.assertEqual(PANEL_DEFAULT, (420, 600))
+        self.assertEqual(PANEL_MIN, (480, 420))
+        self.assertEqual(PANEL_MAX, (600, 640))
+        self.assertEqual(PANEL_DEFAULT, (560, 500))
+        self.assertGreater(PANEL_DEFAULT[0], PANEL_DEFAULT[1])
 
     def test_saved_size_restores_and_survives_restart(self):
-        first = self.make_panel({'panel_size': [420, 700]})
-        self.assertEqual((first.width(), first.height()), (420, 700))
+        first = self.make_panel({'panel_size': [520, 560]})
+        self.assertEqual((first.width(), first.height()), (520, 560))
         first.persist()
         second = self.make_panel()
-        self.assertEqual((second.width(), second.height()), (420, 700))
+        self.assertEqual((second.width(), second.height()), (520, 560))
 
     def test_missing_or_invalid_saved_size_recovers_safely(self):
-        self.assertEqual((self.make_panel().width(), self.make_panel().height())[0], 420)
+        self.assertEqual((self.make_panel().width(), self.make_panel().height())[0], 560)
         self.assertEqual((self.make_panel({'panel_size': [1, 99999]}).width(),
-                          self.make_panel({'panel_size': [1, 99999]}).height()), (360, 760))
+                          self.make_panel({'panel_size': [1, 99999]}).height()), (480, 640))
         self.assertEqual((self.make_panel({'panel_size': ['wide', 'tall']}).width(),
-                          self.make_panel({'panel_size': ['wide', 'tall']}).height()), (420, 600))
+                          self.make_panel({'panel_size': ['wide', 'tall']}).height()), (560, 500))
 
     def test_compact_mode_preserves_saved_expanded_size(self):
-        panel = self.make_panel({'panel_size': [420, 700]})
+        panel = self.make_panel({'panel_size': [520, 560]})
         panel.show()
         panel.toggle_compact()
-        self.assertEqual(panel.prefs['panel_size'], [420, 700])
+        self.assertEqual(panel.prefs['panel_size'], [520, 560])
         self.assertLessEqual(panel.height(), 280)
         panel.toggle_compact()
-        self.assertEqual((panel.width(), panel.height()), (420, 700))
-        self.assertEqual(panel.prefs['panel_size'], [420, 700])
+        self.assertEqual((panel.width(), panel.height()), (520, 560))
+        self.assertEqual(panel.prefs['panel_size'], [520, 560])
 
     def test_minimum_width_renders_all_scopes_languages_formats_currencies(self):
         from analytics import aggregate, normalize_usage
