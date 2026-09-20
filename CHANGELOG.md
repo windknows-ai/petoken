@@ -23,7 +23,7 @@ First formal foundation release of `petoken` (previously Codex Wisp).
 
 ## V1.1.0 — 2026-09-20
 
-UI / interaction refinement, verified against `D:\Desktop\petoken\V1.1.0` (not yet published to GitHub; release at user authorization).
+UI / interaction refinement, verified against `D:\Desktop\petoken\V1.1.0`, user-accepted and published to GitHub as v1.1.0.
 
 ### Added
 - Daily / Token modes with debounced transitions and a bound Working Context (project, model, context, session Tokens).
@@ -32,12 +32,17 @@ UI / interaction refinement, verified against `D:\Desktop\petoken\V1.1.0` (not y
 - Compact two-line Token card; adjacent, resizable companion panel with size persistence; Reset to Defaults.
 - V1.1 chibi character set (idle, typing frames, Working, microphone, music, guitar) with shared anchor and DPI-aware rendering; reactive tap typing.
 - Music subtitle capability from platform SMTC metadata when provided.
+- Adjustable pet character size (50–150%, default 100%) with live Settings preview and anchor-preserving resize.
+- Always on Top and panel pinning; pet-relative floating panel that re-docks without moving the pet.
+- Intentional Compact layout (cost + token heroes, single control strip) with Compact ↔ Expanded size restoration.
+- Free four-edge/four-corner Expanded resizing (420–650 × 400–800) with persisted size.
+- Settings About-the-Data section (four numbered items, zh_CN/en).
 
 ### Changed
 - Larger aspect-preserving 256 x 256 logical-pixel chibi rendering, stable desktop anchor, DPR-aware sprite cache; centralized theme and no manual pricing controls.
 
 ### Fixed
 - Responsive tall-window spacing, malformed panel-size crash, render-tool Token pose ordering.
-### Local correction checkpoint (unpublished)
-- Fixed topmost/pinned lifecycle, scoped Working status, Conversation token headers, Full-number fitting, stale analytics clearing, and media-free smoke diagnostics.
-- The same desktop character remains visible when the panel opens beside it; only dragging saves its position. Final version acceptance still has separate documented gaps.
+- R1–R9 acceptance corrections: topmost/pinned lifecycle, scoped Working status, Conversation token headers, Full-number fitting, stale analytics clearing, and media-free smoke diagnostics.
+- Manual-acceptance corrections: Compact layout and Compact ↔ Expanded restore (plus auto-hide grace on toggle).
+- The same desktop character remains visible when the panel opens beside it; only dragging saves its position.

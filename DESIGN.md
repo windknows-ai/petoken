@@ -7,7 +7,7 @@ The approved idle character and its default bubble are the immutable visual base
 - Silver `#EEF2FF`, ice `#91E4F2`, violet `#B9A7F8`, midnight `#171B32`, muted ink `#A7AEC8`, rose `#F3A7CB`.
 - Native Qt controls, Segoe UI labels, Cascadia Mono numbers and Microsoft YaHei UI fallback.
 - Transparent 272 × 330 logical-pixel pet window; compact two-line status card above the character in Token Mode only (Daily Mode shows the pet alone). All states share one aspect-preserving 256 × 256 sprite box around one feet/ground anchor.
-- The adjacent satellite panel (default 420 × 500, resizable 360–600 × 420–640, compact height 250) retains the companion palette and typography and scrolls on shorter screens. The real desktop pet is the sole character and is never replaced by a panel sprite. The detailed analytics window owns dense tables.
+- The adjacent satellite panel (default 420 × 500, free four-edge/four-corner resize 420–650 × 400–800 with size persistence, compact fixed height 316 with size restoration) retains the companion palette and typography and scrolls on shorter screens. The real desktop pet is the sole character and is never replaced by a panel sprite. The detailed analytics window owns dense tables.
 - All windows scale with Windows DPI and clamp restored positions to a visible screen.
 
 ## Supported states

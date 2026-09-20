@@ -1,6 +1,6 @@
 # petoken v1.1.0
 
-Unpublished V1.1 implementation notes. The correction slice passed its targeted checks; final version acceptance remains separate.
+V1.1.0 UI / interaction refinement release (2026-09-20), user-accepted and published to GitHub.
 
 ## Highlights
 
@@ -11,10 +11,14 @@ Unpublished V1.1 implementation notes. The correction slice passed its targeted 
 - Bilingual UI: Simplified Chinese / English with live switching and a persistent preference.
 - Estimated Cost in USD / CAD / EUR / CNY from one internal price table (USD-canonical conversion via dated Bank of Canada rates); unknown prices stay honestly partial, and manual pricing controls are gone from normal Settings.
 - Compact two-line Token card (project · status + live Tokens) and an adjacent, resizable companion panel; the real desktop pet remains the fixed spatial anchor.
+- Adjustable character size (50–150%, default 100%) with live preview; resizing never moves the pet and re-docks the panel beside it.
+- Always on Top and panel pinning; intentional Compact layout with Compact ↔ Expanded size restoration.
+- Free four-edge/four-corner Expanded resizing (420–650 × 400–800) with persisted size; Compact stays fixed-height.
+- Settings About-the-Data section: four numbered zh_CN/en items covering cost, tokens, model, and status/privacy.
 - V1.1 chibi character set: idle, two reactive typing frames, distinct Codex Working pose, microphone, music, and guitar — all sharing one ground anchor and aspect-preserving 256 × 256 rendering, cached at the actual screen DPR.
 - Reactive typing: timestamp-only key pulses alternate tap phases with inactivity decay; no key content is ever read or stored.
 - Music subtitle capability: shows the platform-provided SMTC subtitle line when a media app supplies one, otherwise Music Mode works normally with no placeholder. Stated accurately: availability depends on the media app providing subtitle metadata.
-- Responsive panel (360–600 × 420–640, default 420 × 500 with size persistence), Reset to Defaults in Settings, and a centralized visual theme.
+- Responsive panel (420–650 × 400–800, default 420 × 500 with size persistence), Reset to Defaults in Settings, and a centralized visual theme.
 
 ## Privacy guarantees
 
@@ -22,5 +26,5 @@ Local-first numeric/metadata reading only. No transcript export, model calls, ke
 
 ## Verification
 
-- 210 unit/UI tests (accounting, scopes, Working Context, modes, localization, pricing/currency, geometry, assets, typing, responsive, acceptance edge cases).
+- 258 unit/UI tests (accounting, scopes, Working Context, modes, localization, pricing/currency, geometry, assets, typing, responsive, pet scale, compact lifecycle, resize, acceptance edge cases).
 - Live quota/token/FX verification, isolated zh_CN and English smokes, render QA at 100–200% DPI, frozen-executable smoke, and PyInstaller packaging verification.
