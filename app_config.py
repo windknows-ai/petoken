@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from localization import DEFAULT_LANGUAGE
+from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 
 APP_VERSION = "1.0.0"
 SETTINGS_SCHEMA_VERSION = 1
@@ -12,6 +13,7 @@ DEFAULT_PREFERENCES = {
     "settings_schema_version": SETTINGS_SCHEMA_VERSION,
     "language": DEFAULT_LANGUAGE,
     "scope": "conversation",
+    "token_number_format": DEFAULT_TOKEN_NUMBER_FORMAT,
 }
 
 
@@ -23,6 +25,8 @@ def normalize_preferences(data):
     schema = preferences.get("settings_schema_version")
     if isinstance(schema, bool) or not isinstance(schema, int) or schema < 1:
         preferences["settings_schema_version"] = SETTINGS_SCHEMA_VERSION
+    preferences["token_number_format"] = normalize_token_format(
+        preferences.get("token_number_format"))
     return preferences
 
 

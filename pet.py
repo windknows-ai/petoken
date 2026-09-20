@@ -5,13 +5,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt,QTimer,QPoint,QRectF
 from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QPen,QKeySequence,QShortcut,QCursor
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
-
-
-def compact_tokens(value):
-    if value is None:return 'N/A'
-    if value>=1_000_000:return f'{value/1_000_000:.2f}M'
-    if value>=10_000:return f'{value/1_000:.1f}K'
-    return f'{value:,}'
+from token_format import format_tokens
 
 
 class DesktopPet(QWidget):
@@ -98,8 +92,9 @@ class DesktopPet(QWidget):
             self.working_context=None
         context=self.working_context or data
         t=context.get('tokens',{})
+        style=self.panel.prefs.get('token_number_format')
         self.setToolTip(f"{context.get('project') or 'Project unavailable'} · {context.get('title') or 'Codex Working'}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"
-                       f"Total {t.get('total_tokens','N/A')} · Input {t.get('input_tokens','N/A')} · Output {t.get('output_tokens','N/A')}\n点击展开用量 · 拖动移动 · 右键菜单")
+                       f"Total {format_tokens(t.get('total_tokens'),style)} · Input {format_tokens(t.get('input_tokens'),style)} · Output {format_tokens(t.get('output_tokens'),style)}\n点击展开用量 · 拖动移动 · 右键菜单")
         self.update()
 
     def token_bubble_visible(self):
@@ -122,7 +117,7 @@ class DesktopPet(QWidget):
             p.setFont(QFont('Segoe UI',8))
             p.setPen(QColor('#B9A7F8'))
             project=context.get('project') or 'Project unavailable'
-            project_tokens=f"{project} · {compact_tokens(tokens.get('total_tokens'))} Tokens"
+            project_tokens=f"{project} · {format_tokens(tokens.get('total_tokens'),self.panel.prefs.get('token_number_format'))}"
             p.drawText(QRectF(13,30,216,16),p.fontMetrics().elidedText(project_tokens,Qt.ElideRight,216))
             p.setPen(QColor('#91E4F2'))
             context_used=context.get('context')

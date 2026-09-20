@@ -43,12 +43,18 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(load_preferences_from({"settings_schema_version": 3})["settings_schema_version"], 3)
 
     def test_language_preference_persists_through_atomic_save(self):
-        save_preferences(self.path, {"language": "en", "pinned": "thread-1"})
+        save_preferences(self.path, {"language": "en", "pinned": "thread-1",
+                                     "token_number_format": "full"})
 
         self.assertEqual(load_preferences(self.path)["language"], "en")
         self.assertEqual(load_preferences(self.path)["pinned"], "thread-1")
+        self.assertEqual(load_preferences(self.path)["token_number_format"], "full")
         self.assertFalse(self.path.with_suffix(".tmp").exists())
         self.assertEqual(text("settings_title", "en"), "petoken · Settings")
+
+    def test_invalid_token_number_format_falls_back_to_compact(self):
+        save_preferences(self.path, {"token_number_format": "future-format"})
+        self.assertEqual(load_preferences(self.path)["token_number_format"], "compact")
 
 
 def load_preferences_from(data):

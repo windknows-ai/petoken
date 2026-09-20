@@ -3,6 +3,7 @@ import json
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QLabel,QTabWidget,QTableWidget,
     QTableWidgetItem,QHeaderView,QAbstractItemView,QPlainTextEdit,QWidget,QPushButton,QApplication)
+from token_format import format_ratio, format_tokens
 
 HELP = {
  'total_tokens':'Official OpenAI total where available; otherwise input + output. Cached input is already inside input; reasoning is already inside output.',
@@ -21,10 +22,6 @@ HELP = {
  'claude_raw':'Comparison only, not the official total. Non-cache/non-write input + cache read + cache write + output. OpenAI and Claude expose caching differently; do not compare their headlines blindly. N/A when a component is unavailable.',
  'known_processed':'Supported subtotal: uncached input + cache read + output. Does not invent a cache-write split or add unknown writes.',
 }
-
-
-def number(value, percent=False):
-    return 'N/A' if value is None else f'{value:,.2f}%' if percent else f'{value:,}'
 
 
 def table(headers):
@@ -75,16 +72,16 @@ class AnalyticsWindow(QDialog):
         layout.addWidget(tabs)
         self.metrics=table(['分组 / Metric','精确值','类型 / 覆盖范围'])
         tabs.addTab(self.metrics,'完整用量')
-        self.models=table(['Model','Input','Cached','Uncached','Write','Output','Reasoning','Non-reasoning','Total'])
+        self.models=table(['Model','Input Tokens','Cached Tokens','Uncached Tokens','Write Tokens','Output Tokens','Reasoning Tokens','Non-reasoning Tokens','Total Tokens'])
         tabs.addTab(self.models,'按模型')
-        self.sessions=table(['Session','Input','Cached','Uncached','Write','Output','Reasoning','Total'])
+        self.sessions=table(['Conversation','Input Tokens','Cached Tokens','Uncached Tokens','Write Tokens','Output Tokens','Reasoning Tokens','Total Tokens'])
         tabs.addTab(self.sessions,'按会话')
         history=QWidget();h=QVBoxLayout(history)
         self.history_note=QLabel('本地索引历史 · 按系统本地时区；包括已归档会话。不是服务器账户的完整 lifetime。')
         self.history_note.setWordWrap(True);h.addWidget(self.history_note)
-        self.ranges=table(['范围','Total','Input','Cached','Output','Reasoning'])
+        self.ranges=table(['范围','Total Tokens','Input Tokens','Cached Tokens','Output Tokens','Reasoning Tokens'])
         self.ranges.setMaximumHeight(240);h.addWidget(self.ranges)
-        self.days=table(['日期 / 本地时区','Total','Input','Cached','Write','Output','Reasoning'])
+        self.days=table(['日期 / 本地时区','Total Tokens','Input Tokens','Cached Tokens','Write Tokens','Output Tokens','Reasoning Tokens'])
         h.addWidget(self.days)
         tabs.addTab(history,'日期与历史')
         self.raw=QPlainTextEdit();self.raw.setReadOnly(True)
@@ -98,8 +95,9 @@ class AnalyticsWindow(QDialog):
         a=d.get('analytics')
         if not a:return
         scope_name={'global':'全局（本地记录）','project':'项目','conversation':'会话'}.get(d.get('scope'),'会话')
+        token_style=self.parentWidget().prefs.get('token_number_format')
         self.heading.setText('TOKEN ANALYTICS · '+scope_name)
-        self.subtitle.setText(f"{d.get('title','')} · {d.get('project','')} · {a['events']} 个去重用量事件\n模型、会话、日期与历史均使用当前统计范围；全局仅代表本地可读取记录。")
+        self.subtitle.setText(f"{d.get('title','')} · {d.get('project','')} · {a['events']:,} Records\n模型、会话、日期与历史均使用当前统计范围；全局仅代表本地可读取记录。")
         rows=[]
         fields=[('Official OpenAI','total_tokens','Total Tokens'),('Official OpenAI','input_tokens','Input Tokens'),
             ('Official OpenAI','cached_input_tokens','Cached Input / Cache Read'),('Official OpenAI','uncached_input_tokens','Uncached Input'),
@@ -113,14 +111,15 @@ class AnalyticsWindow(QDialog):
             ('Comparison','known_processed','Supported processed subtotal')]
         for group,key,caption in fields:
             raw=key in a['tokens'];value=(a['tokens'] if raw else a['derived']).get(key)
-            cover=f"raw · {a['coverage'][key]}/{a['events']} events" if raw else 'derived'
+            cover=f"raw · {a['coverage'][key]}/{a['events']} Records" if raw else 'derived'
             if raw and value is None and a['coverage'][key]:
-                cover+=f" · 已知小计 {a['known'][key]:,}"
+                cover+=f" · 已知小计 {format_tokens(a['known'][key],token_style)}"
             if key=='total_tokens':cover='source total；缺失时仅以 input + output 回退'
-            rows.append((f'{group} · {caption}',(number(value,key.endswith('ratio')),HELP.get(key,'')),cover))
+            shown=format_ratio(value) if key.endswith('ratio') else format_tokens(value,token_style)
+            rows.append((f'{group} · {caption}',(shown,HELP.get(key,'')),cover))
         populate(self.metrics,rows)
         def values(r,keys):
-            return [number(r['tokens'].get(k,r['derived'].get(k))) for k in keys]
+            return [format_tokens(r['tokens'].get(k,r['derived'].get(k)),token_style) for k in keys]
         populate(self.models,[[r['name']]+values(r,['input_tokens','cached_input_tokens','uncached_input_tokens','cache_write_input_tokens','output_tokens','reasoning_output_tokens','non_reasoning_output_tokens','total_tokens']) for r in a['models']])
         names=d.get('session_names',{})
         populate(self.sessions,[[(names.get(r['name']) or r['name'],r['name'])]+values(r,['input_tokens','cached_input_tokens','uncached_input_tokens','cache_write_input_tokens','output_tokens','reasoning_output_tokens','total_tokens']) for r in a['sessions']])

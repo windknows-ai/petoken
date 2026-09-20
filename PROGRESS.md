@@ -1,9 +1,9 @@
 # Project Progress
 
-Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, coherent Working Context, and Global / Project / Conversation scope slices are complete and verified; work is stopped before Token number formatting and units.
+Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, Working Context, three-scope analytics, and Full / Compact Token formatting with units are complete and verified; work is stopped before the full localization pass.
 
 ## Current Objective
-Continue V1.1.0 from implementation-order step 6. Analytics now has one deduplicated Global / Project / Conversation scope system while the compact Token bubble remains bound to the independent active Working Context.
+Continue V1.1.0 from implementation-order step 7. All Token presentation now uses one persisted Full / Compact formatter without changing numeric accounting; the next step is applying the existing zh_CN / en foundation consistently across visible UI.
 
 ## Completed
 - Isolated repository cloned; personal website untouched. GitHub upload permission verified; current repo visibility private.
@@ -47,6 +47,11 @@ Continue V1.1.0 from implementation-order step 6. Analytics now has one deduplic
 - Project resolves the selected/default working conversation through the shared project resolver, then aggregates only rows with the same stable explicit project ID, Git-origin identity, or normalized cwd identity. Equal display names do not merge distinct projects.
 - Conversation uses one exact selected thread ID and never falls back to Project or Global. Missing selections and unavailable project identities return an explicit unavailable state without unrelated Tokens.
 - Scope history, model and session breakdowns now use the same selected scope. Nullable accounting, cache/reasoning subset rules, calendar-day ranges, and fork exclusion remain unchanged.
+- Approved three-scope checkpoint `f6da971855bfbf53f9b1e919c14029800819e649` was committed locally without pushing or changing `APP_VERSION`.
+- `token_format.py` is the single presentation formatter. Full uses the complete non-negative integer with thousands separators; Compact uses two decimals with K / M / B / T and promotes values that round across the next suffix boundary. `None`, negative, boolean, fractional and nonnumeric inputs display `N/A` rather than zero.
+- Persistent `token_number_format` accepts `full` or `compact`, defaults to Compact, and normalizes invalid legacy/future values back to Compact while preserving all other settings. The new Settings labels use the existing zh_CN / en catalog.
+- Main Global / Project / Conversation totals, Input/Output, derived New Work, Working Context tooltip/bubble, and all Token Analytics metric/model/conversation/history tables use the same formatter at render time. Internal values remain numeric.
+- Token Analytics now appends `Tokens` to token values, `%` to ratios, and `Records` to coverage/event counts; model, conversation and history table headers name their Token units explicitly. Cost/time displays retain their existing explicit CAD and duration labels.
 
 ## Files Modified
 Historical V1.0.0 scope: AGENTS.md, PROGRESS.md, DESIGN.md, docs/implementation-plan.md, usage.py, analytics.py, analytics_view.py, desktop.py, widget.py, pet.py, activity.py, assets/, tests/, tools/, requirements*.txt, .gitignore.
@@ -55,6 +60,7 @@ V1.1.0 foundation slice: app_config.py (new), localization.py (new), desktop.py,
 V1.1.0 Daily / Token slice: app_mode.py (new), activity.py, usage.py, widget.py, pet.py, tests/test_app_mode.py (new), tests/test_activity.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 V1.1.0 working-context slice: usage.py, widget.py, pet.py, tests/test_app_mode.py, tests/test_ui.py, tests/test_working_context.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 V1.1.0 scope slice: app_config.py, usage.py, widget.py, analytics_view.py, tests/test_scopes.py (new), tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
+V1.1.0 formatting/units slice: token_format.py (new), app_config.py, localization.py, widget.py, pet.py, analytics_view.py, tests/test_token_format.py (new), tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 
 ## Important Decisions
 - Source: local Codex `state_*.sqlite` + JSONL sessions; UIA document LegacyIAccessible Name follows actual active task. Initial URL is stale and must never select the task.
@@ -71,9 +77,10 @@ V1.1.0 scope slice: app_config.py, usage.py, widget.py, analytics_view.py, tests
 - The Token Mode pet bubble follows the selected global working session; analytics scope is an independent user selection and cannot change active-work detection.
 - Scope identity is structured rather than label-based: Global carries `scope_type` and a local-recorded flag; Project carries stable ID/name/source; Conversation carries thread ID/title and its parent project identity. Formatted labels are presentation only.
 - Existing settings remain compatible: missing scope defaults to Conversation, legacy `task` is interpreted as Conversation, and malformed values safely fall back to Conversation. The persisted `pinned` value remains the stable conversation selector.
+- Token formatting is presentation-only. Accounting, deduplication, scope identity and Working Context keep integers/`None`; views choose formatting from the persistent preference at the last possible step.
 
 ## Current State
-V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and has performed all V1.1.0 implementation work. Checkpoint `859b654` records the foundation and Daily / Token slices; checkpoint `f061ccf` records Working Context. The completed scope slice remains intentionally uncommitted. `99_Implementation_Notes.md` is maintained outside this Git repository.
+V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and has performed all V1.1.0 implementation work. Checkpoints `859b654`, `f061ccf`, and `f6da971` record foundations/modes, Working Context, and scopes. The completed formatting/units slice remains intentionally uncommitted. `99_Implementation_Notes.md` is maintained outside this Git repository.
 
 ## Known Issues
 - Media playback detection depends on Windows System Media Transport Controls, so players that do not integrate with Windows media controls cannot be detected reliably.
@@ -102,10 +109,11 @@ V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 
 - Working-context recovery verification: the uncommitted implementation was complete rather than partial. All 39 tests pass (30 prior + 9 targeted), all Python files pass `py_compile`, and an isolated live smoke detected two working sessions, selected the foreground thread, and reported its matching title, `Web Project`, 31,399,745 session Tokens, explicit project metadata source, live quota, and no keyboard-hook error. The bubble screenshot was inspected and kept the existing 242×378 pet / 240×70 bubble geometry.
 - Initial fixture runs exposed that Python's SQLite context manager does not close Windows file handles and that display names must not reuse case-normalizing path logic. Production read-only connections now close explicitly, and cwd fallback extracts its basename without altering case; all tests passed after both fixes.
 - Scope verification: 52 tests pass (39 checkpoint tests + 13 scope/settings/UI tests); all project/test Python files pass `py_compile`. Isolated Global smoke exits 0, reports `scope_type=global` with the local-recorded limitation, aggregates 1,698 unique events / 186,031,972 Tokens, keeps live quota/activity signals, and independently shows the active `Web Project` Working Context in the pet bubble. Panel, pet and expanded analytics screenshots were inspected.
+- Formatting/units verification: 63 tests pass (52 checkpoint + 11 targeted); all project/test Python files pass `py_compile`. Separate isolated Global smokes for Compact and Full both exit 0 with live quota/activity and an independent Working Context. Compact rendered `191.41M Tokens`; Full rendered `191,626,989 Tokens`. Main panel, pet bubble, and expanded Analytics screenshots for both modes were inspected without clipping in the current data.
 
 ## Remaining Work
-- Implement compact/full Token number formatting and consistent metric units.
+- Apply the existing localization foundation consistently across all visible UI.
 - Continue later V1.1.0 steps only when authorized. Do not start V1.2.0.
 
 ## Next Step
-Implement V1.1.0 order step 6 only: add the persisted Full / Compact Token number format and consistent units in Token Analysis. Do not begin the full localization pass, currency work, assets, Bongo-Cat, subtitles, or V1.2.0.
+Implement V1.1.0 order step 7 only: complete the consistent Simplified Chinese / English visible-language pass using the existing catalog and persistent preference. Do not begin currency work, assets, Bongo-Cat, subtitles, or V1.2.0.

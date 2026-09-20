@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — three-scope Token architecture complete)
+`V1.1.0` (UI and interaction refinement — Token formatting and Analytics units complete)
 
 ## Current Stage
 
-OpenCode performed the pre-implementation Step 1 architecture inspection only. Codex verified it and has performed all V1.1.0 implementation work. Local checkpoints `859b654` and `f061ccf` record the approved foundations/modes and Working Context respectively; neither was pushed. The completed three-scope slice remains uncommitted. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode performed the pre-implementation Step 1 architecture inspection only. Codex verified it and has performed all V1.1.0 implementation work. Local checkpoints `859b654`, `f061ccf`, and `f6da971` record foundations/modes, Working Context, and scopes; none was pushed. The completed formatting/units slice remains uncommitted. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -37,10 +37,14 @@ OpenCode performed the pre-implementation Step 1 architecture inspection only. C
 - Codex implemented structured Global / Project / Conversation identities and coherent scope results. Global reads all eligible local rollout rows, Project groups only a shared stable project identity, and Conversation selects exactly one thread. All use the existing nullable/fork-deduplicated accounting.
 - The minimal Settings and quick-menu selector now exposes all three scopes. Legacy `task` settings remain Conversation-compatible. Analytics scope changes do not alter the active Working Context or pet bubble.
 - Scope verification passed: 52 tests, `py_compile`, isolated Global smoke, and panel/pet/analytics screenshot inspection. The smoke aggregated 1,698 unique events / 186,031,972 locally recorded Tokens while the pet independently displayed the active `Web Project` context.
+- Three-scope checkpoint `f6da971855bfbf53f9b1e919c14029800819e649` was committed locally with a clean post-commit tree; it was not pushed and did not change the application version.
+- Codex added one `token_format.py` source for Full and Compact Token presentation. Compact uses two decimals with K/M/B/T boundary promotion; invalid/missing inputs stay unavailable. The persistent preference defaults and invalid values to Compact.
+- Main panel, all three scopes, Working Context bubble/tooltips, and Analytics metric/model/conversation/history tables now use that formatter. Analytics token values and headers show `Tokens`, ratios show `%`, and event coverage shows `Records`.
+- Formatting verification passed: 63 tests, `py_compile`, and separate Full/Compact Global smokes. Both panel, pet and analytics screenshots were inspected; Compact showed `191.41M Tokens`, Full showed `191,626,989 Tokens`.
 
 ## Current Work / Partial Work
 
-No implementation is currently in progress. Stop point is immediately before compact/full Token number formatting and units.
+No implementation is currently in progress. Stop point is immediately before the full zh_CN / en visible-language pass.
 
 ## Important Decisions
 
@@ -51,8 +55,8 @@ No implementation is currently in progress. Stop point is immediately before com
 
 ## Current Git State
 
-- Branch: `main`, checkpoint HEAD `f061ccf`, three commits ahead of `origin/main`; no local checkpoint was pushed.
-- The post-checkpoint scope slice is intentionally uncommitted. Modified tracked files: `PROGRESS.md`, `HANDOFF.md`, `app_config.py`, `usage.py`, `widget.py`, `analytics_view.py`, `tests/test_settings.py`, and `tests/test_ui.py`. New untracked file: `tests/test_scopes.py`.
+- Branch: `main`, checkpoint HEAD `f6da971`, four commits ahead of `origin/main`; no local checkpoint was pushed.
+- The post-checkpoint formatting slice is intentionally uncommitted. Modified tracked files: `PROGRESS.md`, `HANDOFF.md`, `analytics_view.py`, `app_config.py`, `localization.py`, `pet.py`, `tests/test_settings.py`, `tests/test_ui.py`, and `widget.py`. New untracked files: `token_format.py` and `tests/test_token_format.py`.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -66,8 +70,8 @@ No implementation is currently in progress. Stop point is immediately before com
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 6: persisted Full / Compact Token number formatting and consistent metric units.
-2. Do not combine that slice with the full localization pass, currency changes, character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
+1. Implement V1.1.0 order step 7: use the existing persistent zh_CN / en catalog for a consistent single-language visible UI.
+2. Do not combine that slice with currency changes, character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent

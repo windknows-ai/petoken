@@ -8,11 +8,17 @@ STRINGS = {
         "settings_title": "petoken · 设置",
         "save": "保存",
         "cancel": "取消",
+        "token_number_format": "Token 数字格式",
+        "token_format_full": "完整数字",
+        "token_format_compact": "紧凑格式",
     },
     "en": {
         "settings_title": "petoken · Settings",
         "save": "Save",
         "cancel": "Cancel",
+        "token_number_format": "Token number format",
+        "token_format_full": "Full",
+        "token_format_compact": "Compact",
     },
 }
 

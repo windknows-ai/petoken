@@ -53,7 +53,8 @@ class UiTests(unittest.TestCase):
         metrics=self.panel.analytics_window.metrics
         values={metrics.item(i,0).text():metrics.item(i,1).text() for i in range(metrics.rowCount())}
         self.assertEqual(values['Cache · Cache Write'],'N/A')
-        self.assertEqual(values['Official OpenAI · Total Tokens'],'120')
+        self.assertEqual(values['Official OpenAI · Total Tokens'],'120 Tokens')
+        self.assertTrue(values['Cache · Cache Hit Ratio'].endswith('%'))
         self.panel.toggle_compact();self.app.processEvents()
         self.assertFalse(self.panel.body_scroll.isVisible())
         self.assertLessEqual(self.panel.height(),280)
@@ -110,6 +111,26 @@ class UiTests(unittest.TestCase):
         settings=Settings(self.panel)
         self.assertEqual(settings.scope.currentData(),'conversation')
         settings.reject()
+
+    def test_all_scopes_use_the_same_full_token_format(self):
+        self.panel.prefs['token_number_format']='full'
+        tokens=normalize_usage(dict(input_tokens=31_000_000,cached_input_tokens=0,
+                                    output_tokens=399_745,reasoning_output_tokens=0,
+                                    total_tokens=31_399_745))
+        analytics=aggregate([dict(session='fixture',model='gpt-6-astra',timestamp='2026-09-16T12:00:00Z',
+            event_id='format',tokens=tokens)])
+        for scope in ('global','project','conversation'):
+            self.panel.render(dict(title='Scope',project='Project',model='gpt-6-astra',effort='high',
+                mode='follow',scope=scope,tokens=tokens,available=True,analytics=analytics,
+                usd=0,raw_total={},raw_last={}))
+            self.assertEqual(self.panel.total.text(),'31,399,745')
+
+    def test_working_context_pet_uses_selected_full_format(self):
+        self.panel.prefs['token_number_format']='full'
+        pet=self.panel.pet
+        pet.update_data(dict(working_context=dict(project='Project',title='Task',
+            tokens={'total_tokens':31_399_745,'input_tokens':31_000_000,'output_tokens':399_745})))
+        self.assertIn('31,399,745 Tokens',pet.toolTip())
 
 
 if __name__=='__main__':unittest.main()

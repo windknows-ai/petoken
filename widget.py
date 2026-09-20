@@ -21,6 +21,8 @@ from usage import CodexStore, PRICES, quota_window, sample_age
 from analytics_view import AnalyticsWindow, HELP
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
+from localization import text
+from token_format import format_token_value, format_tokens, normalize_token_format
 
 INK = '#EEF2FF'
 MUTED = '#A7AEC8'
@@ -77,16 +79,6 @@ def button(text, tip, slot):
     w.setAccessibleName(tip)
     w.clicked.connect(slot)
     return w
-
-
-def compact_number(n):
-    if n is None:
-        return 'N/A'
-    if n >= 1_000_000:
-        return f'{n/1_000_000:.2f}M'
-    if n >= 10_000:
-        return f'{n/1000:.1f}K'
-    return f'{n:,}'
 
 
 def read_preferences():
@@ -221,6 +213,13 @@ class Settings(QDialog):
         selected_index = self.scope.findData(selected_scope)
         self.scope.setCurrentIndex(selected_index if selected_index >= 0 else self.scope.findData('conversation'))
         form.addRow('Tokens 与费用范围', self.scope)
+        language = panel.prefs.get('language')
+        self.token_format = QComboBox()
+        self.token_format.addItem(text('token_format_full', language), 'full')
+        self.token_format.addItem(text('token_format_compact', language), 'compact')
+        self.token_format.setCurrentIndex(self.token_format.findData(
+            normalize_token_format(panel.prefs.get('token_number_format'))))
+        form.addRow(text('token_number_format', language), self.token_format)
         self.fx = QDoubleSpinBox()
         self.fx.setRange(.01, 9.9999)
         self.fx.setDecimals(4)
@@ -264,6 +263,7 @@ class Settings(QDialog):
         panel = self.parentWidget()
         prefs = dict(panel.prefs)
         prefs.update(pinned=self.task.currentData(), scope=self.scope.currentData(),
+                     token_number_format=self.token_format.currentData(),
                      manual_fx=self.fx.value() if self.manual.isChecked() else None)
         prices = dict(prefs.get('prices', {}))
         if self.custom.isChecked() and self.price_model:
@@ -535,12 +535,13 @@ class Panel(QWidget):
         self.effort.setText((data.get('effort') or '—')+(' · fast' if data.get('tier') in ('priority','fast') else ''))
         self.effort.setToolTip('Reasoning effort · 最近一次已发送的配置')
         tokens = data.get('tokens', {})
+        token_style = self.prefs.get('token_number_format')
         for w,k in ((self.total,'total_tokens'),(self.input,'input_tokens'),(self.output,'output_tokens')):
             n = tokens.get(k,0)
-            w.setText(compact_number(n) if data.get('available') else '—')
-            w.setToolTip(f'{n:,} tokens' if data.get('available') and n is not None else 'N/A · 没有可靠记录')
+            w.setText(format_token_value(n, token_style) if data.get('available') else '—')
+            w.setToolTip(format_tokens(n, 'full') if data.get('available') else 'N/A · 没有可靠记录')
         self.total.setToolTip(self.total.toolTip()+'\n'+HELP['total_tokens'])
-        self.input.setToolTip(self.input.toolTip()+f"\nCached input: {compact_number(tokens.get('cached_input_tokens'))}")
+        self.input.setToolTip(self.input.toolTip()+f"\nCached input: {format_tokens(tokens.get('cached_input_tokens'), token_style)}")
         self.output.setToolTip(self.output.toolTip()+'\n已包含 reasoning output，不重复相加。')
         self.scope_button.setText(SCOPE_LABELS.get(data.get('scope'),'会话')+' ▾')
         self.context.update_value(data.get('context'), 'used',
@@ -549,7 +550,7 @@ class Panel(QWidget):
         self.refresh_status()
         derived=(data.get('analytics') or {}).get('derived',{})
         hit=derived.get('cache_hit_ratio')
-        self.insights.setText(f"Cache hit {'N/A' if hit is None else f'{hit:.1f}%'}  ·  New work {compact_number(derived.get('new_work'))}")
+        self.insights.setText(f"Cache hit {'N/A' if hit is None else f'{hit:.1f}%'}  ·  New work {format_tokens(derived.get('new_work'), token_style)}")
         if self.analytics_window and self.analytics_window.isVisible():
             self.analytics_window.update_data(data)
 
