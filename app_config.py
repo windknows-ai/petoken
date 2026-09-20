@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from localization import DEFAULT_LANGUAGE
+from localization import DEFAULT_LANGUAGE, normalize_language
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 
 APP_VERSION = "1.0.0"
@@ -27,6 +27,7 @@ def normalize_preferences(data):
         preferences["settings_schema_version"] = SETTINGS_SCHEMA_VERSION
     preferences["token_number_format"] = normalize_token_format(
         preferences.get("token_number_format"))
+    preferences["language"] = normalize_language(preferences.get("language"))
     return preferences
 
 

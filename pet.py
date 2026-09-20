@@ -5,6 +5,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt,QTimer,QPoint,QRectF
 from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QPen,QKeySequence,QShortcut,QCursor
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
+from localization import text
 from token_format import format_tokens
 
 
@@ -12,11 +13,9 @@ class DesktopPet(QWidget):
     def __init__(self,panel):
         super().__init__()
         self.panel=panel
-        self.setWindowTitle('petoken · 丝柯克桌宠')
         self.setWindowFlags(Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFixedSize(242,378)
-        self.setAccessibleName('丝柯克桌宠。点击展开用量，拖动移动，右键打开菜单。')
         self.sprite=QPixmap(str(Path(__file__).parent/'assets/skirk-pet.png'))
         self.sprite=self.sprite.scaled(214,290,Qt.KeepAspectRatio,Qt.SmoothTransformation)
         self.sprites={'idle':self.sprite}
@@ -47,6 +46,19 @@ class DesktopPet(QWidget):
             QShortcut(QKeySequence('Alt+'+name),self,activated=lambda delta=d:self.move_clamped(self.pos()+QPoint(*delta)))
         QShortcut(QKeySequence('Return'),self,activated=self.toggle_panel)
         QShortcut(QKeySequence('Space'),self,activated=self.toggle_panel)
+        self.apply_language()
+
+    def tr_text(self,key,**values):
+        return text(key,self.panel.prefs.get('language'),**values)
+
+    def apply_language(self):
+        self.setWindowTitle(self.tr_text('pet_title'))
+        self.setAccessibleName(self.tr_text('pet_accessible'))
+        if self.snapshot:
+            self.update_data(self.snapshot)
+        else:
+            self.setToolTip(self.tr_text('pet_tooltip_actions'))
+        self.update()
 
     def tick(self):
         self.phase+=.075
@@ -93,8 +105,12 @@ class DesktopPet(QWidget):
         context=self.working_context or data
         t=context.get('tokens',{})
         style=self.panel.prefs.get('token_number_format')
-        self.setToolTip(f"{context.get('project') or 'Project unavailable'} · {context.get('title') or 'Codex Working'}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"
-                       f"Total {format_tokens(t.get('total_tokens'),style)} · Input {format_tokens(t.get('input_tokens'),style)} · Output {format_tokens(t.get('output_tokens'),style)}\n点击展开用量 · 拖动移动 · 右键菜单")
+        project=context.get('project') or self.tr_text('project_unavailable')
+        title=context.get('title') or self.tr_text('codex_working')
+        self.setToolTip(f"{project} · {title}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"+
+                       self.tr_text('pet_tooltip_tokens',total=format_tokens(t.get('total_tokens'),style),
+                           input=format_tokens(t.get('input_tokens'),style),output=format_tokens(t.get('output_tokens'),style))+
+                       '\n'+self.tr_text('pet_tooltip_actions'))
         self.update()
 
     def token_bubble_visible(self):
@@ -112,18 +128,19 @@ class DesktopPet(QWidget):
             p.drawRoundedRect(QRectF(1,1,240,70),16,16)
             p.setPen(QColor('#EEF2FF'))
             p.setFont(QFont('Microsoft YaHei UI',9,QFont.DemiBold))
-            title=context.get('title') or 'Codex Working'
+            title=context.get('title') or self.tr_text('codex_working')
             p.drawText(QRectF(13,8,216,22),Qt.AlignLeft|Qt.AlignVCenter,p.fontMetrics().elidedText(title,Qt.ElideRight,216))
             p.setFont(QFont('Segoe UI',8))
             p.setPen(QColor('#B9A7F8'))
-            project=context.get('project') or 'Project unavailable'
+            project=context.get('project') or self.tr_text('project_unavailable')
             project_tokens=f"{project} · {format_tokens(tokens.get('total_tokens'),self.panel.prefs.get('token_number_format'))}"
             p.drawText(QRectF(13,30,216,16),p.fontMetrics().elidedText(project_tokens,Qt.ElideRight,216))
             p.setPen(QColor('#91E4F2'))
             context_used=context.get('context')
             context_used='—' if context_used is None else f'{context_used:.0f}%'
-            quota=self.panel.five.value.text().replace(' left','')
-            p.drawText(QRectF(13,47,220,18),f'● Working · Ctx {context_used} · 5h {quota}')
+            quota=self.panel.five.value.text().replace(' '+self.tr_text('left'),'')
+            p.drawText(QRectF(13,47,220,18),
+                       f"● {self.tr_text('working')} · {self.tr_text('context_short')} {context_used} · 5h {quota}")
         offset=math.sin(self.phase)*3 if self.motion else 0
         p.save()
         if self.reaction:
@@ -168,13 +185,13 @@ class DesktopPet(QWidget):
     def contextMenuEvent(self,event):
         menu=QMenu(self)
         menu.setStyleSheet(self.panel.styleSheet())
-        menu.addAction('打开 / 收起用量面板',self.toggle_panel)
-        menu.addAction('Token Analytics',self.panel.open_analytics)
-        menu.addAction('设置与任务选择',self.panel.open_settings)
-        motion=menu.addAction('待机动作');motion.setCheckable(True);motion.setChecked(self.motion)
+        menu.addAction(self.tr_text('pet_toggle_panel'),self.toggle_panel)
+        menu.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
+        menu.addAction(self.tr_text('pet_settings'),self.panel.open_settings)
+        motion=menu.addAction(self.tr_text('idle_motion'));motion.setCheckable(True);motion.setChecked(self.motion)
         motion.triggered.connect(self.toggle_motion)
-        menu.addAction('隐藏桌宠（托盘可恢复）',self.hide)
-        menu.addSeparator();menu.addAction('退出',self.panel.shutdown)
+        menu.addAction(self.tr_text('hide_pet'),self.hide)
+        menu.addSeparator();menu.addAction(self.tr_text('exit'),self.panel.shutdown)
         menu.exec(event.globalPos())
 
     def toggle_motion(self,enabled):

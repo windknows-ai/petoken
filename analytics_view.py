@@ -1,144 +1,200 @@
 """Expanded analytics. Every primary value is exact or explicitly unavailable."""
 import json
+
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QLabel,QTabWidget,QTableWidget,
-    QTableWidgetItem,QHeaderView,QAbstractItemView,QPlainTextEdit,QWidget,QPushButton,QApplication)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QHeaderView,
+    QLabel, QPlainTextEdit, QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+
+from localization import scope_text, text
 from token_format import format_ratio, format_tokens
 
-HELP = {
- 'total_tokens':'Official OpenAI total where available; otherwise input + output. Cached input is already inside input; reasoning is already inside output.',
- 'input_tokens':'Source input_tokens. Includes cached input and any reported cache-write input.',
- 'cached_input_tokens':'Previously processed input reused from cache; a subset of input_tokens.',
- 'uncached_input_tokens':'max(input − cached, 0). Input not served from cache; includes cache writes if reported.',
- 'cache_write_input_tokens':'Source cache_write_input_tokens / cache_write_tokens only. Missing = N/A, not zero. A reported 0 is displayed as 0.',
- 'output_tokens':'Source output_tokens. Already includes reasoning output.',
- 'reasoning_output_tokens':'Reasoning tokens reported as part of output usage; not added again to total.',
- 'non_reasoning_output_tokens':'max(output − reasoning, 0).',
- 'new_work':'Uncached input + output. Newly processed input plus generated output.',
- 'cache_hit_ratio':'cached ÷ input × 100. N/A if input is zero or a required field is missing.',
- 'output_ratio':'output ÷ official total × 100. N/A if total is zero.',
- 'reasoning_ratio':'reasoning ÷ output × 100. N/A if output is zero or reasoning is missing.',
- 'comparison_uncached':'Comparison component: input − cache read − cache write. Writes are removed here so the four components do not overlap.',
- 'claude_raw':'Comparison only, not the official total. Non-cache/non-write input + cache read + cache write + output. OpenAI and Claude expose caching differently; do not compare their headlines blindly. N/A when a component is unavailable.',
- 'known_processed':'Supported subtotal: uncached input + cache read + output. Does not invent a cache-write split or add unknown writes.',
-}
+
+def help_text(metric, language):
+    return text(f'help_{metric}', language)
 
 
 def table(headers):
-    t=QTableWidget(0,len(headers))
-    t.setHorizontalHeaderLabels(headers)
-    t.setEditTriggers(QAbstractItemView.NoEditTriggers)
-    t.setSelectionBehavior(QAbstractItemView.SelectRows)
-    t.setAlternatingRowColors(True)
-    t.verticalHeader().hide()
-    t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-    t.horizontalHeader().setStretchLastSection(True)
-    t.setStyleSheet('QTableWidget {background:#1C2139;alternate-background-color:#242B45;gridline-color:#3A415F;border:0;} QHeaderView::section {background:#303752;color:#EEF2FF;padding:8px;border:0;} QTableWidget::item {padding:6px;}')
-    return t
+    widget = QTableWidget(0, len(headers))
+    widget.setHorizontalHeaderLabels(headers)
+    widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+    widget.setSelectionBehavior(QAbstractItemView.SelectRows)
+    widget.setAlternatingRowColors(True)
+    widget.verticalHeader().hide()
+    widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+    widget.horizontalHeader().setStretchLastSection(True)
+    widget.setStyleSheet('QTableWidget {background:#1C2139;alternate-background-color:#242B45;gridline-color:#3A415F;border:0;} QHeaderView::section {background:#303752;color:#EEF2FF;padding:8px;border:0;} QTableWidget::item {padding:6px;}')
+    return widget
 
 
-def populate(t, rows):
-    selected=t.currentRow()
-    scroll=t.verticalScrollBar().value()
-    t.setRowCount(len(rows))
-    for row,values in enumerate(rows):
-        for col,value in enumerate(values):
-            text,tip=value if isinstance(value,tuple) else (str(value),'')
-            item=t.item(row,col)
+def set_headers(widget, headers):
+    for column, header in enumerate(headers):
+        item = widget.horizontalHeaderItem(column)
+        if item is None:
+            item = QTableWidgetItem()
+            widget.setHorizontalHeaderItem(column, item)
+        item.setText(header)
+
+
+def populate(widget, rows):
+    selected = widget.currentRow()
+    scroll = widget.verticalScrollBar().value()
+    widget.setRowCount(len(rows))
+    for row, values in enumerate(rows):
+        for column, value in enumerate(values):
+            shown, tip = value if isinstance(value, tuple) else (str(value), '')
+            item = widget.item(row, column)
             if item is None:
-                item=QTableWidgetItem();t.setItem(row,col,item)
-            item.setText(text)
+                item = QTableWidgetItem()
+                widget.setItem(row, column, item)
+            item.setText(shown)
             item.setToolTip(tip)
-    if selected>=0 and selected<len(rows):t.selectRow(selected)
-    t.verticalScrollBar().setValue(scroll)
+    if 0 <= selected < len(rows):
+        widget.selectRow(selected)
+    widget.verticalScrollBar().setValue(scroll)
 
 
 class AnalyticsWindow(QDialog):
-    def __init__(self,panel):
+    def __init__(self, panel):
         super().__init__(panel)
-        self.setWindowTitle('petoken · Token Analytics')
-        self.setWindowFlag(Qt.Window,True)
-        screen=QApplication.primaryScreen().availableGeometry()
-        self.resize(min(1020,screen.width()-40),min(750,screen.height()-40))
-        layout=QVBoxLayout(self)
-        self.heading=QLabel('TOKEN ANALYTICS')
+        self.setWindowFlag(Qt.Window, True)
+        screen = QApplication.primaryScreen().availableGeometry()
+        self.resize(min(1020, screen.width()-40), min(750, screen.height()-40))
+        layout = QVBoxLayout(self)
+        self.heading = QLabel('TOKEN ANALYTICS')
         self.heading.setStyleSheet('font-size:21px;font-weight:600;color:#91E4F2;')
         layout.addWidget(self.heading)
-        self.subtitle=QLabel()
+        self.subtitle = QLabel()
         self.subtitle.setWordWrap(True)
         layout.addWidget(self.subtitle)
-        tabs=QTabWidget()
-        tabs.setStyleSheet('QTabWidget::pane {border:1px solid #4C5575;} QTabBar::tab {background:#242B45;padding:11px 14px;} QTabBar::tab:selected {background:#41486C;color:#91E4F2;}')
-        layout.addWidget(tabs)
-        self.metrics=table(['分组 / Metric','精确值','类型 / 覆盖范围'])
-        tabs.addTab(self.metrics,'完整用量')
-        self.models=table(['Model','Input Tokens','Cached Tokens','Uncached Tokens','Write Tokens','Output Tokens','Reasoning Tokens','Non-reasoning Tokens','Total Tokens'])
-        tabs.addTab(self.models,'按模型')
-        self.sessions=table(['Conversation','Input Tokens','Cached Tokens','Uncached Tokens','Write Tokens','Output Tokens','Reasoning Tokens','Total Tokens'])
-        tabs.addTab(self.sessions,'按会话')
-        history=QWidget();h=QVBoxLayout(history)
-        self.history_note=QLabel('本地索引历史 · 按系统本地时区；包括已归档会话。不是服务器账户的完整 lifetime。')
-        self.history_note.setWordWrap(True);h.addWidget(self.history_note)
-        self.ranges=table(['范围','Total Tokens','Input Tokens','Cached Tokens','Output Tokens','Reasoning Tokens'])
-        self.ranges.setMaximumHeight(240);h.addWidget(self.ranges)
-        self.days=table(['日期 / 本地时区','Total Tokens','Input Tokens','Cached Tokens','Write Tokens','Output Tokens','Reasoning Tokens'])
-        h.addWidget(self.days)
-        tabs.addTab(history,'日期与历史')
-        self.raw=QPlainTextEdit();self.raw.setReadOnly(True)
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet('QTabWidget::pane {border:1px solid #4C5575;} QTabBar::tab {background:#242B45;padding:11px 14px;} QTabBar::tab:selected {background:#41486C;color:#91E4F2;}')
+        layout.addWidget(self.tabs)
+        self.metrics = table(['', '', ''])
+        self.tabs.addTab(self.metrics, '')
+        self.models = table(['']*9)
+        self.tabs.addTab(self.models, '')
+        self.sessions = table(['']*8)
+        self.tabs.addTab(self.sessions, '')
+        history = QWidget()
+        history_layout = QVBoxLayout(history)
+        self.history_note = QLabel()
+        self.history_note.setWordWrap(True)
+        history_layout.addWidget(self.history_note)
+        self.ranges = table(['']*6)
+        self.ranges.setMaximumHeight(240)
+        history_layout.addWidget(self.ranges)
+        self.days = table(['']*7)
+        history_layout.addWidget(self.days)
+        self.tabs.addTab(history, '')
+        self.raw = QPlainTextEdit()
+        self.raw.setReadOnly(True)
         self.raw.setStyleSheet('background:#1C2139;color:#DDE6FC;font-family:Consolas;font-size:12px;')
-        tabs.addTab(self.raw,'原始字段 / 来源')
-        self.note=QLabel('N/A = 缺少可靠数据。鼠标悬停查看公式与精确来源；部分已知小计会单独标注。')
-        self.note.setWordWrap(True);layout.addWidget(self.note)
-        self.timer_key=None
+        self.tabs.addTab(self.raw, '')
+        self.note = QLabel()
+        self.note.setWordWrap(True)
+        layout.addWidget(self.note)
+        self.snapshot = {}
+        self.apply_language()
 
-    def update_data(self,d):
-        a=d.get('analytics')
-        if not a:return
-        scope_name={'global':'全局（本地记录）','project':'项目','conversation':'会话'}.get(d.get('scope'),'会话')
-        token_style=self.parentWidget().prefs.get('token_number_format')
-        self.heading.setText('TOKEN ANALYTICS · '+scope_name)
-        self.subtitle.setText(f"{d.get('title','')} · {d.get('project','')} · {a['events']:,} Records\n模型、会话、日期与历史均使用当前统计范围；全局仅代表本地可读取记录。")
-        rows=[]
-        fields=[('Official OpenAI','total_tokens','Total Tokens'),('Official OpenAI','input_tokens','Input Tokens'),
-            ('Official OpenAI','cached_input_tokens','Cached Input / Cache Read'),('Official OpenAI','uncached_input_tokens','Uncached Input'),
-            ('Official OpenAI','output_tokens','Output Tokens'),('Official OpenAI','reasoning_output_tokens','Reasoning Tokens'),
-            ('Official OpenAI','non_reasoning_output_tokens','Non-reasoning Output'),('Cache','cache_write_input_tokens','Cache Write'),
-            ('Cache','cache_hit_ratio','Cache Hit Ratio'),('Derived','new_work','New / Non-cached Work'),
-            ('Derived','output_ratio','Output Ratio'),('Derived','reasoning_ratio','Reasoning Share of Output'),
-            ('Comparison','comparison_uncached','Input excluding cache read AND write'),
-            ('Comparison','cached_input_tokens','Cache Read component'),('Comparison','cache_write_input_tokens','Cache Write component'),
-            ('Comparison','output_tokens','Output component'),('Comparison','claude_raw','Claude-style Raw Processed'),
-            ('Comparison','known_processed','Supported processed subtotal')]
-        for group,key,caption in fields:
-            raw=key in a['tokens'];value=(a['tokens'] if raw else a['derived']).get(key)
-            cover=f"raw · {a['coverage'][key]}/{a['events']} Records" if raw else 'derived'
-            if raw and value is None and a['coverage'][key]:
-                cover+=f" · 已知小计 {format_tokens(a['known'][key],token_style)}"
-            if key=='total_tokens':cover='source total；缺失时仅以 input + output 回退'
-            shown=format_ratio(value) if key.endswith('ratio') else format_tokens(value,token_style)
-            rows.append((f'{group} · {caption}',(shown,HELP.get(key,'')),cover))
-        populate(self.metrics,rows)
-        def values(r,keys):
-            return [format_tokens(r['tokens'].get(k,r['derived'].get(k)),token_style) for k in keys]
-        populate(self.models,[[r['name']]+values(r,['input_tokens','cached_input_tokens','uncached_input_tokens','cache_write_input_tokens','output_tokens','reasoning_output_tokens','non_reasoning_output_tokens','total_tokens']) for r in a['models']])
-        names=d.get('session_names',{})
-        populate(self.sessions,[[(names.get(r['name']) or r['name'],r['name'])]+values(r,['input_tokens','cached_input_tokens','uncached_input_tokens','cache_write_input_tokens','output_tokens','reasoning_output_tokens','total_tokens']) for r in a['sessions']])
-        h=d.get('history')
-        if h:
-            ranges=[('Current session',d['current_session']),('Local recorded lifetime',h),
-                    ('Today',h['ranges']['today']),('Last 7 calendar days',h['ranges']['last7']),
-                    ('Last 30 calendar days',h['ranges']['last30']),('Undated / unallocated',h['undated'])]
-            populate(self.ranges,[[name]+values(r,['total_tokens','input_tokens','cached_input_tokens','output_tokens','reasoning_output_tokens']) for name,r in ranges])
-            populate(self.days,[[r['name']]+values(r,['total_tokens','input_tokens','cached_input_tokens','cache_write_input_tokens','output_tokens','reasoning_output_tokens']) for r in h['daily']])
-            self.history_note.setText('本地索引历史 · 本地时区 / 日历天 · 不包括已删除、云端独有或未同步的记录。'+(' 存在缺失或已排除的继承历史，请视为部分记录。' if h.get('partial') else ''))
+    @property
+    def language(self):
+        return self.parentWidget().prefs.get('language')
+
+    def tr_text(self, key, **values):
+        return text(key, self.language, **values)
+
+    def apply_language(self):
+        t = self.tr_text
+        self.setWindowTitle(t('analytics_title'))
+        for index, key in enumerate(('tab_full', 'tab_models', 'tab_conversations', 'tab_history', 'tab_raw')):
+            self.tabs.setTabText(index, t(key))
+        token_headers = [t('header_input_tokens'), t('header_cached_tokens'), t('header_uncached_tokens'),
+                         t('header_write_tokens'), t('header_output_tokens'), t('header_reasoning_tokens'),
+                         t('header_nonreasoning_tokens'), t('header_total_tokens')]
+        set_headers(self.metrics, [t('header_group_metric'), t('header_exact'), t('header_type_coverage')])
+        set_headers(self.models, [t('header_model')] + token_headers)
+        set_headers(self.sessions, [t('header_conversation')] + token_headers[:-1])
+        set_headers(self.ranges, [t('header_range'), t('header_total_tokens'), t('header_input_tokens'),
+                                  t('header_cached_tokens'), t('header_output_tokens'), t('header_reasoning_tokens')])
+        set_headers(self.days, [t('header_date_local'), t('header_total_tokens'), t('header_input_tokens'),
+                                t('header_cached_tokens'), t('header_write_tokens'), t('header_output_tokens'),
+                                t('header_reasoning_tokens')])
+        self.history_note.setText(t('history_initial'))
+        self.note.setText(t('analytics_na_note'))
+        if self.snapshot:
+            self.update_data(self.snapshot)
+
+    def update_data(self, data):
+        analysis = data.get('analytics')
+        if not analysis:
+            return
+        self.snapshot = data
+        t = self.tr_text
+        token_style = self.parentWidget().prefs.get('token_number_format')
+        scope_name = scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')
+        title = t(data.get('title')) if data.get('title') in ('display_local_history', 'display_untitled') else data.get('title', '')
+        project = t(data.get('project')) if data.get('project') in ('display_all_usage', 'project_unavailable') else data.get('project', '')
+        self.heading.setText(t('analytics_heading', scope=scope_name))
+        self.subtitle.setText(t('analytics_subtitle', title=title, project=project, events=analysis['events']))
+        fields = [
+            ('group_official', 'total_tokens', 'metric_total'), ('group_official', 'input_tokens', 'metric_input'),
+            ('group_official', 'cached_input_tokens', 'metric_cached'), ('group_official', 'uncached_input_tokens', 'metric_uncached'),
+            ('group_official', 'output_tokens', 'metric_output'), ('group_official', 'reasoning_output_tokens', 'metric_reasoning'),
+            ('group_official', 'non_reasoning_output_tokens', 'metric_nonreasoning'), ('group_cache', 'cache_write_input_tokens', 'metric_cache_write'),
+            ('group_cache', 'cache_hit_ratio', 'metric_cache_hit'), ('group_derived', 'new_work', 'metric_new_work'),
+            ('group_derived', 'output_ratio', 'metric_output_ratio'), ('group_derived', 'reasoning_ratio', 'metric_reasoning_ratio'),
+            ('group_comparison', 'comparison_uncached', 'metric_comparison_uncached'),
+            ('group_comparison', 'cached_input_tokens', 'metric_cache_read_component'),
+            ('group_comparison', 'cache_write_input_tokens', 'metric_cache_write_component'),
+            ('group_comparison', 'output_tokens', 'metric_output_component'),
+            ('group_comparison', 'claude_raw', 'metric_claude_raw'),
+            ('group_comparison', 'known_processed', 'metric_known_processed')]
+        rows = []
+        for group_key, key, caption_key in fields:
+            raw = key in analysis['tokens']
+            value = (analysis['tokens'] if raw else analysis['derived']).get(key)
+            coverage = f"{t('raw')} · {analysis['coverage'][key]}/{analysis['events']} {t('records')}" if raw else t('derived')
+            if raw and value is None and analysis['coverage'][key]:
+                coverage += ' · ' + t('known_subtotal', value=format_tokens(analysis['known'][key], token_style))
+            if key == 'total_tokens':
+                coverage = t('total_source_coverage')
+            shown = format_ratio(value) if key.endswith('ratio') else format_tokens(value, token_style)
+            rows.append((f"{t(group_key)} · {t(caption_key)}", (shown, help_text(key, self.language)), coverage))
+        populate(self.metrics, rows)
+
+        def values(row, keys):
+            return [format_tokens(row['tokens'].get(key, row['derived'].get(key)), token_style) for key in keys]
+
+        models = []
+        for row in analysis['models']:
+            name = t('unknown_model') if row['name'] == 'unknown_model' else row['name']
+            models.append([name] + values(row, ['input_tokens', 'cached_input_tokens', 'uncached_input_tokens',
+                'cache_write_input_tokens', 'output_tokens', 'reasoning_output_tokens', 'non_reasoning_output_tokens', 'total_tokens']))
+        populate(self.models, models)
+        names = data.get('session_names', {})
+        populate(self.sessions, [[(names.get(row['name']) or row['name'], row['name'])] + values(row,
+            ['input_tokens', 'cached_input_tokens', 'uncached_input_tokens', 'cache_write_input_tokens',
+             'output_tokens', 'reasoning_output_tokens', 'total_tokens']) for row in analysis['sessions']])
+        history_data = data.get('history')
+        if history_data:
+            ranges = [(t('range_current'), data['current_session']), (t('range_lifetime'), history_data),
+                (t('range_today'), history_data['ranges']['today']), (t('range_last7'), history_data['ranges']['last7']),
+                (t('range_last30'), history_data['ranges']['last30']), (t('range_undated'), history_data['undated'])]
+            populate(self.ranges, [[name] + values(row, ['total_tokens', 'input_tokens', 'cached_input_tokens',
+                'output_tokens', 'reasoning_output_tokens']) for name, row in ranges])
+            populate(self.days, [[row['name']] + values(row, ['total_tokens', 'input_tokens', 'cached_input_tokens',
+                'cache_write_input_tokens', 'output_tokens', 'reasoning_output_tokens']) for row in history_data['daily']])
+            self.history_note.setText(t('history_loaded') + (t('history_partial') if history_data.get('partial') else ''))
         else:
-            self.history_note.setText('正在增量读取本地历史…')
-        raw=json.dumps(dict(source='Codex JSONL event_msg/token_count/info (current session latest record)',
-            total_token_usage=d.get('raw_total'),last_token_usage=d.get('raw_last'),
-            model_context_window=d.get('context_window'),timestamp=d.get('sample'),
-            model_metadata=d.get('model'),reasoning_effort=d.get('effort'),service_tier=d.get('tier'),
-            field_notes='Unknown extra source fields are preserved here but not interpreted or added to totals.',
-            notes=d.get('notes',[])),ensure_ascii=False,indent=2)
-        if self.raw.toPlainText()!=raw:
-            pos=self.raw.verticalScrollBar().value();self.raw.setPlainText(raw);self.raw.verticalScrollBar().setValue(pos)
-        self.note.setText('N/A = 缺少可靠数据。'+(' | '.join(d.get('notes',[])) or '缓存输入与 reasoning 均为子项，不会再次计入 Total。'))
+            self.history_note.setText(t('history_loading'))
+        localized_notes = [t(note) for note in data.get('notes', [])]
+        raw = json.dumps(dict(source='Codex JSONL event_msg/token_count/info (current session latest record)',
+            total_token_usage=data.get('raw_total'), last_token_usage=data.get('raw_last'),
+            model_context_window=data.get('context_window'), timestamp=data.get('sample'),
+            model_metadata=data.get('model'), reasoning_effort=data.get('effort'), service_tier=data.get('tier'),
+            field_notes=t('raw_field_notes'), notes=localized_notes), ensure_ascii=False, indent=2)
+        if self.raw.toPlainText() != raw:
+            position = self.raw.verticalScrollBar().value()
+            self.raw.setPlainText(raw)
+            self.raw.verticalScrollBar().setValue(position)
+        self.note.setText('N/A · ' + (' | '.join(localized_notes) or t('analytics_default_note')))

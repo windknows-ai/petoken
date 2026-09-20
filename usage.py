@@ -210,15 +210,15 @@ class SessionUsage:
         if not isinstance(raw_total,dict) or reset:
             if not isinstance(raw_last,dict):
                 self.partial = True
-                self.notes.add('Counter reset without a last-request record; increment unavailable.')
+                self.notes.add('note_reset_missing_last')
                 self.previous = current
                 return
             delta = last
             if reset:
-                self.notes.add('Cumulative counter reset: counted explicit last-request usage, not the reset snapshot.')
+                self.notes.add('note_reset_used_last')
                 if current['total_tokens'] != last['total_tokens']:
                     self.partial = True
-                    self.notes.add('Reset snapshot contains untraceable carry; not added to avoid duplication.')
+                    self.notes.add('note_reset_carry')
         else:
             delta = {k: (max(0,v-(self.previous.get(k) or 0)) if v is not None
                 and (not self.previous or self.previous.get(k) is not None) else last.get(k)) for k,v in current.items()}
@@ -229,7 +229,7 @@ class SessionUsage:
             carry = {k:max(0,current[k]-last[k]) if current[k] is not None and last[k] is not None else None for k in TOKEN_KEYS}
             self.add_record(carry, None, None, identity+'-carry')
             delta = last
-            self.notes.add('First snapshot contains earlier usage without timestamps/model; retained as unattributed carry.')
+            self.notes.add('note_initial_carry')
         self.add_record(delta, self.model, e.get('timestamp'), identity)
         self.previous = current
 
@@ -246,11 +246,11 @@ class SessionUsage:
         record['usd']=cost
         if cost is None:
             if delta.get('total_tokens'):
-                self.unpriced.add(model or 'unknown / missing token breakdown')
+                self.unpriced.add(model or 'unknown_breakdown')
         else:
             self.usd += cost
         if delta.get('cache_write_input_tokens') is None:
-            self.notes.add('Cache-write split unavailable; cost excludes any unknown write premium.')
+            self.notes.add('note_cache_write_unavailable')
 
     def refresh(self):
         try:
@@ -434,7 +434,7 @@ class CodexStore:
             pass
         databases = list(self.home.glob('state_*.sqlite'))
         if not databases:
-            return dict(status='未找到 Codex 本地数据，请先在客户端打开一个任务。', rows=[],
+            return dict(status='status_no_local_data', rows=[],
                         codex_activity=dict(active=False,valid=False,reason='no_database'))
         db = max(databases, key=lambda p: int(p.stem.split('_')[-1]))
         try:
@@ -444,7 +444,7 @@ class CodexStore:
                 fields = [x for x in ('id','name','title','cwd','rollout_path','model','reasoning_effort','source','project_id','git_origin_url','updated_at','archived') if x in columns]
                 rows = [dict(r) for r in c.execute(f"select {','.join(fields)} from threads order by updated_at desc")]
         except sqlite3.Error:
-            return dict(status='Codex 数据库暂时不可读，下一秒重试。', rows=[],
+            return dict(status='status_database_unavailable', rows=[],
                         codex_activity=dict(active=False,valid=False,reason='database_unavailable'))
         desktop = [r for r in rows if r.get('source') in ('vscode','desktop') and not r.get('archived')]
         eligible = [r for r in rows if r.get('rollout_path')]
@@ -479,7 +479,7 @@ class CodexStore:
             identity = dict(scope_type=scope, unavailable=True)
             if scope == 'conversation':
                 identity['thread_id'] = pinned or None
-            return dict(status='固定的任务已不可用，请重新选择。' if pinned else '还没有本地桌面任务。',
+            return dict(status='status_pinned_unavailable' if pinned else 'status_no_desktop_task',
                         rows=desktop, scope=scope, scope_identity=identity,
                         codex_activity=codex_activity, working_context=working_context)
 
@@ -493,7 +493,7 @@ class CodexStore:
                 project_name=chosen_project, project_source=chosen_project_source)
             if chosen_project_id is None:
                 scope_identity['unavailable'] = True
-                return dict(status='当前会话没有可靠的项目身份。', rows=desktop, scope=scope,
+                return dict(status='status_project_unavailable', rows=desktop, scope=scope,
                             scope_identity=scope_identity, codex_activity=codex_activity,
                             working_context=working_context)
             relevant = [r for r in eligible if project_identity(r, state)[2] == chosen_project_id]
@@ -522,7 +522,7 @@ class CodexStore:
             self.analytics_cache = dict(signature=signature,summary=aggregate(records))
         analysis = self.analytics_cache['summary']
         tokens = analysis['tokens']
-        unknown = sorted({r.get('model') or 'unknown / missing token breakdown' for r in records if r.get('usd') is None and r['tokens'].get('total_tokens')})
+        unknown = sorted({r.get('model') or 'unknown_breakdown' for r in records if r.get('usd') is None and r['tokens'].get('total_tokens')})
         last_tokens = current.last.get('total_tokens') if current else None
         context = (min(100, max(0, 100*last_tokens/current.window))
                    if current and last_tokens is not None and current.window else None)
@@ -534,14 +534,14 @@ class CodexStore:
         scope_result = dict(identity=scope_identity, tokens=tokens, analytics=analysis,
                             available=available, count=len(sessions), partial=partial)
         if scope == 'global':
-            display_project, display_title = 'All Codex Usage', 'Locally recorded history'
+            display_project, display_title = 'display_all_usage', 'display_local_history'
         elif scope == 'project':
-            display_project = display_title = chosen_project or 'Project unavailable'
+            display_project = display_title = chosen_project or 'project_unavailable'
         else:
-            display_project = chosen_project or 'Project unavailable'
-            display_title = conversation_title(chosen) or 'Untitled conversation'
+            display_project = chosen_project or 'project_unavailable'
+            display_title = conversation_title(chosen) or 'display_untitled'
         current_summary = summarize(unique_records([current])) if current else summarize([])
-        return dict(rows=desktop, status='' if relevant else '还没有本地用量记录。', mode=mode,
+        return dict(rows=desktop, status='' if relevant else 'status_no_usage', mode=mode,
                     thread=chosen.get('id') if chosen else None, title=display_title,
                     project=display_project, scope=scope, scope_identity=scope_identity,
                     scope_result=scope_result, tokens=tokens, available=available,

@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — Token formatting and Analytics units complete)
+`V1.1.0` (UI and interaction refinement — Token formatting, Analytics units, and zh_CN / en visible localization complete; not pushed)
 
 ## Current Stage
 
-OpenCode performed the pre-implementation Step 1 architecture inspection only. Codex verified it and has performed all V1.1.0 implementation work. Local checkpoints `859b654`, `f061ccf`, and `f6da971` record foundations/modes, Working Context, and scopes; none was pushed. The completed formatting/units slice remains uncommitted. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and performed V1.1.0 implementation through the localization slice. Local checkpoints `859b654`, `f061ccf`, `f6da971`, and `896ed09` record foundations/modes, Working Context, scopes, and formatting/units; none was pushed. Codex began the zh_CN / en visible-language pass on top of `896ed09` and was interrupted by usage limits; OpenCode continued from that exact working tree without restarting or replacing Codex work and completed the slice. All localization changes remain uncommitted. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -41,10 +41,14 @@ OpenCode performed the pre-implementation Step 1 architecture inspection only. C
 - Codex added one `token_format.py` source for Full and Compact Token presentation. Compact uses two decimals with K/M/B/T boundary promotion; invalid/missing inputs stay unavailable. The persistent preference defaults and invalid values to Compact.
 - Main panel, all three scopes, Working Context bubble/tooltips, and Analytics metric/model/conversation/history tables now use that formatter. Analytics token values and headers show `Tokens`, ratios show `%`, and event coverage shows `Records`.
 - Formatting verification passed: 63 tests, `py_compile`, and separate Full/Compact Global smokes. Both panel, pet and analytics screenshots were inspected; Compact showed `191.41M Tokens`, Full showed `191,626,989 Tokens`.
+- Formatting checkpoint `896ed094900d76bcc7c9e0ff0cb60200a363b2ec` was committed locally without pushing or changing the application version; its post-commit working tree was clean.
+- Codex began the zh_CN / en visible-language pass on top of `896ed09` (catalog expansion, settings/panel/Settings/Analytics/pet localization, status/note keys, 7 tests) and stopped at its usage limit before final verification/reporting; PROGRESS/99 notes were not yet updated.
+- OpenCode recovered the exact tree, confirmed `896ed09` clean and all localization work uncommitted, ran the targeted tests green before editing, and finished surgically: centralized pet Analytics menu text, Analytics token column headers (`header_*_tokens`), Settings FX label (`fx_rate_label`), and Qt-mnemonic escaping (`Date && History`). Added 4 tests; updated 1 Codex tab-text expectation for the escaping.
+- Localization verification passed: 74 tests, `py_compile`, `git diff --check`, isolated zh_CN and en smokes (both exit 0, live quota, no keyboard error), and panel/pet/Settings/Analytics screenshots inspected in both languages with no clipping.
 
 ## Current Work / Partial Work
 
-No implementation is currently in progress. Stop point is immediately before the full zh_CN / en visible-language pass.
+None in progress. The V1.1.0 zh_CN / en visible-language pass is complete and verified (main panel, desktop pet, Settings, Analytics, menus, statuses, errors, tooltips) without changing usage semantics. Not committed, not pushed.
 
 ## Important Decisions
 
@@ -55,8 +59,9 @@ No implementation is currently in progress. Stop point is immediately before the
 
 ## Current Git State
 
-- Branch: `main`, checkpoint HEAD `f6da971`, four commits ahead of `origin/main`; no local checkpoint was pushed.
-- The post-checkpoint formatting slice is intentionally uncommitted. Modified tracked files: `PROGRESS.md`, `HANDOFF.md`, `analytics_view.py`, `app_config.py`, `localization.py`, `pet.py`, `tests/test_settings.py`, `tests/test_ui.py`, and `widget.py`. New untracked files: `token_format.py` and `tests/test_token_format.py`.
+- Branch: `main`, checkpoint HEAD `896ed09`, five commits ahead of `origin/main`; no local checkpoint was pushed.
+- The post-checkpoint localization slice is intentionally uncommitted and unpushed. Modified tracked files: `AGENTS.md` (Codex auto-synced instructions section), `HANDOFF.md`, `PROGRESS.md`, `analytics.py`, `analytics_view.py`, `app_config.py`, `desktop.py`, `localization.py`, `pet.py`, `tests/test_settings.py`, `tests/test_ui.py`, `usage.py`, and `widget.py`. No new untracked files.
+- Verification: 74 tests pass, `py_compile` passes, `git diff --check` passes, isolated zh_CN and en smokes exit 0 with live quota, and all four surfaces were screenshot-inspected in both languages.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -70,10 +75,10 @@ No implementation is currently in progress. Stop point is immediately before the
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 7: use the existing persistent zh_CN / en catalog for a consistent single-language visible UI.
-2. Do not combine that slice with currency changes, character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
+1. Implement V1.1.0 order step 8 only when authorized: simplify cost estimation internally and add USD/CAD/EUR/CNY selection.
+2. Do not combine that slice with character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent
 
-Codex (primary). OpenCode remains the fallback continuation agent if Codex usage is exhausted.
+OpenCode (continuation: completed the localization slice Codex began before its usage limit; Codex did all prior V1.1.0 implementation).

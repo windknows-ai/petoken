@@ -170,7 +170,7 @@ class RateLimits:
                     self.stop.wait(max(0, 1-(time.monotonic()-start)))
             except Exception:
                 if not self.stop.is_set():
-                    self.callback(dict(error='额度暂不可用；保留上次读数，15 秒后重试。'))
+                    self.callback(dict(error='quota_error'))
             finally:
                 self.cleanup()
             self.stop.wait(15)

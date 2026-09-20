@@ -59,7 +59,7 @@ def aggregate(records, tz=None):
     by_model,by_day,by_session = defaultdict(list),defaultdict(list),defaultdict(list)
     undated = []
     for r in records:
-        by_model[r.get('model') or 'Unknown / 未记录'].append(r)
+        by_model[r.get('model') or 'unknown_model'].append(r)
         by_session[r['session']].append(r)
         try:
             stamp = datetime.fromisoformat(r['timestamp'].replace('Z','+00:00'))

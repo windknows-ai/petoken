@@ -1,9 +1,9 @@
 # Project Progress
 
-Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, Working Context, three-scope analytics, and Full / Compact Token formatting with units are complete and verified; work is stopped before the full localization pass.
+Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, Working Context, three-scope analytics, Full / Compact Token formatting with units, and the Simplified Chinese / English visible-language pass are complete and verified; the localization slice remains uncommitted and no later V1.1.0 step has started.
 
 ## Current Objective
-Continue V1.1.0 from implementation-order step 7. All Token presentation now uses one persisted Full / Compact formatter without changing numeric accounting; the next step is applying the existing zh_CN / en foundation consistently across visible UI.
+Continue V1.1.0 from implementation-order step 8 only when authorized. The existing zh_CN / en catalog and persistent preference now cover visible UI consistently without changing numeric accounting; the next step is cost-estimation simplification with currency support.
 
 ## Completed
 - Isolated repository cloned; personal website untouched. GitHub upload permission verified; current repo visibility private.
@@ -61,6 +61,7 @@ V1.1.0 Daily / Token slice: app_mode.py (new), activity.py, usage.py, widget.py,
 V1.1.0 working-context slice: usage.py, widget.py, pet.py, tests/test_app_mode.py, tests/test_ui.py, tests/test_working_context.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 V1.1.0 scope slice: app_config.py, usage.py, widget.py, analytics_view.py, tests/test_scopes.py (new), tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 V1.1.0 formatting/units slice: token_format.py (new), app_config.py, localization.py, widget.py, pet.py, analytics_view.py, tests/test_token_format.py (new), tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
+V1.1.0 localization slice (begun by Codex, finished by OpenCode after a Codex usage-limit interruption, without restarting or replacing Codex work): localization.py, widget.py, pet.py, analytics_view.py, usage.py, desktop.py, app_config.py, tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 
 ## Important Decisions
 - Source: local Codex `state_*.sqlite` + JSONL sessions; UIA document LegacyIAccessible Name follows actual active task. Initial URL is stale and must never select the task.
@@ -80,7 +81,7 @@ V1.1.0 formatting/units slice: token_format.py (new), app_config.py, localizatio
 - Token formatting is presentation-only. Accounting, deduplication, scope identity and Working Context keep integers/`None`; views choose formatting from the persistent preference at the last possible step.
 
 ## Current State
-V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and has performed all V1.1.0 implementation work. Checkpoints `859b654`, `f061ccf`, and `f6da971` record foundations/modes, Working Context, and scopes. The completed formatting/units slice remains intentionally uncommitted. `99_Implementation_Notes.md` is maintained outside this Git repository.
+V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and performed V1.1.0 implementation through the localization slice. Checkpoints `859b654`, `f061ccf`, `f6da971`, and `896ed09` record foundations/modes, Working Context, scopes, and formatting/units. The completed formatting/units checkpoint plus the uncommitted localization slice remain unpushed. `99_Implementation_Notes.md` is maintained outside this Git repository.
 
 ## Known Issues
 - Media playback detection depends on Windows System Media Transport Controls, so players that do not integrate with Windows media controls cannot be detected reliably.
@@ -110,10 +111,12 @@ V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 
 - Initial fixture runs exposed that Python's SQLite context manager does not close Windows file handles and that display names must not reuse case-normalizing path logic. Production read-only connections now close explicitly, and cwd fallback extracts its basename without altering case; all tests passed after both fixes.
 - Scope verification: 52 tests pass (39 checkpoint tests + 13 scope/settings/UI tests); all project/test Python files pass `py_compile`. Isolated Global smoke exits 0, reports `scope_type=global` with the local-recorded limitation, aggregates 1,698 unique events / 186,031,972 Tokens, keeps live quota/activity signals, and independently shows the active `Web Project` Working Context in the pet bubble. Panel, pet and expanded analytics screenshots were inspected.
 - Formatting/units verification: 63 tests pass (52 checkpoint + 11 targeted); all project/test Python files pass `py_compile`. Separate isolated Global smokes for Compact and Full both exit 0 with live quota/activity and an independent Working Context. Compact rendered `191.41M Tokens`; Full rendered `191,626,989 Tokens`. Main panel, pet bubble, and expanded Analytics screenshots for both modes were inspected without clipping in the current data.
+- Localization recovery audit: checkpoint `896ed09` was clean; all post-checkpoint localization work was uncommitted on top of it (localization.py catalog expansion, language normalization in settings load, main-panel/Settings/Analytics/pet localization, status/note keys in usage.py/desktop.py, 7 new tests). Targeted Settings/UI tests passed before OpenCode changed code. No hard-coded Chinese remained outside `localization.py`. Remaining hard-coded English user-visible strings were the pet Analytics menu item, Analytics token column headers, the Settings FX row label, and a Qt-mnemonic `&` in the English history tab.
+- Localization completion (OpenCode, surgical): pet Analytics menu now uses the centralized `analytics_button` string (consistent with the tray menu); Analytics model/session/range/day token column headers now use new centralized `header_*_tokens` keys (short technical headers intentionally identical in both languages); the Settings FX row label is now the centralized `fx_rate_label` and refreshes with language; the English history tab is `Date && History` so Qt renders `Date & History`. Four tests added (centralized headers, FX label stability, pet title/menu language, no unescaped Qt mnemonics in any catalog value); one Codex tab-text expectation updated for the `&&` escaping.
+- Localization verification: 74 tests pass (63 formatting-checkpoint + 7 Codex localization + 4 OpenCode); all project/test Python files pass `py_compile`; `git diff --check` passes. Isolated zh_CN smoke exits 0 (`language: zh_CN`, live quota, no keyboard error); isolated en smoke exits 0 (`language: en`, live quota, no keyboard error). Main panel, desktop pet (Daily, no bubble), Settings, and Token Analytics screenshots inspected in both languages: zh_CN UI is consistently Simplified Chinese, en UI contains no Chinese labels, dynamic project/conversation/model names stay untranslated, Token values and scope identity are unchanged by language, and no clipping/overlap appears. Token values differ between the two smoke runs only because each run auto-selected a different scope (Project with 948 records vs Conversation with 321 records); same-fixture tests assert values are identical across language switches.
 
 ## Remaining Work
-- Apply the existing localization foundation consistently across all visible UI.
-- Continue later V1.1.0 steps only when authorized. Do not start V1.2.0.
+- Continue later V1.1.0 steps only when authorized (next is step 8: cost-estimation simplification with currency support). Do not start V1.2.0.
 
 ## Next Step
-Implement V1.1.0 order step 7 only: complete the consistent Simplified Chinese / English visible-language pass using the existing catalog and persistent preference. Do not begin currency work, assets, Bongo-Cat, subtitles, or V1.2.0.
+Implement V1.1.0 order step 8 only when authorized: simplify cost estimation internally and add USD/CAD/EUR/CNY selection. Do not begin assets, Bongo-Cat, subtitles, or V1.2.0.

@@ -18,10 +18,10 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
 
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import CodexStore, PRICES, quota_window, sample_age
-from analytics_view import AnalyticsWindow, HELP
+from analytics_view import AnalyticsWindow, help_text
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
-from localization import text
+from localization import normalize_language, scope_text, text
 from token_format import format_token_value, format_tokens, normalize_token_format
 
 INK = '#EEF2FF'
@@ -30,12 +30,6 @@ ICE = '#91E4F2'
 VIOLET = '#B9A7F8'
 BG = '#171B32'
 PREF_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home()/'.local/share')))/'CodexWisp'
-SCOPE_LABELS = {
-    'global': '全局（本地记录）',
-    'project': '项目',
-    'conversation': '会话',
-}
-
 STYLE = f'''
 QWidget {{ color:{INK}; font-family:"Segoe UI","Microsoft YaHei UI"; font-size:12px; }}
 QWidget#surface {{ background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #242641,stop:.5 {BG},stop:1 #22243D); border:1px solid #515473; border-radius:23px; }}
@@ -94,7 +88,7 @@ class Spirit(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(54, 60)
-        self.setAccessibleName('冰晶小精灵')
+        self.setAccessibleName('')
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -162,7 +156,8 @@ class Meter(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
         row = QHBoxLayout()
-        row.addWidget(label(title))
+        self.title = label(title)
+        row.addWidget(self.title)
         row.addStretch()
         self.value = label('—')
         row.addWidget(self.value)
@@ -177,6 +172,10 @@ class Meter(QWidget):
         self.reset = label('', 'muted')
         self.reset.setVisible(False)
         layout.addWidget(self.reset)
+
+    def set_title(self, title):
+        self.title.setText(title)
+        self.bar.setAccessibleName(title)
 
     def update_value(self, value, suffix='', tip='', stale=False):
         self.value.setText('—' if value is None else f'{value:.0f}% {suffix}')
@@ -195,48 +194,60 @@ class Bridge(QObject):
 class Settings(QDialog):
     def __init__(self, panel):
         super().__init__(panel)
-        self.setWindowTitle('petoken · 设置')
-        self.setMinimumWidth(430)
+        self.setMinimumWidth(540)
         layout = QVBoxLayout(self)
-        form = QFormLayout()
+        self.form = QFormLayout()
         self.task = QComboBox()
-        self.task.addItem('自动跟随 Codex 当前任务', '')
+        self.task.addItem('', '')
         for row in panel.snapshot.get('rows', []):
-            self.task.addItem(row.get('name') or row.get('title','').split('\n')[0][:60] or '未命名任务', row['id'])
+            self.task.addItem(row.get('name') or row.get('title','').split('\n')[0][:60] or
+                              text('task_unnamed', panel.prefs.get('language')), row['id'])
         self.task.setCurrentIndex(max(0, self.task.findData(panel.prefs.get('pinned', ''))))
-        self.task.setMaximumWidth(325)
-        form.addRow('跟随 / 固定任务', self.task)
+        self.task.setMaximumWidth(390)
+        self.task_label = label()
+        self.form.addRow(self.task_label, self.task)
         self.scope = QComboBox()
         for key in ('global','project','conversation'):
-            self.scope.addItem(SCOPE_LABELS[key], key)
+            self.scope.addItem('', key)
         selected_scope = {'task':'conversation'}.get(panel.prefs.get('scope'), panel.prefs.get('scope'))
         selected_index = self.scope.findData(selected_scope)
         self.scope.setCurrentIndex(selected_index if selected_index >= 0 else self.scope.findData('conversation'))
-        form.addRow('Tokens 与费用范围', self.scope)
-        language = panel.prefs.get('language')
+        self.scope_label = label()
+        self.form.addRow(self.scope_label, self.scope)
+        self.language = QComboBox()
+        initial_language = normalize_language(panel.prefs.get('language'))
+        self.language.addItem(text('language_zh_CN', initial_language), 'zh_CN')
+        self.language.addItem(text('language_en', initial_language), 'en')
+        self.language.setCurrentIndex(self.language.findData(normalize_language(panel.prefs.get('language'))))
+        self.language_label = label()
+        self.form.addRow(self.language_label, self.language)
         self.token_format = QComboBox()
-        self.token_format.addItem(text('token_format_full', language), 'full')
-        self.token_format.addItem(text('token_format_compact', language), 'compact')
+        self.token_format.addItem('', 'full')
+        self.token_format.addItem('', 'compact')
         self.token_format.setCurrentIndex(self.token_format.findData(
             normalize_token_format(panel.prefs.get('token_number_format'))))
-        form.addRow(text('token_number_format', language), self.token_format)
+        self.token_format_label = label()
+        self.form.addRow(self.token_format_label, self.token_format)
         self.fx = QDoubleSpinBox()
         self.fx.setRange(.01, 9.9999)
         self.fx.setDecimals(4)
         self.fx.setValue(panel.fx_rate()['rate'])
-        self.manual = QCheckBox('手动汇率（取消后使用加拿大央行）')
+        self.manual = QCheckBox()
         self.manual.setChecked(bool(panel.prefs.get('manual_fx')))
         self.fx.setEnabled(self.manual.isChecked())
         self.manual.toggled.connect(self.fx.setEnabled)
-        form.addRow('1 USD = CAD', self.fx)
-        form.addRow('', self.manual)
+        self.fx_label = label()
+        self.form.addRow(self.fx_label, self.fx)
+        self.form.addRow(self.manual)
         self.price_model = panel.snapshot.get('model')
-        self.custom = QCheckBox('覆盖当前模型的 Standard 单价')
+        self.custom = QCheckBox()
         self.custom.setChecked(self.price_model in panel.prefs.get('prices', {}))
-        form.addRow(self.price_model or '模型尚未记录', self.custom)
+        self.model_label = label()
+        self.form.addRow(self.model_label, self.custom)
         self.price_fields = []
+        self.price_labels = []
         rates = panel.prefs.get('prices', {}).get(self.price_model, PRICES.get(self.price_model, (0,0,0,0)))
-        for caption, value in zip(('普通输入', '缓存输入', '缓存写入', '输出（含 reasoning）'), rates):
+        for value in rates:
             spin = QDoubleSpinBox()
             spin.setRange(0, 10000)
             spin.setDecimals(4)
@@ -244,40 +255,71 @@ class Settings(QDialog):
             spin.setEnabled(self.custom.isChecked())
             self.custom.toggled.connect(spin.setEnabled)
             self.price_fields.append(spin)
-            form.addRow(f'{caption} · USD / 1M', spin)
+            price_label = label()
+            self.price_labels.append(price_label)
+            self.form.addRow(price_label, spin)
         self.custom.setEnabled(bool(self.price_model))
-        layout.addLayout(form)
-        note = label('费用是 API 等价估算，不是订阅账单。\n按已记录的模型、缓存、快速模式与长上下文计算；不含工具费用。\n未知单价显示部分估算。fork 去除继承历史，保留新增用量。\n模型 / reasoning 是最近一次已发送配置；发送前的菜单改动可能尚未记录。\n每秒检查；Tokens 在 Codex 写入新事件后更新。\nContext = 最近记录的上下文 tokens ÷ 可用窗口；非累计总量。\n桌宠优先级：用量 > 麦克风 > 媒体播放 > 打字 > 待机。\n只读取活动状态，不保存按键、录音或媒体标题。', 'muted')
-        note.setWordWrap(True)
-        layout.addWidget(note)
+        layout.addLayout(self.form)
+        self.note = label('', 'muted')
+        self.note.setWordWrap(True)
+        layout.addWidget(self.note)
         self.error = label('', 'muted')
         layout.addWidget(self.error)
-        buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        buttons.button(QDialogButtonBox.Save).setText('保存')
-        buttons.button(QDialogButtonBox.Cancel).setText('取消')
-        buttons.accepted.connect(self.save)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        self.buttons.accepted.connect(self.save)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
+        self.language.currentIndexChanged.connect(self.apply_language)
+        self.apply_language()
+
+    def tr_text(self, key, **values):
+        return text(key, self.language.currentData(), **values)
+
+    def apply_language(self):
+        t = self.tr_text
+        self.setWindowTitle(t('settings_title'))
+        self.task.setItemText(0, t('task_auto'))
+        for index, scope in enumerate(('global','project','conversation')):
+            self.scope.setItemText(index, scope_text(scope, self.language.currentData(), recorded=scope == 'global'))
+        self.language.setItemText(0, t('language_zh_CN'))
+        self.language.setItemText(1, t('language_en'))
+        self.token_format.setItemText(self.token_format.findData('full'), t('token_format_full'))
+        self.token_format.setItemText(self.token_format.findData('compact'), t('token_format_compact'))
+        self.task_label.setText(t('task_selection'))
+        self.scope_label.setText(t('token_scope'))
+        self.language_label.setText(t('language'))
+        self.token_format_label.setText(t('token_number_format'))
+        self.fx_label.setText(t('fx_rate_label'))
+        self.manual.setText(t('manual_fx'))
+        self.custom.setText(t('custom_price'))
+        self.model_label.setText(self.price_model or t('model_unrecorded'))
+        for price_label, key in zip(self.price_labels, ('price_input','price_cached','price_write','price_output')):
+            price_label.setText(f"{t(key)} · USD / 1M")
+        self.note.setText(t('settings_note'))
+        self.buttons.button(QDialogButtonBox.Save).setText(t('save'))
+        self.buttons.button(QDialogButtonBox.Cancel).setText(t('cancel'))
 
     def save(self):
         panel = self.parentWidget()
         prefs = dict(panel.prefs)
         prefs.update(pinned=self.task.currentData(), scope=self.scope.currentData(),
+                     language=normalize_language(self.language.currentData()),
                      token_number_format=self.token_format.currentData(),
                      manual_fx=self.fx.value() if self.manual.isChecked() else None)
         prices = dict(prefs.get('prices', {}))
         if self.custom.isChecked() and self.price_model:
-            prices[self.price_model] = [w.value() for w in self.price_fields]
+            prices[self.price_model] = [field.value() for field in self.price_fields]
         else:
             prices.pop(self.price_model, None)
         prefs['prices'] = prices
         try:
             write_preferences(prefs)
         except OSError:
-            self.error.setText('无法保存设置，请检查用户文件夹的写入权限。')
+            self.error.setText(self.tr_text('settings_save_error'))
             return
         panel.prefs = prefs
         panel.reset_store.set()
+        panel.apply_language()
         self.accept()
 
 
@@ -323,23 +365,23 @@ class Panel(QWidget):
         brand = QVBoxLayout()
         brand.setSpacing(3)
         brand.addWidget(label('PETOKEN', 'brand'))
-        self.connection = label('正在连接…', 'muted')
+        self.connection = label('', 'muted')
         brand.addWidget(self.connection)
         head.addLayout(brand)
         head.addStretch()
         controls = QVBoxLayout()
         controls.setSpacing(0)
-        self.collapse_button = button('−', '收起 / 展开', self.toggle_compact)
+        self.collapse_button = button('−', '', self.toggle_compact)
         self.collapse_button.setFixedSize(30, 28)
         controls.addWidget(self.collapse_button)
-        hide = button('×', '隐藏到系统托盘', self.hide_to_tray)
-        hide.setFixedSize(30, 28)
-        controls.addWidget(hide)
+        self.hide_button = button('×', '', self.hide_to_tray)
+        self.hide_button.setFixedSize(30, 28)
+        controls.addWidget(self.hide_button)
         head.addLayout(controls)
         layout.addWidget(self.header)
-        self.project = label('等待 Codex', 'muted')
+        self.project = label('', 'muted')
         layout.addWidget(self.project)
-        self.title = ElidedLabel('打开 Codex 中的任务')
+        self.title = ElidedLabel('')
         self.title.setStyleSheet('font-size:17px; font-weight:600;')
         layout.addWidget(self.title)
         self.body = QWidget()
@@ -358,9 +400,10 @@ class Panel(QWidget):
         token_box = QVBoxLayout()
         token_box.setSpacing(6)
         token_header = QHBoxLayout()
-        token_header.addWidget(label('TOTAL TOKENS', 'muted'))
+        self.total_header = label('', 'muted')
+        token_header.addWidget(self.total_header)
         token_header.addStretch()
-        self.scope_button = button('当前任务 ▾', '切换统计范围', self.scope_menu)
+        self.scope_button = button('', '', self.scope_menu)
         self.scope_button.setStyleSheet(f'color:{MUTED};font-size:11px;padding:0px 3px;min-height:24px;')
         token_header.addWidget(self.scope_button)
         token_box.addLayout(token_header)
@@ -370,25 +413,26 @@ class Panel(QWidget):
         io.setVerticalSpacing(5)
         self.input = label('—', 'smallnumber')
         self.output = label('—', 'smallnumber')
-        io.addWidget(label('INPUT', 'muted'), 0,0)
-        io.addWidget(label('OUTPUT', 'muted'), 0,1)
+        self.input_header = label('', 'muted')
+        self.output_header = label('', 'muted')
+        io.addWidget(self.input_header, 0,0)
+        io.addWidget(self.output_header, 0,1)
         io.addWidget(self.input, 1,0)
         io.addWidget(self.output, 1,1)
         io.setColumnStretch(0,1)
         io.setColumnStretch(1,1)
         token_box.addLayout(io)
-        self.insights = label('Cache hit —   ·   New work —', 'muted')
-        self.insights.setToolTip(HELP['cache_hit_ratio']+'\n'+HELP['new_work'])
+        self.insights = label('', 'muted')
         token_box.addWidget(self.insights)
-        details_button = button('Token Analytics  ↗', '展开完整原始用量、派生指标、模型、会话与历史', self.open_analytics)
-        token_box.addWidget(details_button)
+        self.details_button = button('', '', self.open_analytics)
+        token_box.addWidget(self.details_button)
         body.addLayout(token_box)
         divider = QFrame()
         divider.setObjectName('divider')
         body.addWidget(divider)
-        self.context = Meter('Context used', VIOLET)
-        self.five = Meter('5-hour limit', ICE)
-        self.week = Meter('Weekly limit', '#B9A7F8')
+        self.context = Meter('', VIOLET)
+        self.five = Meter('', ICE)
+        self.week = Meter('', '#B9A7F8')
         body.addWidget(self.context)
         body.addWidget(self.five)
         body.addWidget(self.week)
@@ -401,23 +445,24 @@ class Panel(QWidget):
         cost_row = QHBoxLayout()
         cost_left = QVBoxLayout()
         cost_left.setSpacing(4)
-        self.cost_label = label('API 等价估算 · CAD', 'muted')
+        self.cost_label = label('', 'muted')
         self.cost = label('—', 'cost')
         cost_left.addWidget(self.cost_label)
         cost_left.addWidget(self.cost)
         cost_row.addLayout(cost_left)
         cost_row.addStretch()
-        self.pin = button('◇', '置顶开关', self.toggle_top)
+        self.pin = button('◇', '', self.toggle_top)
         self.pin.setCheckable(True)
         self.pin.setChecked(self.prefs.get('topmost', True))
         self.pin.setFixedSize(34,34)
         cost_row.addWidget(self.pin)
         layout.addLayout(cost_row)
         bottom = QHBoxLayout()
-        self.status = label('每秒检查 · 等待数据', 'muted')
+        self.status = label('', 'muted')
         bottom.addWidget(self.status)
         bottom.addStretch()
-        bottom.addWidget(button('⚙', '设置与数据说明', self.open_settings))
+        self.settings_button = button('⚙', '', self.open_settings)
+        bottom.addWidget(self.settings_button)
         layout.addLayout(bottom)
         self.header.mousePressEvent = self.begin_drag
         self.header.mouseMoveEvent = self.drag
@@ -435,21 +480,23 @@ class Panel(QWidget):
         self.spirit.render(pix)
         self.setWindowIcon(QIcon(pix))
         self.tray.setIcon(QIcon(pix))
-        self.tray.setToolTip('petoken · 双击显示')
         menu = QMenu()
-        menu.addAction('显示 / 隐藏', self.toggle_visible)
-        menu.addAction('显示 / 隐藏桌宠', self.toggle_pet)
-        menu.addAction('Token Analytics', self.open_analytics)
-        menu.addAction('收起 / 展开', self.toggle_compact)
-        menu.addAction('设置与数据说明', self.open_settings)
-        menu.addAction('移回屏幕右侧', self.reset_position)
+        self.tray_actions = {
+            'show_hide': menu.addAction('', self.toggle_visible),
+            'show_hide_pet': menu.addAction('', self.toggle_pet),
+            'analytics_button': menu.addAction('', self.open_analytics),
+            'collapse_expand': menu.addAction('', self.toggle_compact),
+            'settings_help': menu.addAction('', self.open_settings),
+            'move_right': menu.addAction('', self.reset_position),
+        }
         menu.addSeparator()
-        menu.addAction('退出 petoken', self.shutdown)
+        self.tray_actions['exit_petoken'] = menu.addAction('', self.shutdown)
         self.tray.setContextMenu(menu)
         self.tray.activated.connect(lambda reason:self.toggle_visible() if reason == QSystemTrayIcon.DoubleClick else None)
         self.tray.show()
         self.tray_menu = menu
         self.compact = bool(self.prefs.get('compact', False))
+        self.apply_language()
         self.apply_compact()
         if not self.pin.isChecked():
             self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
@@ -471,6 +518,60 @@ class Panel(QWidget):
         self.clock.timeout.connect(self.refresh_status)
         self.clock.start(1000)
 
+    @property
+    def language(self):
+        return normalize_language(self.prefs.get('language'))
+
+    def tr_text(self, key, **values):
+        return text(key, self.language, **values)
+
+    def display_text(self, value, fallback):
+        return self.tr_text(value) if value in (
+            'display_all_usage', 'display_local_history', 'display_untitled',
+            'project_unavailable') else (value or self.tr_text(fallback))
+
+    def apply_language(self):
+        self.prefs['language'] = self.language
+        t = self.tr_text
+        self.spirit.setAccessibleName(t('spirit_accessible'))
+        self.connection.setText(t('connecting'))
+        self.collapse_button.setToolTip(t('collapse_expand'))
+        self.collapse_button.setAccessibleName(t('collapse_expand'))
+        self.hide_button.setToolTip(t('hide_to_tray'))
+        self.hide_button.setAccessibleName(t('hide_to_tray'))
+        self.project.setText(t('waiting_codex'))
+        self.title.setFullText(t('open_codex_task'))
+        self.total_header.setText(t('total_tokens'))
+        self.input_header.setText(t('input'))
+        self.output_header.setText(t('output'))
+        self.scope_button.setToolTip(t('switch_scope'))
+        self.scope_button.setAccessibleName(t('switch_scope'))
+        self.scope_button.setText(scope_text(self.snapshot.get('scope', self.prefs.get('scope')),
+                                             self.language, recorded=self.snapshot.get('scope') == 'global') + ' ▾')
+        self.insights.setText(t('cache_hit_new_work', ratio='—', work='—'))
+        self.insights.setToolTip(help_text('cache_hit_ratio', self.language)+'\n'+help_text('new_work', self.language))
+        self.details_button.setText(t('analytics_button'))
+        self.details_button.setToolTip(t('analytics_button_tip'))
+        self.details_button.setAccessibleName(t('analytics_button_tip'))
+        self.context.set_title(t('context_used'))
+        self.five.set_title(t('five_hour_limit'))
+        self.week.set_title(t('weekly_limit'))
+        self.cost_label.setText(t('estimated_cost')+' · CAD')
+        self.pin.setToolTip(t('pin_toggle'))
+        self.pin.setAccessibleName(t('pin_toggle'))
+        self.status.setText(t('checking_wait'))
+        self.settings_button.setToolTip(t('settings_help'))
+        self.settings_button.setAccessibleName(t('settings_help'))
+        self.tray.setToolTip(t('tray_tip'))
+        for key, action in self.tray_actions.items():
+            action.setText(t(key))
+        if self.analytics_window:
+            self.analytics_window.apply_language()
+        if hasattr(self, 'pet'):
+            self.pet.apply_language()
+        if self.snapshot:
+            self.render(self.snapshot)
+
     def read_loop(self):
         store = None
         while not self.stop.is_set():
@@ -485,7 +586,7 @@ class Panel(QWidget):
                 self.bridge.data.emit(store.read(active, prefs.get('pinned',''), prefs.get('scope','conversation'),
                                                  self.want_history.is_set(), detection_valid))
             except Exception:
-                self.bridge.data.emit(dict(status='读取暂时失败，下一秒重试。', rows=[]))
+                self.bridge.data.emit(dict(status='status_read_failed', rows=[]))
             self.stop.wait(max(0,1-(time.monotonic()-start)))
 
     def fx_loop(self):
@@ -504,7 +605,7 @@ class Panel(QWidget):
 
     def fx_rate(self):
         manual = self.prefs.get('manual_fx')
-        return dict(rate=manual, date='手动', source='自定义') if manual else self.fx_data
+        return dict(rate=manual, date=self.tr_text('manual'), source=self.tr_text('custom')) if manual else self.fx_data
 
     def receive_limits(self, data):
         self.quota.update(data)
@@ -517,40 +618,43 @@ class Panel(QWidget):
         if hasattr(self,'pet'):
             self.pet.update_data(data)
         if data.get('status'):
-            self.connection.setText(data['status'])
-            self.connection.setToolTip(data['status'])
-            self.title.setFullText('等待可用任务')
+            status = self.tr_text(data['status'])
+            self.connection.setText(status)
+            self.connection.setToolTip(status)
+            self.title.setFullText(self.tr_text('waiting_available_task'))
             self.project.setText('CODEX')
             for w in (self.total,self.input,self.output,self.model,self.effort,self.cost):
                 w.setText('—')
             self.context.update_value(None)
             return
-        modes = {'follow':'● 自动跟随', 'fixed':'◇ 已固定任务', 'recent':'◌ 最近活动 · 未识别前台'}
-        self.connection.setText(modes.get(data.get('mode'),'等待数据'))
-        self.connection.setToolTip('通过 Codex 窗口的辅助功能标题识别当前任务。无法识别时明确退回最近活动；可在设置中固定。')
-        self.project.setText(data.get('project','CODEX').upper())
-        self.title.setFullText(data.get('title','未命名任务'))
-        self.model.setText(data.get('model') or '尚未记录模型')
-        self.model.setToolTip('最近一次已发送的模型配置。发送前的模型菜单改动可能尚未写入记录。')
+        modes = {'follow':'mode_follow', 'fixed':'mode_fixed', 'recent':'mode_recent', 'working':'mode_working'}
+        self.connection.setText(self.tr_text(modes.get(data.get('mode'),'waiting_data')))
+        self.connection.setToolTip(self.tr_text('task_detection_tip'))
+        self.project.setText(self.display_text(data.get('project'), 'waiting_codex').upper())
+        self.title.setFullText(self.display_text(data.get('title'), 'unnamed_task'))
+        self.model.setText(data.get('model') or self.tr_text('model_not_recorded'))
+        self.model.setToolTip(self.tr_text('model_tip'))
         self.effort.setText((data.get('effort') or '—')+(' · fast' if data.get('tier') in ('priority','fast') else ''))
-        self.effort.setToolTip('Reasoning effort · 最近一次已发送的配置')
+        self.effort.setToolTip(self.tr_text('effort_tip'))
         tokens = data.get('tokens', {})
         token_style = self.prefs.get('token_number_format')
         for w,k in ((self.total,'total_tokens'),(self.input,'input_tokens'),(self.output,'output_tokens')):
             n = tokens.get(k,0)
             w.setText(format_token_value(n, token_style) if data.get('available') else '—')
-            w.setToolTip(format_tokens(n, 'full') if data.get('available') else 'N/A · 没有可靠记录')
-        self.total.setToolTip(self.total.toolTip()+'\n'+HELP['total_tokens'])
-        self.input.setToolTip(self.input.toolTip()+f"\nCached input: {format_tokens(tokens.get('cached_input_tokens'), token_style)}")
-        self.output.setToolTip(self.output.toolTip()+'\n已包含 reasoning output，不重复相加。')
-        self.scope_button.setText(SCOPE_LABELS.get(data.get('scope'),'会话')+' ▾')
-        self.context.update_value(data.get('context'), 'used',
-            f"当前任务 · {data.get('context_tokens')} / {data.get('context_window')} tokens\n最近一次记录的上下文占用，非累计 token；与 CLI 的保留空间算法可能略有不同。")
+            w.setToolTip(format_tokens(n, 'full') if data.get('available') else self.tr_text('no_reliable_record'))
+        self.total.setToolTip(self.total.toolTip()+'\n'+help_text('total_tokens', self.language))
+        self.input.setToolTip(self.input.toolTip()+'\n'+self.tr_text('cached_input_line', value=format_tokens(tokens.get('cached_input_tokens'), token_style)))
+        self.output.setToolTip(self.output.toolTip()+'\n'+self.tr_text('output_includes_reasoning'))
+        self.scope_button.setText(scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')+' ▾')
+        self.context.update_value(data.get('context'), 'used', self.tr_text('context_tip',
+            used=data.get('context_tokens'), window=data.get('context_window')))
         self.refresh_cost()
         self.refresh_status()
         derived=(data.get('analytics') or {}).get('derived',{})
         hit=derived.get('cache_hit_ratio')
-        self.insights.setText(f"Cache hit {'N/A' if hit is None else f'{hit:.1f}%'}  ·  New work {format_tokens(derived.get('new_work'), token_style)}")
+        self.insights.setText(self.tr_text('cache_hit_new_work',
+            ratio='N/A' if hit is None else f'{hit:.1f}%',
+            work=format_tokens(derived.get('new_work'), token_style)))
         if self.analytics_window and self.analytics_window.isVisible():
             self.analytics_window.update_data(data)
 
@@ -560,16 +664,20 @@ class Panel(QWidget):
             self.cost.setText('—')
             return
         fx = self.fx_rate()
-        partial = bool(d.get('unknown') or d.get('partial') or any('write split unavailable' in x for x in d.get('notes',[])))
+        partial = bool(d.get('unknown') or d.get('partial') or 'note_cache_write_unavailable' in d.get('notes',[]))
         self.cost.setText(f"≈ ${d.get('usd',0)*fx['rate']:,.2f}")
-        self.cost_label.setText(('部分估算' if partial else 'API 等价估算')+' · CAD')
-        tip = (f"{SCOPE_LABELS.get(d.get('scope'),'会话')} · {d.get('count',1)} 个本地会话\n"
-               f"已知单价部分 USD ${d.get('usd',0):,.4f}\n1 USD = {fx['rate']:.4f} CAD · {fx['date']}\n{fx['source']}\n"
-               '不是订阅账单；按已记录的模型和服务档位折算，不含工具费用。')
+        self.cost_label.setText(self.tr_text('partial_estimate' if partial else 'estimated_cost')+' · CAD')
+        tip = (self.tr_text('local_conversations',
+                scope=scope_text(d.get('scope'), self.language, recorded=d.get('scope') == 'global'),
+                count=d.get('count',1))+'\n'+
+               self.tr_text('known_price_usd', usd=f"{d.get('usd',0):,.4f}")+
+               f"\n1 USD = {fx['rate']:.4f} CAD · {fx['date']}\n{fx['source']}\n"+
+               self.tr_text('not_subscription_bill'))
         if d.get('unknown'):
-            tip += '\n尚无单价：'+', '.join(d['unknown'])+'（可在设置中填写）'
+            names = ', '.join(self.tr_text(name) if name == 'unknown_breakdown' else name for name in d['unknown'])
+            tip += '\n'+self.tr_text('unpriced_models', models=names)
         if d.get('partial'):
-            tip += '\n部分记录缺失 / 重置，或排除了继承历史的 fork。'
+            tip += '\n'+self.tr_text('partial_records')
         self.cost.setToolTip(tip)
         self.cost_label.setToolTip(tip)
 
@@ -582,28 +690,33 @@ class Panel(QWidget):
         for widget,minutes in ((self.five,300),(self.week,10080)):
             w = quota_window(limits, minutes)
             if not w:
-                widget.update_value(None, tip='当前账户未提供此额度。')
+                widget.update_value(None, tip=self.tr_text('quota_unavailable'))
                 widget.reset.setVisible(False)
                 continue
-            reset = datetime.fromtimestamp(w['reset']).strftime('%m/%d %H:%M') if w.get('reset') else '未知'
-            tip = f'账户额度 · 剩余比例\n重置时间：{reset}\n'+('上次记录，等待刷新' if stale or w['expired'] else '官方接口 · 每秒查询')
-            widget.update_value(w['remaining'], 'left'+(' · 旧' if stale or w['expired'] else ''), tip, stale or w['expired'])
+            reset = datetime.fromtimestamp(w['reset']).strftime('%m/%d %H:%M') if w.get('reset') else self.tr_text('unknown')
+            tip = (self.tr_text('account_quota')+'\n'+self.tr_text('reset_time', reset=reset)+'\n'+
+                   self.tr_text('quota_stale' if stale or w['expired'] else 'quota_live'))
+            suffix = self.tr_text('left')+(' · '+self.tr_text('stale') if stale or w['expired'] else '')
+            widget.update_value(w['remaining'], suffix, tip, stale or w['expired'])
             if w.get('reset'):
                 seconds=max(0,int(w['reset']-time.time()))
                 days,seconds=divmod(seconds,86400);hours,seconds=divmod(seconds,3600);minutes,seconds=divmod(seconds,60)
-                widget.reset.setText('等待服务端确认重置' if w['expired'] else f"{'%dd ' % days if days else ''}{hours:02}:{minutes:02}:{seconds:02} 后重置")
+                duration=f"{'%dd ' % days if days else ''}{hours:02}:{minutes:02}:{seconds:02}"
+                widget.reset.setText(self.tr_text('awaiting_reset') if w['expired'] else self.tr_text('reset_in', duration=duration))
                 widget.reset.setVisible(True)
-        self.status.setText('额度等待刷新' if stale else '每秒同步 · '+time.strftime('%H:%M:%S'))
+        self.status.setText(self.tr_text('quota_waiting') if stale else self.tr_text('syncing', time=time.strftime('%H:%M:%S')))
         token_age = sample_age(self.snapshot.get('sample'))
-        self.status.setToolTip((f'Tokens 最近写入：{int(token_age)} 秒前\n' if token_age is not None else '尚无 token 事件\n')+
-            (quota.get('error') or '读取不会调用模型或消耗模型 tokens。'))
+        error = quota.get('error')
+        if error in ('quota_error',):
+            error = self.tr_text(error)
+        self.status.setToolTip((self.tr_text('token_last_written', seconds=int(token_age))+'\n' if token_age is not None else self.tr_text('no_token_events')+'\n')+
+            (error or self.tr_text('no_model_usage')))
 
     def scope_menu(self):
         menu = QMenu(self)
         selected = {'task':'conversation'}.get(self.prefs.get('scope'), self.prefs.get('scope'))
         for key in ('global','project','conversation'):
-            text = SCOPE_LABELS[key]
-            action = menu.addAction(text)
+            action = menu.addAction(scope_text(key, self.language, recorded=key == 'global'))
             action.setCheckable(True)
             action.setChecked(selected == key)
             action.triggered.connect(lambda checked=False,k=key:self.change_scope(k))
@@ -678,7 +791,7 @@ class Panel(QWidget):
         try:
             write_preferences(self.prefs)
         except OSError:
-            self.status.setText('设置暂时无法保存')
+            self.status.setText(self.tr_text('settings_save_failed'))
 
     def hide_to_tray(self):
         if QSystemTrayIcon.isSystemTrayAvailable():
@@ -742,8 +855,14 @@ def main():
             panel.grab().save(str(args.smoke))
             panel.pet.grab().save(str(args.smoke.with_name(args.smoke.stem+'-pet.png')))
             panel.analytics_window.grab().save(str(args.smoke.with_name(args.smoke.stem+'-analytics.png')))
+            settings = Settings(panel)
+            settings.show()
+            app.processEvents()
+            settings.grab().save(str(args.smoke.with_name(args.smoke.stem+'-settings.png')))
+            settings.close()
             report = dict(visible=panel.isVisible(), task=panel.snapshot.get('title'),
                           has_usage=panel.snapshot.get('available'), mode=panel.snapshot.get('mode'),
+                          language=panel.language,
                           app_mode=panel.app_mode.mode, codex_activity=panel.codex_activity,
                           scope_identity=panel.snapshot.get('scope_identity'),
                           working_context={k:(v.get('total_tokens') if k=='tokens' else v)

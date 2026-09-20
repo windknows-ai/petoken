@@ -6,7 +6,7 @@ from pathlib import Path
 import desktop
 from app_config import (APP_VERSION, DEFAULT_PREFERENCES, SETTINGS_SCHEMA_VERSION,
                         load_preferences, save_preferences)
-from localization import DEFAULT_LANGUAGE, text
+from localization import DEFAULT_LANGUAGE, normalize_language, text
 
 
 class SettingsTests(unittest.TestCase):
@@ -51,6 +51,12 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(load_preferences(self.path)["token_number_format"], "full")
         self.assertFalse(self.path.with_suffix(".tmp").exists())
         self.assertEqual(text("settings_title", "en"), "petoken · Settings")
+
+    def test_supported_languages_load_and_invalid_language_falls_back(self):
+        self.assertEqual(load_preferences_from({"language": "zh_CN"})["language"], "zh_CN")
+        self.assertEqual(load_preferences_from({"language": "en"})["language"], "en")
+        self.assertEqual(load_preferences_from({"language": "fr"})["language"], DEFAULT_LANGUAGE)
+        self.assertEqual(normalize_language(None), DEFAULT_LANGUAGE)
 
     def test_invalid_token_number_format_falls_back_to_compact(self):
         save_preferences(self.path, {"token_number_format": "future-format"})

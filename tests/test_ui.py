@@ -4,12 +4,13 @@ import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton
 from PySide6.QtGui import QImage
 from PySide6.QtCore import QPoint
 from widget import Panel, Settings
 from pet import DesktopPet
 from analytics import aggregate,normalize_usage
+from localization import STRINGS, text
 
 
 class UiTests(unittest.TestCase):
@@ -131,6 +132,129 @@ class UiTests(unittest.TestCase):
         pet.update_data(dict(working_context=dict(project='Project',title='Task',
             tokens={'total_tokens':31_399_745,'input_tokens':31_000_000,'output_tokens':399_745})))
         self.assertIn('31,399,745 Tokens',pet.toolTip())
+
+    def localized_fixture(self):
+        tokens=normalize_usage(dict(input_tokens=100,cached_input_tokens=80,
+                                    output_tokens=20,reasoning_output_tokens=12,
+                                    total_tokens=120))
+        analytics=aggregate([dict(session='fixture',model='gpt-6-astra',
+            timestamp='2026-09-16T12:00:00Z',event_id='localized',tokens=tokens)])
+        return dict(title='Never Translate This Task',project='Never Translate This Project',
+            model='gpt-6-astra',effort='high',mode='follow',scope='project',tokens=tokens,
+            available=True,analytics=analytics,usd=0,raw_total={},raw_last={},count=1,
+            codex_activity=dict(active=True,valid=True),
+            working_context=dict(project='Never Translate This Project',title='Never Translate This Task',
+                model='gpt-6-astra',effort='high',tokens=tokens))
+
+    def test_live_language_switch_updates_panel_and_pet_without_changing_data(self):
+        data=self.localized_fixture()
+        self.panel.render(data)
+        before=(self.panel.total.text(),self.panel.prefs['scope'])
+        self.panel.prefs['language']='en'
+        self.panel.apply_language()
+        self.panel.pet.update_data(data)
+        self.assertEqual(self.panel.scope_button.text(),'Project ▾')
+        self.assertIn('Estimated Cost',self.panel.cost_label.text())
+        self.assertIn('Never Translate This Project',self.panel.pet.toolTip())
+        self.assertIn('Click to view usage',self.panel.pet.toolTip())
+        self.assertEqual((self.panel.total.text(),self.panel.prefs['scope']),before)
+
+    def test_settings_language_selector_and_labels_follow_selected_language(self):
+        self.panel.prefs['language']='en'
+        settings=Settings(self.panel)
+        self.assertEqual(settings.windowTitle(),'petoken · Settings')
+        self.assertEqual([settings.language.itemText(i) for i in range(settings.language.count())],
+                         ['简体中文','English'])
+        self.assertEqual(settings.scope.itemText(0),'Global (Locally Recorded)')
+        settings.language.setCurrentIndex(settings.language.findData('zh_CN'))
+        self.app.processEvents()
+        self.assertEqual(settings.windowTitle(),'petoken · 设置')
+        settings.reject()
+
+    def test_settings_language_change_persists_and_refreshes_current_session(self):
+        settings=Settings(self.panel)
+        settings.language.setCurrentIndex(settings.language.findData('en'))
+        with patch('widget.write_preferences') as write:
+            settings.save()
+        self.assertEqual(self.panel.prefs['language'],'en')
+        self.assertEqual(write.call_args.args[0]['language'],'en')
+        self.assertEqual(self.panel.cost_label.text(),'Estimated Cost · CAD')
+
+    def test_analytics_tabs_headers_and_dynamic_values_follow_language(self):
+        data=self.localized_fixture()
+        self.panel.prefs['language']='en'
+        self.panel.apply_language()
+        self.panel.render(data)
+        self.panel.open_analytics();self.app.processEvents()
+        analytics=self.panel.analytics_window
+        self.assertEqual([analytics.tabs.tabText(i) for i in range(analytics.tabs.count())],
+                         ['Full Usage','By Model','By Conversation','Date && History','Raw Fields / Source'])
+        self.assertEqual(analytics.metrics.horizontalHeaderItem(0).text(),'Group / Metric')
+        self.assertIn('Never Translate This Project',analytics.subtitle.text())
+        self.assertNotRegex(analytics.subtitle.text(),r'[\u4e00-\u9fff]')
+
+    def test_representative_english_ui_contains_no_chinese_labels(self):
+        self.panel.prefs['language']='en'
+        self.panel.apply_language()
+        self.panel.render(self.localized_fixture())
+        visible='\n'.join(w.text() for cls in (QLabel,QPushButton) for w in self.panel.findChildren(cls))
+        self.assertNotRegex(visible,r'[\u4e00-\u9fff]')
+        self.assertIn('Waiting for limit refresh',visible)
+
+    def test_representative_chinese_ui_has_no_english_sentence_labels(self):
+        self.panel.prefs['language']='zh_CN'
+        self.panel.apply_language()
+        self.panel.render(self.localized_fixture())
+        visible='\n'.join(w.text() for cls in (QLabel,QPushButton) for w in self.panel.findChildren(cls))
+        self.assertIn('预估费用',visible)
+        self.assertNotIn('Waiting for data',visible)
+        self.assertNotIn('Estimated Cost',visible)
+
+    def test_analytics_token_column_headers_use_centralized_catalog(self):
+        self.panel.prefs['language']='en'
+        self.panel.apply_language()
+        self.panel.render(self.localized_fixture())
+        self.panel.open_analytics();self.app.processEvents()
+        analytics=self.panel.analytics_window
+        expected=[text(f'header_{name}','en') for name in
+            ('input_tokens','cached_tokens','uncached_tokens','write_tokens',
+             'output_tokens','reasoning_tokens','nonreasoning_tokens','total_tokens')]
+        self.assertEqual([analytics.models.horizontalHeaderItem(i).text() for i in range(1,9)],expected)
+        self.assertEqual(analytics.ranges.horizontalHeaderItem(1).text(),text('header_total_tokens','en'))
+        self.assertEqual(analytics.days.horizontalHeaderItem(4).text(),text('header_write_tokens','en'))
+        self.panel.prefs['language']='zh_CN'
+        self.panel.apply_language();self.app.processEvents()
+        self.assertEqual([analytics.models.horizontalHeaderItem(i).text() for i in range(1,9)],
+            [text(f'header_{name}','zh_CN') for name in
+            ('input_tokens','cached_tokens','uncached_tokens','write_tokens',
+             'output_tokens','reasoning_tokens','nonreasoning_tokens','total_tokens')])
+
+    def test_settings_fx_label_is_centralized_and_stable_across_languages(self):
+        self.panel.prefs['language']='en'
+        settings=Settings(self.panel)
+        self.assertEqual(settings.fx_label.text(),text('fx_rate_label','en'))
+        settings.language.setCurrentIndex(settings.language.findData('zh_CN'))
+        self.app.processEvents()
+        self.assertEqual(settings.fx_label.text(),text('fx_rate_label','zh_CN'))
+        settings.reject()
+
+    def test_catalog_has_no_unescaped_qt_mnemonics(self):
+        import re
+        for language, catalog in STRINGS.items():
+            for key, value in catalog.items():
+                self.assertIsNone(re.search(r'(?<!&)&(?!&)', value),
+                    f'{language}.{key} contains a single & that Qt would swallow as a mnemonic')
+
+    def test_pet_title_and_analytics_menu_follow_language(self):
+        self.panel.prefs['language']='en'
+        self.panel.apply_language();self.app.processEvents()
+        self.assertEqual(self.panel.pet.windowTitle(),text('pet_title','en'))
+        self.assertEqual(self.panel.pet.tr_text('analytics_button'),
+                         self.panel.tray_actions['analytics_button'].text())
+        self.panel.prefs['language']='zh_CN'
+        self.panel.apply_language();self.app.processEvents()
+        self.assertEqual(self.panel.pet.windowTitle(),text('pet_title','zh_CN'))
+        self.assertEqual(self.panel.pet.tr_text('analytics_button'),text('analytics_button','zh_CN'))
 
 
 if __name__=='__main__':unittest.main()
