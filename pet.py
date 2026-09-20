@@ -55,6 +55,10 @@ class DesktopPet(QWidget):
     def tr_text(self,key,**values):
         return text(key,self.panel.prefs.get('language'),**values)
 
+    def typing_phase(self):
+        monitor=getattr(self.panel,'activity',None)
+        return getattr(getattr(monitor,'state',None),'tap_phase',0)
+
     def apply_language(self):
         self.setWindowTitle(self.tr_text('pet_title'))
         self.setAccessibleName(self.tr_text('pet_accessible'))
@@ -155,11 +159,23 @@ class DesktopPet(QWidget):
         sprite=self.sprites.get(self.current_state,self.sprite)
         # Every state shares one logical sprite box around one feet anchor;
         # only approved-asset pixels change between states, never the geometry.
+        tap_shift=0
         if self.current_state=='typing' and self.motion:
-            offset+=math.sin(self.phase*8)*geometry.TYPING_AMPLITUDE
+            framed=assets.frame_for('typing',self.typing_phase())
+            if framed is not None:
+                sprite=framed
+            else:
+                # Fallback tap until approved V1.1 frames exist: tiny alternating
+                # tilt around the feet anchor plus a small lateral shift. The
+                # source art is never modified; motion stays inside the box.
+                tilt=1.2 if self.typing_phase() else -1.2
+                tap_shift=2 if self.typing_phase() else -2
+                ax,ay=geometry.anchor()
+                p.translate(ax,ay);p.rotate(tilt);p.translate(-ax,-ay)
+                offset+=math.sin(self.phase*8)*geometry.TYPING_AMPLITUDE
         sx,sy,sw,sh=geometry.sprite_rect(round(offset))
         if sprite is not None and not sprite.isNull():
-            p.drawPixmap(QRectF(sx,sy,sw,sh).toRect(),sprite)
+            p.drawPixmap(QRectF(sx+round(tap_shift),sy,sw,sh).toRect(),sprite)
         p.restore()
 
     def mousePressEvent(self,event):

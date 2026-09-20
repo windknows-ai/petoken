@@ -44,7 +44,8 @@ class AssetEntry:
 
 REGISTRY = (
     AssetEntry("idle", "assets/v1_1/idle.png", "assets/skirk-pet.png"),
-    AssetEntry("typing", "assets/v1_1/typing.png", "assets/skirk-typing.png"),
+    AssetEntry("typing", "assets/v1_1/typing.png", "assets/skirk-typing.png",
+               frames=("assets/v1_1/typing_1.png", "assets/v1_1/typing_2.png")),
     AssetEntry("codex_working", "assets/v1_1/working.png", "assets/skirk-pet.png"),
     AssetEntry("microphone", "assets/v1_1/microphone.png", "assets/skirk-microphone.png"),
     AssetEntry("music", "assets/v1_1/music.png", "assets/skirk-music.png"),
@@ -105,6 +106,36 @@ def sprite_for(state):
         if pixmap is not None:
             return pixmap
     return None
+
+
+_FRAME_CACHE = {}
+
+
+def existing_frames(entry):
+    """Return the entry's frame paths that actually exist on disk, in order."""
+    return [path for path in entry.frames
+            if (ASSETS_DIR.parent / path).is_file()]
+
+
+def frame_for(state_or_entry, phase):
+    """Resolve one animation frame for a tap ``phase``.
+
+    Accepts a state name or an ``AssetEntry`` (entries are directly testable
+    with temporary files). Returns None when no frame files exist, in which
+    case callers keep the static fallback visual. Loaded frames are cached so
+    per-repaint resolution stays cheap.
+    """
+    entry = state_or_entry if isinstance(state_or_entry, AssetEntry) else entry_for(state_or_entry)
+    valid = existing_frames(entry)
+    if not valid:
+        return None
+    from PySide6.QtGui import QPixmap
+    path = valid[phase % len(valid)]
+    pixmap = _FRAME_CACHE.get(path)
+    if pixmap is None or pixmap.isNull():
+        pixmap = QPixmap(str(ASSETS_DIR.parent / path))
+        _FRAME_CACHE[path] = pixmap
+    return pixmap if not pixmap.isNull() else None
 
 
 def load_sprites():

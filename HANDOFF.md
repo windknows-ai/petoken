@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — through asset pipeline / high-DPI architecture complete; geometry committed, asset slice uncommitted; not pushed)
+`V1.1.0` (UI and interaction refinement — through Bongo-Cat typing interaction complete; registry committed, typing slice uncommitted; not pushed)
 
 ## Current Stage
 
-OpenCode is the active continuation agent (Codex at usage limit). Geometry was committed as `f3cf834`; the Step 10 asset pipeline (central registry, V1.1 drop-in convention, explicit fallback chain, validation, render-tool enumeration) is complete and verified but intentionally uncommitted. No artwork was created, redrawn, or generated. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). Registry was committed as `a687cbc`; the Step 11 typing interaction (timestamp-only tap phases, registry frame hooks, subtle fallback tilt, preserved priority/geometry) is complete and verified but intentionally uncommitted. No Bongo Cat material copied; no artwork created. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -54,10 +54,13 @@ OpenCode is the active continuation agent (Codex at usage limit). Geometry was c
 - Geometry checkpoint `f3cf834` committed locally (7 files: geometry/render/tests/PROGRESS/HANDOFF work; message "feat: add compact DPI-aware pet geometry"). `AGENTS.md` excluded again, untouched.
 - Step 10 implemented by OpenCode, uncommitted: new `pet_assets.py` (frozen `AssetEntry` registry for idle/typing/codex_working/microphone/music/guitar, `ALIASES` for working→codex_working and usage→idle, `PREVIEW_STATES`, `entry_for`/`sprite_for` with primary→fallback→idle chain, `validate_path`/`load_path`, `load_sprites` keyed by activity name, `frames` stub for future animation); `pet.py` builds sprites from the registry (no filenames left in pet code, null-safe paint); `tools/render_states.py` enumerates `STATES = PREVIEW_STATES`; `assets/v1_1/README.md` documents the drop-in convention.
 - Asset verification passed: 113 tests, `py_compile`, `git diff --check`, 100%/200% renders for all six states plus Token Mode (all resolve via V1.0 fallbacks), live zh_CN smoke exits 0, idle SHA unchanged.
+- Registry checkpoint `a687cbc` committed locally (7 files: registry/render/README/tests/PROGRESS/HANDOFF work; message "feat: add V1.1 pet asset registry"). `AGENTS.md` excluded again, untouched.
+- Step 11 implemented by OpenCode, uncommitted: `ActivityState` gains timestamp-only `tap_phase` (`TAP_MIN_INTERVAL = 0.12`, `TYPING_WINDOW = 1.5`); typing entry carries `frames = (typing_1, typing_2)` with `frame_for` + cache; pet renders frames when present else a subtle feet-anchored fallback tilt (±1.2°, ±2px); render tool emits neutral/tap0/tap1 shots via synthetic timestamp pulses.
+- Typing verification passed: 122 tests, `py_compile`, `git diff --check`, 100%/200% tap renders inspected, live F24 typing smoke exits 0 with visible taps and `keyboard_hook_error: null`.
 
 ## Current Work / Partial Work
 
-None in progress. Step 10 asset pipeline is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
+None in progress. Step 11 typing interaction is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
 
 ## Important Decisions
 
@@ -68,9 +71,9 @@ None in progress. Step 10 asset pipeline is complete and verified but uncommitte
 
 ## Current Git State
 
-- Branch: `main`, HEAD `f3cf834` ("feat: add compact DPI-aware pet geometry"), eight commits ahead of `origin/main`; nothing was pushed.
-- The Step 10 asset-pipeline slice is intentionally uncommitted and unpushed. Modified tracked files: `pet.py`, `tools/render_states.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `pet_assets.py`, `tests/test_pet_assets.py`, `assets/v1_1/README.md`. `AGENTS.md` remains worktree-modified (excluded from `27ceb81`, `918f8cf`, and `f3cf834`).
-- Verification: 113 tests pass, `py_compile` passes, `git diff --check` passes, render QA at 100%/200% for all six states plus Token Mode inspected, and a live isolated zh_CN smoke exits 0.
+- Branch: `main`, HEAD `a687cbc` ("feat: add V1.1 pet asset registry"), nine commits ahead of `origin/main`; nothing was pushed.
+- The Step 11 typing slice is intentionally uncommitted and unpushed. Modified tracked files: `activity.py`, `pet.py`, `pet_assets.py`, `assets/v1_1/README.md`, `tools/render_states.py`, `tests/test_ui.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `tests/test_typing.py`. `AGENTS.md` remains worktree-modified (excluded from `27ceb81`, `918f8cf`, `f3cf834`, and `a687cbc`).
+- Verification: 122 tests pass, `py_compile` passes, `git diff --check` passes, render QA (typing neutral/tap phases at 100%/200%) inspected, and a live isolated zh_CN typing smoke exits 0 with visible taps.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -84,7 +87,7 @@ None in progress. Step 10 asset pipeline is complete and verified but uncommitte
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 11 only when authorized: Bongo-Cat-inspired typing interaction on the registry/geometry foundation.
+1. Implement V1.1.0 order step 12 only when authorized: floating Token UI + expanded interface redesign.
 2. Do not combine that slice with Working-animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 

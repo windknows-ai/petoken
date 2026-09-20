@@ -1,5 +1,6 @@
 """Local visual QA helper. Writes only synthetic screenshots to an ignored path."""
 import sys
+import time
 from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
@@ -39,6 +40,21 @@ def main(output):
         panel.pet.update_activity()
         app.processEvents()
         panel.pet.grab().save(str(output / f'pet-{state}.png'))
+    # Typing tap phases via synthetic timestamp-only pulses (no key content).
+    # With no V1.1 frame files present these are fallback-state renders.
+    from types import SimpleNamespace
+    from activity import ActivityState
+    panel.activity = SimpleNamespace(state=ActivityState(), close=lambda: None)
+    panel.pet.preview_state = 'typing'
+    base = time.monotonic()
+    panel.activity.state.key(base)
+    panel.pet.update_activity()
+    app.processEvents()
+    panel.pet.grab().save(str(output / 'pet-typing-tap1.png'))
+    panel.activity.state.key(base + 0.2)
+    panel.pet.update_activity()
+    app.processEvents()
+    panel.pet.grab().save(str(output / 'pet-typing-tap0.png'))
     panel.pet.preview_state = None
     panel.app_mode.update(True, True)
     panel.app_mode.update(True, True, panel.app_mode.pending_since + 1.0)

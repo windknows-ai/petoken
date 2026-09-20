@@ -7,15 +7,31 @@ import threading
 import time
 
 
+# Typing interaction timing. TYPING_WINDOW reuses the long-standing typing
+# debounce (typing shows for 1.5 s after the last pulse). TAP_MIN_INTERVAL
+# caps the visual tap rate: pulses closer than 0.12 s coalesce into the
+# current tap phase instead of flipping it, so rapid typing stays smooth.
+TYPING_WINDOW = 1.5
+TAP_MIN_INTERVAL = .12
+
+
 class ActivityState:
     def __init__(self):
         self.last_key=float('-inf')
         self.sampled=float('-inf')
         self.stable={'microphone':False,'music':False}
         self.pending={}
+        self.tap_phase=0
+        self.last_tap_change=float('-inf')
 
     def key(self,now=None):
-        self.last_key=time.monotonic() if now is None else now
+        # Timestamp pulse only. Key codes, characters, and text content are
+        # never accepted here and never reach the animation layer.
+        now=time.monotonic() if now is None else now
+        self.last_key=now
+        if now-self.last_tap_change>=TAP_MIN_INTERVAL:
+            self.tap_phase^=1
+            self.last_tap_change=now
 
     def sample(self,microphone,music,now=None):
         now=time.monotonic() if now is None else now
@@ -40,7 +56,7 @@ class ActivityState:
         if now-self.sampled<5:
             if self.stable['microphone']:return 'microphone'
             if self.stable['music']:return 'music'
-        return 'typing' if now-self.last_key<1.5 else 'idle'
+        return 'typing' if now-self.last_key<TYPING_WINDOW else 'idle'
 
 
 class KeyboardActivity:

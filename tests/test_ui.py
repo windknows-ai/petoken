@@ -336,6 +336,26 @@ class UiTests(unittest.TestCase):
         self.assertLessEqual(pos.x()+self.panel.pet.width(),screen.right()+1)
         self.assertLessEqual(pos.y()+self.panel.pet.height(),screen.bottom()+1)
 
+    def test_typing_tap_phases_render_without_geometry_change(self):
+        import pet_geometry as geometry
+        from types import SimpleNamespace
+        from activity import ActivityState
+        window_before=(self.panel.pet.width(),self.panel.pet.height())
+        self.panel.activity=SimpleNamespace(state=ActivityState())
+        self.panel.pet.preview_state='typing'
+        base=1000.0
+        for pulse,phase in ((None,0),(0.0,1),(0.2,0)):
+            if pulse is not None:
+                self.panel.activity.state.key(base+pulse)
+            self.panel.pet.update_activity()
+            self.app.processEvents()
+            self.assertEqual(self.panel.pet.current_state,'typing')
+            self.assertEqual(self.panel.pet.typing_phase(),phase)
+            self.assertFalse(self.panel.pet.grab().toImage().isNull())
+        self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),window_before)
+        self.assertEqual(geometry.anchor(),(121,225))
+        self.panel.pet.preview_state=None
+
     def test_pet_title_and_analytics_menu_follow_language(self):
         self.panel.prefs['language']='en'
         self.panel.apply_language();self.app.processEvents()

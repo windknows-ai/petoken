@@ -1,9 +1,9 @@
 # Project Progress
 
-Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, Working Context, three-scope analytics, Full / Compact Token formatting with units, Simplified Chinese / English visible localization (committed as `27ceb81`), Estimated Cost simplification with USD/CAD/EUR/CNY selection (committed as `918f8cf`), character scale / presentation foundation (committed as `f3cf834`), and the character asset pipeline / high-DPI asset architecture are complete and verified; the asset slice remains uncommitted and no later V1.1.0 step has started.
+Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, Working Context, three-scope analytics, Full / Compact Token formatting with units, Simplified Chinese / English visible localization (committed as `27ceb81`), Estimated Cost simplification with USD/CAD/EUR/CNY selection (committed as `918f8cf`), character scale / presentation foundation (committed as `f3cf834`), character asset pipeline / high-DPI architecture (committed as `a687cbc`), and the Bongo-Cat-inspired typing interaction are complete and verified; the typing slice remains uncommitted and no later V1.1.0 step has started.
 
 ## Current Objective
-Continue V1.1.0 from implementation-order step 11 only when authorized (Bongo-Cat-inspired typing interaction). The registry resolves all states with V1.0 fallbacks; final chibi artwork is still not supplied.
+Continue V1.1.0 from implementation-order step 12 only when authorized (floating UI / expanded UI redesign). Typing now taps left/right from timestamp-only pulses with V1.0 fallback art; approved typing frames and chibi artwork are still not supplied.
 
 ## Completed
 - Isolated repository cloned; personal website untouched. GitHub upload permission verified; current repo visibility private.
@@ -64,7 +64,8 @@ V1.1.0 formatting/units slice: token_format.py (new), app_config.py, localizatio
 V1.1.0 localization slice (begun by Codex, finished by OpenCode after a Codex usage-limit interruption, without restarting or replacing Codex work): localization.py, widget.py, pet.py, analytics_view.py, usage.py, desktop.py, app_config.py, tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`. Committed locally as `27ceb81` ("feat: add bilingual UI localization"); the tool-generated `AGENTS.md` auto-sync section was deliberately excluded and remains uncommitted.
 V1.1.0 cost/currency slice (OpenCode): pricing.py (new), usage.py, desktop.py, app_config.py, localization.py, widget.py, tests/test_pricing.py (new), tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`. Committed locally as `918f8cf` ("feat: simplify estimated cost and add currency selection"); `AGENTS.md` excluded again and remains uncommitted.
 V1.1.0 character-presentation slice (OpenCode): pet_geometry.py (new), pet.py, tools/render_states.py, tests/test_pet_geometry.py (new), tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`. Committed locally as `f3cf834` ("feat: add compact DPI-aware pet geometry"); `AGENTS.md` excluded again and remains uncommitted. No artwork created or modified; no animation changes.
-V1.1.0 asset-pipeline slice (OpenCode, uncommitted): pet_assets.py (new), assets/v1_1/README.md (new convention doc), pet.py, tools/render_states.py, tests/test_pet_assets.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`. No artwork created, redrawn, or generated.
+V1.1.0 asset-pipeline slice (OpenCode): pet_assets.py (new), assets/v1_1/README.md (new convention doc), pet.py, tools/render_states.py, tests/test_pet_assets.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`. Committed locally as `a687cbc` ("feat: add V1.1 pet asset registry"); `AGENTS.md` excluded again and remains uncommitted. No artwork created, redrawn, or generated.
+V1.1.0 typing-interaction slice (OpenCode, uncommitted): activity.py, pet_assets.py, pet.py, assets/v1_1/README.md, tools/render_states.py, tests/test_typing.py (new), tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`. Behavior inspiration only; no Bongo Cat art, sounds, or designs copied; no final artwork created.
 
 ## Important Decisions
 - Source: local Codex `state_*.sqlite` + JSONL sessions; UIA document LegacyIAccessible Name follows actual active task. Initial URL is stale and must never select the task.
@@ -84,7 +85,7 @@ V1.1.0 asset-pipeline slice (OpenCode, uncommitted): pet_assets.py (new), assets
 - Token formatting is presentation-only. Accounting, deduplication, scope identity and Working Context keep integers/`None`; views choose formatting from the persistent preference at the last possible step.
 
 ## Current State
-V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and performed V1.1.0 implementation through the localization slice. Checkpoints `859b654`, `f061ccf`, `f6da971`, `896ed09`, `27ceb81`, `918f8cf`, and `f3cf834` record foundations/modes, Working Context, scopes, formatting/units, localization, cost/currency, and character geometry. The completed asset-pipeline slice remains uncommitted and nothing was pushed. `99_Implementation_Notes.md` is maintained outside this Git repository.
+V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and performed V1.1.0 implementation through the localization slice. Checkpoints `859b654`, `f061ccf`, `f6da971`, `896ed09`, `27ceb81`, `918f8cf`, `f3cf834`, and `a687cbc` record foundations/modes, Working Context, scopes, formatting/units, localization, cost/currency, character geometry, and the asset registry. The completed typing-interaction slice remains uncommitted and nothing was pushed. `99_Implementation_Notes.md` is maintained outside this Git repository.
 
 ## Known Issues
 - Media playback detection depends on Windows System Media Transport Controls, so players that do not integrate with Windows media controls cannot be detected reliably.
@@ -127,8 +128,11 @@ V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 
 - Asset-pipeline verification: 113 tests pass (102 character-checkpoint + 11 asset); all project/test Python files pass `py_compile`; `git diff --check` passes. Render QA at 100% and 200% (`QT_SCALE_FACTOR=2`) for all six preview states plus Token Mode inspected: every state resolves (V1.1 primaries absent → V1.0 fallbacks), working/usage fall back to idle art with distinct identities, alpha clean, geometry and sharpness unchanged from Step 9. Live isolated zh_CN smoke exits 0. Idle SHA-256 unchanged; `assets/v1_1/` holds only the convention README.
 - Character checkpoint `f3cf834` ("feat: add compact DPI-aware pet geometry") was committed locally without pushing and without changing the application version. `AGENTS.md` excluded again and remains the only pre-existing modification outside the slice.
 
+- Typing-interaction verification: 122 tests pass (113 asset-checkpoint + 8 typing + 1 UI); all project/test Python files pass `py_compile`; `git diff --check` passes. Render QA at 100% and 200% for typing neutral/tap-left/tap-right plus all other states inspected (subtle ±1.2° feet-anchored tilt with ±2px shift, feet planted, in-box). Live isolated zh_CN smoke with continuous synthetic F24 pulses exits 0, `keyboard_hook_error: null`, and the pet visibly taps with no key content anywhere. Priority, decay, coalescing, and geometry covered by tests; no new timers, threads, or workers.
+- Asset checkpoint `a687cbc` ("feat: add V1.1 pet asset registry") was committed locally without pushing and without changing the application version. `AGENTS.md` excluded again and remains the only pre-existing modification outside the slice.
+
 ## Remaining Work
-- Continue later V1.1.0 steps only when authorized (next is step 11: Bongo-Cat-inspired typing interaction). Final chibi artwork is still not supplied. Do not start V1.2.0.
+- Continue later V1.1.0 steps only when authorized (next is step 12: floating UI and expanded UI redesign). Approved typing frames and final chibi artwork are still not supplied. Do not start V1.2.0.
 
 ## Next Step
-Implement V1.1.0 order step 11 only when authorized: Bongo-Cat-inspired typing interaction on top of the registry/geometry foundation. Do not begin Working-animation, subtitles, or V1.2.0.
+Implement V1.1.0 order step 12 only when authorized: redesign the floating Token UI and the click/hover expanded interface. Do not begin Working-animation, subtitles, or V1.2.0.

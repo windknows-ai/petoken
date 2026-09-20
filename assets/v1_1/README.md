@@ -9,7 +9,10 @@ do NOT generate, redraw, or invent assets here.
 Approved files, when supplied, use these exact names:
 
 - `idle.png`
-- `typing.png`
+- `typing.png` (static fallback pose)
+- `typing_1.png` / `typing_2.png` (optional tap-left / tap-right frames;
+  used automatically when both exist, otherwise the static pose plus a
+  subtle fallback tilt is rendered)
 - `working.png` (Codex Working; distinct from typing)
 - `microphone.png`
 - `music.png`
