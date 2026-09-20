@@ -198,10 +198,11 @@ class RedesignTests(unittest.TestCase):
         self.panel.end_resize(move)
 
     def test_compact_hides_body_and_stays_small(self):
+        from widget import COMPACT_HEIGHT
         self.panel.show()
         self.panel.toggle_compact()
         self.assertFalse(self.panel.body_scroll.isVisible())
-        self.assertLessEqual(self.panel.height(), 280)
+        self.assertEqual(self.panel.height(), COMPACT_HEIGHT)
         self.assertFalse(self.panel.size_grip.isVisible())
         self.panel.toggle_compact()
         self.assertTrue(self.panel.body_scroll.isVisible())

@@ -94,6 +94,9 @@ def divider():
 PANEL_MIN = (360, 420)
 PANEL_MAX = (600, 640)
 PANEL_DEFAULT = (420, 500)
+# Intentional compact footprint: identity + task + one metrics row + one
+# control strip. Tuned from real renders, not from the expanded stack.
+COMPACT_HEIGHT = 316
 
 
 
@@ -184,17 +187,19 @@ class ElidedLabel(QLabel):
 
 class TokenTotalLabel(QLabel):
     """Fit full integers to the viewport without changing their numeric text."""
-    def __init__(self):
+    def __init__(self, base_size=30, object_name='number'):
         super().__init__('—')
-        self.setObjectName('number')
+        self._base_size = base_size
+        self.setObjectName(object_name)
         self.setWordWrap(True)
         self.setTextFormat(Qt.PlainText)
 
     def fit(self):
         font = QFont(self.font())
-        font.setPixelSize(30)
+        font.setPixelSize(self._base_size)
         width = QFontMetrics(font).horizontalAdvance(self.text())
-        size = max(12, min(30, int(30 * max(1, self.contentsRect().width()-2) / max(1, width))))
+        size = max(12, min(self._base_size,
+                           int(self._base_size * max(1, self.contentsRect().width()-2) / max(1, width))))
         style = f'font-size:{size}px;'
         if self.styleSheet() != style:
             self.setStyleSheet(style)
@@ -503,6 +508,45 @@ class Panel(QWidget):
         model_row.addWidget(self.effort)
         model_row.addStretch()
         layout.addLayout(model_row)
+        # Intentional compact composition (A3): one metrics row (cost hero +
+        # token hero sharing the width) plus one control strip. The expanded
+        # bars lend their widgets here while compact; nothing is duplicated.
+        self.compact_box = QWidget()
+        compact_layout = QVBoxLayout(self.compact_box)
+        compact_layout.setContentsMargins(0, 0, 0, 0)
+        compact_layout.setSpacing(8)
+        compact_layout.addWidget(divider())
+        metrics = QHBoxLayout()
+        metrics.setSpacing(12)
+        cost_hero = QVBoxLayout()
+        cost_hero.setSpacing(4)
+        # Compact cost twins auto-fit like the token hero, so Full numbers
+        # plus large costs share one 360 px row without overlap. The expanded
+        # cost widgets stay untouched in their hidden bar.
+        self.compact_cost_label = label('', 'muted')
+        cost_hero.addWidget(self.compact_cost_label)
+        self.compact_cost = TokenTotalLabel(base_size=22, object_name='cost')
+        self.compact_cost.setWordWrap(False)
+        cost_hero.addWidget(self.compact_cost)
+        metrics.addLayout(cost_hero, 1)
+        token_hero = QVBoxLayout()
+        token_hero.setSpacing(4)
+        self.compact_token_header = label('', 'muted')
+        self.compact_token_header.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        token_hero.addWidget(self.compact_token_header)
+        self.compact_total = TokenTotalLabel()
+        self.compact_total.setWordWrap(False)
+        self.compact_total.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        token_hero.addWidget(self.compact_total)
+        metrics.addLayout(token_hero, 1)
+        compact_layout.addLayout(metrics)
+        self.compact_foot = QHBoxLayout()
+        self.compact_foot.setSpacing(8)
+        self.compact_foot.addStretch()
+        compact_layout.addLayout(self.compact_foot)
+        self.compact_box.setVisible(False)
+        self._compact_docked = False
+        layout.addWidget(self.compact_box)
         self.body = QWidget()
         self.body.setStyleSheet(f'background:{BG};')
         body = QVBoxLayout(self.body)
@@ -554,6 +598,7 @@ class Panel(QWidget):
         self.body_scroll.setWidget(self.body)
         layout.addWidget(self.body_scroll,1)
         cost_row = QHBoxLayout()
+        self.cost_row_layout = cost_row
         cost_left = QVBoxLayout()
         cost_left.setSpacing(4)
         self.cost_label = label('', 'muted')
@@ -567,8 +612,11 @@ class Panel(QWidget):
         self.pin.setChecked(bool(self.prefs.get('panel_pinned', False)))
         self.pin.setFixedSize(34,34)
         cost_row.addWidget(self.pin)
-        layout.addLayout(cost_row)
+        self.cost_bar = QWidget()
+        self.cost_bar.setLayout(cost_row)
+        layout.addWidget(self.cost_bar)
         bottom = QHBoxLayout()
+        self.bottom_layout = bottom
         self.status = label('', 'muted')
         bottom.addWidget(self.status)
         bottom.addStretch()
@@ -577,7 +625,9 @@ class Panel(QWidget):
         self.size_grip = label('⋰', 'muted')
         self.size_grip.setCursor(Qt.SizeFDiagCursor)
         bottom.addWidget(self.size_grip)
-        layout.addLayout(bottom)
+        self.bottom_bar = QWidget()
+        self.bottom_bar.setLayout(bottom)
+        layout.addWidget(self.bottom_bar)
         self.header.mousePressEvent = self.begin_drag
         self.header.mouseMoveEvent = self.drag
         self.header.mouseReleaseEvent = self.end_drag
@@ -687,6 +737,7 @@ class Panel(QWidget):
         self.project.setText(t('waiting_codex'))
         self.title.setFullText(t('open_codex_task'))
         self.total_header.setText(t('total_tokens'))
+        self.compact_token_header.setText(t('total_tokens'))
         self.scope_button.setToolTip(t('switch_scope'))
         self.scope_button.setAccessibleName(t('switch_scope'))
         self.scope_button.setText(scope_text(self.snapshot.get('scope', self.prefs.get('scope')),
@@ -700,6 +751,7 @@ class Panel(QWidget):
         self.five.set_title(t('five_hour_limit'))
         self.week.set_title(t('weekly_limit'))
         self.cost_label.setText(t('estimated_cost')+f" · {normalize_currency(self.prefs.get('currency'))}")
+        self.compact_cost_label.setText(self.cost_label.text())
         self.update_pin_button()
         self.status.setText(t('checking_wait'))
         self.settings_button.setToolTip(t('settings_help'))
@@ -769,7 +821,8 @@ class Panel(QWidget):
             self.connection.setToolTip(status)
             self.title.setFullText(self.tr_text('waiting_available_task'))
             self.project.setText('CODEX')
-            for w in (self.total,self.model,self.effort,self.cost):
+            for w in (self.total,self.model,self.effort,self.cost,self.compact_total,
+                        self.compact_cost):
                 w.setText('—')
                 w.setToolTip(status)
             self.io_line.setText('—')
@@ -794,8 +847,14 @@ class Panel(QWidget):
         tokens = data.get('tokens', {})
         token_style = self.prefs.get('token_number_format')
         total = tokens.get('total_tokens',0)
-        self.total.setText(format_token_value(total, token_style) if data.get('available') else '—')
-        self.total.setToolTip((format_tokens(total, 'full') if data.get('available') else self.tr_text('no_reliable_record'))+'\n'+help_text('total_tokens', self.language))
+        total_text = format_token_value(total, token_style) if data.get('available') else '—'
+        total_tip = ((format_tokens(total, 'full') if data.get('available')
+                      else self.tr_text('no_reliable_record'))
+                     + '\n' + help_text('total_tokens', self.language))
+        self.total.setText(total_text)
+        self.total.setToolTip(total_tip)
+        self.compact_total.setText(total_text)
+        self.compact_total.setToolTip(total_tip)
         if data.get('available'):
             cached = self.tr_text('cached_input_line', value=format_tokens(tokens.get('cached_input_tokens'), token_style))
             self.io_line.setText(f"{self.tr_text('input')} {format_tokens(tokens.get('input_tokens'), token_style)} · {self.tr_text('output')} {format_tokens(tokens.get('output_tokens'), token_style)}")
@@ -827,6 +886,7 @@ class Panel(QWidget):
         d = self.snapshot
         if not d.get('available'):
             self.cost.setText('—')
+            self.compact_cost.setText('—')
             return
         currency = self.currency
         fx = self.fx
@@ -842,7 +902,9 @@ class Panel(QWidget):
                          f" · {fx['date']}\n{fx['source']}")
         partial = bool(d.get('unknown') or d.get('partial') or 'note_cache_write_unavailable' in d.get('notes',[]))
         self.cost.setText('≈ ' + format_cost(value, currency))
+        self.compact_cost.setText('≈ ' + format_cost(value, currency))
         self.cost_label.setText(self.tr_text('partial_estimate' if partial else 'estimated_cost')+f' · {currency}')
+        self.compact_cost_label.setText(self.cost_label.text())
         tip = (self.tr_text('local_conversations',
                 scope=scope_text(d.get('scope'), self.language, recorded=d.get('scope') == 'global'),
                 count=d.get('count',1))+'\n'+
@@ -856,6 +918,8 @@ class Panel(QWidget):
             tip += '\n'+self.tr_text('partial_records')
         self.cost.setToolTip(tip)
         self.cost_label.setToolTip(tip)
+        self.compact_cost.setToolTip(tip)
+        self.compact_cost_label.setToolTip(tip)
 
     def refresh_status(self):
         quota = self.quota
@@ -960,20 +1024,48 @@ class Panel(QWidget):
         self.body.setVisible(not self.compact)
         self.body_scroll.setVisible(not self.compact)
         self.size_grip.setVisible(not self.compact)
+        self.cost_bar.setVisible(not self.compact)
+        self.bottom_bar.setVisible(not self.compact)
+        self.compact_box.setVisible(self.compact)
         self.collapse_button.setText('+' if self.compact else '−')
         if self.compact:
-            self.setFixedHeight(250)
+            self._dock_compact_widgets()
+            self.setFixedHeight(COMPACT_HEIGHT)
         else:
+            self._restore_expanded_widgets()
             self.setMinimumSize(*PANEL_MIN)
             self.setMaximumSize(*PANEL_MAX)
             self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
         QTimer.singleShot(0, lambda: self.anchor_to_pet() if self.isVisible() else None)
+
+    def _dock_compact_widgets(self):
+        # The expanded bars lend status/pin/settings to the compact
+        # composition; the flag keeps repeated calls order-stable.
+        if self._compact_docked:
+            return
+        self.compact_foot.insertWidget(0, self.status)
+        self.compact_foot.addWidget(self.pin)
+        self.compact_foot.addWidget(self.settings_button)
+        self._compact_docked = True
+
+    def _restore_expanded_widgets(self):
+        if not self._compact_docked:
+            return
+        self.cost_row_layout.addWidget(self.pin)
+        self.bottom_layout.insertWidget(0, self.status)
+        self.bottom_layout.insertWidget(2, self.settings_button)
+        self._compact_docked = False
 
     def toggle_compact(self):
         self.compact = not self.compact
         self.prefs['compact'] = self.compact
         self.apply_compact()
         self.persist()
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            # The click counts as fresh presence: an expand-then-anchor jump
+            # must not immediately read as a cursor leave (auto-hide grace).
+            pet.left_since = None
 
     def begin_drag(self, event):
         if event.button() == Qt.LeftButton:

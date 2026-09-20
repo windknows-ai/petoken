@@ -58,7 +58,8 @@ class UiTests(unittest.TestCase):
         self.assertTrue(values['Cache · Cache Hit Ratio'].endswith('%'))
         self.panel.toggle_compact();self.app.processEvents()
         self.assertFalse(self.panel.body_scroll.isVisible())
-        self.assertLessEqual(self.panel.height(),280)
+        from widget import COMPACT_HEIGHT
+        self.assertEqual(self.panel.height(),COMPACT_HEIGHT)
         self.panel.toggle_compact();self.app.processEvents()
         self.assertTrue(self.panel.body_scroll.isVisible())
         settings=Settings(self.panel);settings.show();self.app.processEvents();settings.reject()

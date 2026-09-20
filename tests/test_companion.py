@@ -417,12 +417,13 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(panel.status_text.text(), 'Working')
 
     def test_compact_keeps_identity_and_hides_scroll(self):
+        from widget import COMPACT_HEIGHT
         panel = self.make_panel()
         panel.show()
         panel.toggle_compact()
         self.app.processEvents()
         self.assertFalse(panel.body_scroll.isVisible())
-        self.assertLessEqual(panel.height(), 280)
+        self.assertEqual(panel.height(), COMPACT_HEIGHT)
         self.assertTrue(panel.title.isVisible())
         panel.toggle_compact()
         self.app.processEvents()

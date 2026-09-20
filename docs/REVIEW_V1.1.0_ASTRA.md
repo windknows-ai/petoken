@@ -202,3 +202,23 @@ APP_VERSION stays 1.1.0. The authorized single local correction checkpoint uses 
 Final V1.1 requirement implemented on top of the correction checkpoint without altering its geometry, anchoring, or rendering: persistent `pet_scale_percent` (default 100%, range 50–150%, invalid normalizes to 100%). 100% reproduces the approved 256-square composition exactly (base geometry functions byte-unchanged; asserted by test). Scaling is proportional across window/sprite/anchor/bubble/fonts/amplitudes and reuses the single-DPR-resample pipeline; resize preserves the feet anchor's screen position and re-docks the panel through the existing right-first helper. Settings exposes a Character Size / 角色大小 slider with live preview, cancel-revert, Save persistence and Reset-to-Defaults 100%.
 
 Evidence: 232/232 tests pass (22 new in tests/test_pet_scale.py: defaults, bounds, 100%-unchanged, half/intermediate/max geometry, persistence, invalid normalization, reset, all seven state families incl. both typing frames, aspect stability, anchor stability, clamp, panel adjacency, no-move open, no-drift rescale, live preview, bilingual labels); py_compile and git diff --check pass; isolated source smoke exits 0 with live usage/quota; 50/75/100/150% idle+working pets, Settings zh/en, and panel adjacency inspected at measured DPR 1.25 and 2.5 (`.private/pet-scale-qa/`, ignored). 150% maximum justified: 408×495 still docks beside the panel on standard screens and stays below the 1254 px source at high DPR. No artwork, analytics, or version change. Single local checkpoint `feat: add adjustable pet character size`; AGENTS.md/ROADMAP.md pre-existing changes excluded; nothing pushed; V1.2.0 not started.
+
+## Manual-acceptance addendum - OpenCode, 2026-09-20 (A1-A4)
+
+User manual testing on the frozen app found four issues automated QA missed. Dispositions below; single local checkpoint `fix: close final V1.1 manual acceptance issues`; nothing pushed/tagged/published; V1.2.0 not started.
+
+### A1 — Character Size control not found: PASS (stale frozen binary, not a code defect)
+
+Root cause: the frozen binary under test (`dist/petoken/petoken.exe`, 12:19:26) predates the pet-scale commit `c277366` (13:03:40) by ~44 minutes, so it cannot contain the control. The feature exists in HEAD: the real Settings window was launched and inspected — 角色大小 / Character Size slider (50–150%, live %, default 100%) is the last form row, visible without scrolling in zh_CN and en (dialog 540×537/612). Closed with a fresh frozen build whose smoke Settings screenshot shows the same slider. Lesson: acceptance must run against a build of the reviewed revision.
+
+### A2 — QQ Music shows no subtitle: PASS (honest no-subtitle behavior, documented limitation)
+
+Live inspection of the running `QQMusic.exe` SMTC session: title present, artist present, album_title present, **subtitle empty**, playback status PAUSED (5). A 4-second live `ActivityMonitor` probe reads music=False / music_text=None — the pipeline is correct. Per the approved subtitle-only design, no pill is the required behavior; no scraping, lyric APIs, audio capture, transcription, persistence, or fabrication was added. If QQ Music ever populates `subtitle` while Playing, the existing verified path displays it.
+
+### A3 — Compact layout redesigned: PASS
+
+Compact was a cropped expanded stack (cost/pin and status/settings stretched into detached islands, no token metric). It is now intentional: header/project/title/model rows, one divider, one metrics row (cost hero + auto-fitting token hero sharing the width), one control strip (status + pin + settings). Expanded bars lend status/pin/settings while compact (order-stable, flag-guarded); cost uses auto-fit twins so Full trillions plus large costs share a 360 px row with no overlap and no clipped values. Expanded UI untouched. Verified zh/en, Compact/Full, $17k cost, 360/420/600 widths, pinned ◆, two DPRs.
+
+### A4 — Compact to Expanded restore: PASS
+
+Real `QTest.mouseClick` lifecycle probes on HEAD: click enters compact (420×316, `+`), click `+` restores expanded with the last valid size (520×520 and 500×460 cases), 4+ repeated cycles hold size with controls intact, restart-in-compact restores then expands on click. The reported total failure matches the stale 12:19 binary built mid-refactor (64f7fcb-era `CompanionStage` overlay / WIP tree), not current code. Hardening added: `toggle_compact` resets the pet leave-timestamp so an expand-then-anchor jump gets auto-hide grace instead of vanishing. COMPACT_HEIGHT is now 316 (fixed-height holds at every width after disabling wrap on the compact twins; the old ≤280 assertions were legitimately updated).

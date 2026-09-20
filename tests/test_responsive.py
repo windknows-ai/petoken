@@ -69,11 +69,12 @@ class ResponsiveTests(unittest.TestCase):
                           self.make_panel({'panel_size': ['wide', 'tall']}).height()), (420, 500))
 
     def test_compact_mode_preserves_saved_expanded_size(self):
+        from widget import COMPACT_HEIGHT
         panel = self.make_panel({'panel_size': [520, 560]})
         panel.show()
         panel.toggle_compact()
         self.assertEqual(panel.prefs['panel_size'], [520, 560])
-        self.assertLessEqual(panel.height(), 280)
+        self.assertEqual(panel.height(), COMPACT_HEIGHT)
         panel.toggle_compact()
         self.assertEqual((panel.width(), panel.height()), (520, 560))
         self.assertEqual(panel.prefs['panel_size'], [520, 560])
