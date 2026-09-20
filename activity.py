@@ -15,6 +15,12 @@ TYPING_WINDOW = 1.5
 TAP_MIN_INTERVAL = .12
 
 
+def activity_diagnostics(status):
+    """Allowlist state-only diagnostics; media contents stay in memory."""
+    return {name: status.get(name) if isinstance(status.get(name), bool) else None
+            for name in ('microphone', 'music')}
+
+
 def summarize_music_text(app_id, title, artist, subtitle, playing):
     """Build the memory-only Music text state from verified session metadata.
 

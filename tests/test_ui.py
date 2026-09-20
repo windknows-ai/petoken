@@ -70,7 +70,7 @@ class UiTests(unittest.TestCase):
             pet.hover_since=time.monotonic()-1
             pet.update_activity()
             self.assertTrue(self.panel.isVisible())
-            self.assertEqual(pet.current_state,'usage')
+            self.assertEqual(pet.current_state,'idle')
             cursor.pos.return_value=QPoint(-9999,-9999)
             pet.left_since=time.monotonic()-1
             self.panel.activity.state.key()
@@ -302,7 +302,7 @@ class UiTests(unittest.TestCase):
     def test_pet_uses_companion_scale_window_and_full_res_sources(self):
         import pet_geometry as geometry
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),geometry.window_size())
-        self.assertEqual(geometry.window_size(),(242,268))
+        self.assertEqual(geometry.window_size(),(272,330))
         for state in ('idle','typing','microphone','music'):
             source=self.panel.pet.sprites[state]
             self.assertFalse(source.isNull(),state)
@@ -318,7 +318,7 @@ class UiTests(unittest.TestCase):
             image=self.panel.pet.grab().toImage()
             self.assertFalse(image.isNull(),state)
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),before)
-        self.assertEqual(geometry.sprite_rect(),(48,64,145,197))
+        self.assertEqual(geometry.sprite_rect(),(8,64,256,256))
         self.panel.pet.preview_state=None
 
     def test_pet_drag_clamp_and_saved_position_recovery(self):
@@ -355,7 +355,7 @@ class UiTests(unittest.TestCase):
             self.assertEqual(self.panel.pet.typing_phase(),phase)
             self.assertFalse(self.panel.pet.grab().toImage().isNull())
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),window_before)
-        self.assertEqual(geometry.anchor(),(121,261))
+        self.assertEqual(geometry.anchor(),(136,320))
         self.panel.pet.preview_state=None
 
     def test_music_subtitle_pill_only_with_text_and_music_visible(self):
@@ -435,7 +435,7 @@ class UiTests(unittest.TestCase):
             grabs.add(image.cacheKey() if hasattr(image,'cacheKey') else image.sizeInBytes())
             self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),
                              geometry.window_size(),state)
-        self.assertEqual(geometry.anchor(),(121,261))
+        self.assertEqual(geometry.anchor(),(136,320))
         self.assertGreater(len(grabs),1)
         self.panel.pet.preview_state=None
         self.assertEqual(assets.resolve_path(assets.entry_for('idle')),'assets/v1_1/idle.png')

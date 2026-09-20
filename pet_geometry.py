@@ -1,18 +1,8 @@
-"""Logical character geometry for the desktop pet.
+"""Logical bounds for the anchored desktop companion.
 
-Separates three concerns that V1.0 tangled together:
-
-- source asset pixels (``assets/skirk-*.png``, ~1080 px, never modified here),
-- logical pet size (device-independent pixels the UI is laid out in),
-- physical rendering (logical size times the screen devicePixelRatio).
-
-V1.0 baseline: 242x378 window, 214x290 sprite box at y=82.
-Companion redesign (V1.1 character-led slice): ``CHARACTER_SCALE`` (0.68) of
-the baseline apparent size, so the desktop pet holds its own next to the
-wider companion panel. One shared sprite box and one feet/ground anchor for
-every state, bubble geometry unchanged. Future approved chibi assets only
-need to fill the same logical sprite box; no per-state offsets exist to
-re-tune.
+Approved square chibi sources occupy a 256x256 box. Rendering fits each source
+without stretching and aligns its feet to the same anchor at every screen DPR.
+The panel is an adjacent satellite; it never owns or relocates the character.
 """
 from __future__ import annotations
 
@@ -21,20 +11,20 @@ BASELINE_WINDOW = (242, 378)
 BASELINE_SPRITE = (214, 290)
 BASELINE_SPRITE_Y = 82
 
-# Companion presentation scale vs the V1.0 baseline apparent size.
-CHARACTER_SCALE = 0.68
+# Motion amplitude scale; artwork has its own square logical bounds.
+CHARACTER_SCALE = 1.0
 
-WINDOW_WIDTH = BASELINE_WINDOW[0]
+WINDOW_WIDTH = 272
 # Compact Token card (V1.1 step 12): project + status on line one, live
 # Tokens on line two. Smaller than the V1.0 240x70 bubble.
-BUBBLE_RECT = (1, 1, 240, 58)
+BUBBLE_RECT = (16, 1, 240, 58)
 BUBBLE_TEXT_WIDTH = 216
 
-SPRITE_WIDTH = int(BASELINE_SPRITE[0] * CHARACTER_SCALE)
-SPRITE_HEIGHT = int(BASELINE_SPRITE[1] * CHARACTER_SCALE)
+SPRITE_WIDTH = 256
+SPRITE_HEIGHT = 256
 SPRITE_X = (WINDOW_WIDTH - SPRITE_WIDTH) // 2
 SPRITE_Y = 64
-WINDOW_HEIGHT = SPRITE_Y + SPRITE_HEIGHT + 7
+WINDOW_HEIGHT = SPRITE_Y + SPRITE_HEIGHT + 10
 
 # Feet/ground anchor: bottom-center of the shared sprite box. Every state
 # draws into the same box, so switching states cannot shift the feet.
@@ -80,3 +70,20 @@ def clamp_position(x, y, width, height, screen):
     left, top, right, bottom = screen
     return (max(left, min(x, right - width + 1)),
             max(top, min(y, bottom - height + 1)))
+
+
+def panel_position(pet, panel_size, screen, gap=12):
+    """Place the satellite on the pet's screen without moving its anchor.
+
+    Prefer right, then left. When neither side fits, choose the roomier side
+    and clamp only the panel. An undersized work area may necessarily overlap.
+    Rectangles use (x, y, width, height); screen uses inclusive edges.
+    """
+    x, y, width, height = pet
+    pw, ph = panel_size
+    left, top, right, bottom = screen
+    right_space = right + 1 - (x + width + gap)
+    left_space = x - gap - left
+    use_right = right_space >= pw or (left_space < pw and right_space >= left_space)
+    px = x + width + gap if use_right else x - gap - pw
+    return clamp_position(px, y + height - ph, pw, ph, screen)

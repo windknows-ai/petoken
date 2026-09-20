@@ -1,5 +1,17 @@
 # Handoff
 
+## Latest authorized correction - COMPLETE
+
+- Astra temporarily implemented this slice; OpenCode stayed paused. Correction acceptance PASS: enlarged aspect-preserving 256-square pet, one real character as spatial anchor, right-first adjacent satellite, R1-R9 and scope-aware verifier fixed. Default role returns to Astra review/planning after this slice.
+- Evidence: 210 tests; 37 compiled Python files; source/frozen smoke with real usage/quota; PyInstaller; five effective DPRs; 75 zero-drift cycles; two native monitor/focus checks. Details and remaining version-level gaps: docs/REVIEW_V1.1.0_ASTRA.md addendum.
+- One authorized correction checkpoint: `fix: close V1.1 companion acceptance gaps`, parent `64f7fcb`. AGENTS.md and ROADMAP.md pre-existing changes excluded. No push/publication or V1.2.
+
+## Historical baseline review (2026-09-20)
+
+- COMPLETED: independent review of HEAD `64f7fcb`; verdict PARTIAL / not release-ready. Implementation code was not modified. Initial working-tree change was `AGENTS.md` only and is preserved.
+- Fresh checks: 196 tests pass; 36 Python files compile; isolated source smoke exits 0 with live usage/quota and no keyboard hook error. Qt probes reproduce window visibility, pinned startup, stage animation/state, and scoped-status defects; final findings are recorded in `docs/REVIEW_V1.1.0_ASTRA.md`.
+- `tools/verify_local.py` failed at `assert checked>=3` after the earlier numeric reconciliation assertions passed. Confirmed default Conversation scope indexes one eligible session. An independent explicit Global check reconciled 30 eligible / 44 indexed sessions and both model/session sums; the original command still FAILS and needs a scope-aware fix.
+
 Concise current execution/review snapshot. This is NOT a substitute for `PROGRESS.md`, `CHANGELOG.md`, `AGENTS.md`, or the external version specifications.
 
 ## Current Implementer
@@ -20,42 +32,42 @@ Astra-6 is the primary reviewer, technical lead, acceptance reviewer, and roadma
 
 ## Current Target Version
 
-`V1.1.0` (implementation COMPLETE locally and verified with final artwork; completion committed locally; not pushed, not published)
+`V1.1.0` (parent `64f7fcb` plus the correction checkpoint containing this entry; correction slice PASS, version acceptance PARTIAL; not pushed or published)
 
 ## Current Approved Slice
 
-`V1.1 companion-redesign slice (user-authorized character-led correction)`
+`Completed Astra fixed-anchor / size / clarity / R1-R9 correction slice`
 
-Single-composition companion panel with a live chibi stage, landscape proportions, enlarged desktop pet, and card-free data presentation — on top of completed V1.1.0 + polish slice, without starting V1.2.0 and without discarding validated functionality. OpenCode must not begin any further slice without explicit approval.
+The desktop pet is the only full character and permanent spatial anchor. Its satellite opens beside it. R1-R9 corrections and validation are complete. No further implementation slice is authorized.
 
 ## Implementation Status
 
-`COMPLETED — AWAITING REVIEW / PUBLICATION DECISION`
+`CORRECTION SLICE PASS; VERSION RELEASE ACCEPTANCE STILL PARTIAL`
 
-The companion-redesign slice is implemented, verified (196 tests, isolated live smoke, 100%/200% screenshot matrix inspected), and committed locally as one checkpoint. V1.1.0 implementation and the polish slice remain complete. No push, GitHub Release, or binary publication has been authorized.
+The initial review failures have been fixed and verified in the authorized correction slice. Remaining version-level requirements are listed in the review addendum. No push, GitHub Release or binary publication is authorized.
 
 ## Last Review Verdict
 
-`Awaiting Codex / Astra-6 review under the new reviewer/planner role`
+`PASS for the authorized correction slice; PARTIAL for full V1.1 release readiness`
 
-The prior OpenCode acceptance checks passed, but future roadmap/next-slice decisions belong to Astra-6/user review.
+See the latest addendum in `docs/REVIEW_V1.1.0_ASTRA.md`; preserve the original review as history.
 
 ## Required Corrections
 
-`None currently recorded — the character-led correction list became the authorized companion-redesign slice and is implemented (see Last Completed Step).`
+`R1-R9 and verification-tool corrections FIXED. Remaining separate version gaps: scope selection, multi-active indication, hitboxes, system reduced motion, full performance baseline and distribution acceptance.`
 
-Any new correction list must come from Astra-6 review or explicit user direction.
+The report gives precise reproduction evidence and regression-test requirements. Subsequent acceptance closure must address remaining scope/multi-task/accessibility/performance evidence gaps.
 
 ## Next Planned Slice
 
-`Not authorized yet.`
+`Not started: remaining V1.1 acceptance closure, subject to the next explicit task.`
 
-Astra-6 will review the actual repository and determine the next planned slice. `ROADMAP.md` is planning context only and does not authorize implementation.
+Astra-6 remains the default reviewer/planner. ROADMAP.md is planning context only, not implementation authorization.
 
 ## Exact Next Action
 
-- OpenCode: STOP after the authorized companion-redesign slice is committed; do not start new work independently.
-- Codex / Astra-6: when available, review the actual completed repository state (V1.1.0 + polish + redesign slices) and recommend either publication or the next approved development slice.
+- Both agents: STOP implementation after this correction checkpoint; preserve the remaining AGENTS.md/ROADMAP.md working-tree changes.
+- Astra-6: default review/planning role resumes. Determine the next bounded V1.1 acceptance slice only when requested.
 - User: explicitly authorizes any push, GitHub Release, binary publication, or next-version start.
 
 ## Last Completed Step

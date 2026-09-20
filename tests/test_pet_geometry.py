@@ -10,23 +10,23 @@ class PetGeometryTests(unittest.TestCase):
         self.assertEqual(geometry.BASELINE_SPRITE_Y, 82)
 
     def test_logical_character_scale(self):
-        self.assertEqual(geometry.CHARACTER_SCALE, 0.68)
-        self.assertEqual((geometry.SPRITE_WIDTH, geometry.SPRITE_HEIGHT), (145, 197))
+        self.assertEqual(geometry.CHARACTER_SCALE, 1.0)
+        self.assertEqual((geometry.SPRITE_WIDTH, geometry.SPRITE_HEIGHT), (256, 256))
         self.assertLess(geometry.WINDOW_HEIGHT, geometry.BASELINE_WINDOW[1])
-        self.assertEqual(geometry.window_size(), (242, 268))
+        self.assertEqual(geometry.window_size(), (272, 330))
 
     def test_single_shared_sprite_box_for_all_states(self):
         first = geometry.sprite_rect()
         for offset in (0, 1, -2, 3):
             x, y, w, h = geometry.sprite_rect(offset)
-            self.assertEqual((x, w, h), (first[0], 145, 197))
+            self.assertEqual((x, w, h), (first[0], 256, 256))
             self.assertEqual(y, first[1] + offset)
 
     def test_feet_anchor_is_sprite_bottom_center(self):
         x, y, w, h = geometry.sprite_rect()
         ax, ay = geometry.anchor()
         self.assertEqual((ax, ay), (geometry.WINDOW_WIDTH // 2, y + h))
-        self.assertEqual(geometry.anchor(), (121, 261))
+        self.assertEqual(geometry.anchor(), (136, 320))
 
     def test_bubble_stays_inside_window_above_sprite(self):
         bx, by, bw, bh = geometry.bubble_rect()

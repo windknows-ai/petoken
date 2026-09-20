@@ -153,7 +153,10 @@ class PanelPersistTests(unittest.TestCase):
 
     def test_pinned_panel_restores_visible_unpinned_stays_hidden(self):
         pinned = self.make_panel({'panel_pinned': True})
+        self.attach_pet(pinned)
+        pinned.restore_companion()
         self.assertTrue(pinned.isVisible())
+        self.assertTrue(pinned.pet.isVisible())
         plain = self.make_panel({})
         self.assertFalse(plain.isVisible())
 
@@ -173,10 +176,10 @@ class PanelPersistTests(unittest.TestCase):
     # -- proportions ----------------------------------------------------------
 
     def test_landscape_proportions_stay_sane_and_clamped(self):
-        self.assertEqual(PANEL_MIN, (480, 420))
+        self.assertEqual(PANEL_MIN, (360, 420))
         self.assertEqual(PANEL_MAX, (600, 640))
-        self.assertEqual(PANEL_DEFAULT, (560, 500))
-        self.assertGreater(PANEL_DEFAULT[0], PANEL_DEFAULT[1])
+        self.assertEqual(PANEL_DEFAULT, (420, 500))
+        self.assertGreater(PANEL_DEFAULT[0] + 272, PANEL_DEFAULT[1])
         self.assertEqual(valid_panel_size([500, 500]), [500, 500])
         self.assertEqual(valid_panel_size([10, 9999]), [PANEL_MIN[0], PANEL_MAX[1]])
 

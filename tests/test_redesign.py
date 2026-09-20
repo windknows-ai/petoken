@@ -136,7 +136,7 @@ class RedesignTests(unittest.TestCase):
 
     def test_expanded_core_sections_and_navigation(self):
         for name in ('total', 'io_line', 'status_text', 'scope_button', 'context', 'five', 'week',
-                     'cost', 'details_button', 'settings_button', 'status', 'stage'):
+                     'cost', 'details_button', 'settings_button', 'status'):
             self.assertIsNotNone(getattr(self.panel, name), name)
         self.panel.show()
         self.panel.open_analytics()
@@ -178,7 +178,7 @@ class RedesignTests(unittest.TestCase):
             self.app.processEvents()
 
     def test_resize_stays_within_minimums_and_persists(self):
-        self.assertEqual((self.panel.minimumWidth(), self.panel.minimumHeight()), (480, 420))
+        self.assertEqual((self.panel.minimumWidth(), self.panel.minimumHeight()), (360, 420))
         self.panel.show()
         self.app.processEvents()
         self.panel.resize(520, 560)

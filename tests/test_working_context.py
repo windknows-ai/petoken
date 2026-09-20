@@ -58,6 +58,44 @@ class ContextFixture:
 
 
 class WorkingContextTests(unittest.TestCase):
+    def test_scope_activity_matches_all_working_identities_not_just_foreground(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = ContextFixture(directory)
+            fixture.add('a', 'Task A', 120, 'pa', 'Alpha')
+            fixture.add('b', 'Task B', 220, 'pb', 'Beta')
+            fixture.add('c', 'Task C', 320, 'pc', 'Completed', working=False)
+            store = fixture.finish()
+            for scope, pinned, expected in [('conversation','a',True), ('conversation','b',True),
+                    ('conversation','c',False), ('project','b',True), ('project','c',False), ('global','c',True)]:
+                data = store.read('Task A', pinned=pinned, scope=scope, activity_detection_valid=True)
+                self.assertEqual(data['scope_activity']['active'], expected, (scope, pinned))
+                self.assertTrue(data['scope_activity']['valid'])
+            data = store.read('Task A', scope='global', activity_detection_valid=False)
+            self.assertFalse(data['scope_activity']['valid'])
+
+    def test_local_verifier_reconciles_global_and_selected_scopes(self):
+        from tools.verify_local import verify, reconcile
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = ContextFixture(directory)
+            for i in range(3):
+                fixture.add(str(i), f'Task {i}', 120+i, f'p{i}', f'Project {i}', working=False)
+            store = fixture.finish()
+            result = verify(store)
+            self.assertEqual(result['status'], 'PASS')
+            self.assertEqual(result['sessions_reconciled'], 3)
+            self.assertEqual(result['scopes'], {'global':1,'project':3,'conversation':3})
+            data = store.read(scope='global', include_history=True)
+            data['history']['known']['total_tokens'] += 1
+            with self.assertRaises(AssertionError):
+                reconcile(data['history'])
+
+    def test_local_verifier_reports_insufficient_history_explicitly(self):
+        from tools.verify_local import verify
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = ContextFixture(directory)
+            fixture.add('a','Only task',120,'p','Project',working=False)
+            self.assertEqual(verify(fixture.finish())['status'], 'INSUFFICIENT_DATA')
+
     def test_one_active_session_maps_to_explicit_project(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture=ContextFixture(directory)

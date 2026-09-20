@@ -29,12 +29,15 @@ UI / interaction refinement, verified against `D:\Desktop\petoken\V1.1.0` (not y
 - Daily / Token modes with debounced transitions and a bound Working Context (project, model, context, session Tokens).
 - Global / Project / Conversation scopes; Full / Compact Token formatting with units.
 - Simplified Chinese / English UI with live switching; USD / CAD / EUR / CNY Estimated Cost from an internal table.
-- Compact two-line Token card; grouped, resizable expanded panel with size persistence; Reset to Defaults.
+- Compact two-line Token card; adjacent, resizable companion panel with size persistence; Reset to Defaults.
 - V1.1 chibi character set (idle, typing frames, Working, microphone, music, guitar) with shared anchor and DPI-aware rendering; reactive tap typing.
 - Music subtitle capability from platform SMTC metadata when provided.
 
 ### Changed
-- Smaller pet footprint (50% logical scale), centralized theme, manual pricing controls removed from Settings.
+- Larger aspect-preserving 256 x 256 logical-pixel chibi rendering, stable desktop anchor, DPR-aware sprite cache; centralized theme and no manual pricing controls.
 
 ### Fixed
 - Responsive tall-window spacing, malformed panel-size crash, render-tool Token pose ordering.
+### Local correction checkpoint (unpublished)
+- Fixed topmost/pinned lifecycle, scoped Working status, Conversation token headers, Full-number fitting, stale analytics clearing, and media-free smoke diagnostics.
+- The same desktop character remains visible when the panel opens beside it; only dragging saves its position. Final version acceptance still has separate documented gaps.

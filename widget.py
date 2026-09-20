@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import sys
 import threading
@@ -11,8 +10,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRect, QRectF, QLockFile
-from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRect, QRectF, QSize, QLockFile
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
     QFormLayout, QComboBox, QCheckBox, QDialogButtonBox, QScrollArea)
@@ -23,6 +22,7 @@ from analytics_view import AnalyticsWindow, help_text
 import pet_assets as assets
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
+from activity import activity_diagnostics
 from localization import DEFAULT_LANGUAGE, normalize_language, scope_text, text
 from pricing import (DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, convert_usd, format_cost,
                      normalize_currency, normalize_rates)
@@ -88,17 +88,10 @@ def divider():
     return w
 
 
-PANEL_MIN = (480, 420)
+PANEL_MIN = (360, 420)
 PANEL_MAX = (600, 640)
-PANEL_DEFAULT = (560, 500)
+PANEL_DEFAULT = (420, 500)
 
-# Character-led composition (companion redesign slice): the panel window
-# keeps a transparent left gutter and the surface starts at SURFACE_LEFT, so
-# the companion stage bleeds over the surface edge instead of sitting in
-# another stacked card. The sprite stays left of the data column and only
-# grazes the surface background; text always starts clear of the bleed.
-STAGE_WIDTH = 230
-SURFACE_LEFT = 180
 
 
 def valid_panel_size(value):
@@ -186,6 +179,35 @@ class ElidedLabel(QLabel):
         self.fit()
 
 
+class TokenTotalLabel(QLabel):
+    """Fit full integers to the viewport without changing their numeric text."""
+    def __init__(self):
+        super().__init__('—')
+        self.setObjectName('number')
+        self.setWordWrap(True)
+        self.setTextFormat(Qt.PlainText)
+
+    def fit(self):
+        font = QFont(self.font())
+        font.setPixelSize(30)
+        width = QFontMetrics(font).horizontalAdvance(self.text())
+        size = max(12, min(30, int(30 * max(1, self.contentsRect().width()-2) / max(1, width))))
+        style = f'font-size:{size}px;'
+        if self.styleSheet() != style:
+            self.setStyleSheet(style)
+
+    def setText(self, value):
+        super().setText(value)
+        self.fit()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.fit()
+
+    def minimumSizeHint(self):
+        return QSize(1, super().minimumSizeHint().height())
+
+
 class Meter(QWidget):
     def __init__(self, title, color):
         super().__init__()
@@ -226,64 +248,6 @@ class Bridge(QObject):
     data = Signal(dict)
     limits = Signal(dict)
     fx = Signal(dict)
-
-
-class CompanionStage(QWidget):
-    """The panel's character anchor: one large live companion sprite.
-
-    Paints the same live state as the desktop pet (shared sprite table, tap
-    frames included) over a soft glow, bleeding over the surface edge. The
-    widget itself is mouse-transparent and paints nothing but glow + sprite,
-    so text never overlaps the gutter. Integer-aligned geometry keeps edges
-    crisp at 100% and 200% DPI.
-    """
-    SPRITE_BOX = 184
-    SPRITE_X = 12
-
-    def __init__(self, panel):
-        super().__init__(panel)
-        self.panel = panel
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.setAccessibleName('')
-        self.phase = 0.0
-        self.current_state = 'idle'
-
-    def sync_from_pet(self):
-        pet = getattr(self.panel, 'pet', None)
-        if pet is None:
-            return
-        self.current_state = pet.current_state
-        self.phase = pet.phase
-
-    def sprite_table(self):
-        pet = getattr(self.panel, 'pet', None)
-        return getattr(pet, 'sprites', None) or {}
-
-    def paintEvent(self, event):
-        width, height = self.width(), self.height()
-        if width < 10 or height < 10:
-            return
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        p.setRenderHint(QPainter.SmoothPixmapTransform)
-        table = self.sprite_table()
-        if not table:
-            return
-        pet = getattr(self.panel, 'pet', None)
-        motion = bool(getattr(pet, 'motion', True))
-        sprite = table.get(self.current_state, table.get('idle'))
-        if self.current_state == 'typing' and motion and pet is not None:
-            framed = assets.frame_for('typing', pet.typing_phase())
-            if framed is not None:
-                sprite = framed
-        if sprite is None or sprite.isNull():
-            return
-        box = self.SPRITE_BOX
-        offset = round(math.sin(self.phase) * 2) if motion else 0
-        x = self.SPRITE_X
-        y = height - 24 - box + offset
-        p.drawPixmap(QRect(x, y, box, box), sprite)
 
 
 class Settings(QDialog):
@@ -418,6 +382,7 @@ class Settings(QDialog):
         panel.prefs = prefs
         panel.reset_store.set()
         panel.apply_language()
+        panel.apply_topmost()
         self.accept()
 
 
@@ -434,7 +399,6 @@ class Panel(QWidget):
         self.fx_data = self.prefs.get('fx_cache') or dict(
             date='2026-09-15', source='Bank of Canada · bundled', rates={'CAD': 1.3917})
         self.closing = False
-        self._pet_was_visible = False
         self.stop = threading.Event()
         self.reset_store = threading.Event()
         self.bridge = Bridge()
@@ -445,15 +409,12 @@ class Panel(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setMinimumSize(480, 250)
+        self.setMinimumSize(PANEL_MIN[0], 250)
         self.setMaximumSize(600, 640)
         self.setStyleSheet(STYLE)
-        # Character-led composition: the window keeps a transparent left
-        # gutter where the companion stage bleeds over the surface edge. The
-        # data column on the right is deliberately card-free: typography,
-        # one token block, light quota strips, and an inline footer.
+        # The character remains in its own anchored window; this is its satellite.
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(SURFACE_LEFT, 8, 8, 8)
+        outer.setContentsMargins(8, 8, 8, 8)
         self.surface = QWidget()
         self.surface.setObjectName('surface')
         outer.addWidget(self.surface)
@@ -509,7 +470,7 @@ class Panel(QWidget):
         self.scope_button.setStyleSheet(f'color:{MUTED};font-size:11px;padding:0px 3px;min-height:24px;')
         token_header.addWidget(self.scope_button)
         body.addLayout(token_header)
-        self.total = label('—', 'number')
+        self.total = TokenTotalLabel()
         body.addWidget(self.total)
         status_row = QHBoxLayout()
         status_row.setSpacing(6)
@@ -520,8 +481,10 @@ class Panel(QWidget):
         status_row.addStretch()
         body.addLayout(status_row)
         self.io_line = label('', 'muted')
+        self.io_line.setWordWrap(True)
         body.addWidget(self.io_line)
         self.insights = label('', 'muted')
+        self.insights.setWordWrap(True)
         body.addWidget(self.insights)
         details_row = QHBoxLayout()
         details_row.addStretch()
@@ -569,17 +532,10 @@ class Panel(QWidget):
         self.size_grip.setCursor(Qt.SizeFDiagCursor)
         bottom.addWidget(self.size_grip)
         layout.addLayout(bottom)
-        self.stage = CompanionStage(self)
-        self.stage.raise_()
-        self.position_stage()
-        self.stage_timer = QTimer(self)
-        self.stage_timer.timeout.connect(self.tick_stage)
-        self.stage_timer.setInterval(50)
         self.header.mousePressEvent = self.begin_drag
         self.header.mouseMoveEvent = self.drag
         self.header.mouseReleaseEvent = self.end_drag
-        # The vector spirit no longer sits in the companion header (the live
-        # chibi owns that role now) but still draws the tray/window icon.
+        # Keep the vector spirit for the tray/window icon only.
         self.spirit = Spirit()
         self.spirit.setVisible(False)
         for text, delta in [('Left',(-10,0)),('Right',(10,0)),('Up',(0,-10)),('Down',(0,10))]:
@@ -621,11 +577,6 @@ class Panel(QWidget):
             self.move_clamped(QPoint(*map(int,self.prefs['position'])))
         else:
             self.reset_position()
-        if self.is_pinned():
-            # A pinned panel is persistent: restore it visible across restarts
-            # instead of waiting for the next hover.
-            self.show()
-            self.raise_()
         self.active = ActiveTask()
         self.rates = RateLimits(self.bridge.limits.emit)
         from activity import ActivityMonitor
@@ -640,42 +591,31 @@ class Panel(QWidget):
         self.clock.timeout.connect(self.refresh_status)
         self.clock.start(1000)
 
-    def position_stage(self):
-        self.stage.setGeometry(8, 8, STAGE_WIDTH, max(10, self.height() - 16))
+    def anchor_to_pet(self):
+        pet = getattr(self, 'pet', None)
+        if pet is None:
+            return
+        import pet_geometry as geometry
+        screen = QApplication.screenAt(pet.geometry().center()) or pet.screen()
+        r = screen.availableGeometry()
+        point = geometry.panel_position((pet.x(), pet.y(), pet.width(), pet.height()),
+            (self.width(), self.height()), (r.left(), r.top(), r.right(), r.bottom()))
+        self.move(*point)
 
-    def tick_stage(self):
-        self.stage.sync_from_pet()
-        self.stage.update()
+    def restore_companion(self):
+        """Called after both windows exist; pinned startup uses the same anchor."""
+        self.pet.show()
+        if self.is_pinned():
+            self.pet.show_panel()
 
     def showEvent(self, event):
-        # The panel IS the pet's companion interface: while it is open the
-        # desktop pet steps aside so exactly one character is ever visible.
         super().showEvent(event)
-        pet = getattr(self, 'pet', None)
-        if pet is not None:
-            self._pet_was_visible = pet.isVisible()
-            if self._pet_was_visible:
-                pet.hide()
-        self.position_stage()
-        self.stage.raise_()
-        if not self.stage_timer.isActive():
-            self.stage_timer.start()
-
-    def hideEvent(self, event):
-        super().hideEvent(event)
-        if self.stage_timer.isActive():
-            self.stage_timer.stop()
-        if self.closing:
-            return
-        pet = getattr(self, 'pet', None)
-        if pet is not None and self._pet_was_visible and not pet.isVisible():
-            pet.show()
-        self._pet_was_visible = False
+        self.anchor_to_pet()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if hasattr(self, 'stage'):
-            self.position_stage()
+        if self.isVisible():
+            self.anchor_to_pet()
 
     @property
     def language(self):
@@ -777,18 +717,24 @@ class Panel(QWidget):
         self.app_mode.update(self.codex_activity.get('active',False), self.codex_activity.get('valid',False))
         if hasattr(self,'pet'):
             self.pet.update_data(data)
-        if data.get('status'):
-            status = self.tr_text(data['status'])
+        if data.get('status') or not data.get('available'):
+            status = self.tr_text(data.get('status') or 'no_reliable_record')
             self.connection.setText(status)
             self.connection.setToolTip(status)
             self.title.setFullText(self.tr_text('waiting_available_task'))
             self.project.setText('CODEX')
             for w in (self.total,self.model,self.effort,self.cost):
                 w.setText('—')
+                w.setToolTip(status)
             self.io_line.setText('—')
+            self.io_line.setToolTip(status)
+            self.insights.setText(self.tr_text('cache_hit_new_work', ratio='N/A', work='N/A'))
+            self.scope_button.setText(scope_text(data.get('scope', self.prefs.get('scope')), self.language)+' ▾')
             self.status_dot.setVisible(False)
             self.status_text.setVisible(False)
-            self.context.update_value(None)
+            self.context.update_value(None, tip=status)
+            if self.analytics_window:
+                self.analytics_window.update_data(data)
             return
         modes = {'follow':'mode_follow', 'fixed':'mode_fixed', 'recent':'mode_recent', 'working':'mode_working'}
         self.connection.setText(self.tr_text(modes.get(data.get('mode'),'waiting_data')))
@@ -811,16 +757,13 @@ class Panel(QWidget):
         else:
             self.io_line.setText('—')
             self.io_line.setToolTip(self.tr_text('no_reliable_record'))
-        if bool(self.app_mode and self.app_mode.is_token):
-            self.status_dot.setVisible(True)
-            self.status_text.setVisible(True)
-            self.status_dot.setStyleSheet(f'color:{ICE};')
-            self.status_text.setText(self.tr_text('working'))
-        else:
-            self.status_dot.setVisible(True)
-            self.status_text.setVisible(True)
-            self.status_dot.setStyleSheet(f'color:{MUTED};')
-            self.status_text.setText(self.tr_text('idle'))
+        activity = data.get('scope_activity') or {}
+        working = bool(activity.get('valid') and activity.get('active'))
+        self.status_dot.setVisible(True)
+        self.status_text.setVisible(True)
+        self.status_dot.setStyleSheet(f'color:{ICE if working else MUTED};')
+        self.status_text.setText(self.tr_text('working' if working else
+            ('idle' if activity.get('valid') else 'unknown')))
         self.scope_button.setText(scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')+' ▾')
         self.context.update_value(data.get('context'), 'used', self.tr_text('context_tip',
             used=data.get('context_tokens'), window=data.get('context_window')))
@@ -930,10 +873,6 @@ class Panel(QWidget):
             if self.pet.isVisible():
                 self.pet.hide()
             else:
-                # One character at a time: revealing the pet while its
-                # companion interface is open first closes the panel.
-                if self.isVisible():
-                    self.hide()
                 self.pet.show()
 
     def is_pinned(self):
@@ -956,14 +895,15 @@ class Panel(QWidget):
     def apply_topmost(self):
         """Apply the persistent always-on-top preference to panel and pet."""
         on_top = bool(self.prefs.get('always_on_top', True))
-        self.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
-        if self.isVisible():
-            self.show()
-        pet = getattr(self, 'pet', None)
-        if pet is not None:
-            pet.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
-            if pet.isVisible():
-                pet.show()
+        for window in (self, getattr(self, 'pet', None)):
+            if window is None or bool(window.windowFlags() & Qt.WindowStaysOnTopHint) == on_top:
+                continue
+            visible, position = window.isVisible(), window.pos()
+            window.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
+            if visible:
+                window.show()
+            window.move(position)
+
 
     def set_always_on_top(self, enabled):
         self.prefs['always_on_top'] = bool(enabled)
@@ -973,7 +913,6 @@ class Panel(QWidget):
     def apply_compact(self):
         self.body.setVisible(not self.compact)
         self.body_scroll.setVisible(not self.compact)
-        self.stage.setVisible(not self.compact)
         self.size_grip.setVisible(not self.compact)
         self.collapse_button.setText('+' if self.compact else '−')
         if self.compact:
@@ -982,7 +921,7 @@ class Panel(QWidget):
             self.setMinimumSize(*PANEL_MIN)
             self.setMaximumSize(*PANEL_MAX)
             self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
-        QTimer.singleShot(0, lambda:self.move_clamped(self.pos()))
+        QTimer.singleShot(0, lambda: self.anchor_to_pet() if self.isVisible() else None)
 
     def toggle_compact(self):
         self.compact = not self.compact
@@ -1087,7 +1026,7 @@ def main():
     panel = Panel()
     from pet import DesktopPet
     panel.pet=DesktopPet(panel)
-    panel.pet.show()
+    panel.restore_companion()
     if args.smoke:
         panel.show()
         panel.open_analytics()
@@ -1112,7 +1051,7 @@ def main():
                               for k,v in (panel.snapshot.get('working_context') or {}).items()
                               if k in ('thread','title','project','project_source','tokens','selection')},
                           quota_live=bool(panel.quota.get('sampled')),
-                          activity_status=panel.activity.status,
+                          activity_status=activity_diagnostics(panel.activity.status),
                           keyboard_hook_error=panel.activity.keyboard.error,
                           width=panel.width(),height=panel.height())
             args.smoke.with_suffix('.json').write_text(json.dumps(report, ensure_ascii=False,indent=2),encoding='utf-8')

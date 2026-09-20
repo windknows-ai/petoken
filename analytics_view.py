@@ -74,7 +74,7 @@ class AnalyticsWindow(QDialog):
         self.tabs.addTab(self.metrics, '')
         self.models = table(['']*9)
         self.tabs.addTab(self.models, '')
-        self.sessions = table(['']*8)
+        self.sessions = table(['']*9)
         self.tabs.addTab(self.sessions, '')
         history = QWidget()
         history_layout = QVBoxLayout(history)
@@ -114,7 +114,7 @@ class AnalyticsWindow(QDialog):
                          t('header_nonreasoning_tokens'), t('header_total_tokens')]
         set_headers(self.metrics, [t('header_group_metric'), t('header_exact'), t('header_type_coverage')])
         set_headers(self.models, [t('header_model')] + token_headers)
-        set_headers(self.sessions, [t('header_conversation')] + token_headers[:-1])
+        set_headers(self.sessions, [t('header_conversation')] + token_headers)
         set_headers(self.ranges, [t('header_range'), t('header_total_tokens'), t('header_input_tokens'),
                                   t('header_cached_tokens'), t('header_output_tokens'), t('header_reasoning_tokens')])
         set_headers(self.days, [t('header_date_local'), t('header_total_tokens'), t('header_input_tokens'),
@@ -126,10 +126,18 @@ class AnalyticsWindow(QDialog):
             self.update_data(self.snapshot)
 
     def update_data(self, data):
-        analysis = data.get('analytics')
-        if not analysis:
-            return
         self.snapshot = data
+        analysis = data.get('analytics')
+        if data.get('status') or not analysis or not data.get('available'):
+            self.heading.setText(self.tr_text('analytics_heading', scope=scope_text(
+                data.get('scope', self.parentWidget().prefs.get('scope')), self.language)))
+            self.subtitle.setText(self.tr_text(data.get('status') or 'no_reliable_record'))
+            for widget in (self.metrics, self.models, self.sessions, self.ranges, self.days):
+                widget.setRowCount(0)
+            self.raw.clear()
+            self.history_note.setText(self.tr_text('no_reliable_record'))
+            self.note.setText(self.tr_text('analytics_na_note'))
+            return
         t = self.tr_text
         token_style = self.parentWidget().prefs.get('token_number_format')
         scope_name = scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')
@@ -175,7 +183,7 @@ class AnalyticsWindow(QDialog):
         names = data.get('session_names', {})
         populate(self.sessions, [[(names.get(row['name']) or row['name'], row['name'])] + values(row,
             ['input_tokens', 'cached_input_tokens', 'uncached_input_tokens', 'cache_write_input_tokens',
-             'output_tokens', 'reasoning_output_tokens', 'total_tokens']) for row in analysis['sessions']])
+             'output_tokens', 'reasoning_output_tokens', 'non_reasoning_output_tokens', 'total_tokens']) for row in analysis['sessions']])
         history_data = data.get('history')
         if history_data:
             ranges = [(t('range_current'), data['current_session']), (t('range_lifetime'), history_data),
@@ -187,6 +195,8 @@ class AnalyticsWindow(QDialog):
                 'cache_write_input_tokens', 'output_tokens', 'reasoning_output_tokens']) for row in history_data['daily']])
             self.history_note.setText(t('history_loaded') + (t('history_partial') if history_data.get('partial') else ''))
         else:
+            self.ranges.setRowCount(0)
+            self.days.setRowCount(0)
             self.history_note.setText(t('history_loading'))
         localized_notes = [t(note) for note in data.get('notes', [])]
         raw = json.dumps(dict(source='Codex JSONL event_msg/token_count/info (current session latest record)',

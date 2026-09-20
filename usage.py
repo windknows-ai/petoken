@@ -345,6 +345,7 @@ class CodexActivityDetector:
         selected = dict(active[self.selected_thread])
         selected['selection'] = selection if selected['thread'] == candidate['thread'] else 'debounced_previous'
         selected['working_count'] = len(candidates)
+        selected['working_threads'] = sorted(active)
         return selected
 
     def detect(self, rows, active_title, detection_valid, now=None):
@@ -475,6 +476,10 @@ class CodexStore:
                 conversation_title=conversation_title(chosen), project_id=chosen_project_id,
                 project_name=chosen_project, project_source=chosen_project_source)
 
+        working_ids = set(codex_activity.get('working_threads', []))
+        scope_working = working_ids.intersection(row.get('id') for row in relevant)
+        scope_activity = dict(active=bool(scope_working), valid=bool(codex_activity.get('valid')),
+                              working_count=len(scope_working))
         refresh_rows = relevant + ([working_row] if working_row and working_row not in relevant else [])
         for row in refresh_rows:
             key = row.get('rollout_path')
@@ -528,7 +533,7 @@ class CodexStore:
                     session_names=names, current_session=current_summary,
                     raw_total=current.raw_total if current else {}, raw_last=current.raw_last if current else {},
                     notes=sorted(set().union(*(s.notes for s in sessions))), codex_activity=codex_activity,
-                    working_context=working_context)
+                    working_context=working_context, scope_activity=scope_activity)
 
 
 def sample_age(timestamp):

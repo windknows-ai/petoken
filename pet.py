@@ -1,7 +1,7 @@
 """Transparent character desktop pet; click to reveal the existing dashboard."""
 import math
 import time
-from PySide6.QtCore import Qt,QTimer,QPoint,QRectF
+from PySide6.QtCore import Qt,QTimer,QPoint,QPointF,QRectF,QSize
 from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QFontMetrics,QPen,QKeySequence,QShortcut,QCursor
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
@@ -27,6 +27,7 @@ class DesktopPet(QWidget):
             flags|=Qt.WindowStaysOnTopHint
         self.setWindowFlags(flags)
         self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.setFixedSize(*geometry.window_size())
         # Full-resolution sources from the central registry; paintEvent scales
         # them into the small logical sprite box each frame so high-DPI
@@ -34,6 +35,8 @@ class DesktopPet(QWidget):
         # states are simply absent and fall back to the idle source.
         self.sprites={k:v for k,v in assets.load_sprites().items() if v is not None}
         self.sprite=self.sprites.get('idle',QPixmap())
+        self._render_cache={}
+        self._render_dpr=None
         self.current_state='idle'
         self.hover_since=None
         self.left_since=None
@@ -124,7 +127,8 @@ class DesktopPet(QWidget):
                 if now-self.hover_since>.35 and not self.panel.isVisible():self.show_panel()
         monitor=getattr(self.panel,'activity',None)
         codex_working=getattr(self.panel,'app_mode',None)
-        state=self.preview_state or (monitor.state.state(usage_open=self.panel.isVisible(),
+        # Opening usage is an overlay, not a pose: keep the same live companion.
+        state=self.preview_state or (monitor.state.state(
             codex_working=bool(codex_working and codex_working.is_token)) if monitor else 'idle')
         if state!=self.current_state:
             self.current_state=state
@@ -134,7 +138,7 @@ class DesktopPet(QWidget):
         self.snapshot=data
         if data.get('working_context'):
             self.working_context=data['working_context']
-        elif not self.token_bubble_visible():
+        elif data.get('status') or not data.get('available') or not self.token_bubble_visible():
             self.working_context=None
         context=self.working_context or data
         t=context.get('tokens',{})
@@ -168,7 +172,7 @@ class DesktopPet(QWidget):
             p.drawRoundedRect(QRectF(bx,by,bw,bh),theme.RADIUS_CARD,theme.RADIUS_CARD)
             width=geometry.BUBBLE_TEXT_WIDTH
             project=context.get('project') or self.tr_text('project_unavailable')
-            status=self.tr_text('working')
+            status=self.tr_text('working' if context else 'unknown')
             used=context.get('context')
             ctx_text=f"{self.tr_text('context_short')} {'—' if used is None else f'{used:.0f}%'}"
             main_font=QFont('Microsoft YaHei UI',9,QFont.DemiBold)
@@ -180,7 +184,7 @@ class DesktopPet(QWidget):
             status_text=f' · {status}'
             status_w=metrics.horizontalAdvance(status_text)
             shown=metrics.elidedText(project,Qt.ElideRight,max(0,width-dot_w-status_w-ctx_w-8))
-            x=13.0
+            x=bx+12.0
             p.setPen(QColor(STATE_DOT.get(self.current_state, theme.ICE)))
             p.drawText(QRectF(x,7,width,20),Qt.AlignLeft|Qt.AlignVCenter,dot)
             x+=dot_w
@@ -188,11 +192,11 @@ class DesktopPet(QWidget):
             p.drawText(QRectF(x,7,width,20),Qt.AlignLeft|Qt.AlignVCenter,shown+status_text)
             p.setPen(QColor(theme.MUTED))
             p.setFont(QFont('Segoe UI',8))
-            p.drawText(QRectF(13,7,width,20),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
+            p.drawText(QRectF(bx+12,7,width,20),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
             total=format_tokens(tokens.get('total_tokens'),style)
             p.setPen(QColor(theme.INK))
             p.setFont(QFont('Segoe UI',12,QFont.DemiBold))
-            p.drawText(QRectF(13,30,width,22),Qt.AlignLeft|Qt.AlignVCenter,
+            p.drawText(QRectF(bx+12,30,width,22),Qt.AlignLeft|Qt.AlignVCenter,
                        p.fontMetrics().elidedText(total,Qt.ElideRight,width))
         elif (subtitle:=self.music_subtitle()) is not None:
             # One small secondary pill in the idle card area. No text means no
@@ -230,8 +234,34 @@ class DesktopPet(QWidget):
                 offset+=math.sin(self.phase*8)*geometry.TYPING_AMPLITUDE
         sx,sy,sw,sh=geometry.sprite_rect(round(offset))
         if sprite is not None and not sprite.isNull():
-            p.drawPixmap(QRectF(sx+round(tap_shift),sy,sw,sh).toRect(),sprite)
+            rendered=self.render_sprite(sprite)
+            size=rendered.deviceIndependentSize()
+            dpr=self.devicePixelRatioF()
+            x=round((sx+(sw-size.width())/2+tap_shift)*dpr)/dpr
+            y=round((sy+sh-size.height())*dpr)/dpr
+            p.drawPixmap(QPointF(x,y),rendered)
         p.restore()
+
+    def render_sprite(self, sprite):
+        # Resample the original once at the actual screen density, never a
+        # thumbnail or a previous DPR's scaled image. Preserve alpha and ratio.
+        dpr=self.devicePixelRatioF()
+        if self._render_dpr!=dpr:
+            self._render_cache.clear()
+            self._render_dpr=dpr
+        key=sprite.cacheKey()
+        if key not in self._render_cache:
+            target=QSize(geometry.device_pixels(geometry.SPRITE_WIDTH,dpr),
+                         geometry.device_pixels(geometry.SPRITE_HEIGHT,dpr))
+            result=sprite.scaled(target,Qt.KeepAspectRatio,Qt.SmoothTransformation)
+            result.setDevicePixelRatio(dpr)
+            self._render_cache[key]=result
+        return self._render_cache[key]
+
+    def moveEvent(self,event):
+        super().moveEvent(event)
+        if self.panel.isVisible():
+            self.panel.anchor_to_pet()
 
     def mousePressEvent(self,event):
         if event.button()==Qt.LeftButton:
@@ -247,10 +277,10 @@ class DesktopPet(QWidget):
             moved=(event.globalPosition().toPoint()-self.pressed).manhattanLength()
             self.pressed=None
             if moved<5:
-                self.reaction=1
                 self.toggle_panel()
-            self.panel.prefs['pet_position']=[self.x(),self.y()]
-            self.panel.persist()
+            else:
+                self.panel.prefs['pet_position']=[self.x(),self.y()]
+                self.panel.persist()
 
     def toggle_panel(self):
         if self.panel.isVisible():
@@ -258,13 +288,8 @@ class DesktopPet(QWidget):
         else:self.show_panel()
 
     def show_panel(self):
-        # Center the companion panel on the pet so the cursor that opened it
-        # lands inside the panel: the open stays stable instead of instantly
-        # counting as a leave. move_clamped keeps it on screen at the edges.
-        panel = self.panel
-        panel.move_clamped(QPoint(self.x() + self.width() // 2 - panel.width() // 2,
-                                  self.y() + self.height() // 2 - panel.height() // 2))
-        panel.show();panel.raise_()
+        self.panel.anchor_to_pet()
+        self.panel.show();self.panel.raise_()
         self.left_since=None
 
     def contextMenuEvent(self,event):
@@ -289,11 +314,11 @@ class DesktopPet(QWidget):
     def toggle_motion(self,enabled):
         self.motion=enabled
         self.panel.prefs['pet_motion']=enabled
-        self.timer.start() if enabled else self.timer.stop()
+        self.timer.start() if enabled and self.isVisible() else self.timer.stop()
         self.panel.persist();self.update()
 
     def move_clamped(self,point):
-        screen=QApplication.screenAt(point+QPoint(121,30)) or QApplication.primaryScreen()
+        screen=QApplication.screenAt(point+self.rect().center()) or QApplication.primaryScreen()
         r=screen.availableGeometry()
         x,y=geometry.clamp_position(point.x(),point.y(),self.width(),self.height(),
                                     (r.left(),r.top(),r.right(),r.bottom()))
