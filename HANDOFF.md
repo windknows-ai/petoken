@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — through character scale/presentation foundation complete; cost slice committed, character slice uncommitted; not pushed)
+`V1.1.0` (UI and interaction refinement — through asset pipeline / high-DPI architecture complete; geometry committed, asset slice uncommitted; not pushed)
 
 ## Current Stage
 
-OpenCode is the active continuation agent (Codex at usage limit). Cost/currency was committed as `918f8cf`; the Step 9 character-presentation foundation (50% logical scale, one feet anchor, DPI-aware source rendering, smaller window) is complete and verified but intentionally uncommitted. No artwork was created or modified. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). Geometry was committed as `f3cf834`; the Step 10 asset pipeline (central registry, V1.1 drop-in convention, explicit fallback chain, validation, render-tool enumeration) is complete and verified but intentionally uncommitted. No artwork was created, redrawn, or generated. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -51,10 +51,13 @@ OpenCode is the active continuation agent (Codex at usage limit). Cost/currency 
 - Cost/currency checkpoint `918f8cf` committed locally (11 files: pricing/currency/UI/tests/PROGRESS/HANDOFF work; message "feat: simplify estimated cost and add currency selection"). `AGENTS.md` excluded again, untouched.
 - Step 9 implemented by OpenCode, uncommitted: new `pet_geometry.py` (V1.0 baseline constants, `CHARACTER_SCALE = 0.5`, one 107×145 sprite box at (67,80), feet anchor (121,225), unchanged 240×70 bubble, pure clamp/DPR helpers); `pet.py` paints from full-resolution sources into the logical box with smooth filtering, scaled motion amplitudes, and geometry-driven clamp/placement; `tools/render_states.py` renders all six states plus a forced Token Mode shot.
 - Character verification passed: 102 tests, `py_compile`, `git diff --check`, 100%/200% state renders inspected (sharp, anchored, bubble attached, Daily bubble hidden), live zh_CN smoke exits 0. Idle asset hash unchanged; no artwork touched.
+- Geometry checkpoint `f3cf834` committed locally (7 files: geometry/render/tests/PROGRESS/HANDOFF work; message "feat: add compact DPI-aware pet geometry"). `AGENTS.md` excluded again, untouched.
+- Step 10 implemented by OpenCode, uncommitted: new `pet_assets.py` (frozen `AssetEntry` registry for idle/typing/codex_working/microphone/music/guitar, `ALIASES` for working→codex_working and usage→idle, `PREVIEW_STATES`, `entry_for`/`sprite_for` with primary→fallback→idle chain, `validate_path`/`load_path`, `load_sprites` keyed by activity name, `frames` stub for future animation); `pet.py` builds sprites from the registry (no filenames left in pet code, null-safe paint); `tools/render_states.py` enumerates `STATES = PREVIEW_STATES`; `assets/v1_1/README.md` documents the drop-in convention.
+- Asset verification passed: 113 tests, `py_compile`, `git diff --check`, 100%/200% renders for all six states plus Token Mode (all resolve via V1.0 fallbacks), live zh_CN smoke exits 0, idle SHA unchanged.
 
 ## Current Work / Partial Work
 
-None in progress. Step 9 character presentation is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
+None in progress. Step 10 asset pipeline is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
 
 ## Important Decisions
 
@@ -65,9 +68,9 @@ None in progress. Step 9 character presentation is complete and verified but unc
 
 ## Current Git State
 
-- Branch: `main`, HEAD `918f8cf` ("feat: simplify estimated cost and add currency selection"), seven commits ahead of `origin/main`; nothing was pushed.
-- The Step 9 character-presentation slice is intentionally uncommitted and unpushed. Modified tracked files: `pet.py`, `tools/render_states.py`, `tests/test_ui.py`. New untracked files: `pet_geometry.py`, `tests/test_pet_geometry.py`. `AGENTS.md` remains worktree-modified (excluded from both `27ceb81` and `918f8cf`).
-- Verification: 102 tests pass, `py_compile` passes, `git diff --check` passes, synthetic renders at 100%/200% for all six states plus Token Mode inspected, and a live isolated zh_CN smoke exits 0.
+- Branch: `main`, HEAD `f3cf834` ("feat: add compact DPI-aware pet geometry"), eight commits ahead of `origin/main`; nothing was pushed.
+- The Step 10 asset-pipeline slice is intentionally uncommitted and unpushed. Modified tracked files: `pet.py`, `tools/render_states.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `pet_assets.py`, `tests/test_pet_assets.py`, `assets/v1_1/README.md`. `AGENTS.md` remains worktree-modified (excluded from `27ceb81`, `918f8cf`, and `f3cf834`).
+- Verification: 113 tests pass, `py_compile` passes, `git diff --check` passes, render QA at 100%/200% for all six states plus Token Mode inspected, and a live isolated zh_CN smoke exits 0.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -81,8 +84,8 @@ None in progress. Step 9 character presentation is complete and verified but unc
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 10 only when authorized: dedicated high-DPI / asset-pipeline rendering on the scale foundation.
-2. Do not combine that slice with Bongo-Cat animation, music subtitles, or V1.2.0.
+1. Implement V1.1.0 order step 11 only when authorized: Bongo-Cat-inspired typing interaction on the registry/geometry foundation.
+2. Do not combine that slice with Working-animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent

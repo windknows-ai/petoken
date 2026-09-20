@@ -7,7 +7,12 @@ from PySide6.QtWidgets import QApplication
 sys.path.insert(0, str(Path(__file__).parents[1]))
 from analytics import aggregate, normalize_usage
 from pet import DesktopPet
+from pet_assets import PREVIEW_STATES
 from widget import Panel
+
+# Render QA enumerates the asset registry; adding a future approved asset
+# needs no tool change.
+STATES = PREVIEW_STATES
 
 
 def main(output):
@@ -29,7 +34,7 @@ def main(output):
     panel.pet.activity_timer.stop()
     panel.pet.motion = False
     panel.pet.show()
-    for state in ('idle', 'typing', 'microphone', 'music', 'working', 'usage'):
+    for state in STATES:
         panel.pet.preview_state = state
         panel.pet.update_activity()
         app.processEvents()

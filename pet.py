@@ -1,11 +1,11 @@
 """Transparent character desktop pet; click to reveal the existing dashboard."""
 import math
 import time
-from pathlib import Path
 from PySide6.QtCore import Qt,QTimer,QPoint,QRectF
 from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QPen,QKeySequence,QShortcut,QCursor
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
+import pet_assets as assets
 import pet_geometry as geometry
 from token_format import format_tokens
 
@@ -17,13 +17,12 @@ class DesktopPet(QWidget):
         self.setWindowFlags(Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFixedSize(*geometry.window_size())
-        # Keep full-resolution sources; paintEvent scales them into the small
-        # logical sprite box each frame so high-DPI screens stay sharp.
-        self.sprite=QPixmap(str(Path(__file__).parent/'assets/skirk-pet.png'))
-        self.sprites={'idle':self.sprite}
-        for state in ('typing','microphone','music'):
-            image=QPixmap(str(Path(__file__).parent/f'assets/skirk-{state}.png'))
-            if not image.isNull():self.sprites[state]=image
+        # Full-resolution sources from the central registry; paintEvent scales
+        # them into the small logical sprite box each frame so high-DPI
+        # screens stay sharp. Missing art can never crash the pet: unresolvable
+        # states are simply absent and fall back to the idle source.
+        self.sprites={k:v for k,v in assets.load_sprites().items() if v is not None}
+        self.sprite=self.sprites.get('idle',QPixmap())
         self.current_state='idle'
         self.hover_since=None
         self.left_since=None
@@ -159,7 +158,8 @@ class DesktopPet(QWidget):
         if self.current_state=='typing' and self.motion:
             offset+=math.sin(self.phase*8)*geometry.TYPING_AMPLITUDE
         sx,sy,sw,sh=geometry.sprite_rect(round(offset))
-        p.drawPixmap(QRectF(sx,sy,sw,sh).toRect(),sprite)
+        if sprite is not None and not sprite.isNull():
+            p.drawPixmap(QRectF(sx,sy,sw,sh).toRect(),sprite)
         p.restore()
 
     def mousePressEvent(self,event):
