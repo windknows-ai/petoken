@@ -29,11 +29,19 @@ def main(output):
     panel.pet.activity_timer.stop()
     panel.pet.motion = False
     panel.pet.show()
-    for state in ('idle', 'typing', 'microphone', 'music'):
+    for state in ('idle', 'typing', 'microphone', 'music', 'working', 'usage'):
         panel.pet.preview_state = state
         panel.pet.update_activity()
         app.processEvents()
         panel.pet.grab().save(str(output / f'pet-{state}.png'))
+    panel.pet.preview_state = None
+    panel.app_mode.update(True, True)
+    panel.app_mode.update(True, True, panel.app_mode.pending_since + 1.0)
+    panel.pet.update_data(dict(panel.snapshot, working_context=dict(
+        project='petoken', title='Visual fixture', model='gpt-6-astra',
+        effort='high', context=42, tokens=tokens)))
+    app.processEvents()
+    panel.pet.grab().save(str(output / 'pet-token.png'))
     panel.show()
     panel.open_analytics()
     app.processEvents()

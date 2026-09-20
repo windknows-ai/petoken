@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — through Estimated Cost + USD/CAD/EUR/CNY complete; localization committed, cost slice uncommitted; not pushed)
+`V1.1.0` (UI and interaction refinement — through character scale/presentation foundation complete; cost slice committed, character slice uncommitted; not pushed)
 
 ## Current Stage
 
-OpenCode is the active continuation agent (Codex at usage limit). Localization was committed as `27ceb81`; the Step 8 cost/currency slice (internal pricing table, USD-canonical conversion, Currency setting, no manual pricing in normal Settings) is complete and verified but intentionally uncommitted. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). Cost/currency was committed as `918f8cf`; the Step 9 character-presentation foundation (50% logical scale, one feet anchor, DPI-aware source rendering, smaller window) is complete and verified but intentionally uncommitted. No artwork was created or modified. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -48,10 +48,13 @@ OpenCode is the active continuation agent (Codex at usage limit). Localization w
 - Localization checkpoint `27ceb81` committed locally (12 files: catalog/UI/tests/PROGRESS/HANDOFF work; message "feat: add bilingual UI localization"). `AGENTS.md` diff is +755/-0 append-only (Codex `## Codex Instructions (auto-synced)` bootstrap section after line 126, verified via `git diff --numstat`/`git diff`); unrelated to localization, tool-generated, so excluded from the commit and left unmodified in the working tree (not reverted).
 - Step 8 cost/currency implemented and verified by OpenCode, uncommitted: new `pricing.py` (moved `MODEL_PRICES`/`estimate_usd` from `usage.py` with identical math, plus USD-canonical currency layer); `usage.py` keeps `PRICES`/`estimate_usd` aliases and dropped the custom-price override plumbing; `desktop.fetch_fx` returns `{date, source, rates:{CAD,EUR,CNY}}` from verified BoC series (USD legs derived); `app_config` persists `currency` (default CAD, invalid falls back); Settings exposes only a Currency combo (manual FX + per-model price controls removed; legacy keys preserved untouched); cost display converts once (`≈ CA$…` etc.) with honest USD fallback when a rate is missing.
 - Cost verification passed: 90 tests, `py_compile`, `git diff --check`, and four isolated smokes (zh+CAD, en+USD/EUR/CNY) with live BoC rates, no scope/cost mismatch, and no manual pricing controls in Settings.
+- Cost/currency checkpoint `918f8cf` committed locally (11 files: pricing/currency/UI/tests/PROGRESS/HANDOFF work; message "feat: simplify estimated cost and add currency selection"). `AGENTS.md` excluded again, untouched.
+- Step 9 implemented by OpenCode, uncommitted: new `pet_geometry.py` (V1.0 baseline constants, `CHARACTER_SCALE = 0.5`, one 107×145 sprite box at (67,80), feet anchor (121,225), unchanged 240×70 bubble, pure clamp/DPR helpers); `pet.py` paints from full-resolution sources into the logical box with smooth filtering, scaled motion amplitudes, and geometry-driven clamp/placement; `tools/render_states.py` renders all six states plus a forced Token Mode shot.
+- Character verification passed: 102 tests, `py_compile`, `git diff --check`, 100%/200% state renders inspected (sharp, anchored, bubble attached, Daily bubble hidden), live zh_CN smoke exits 0. Idle asset hash unchanged; no artwork touched.
 
 ## Current Work / Partial Work
 
-None in progress. Step 8 cost/currency is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
+None in progress. Step 9 character presentation is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
 
 ## Important Decisions
 
@@ -62,9 +65,9 @@ None in progress. Step 8 cost/currency is complete and verified but uncommitted 
 
 ## Current Git State
 
-- Branch: `main`, HEAD `27ceb81` ("feat: add bilingual UI localization"), six commits ahead of `origin/main`; nothing was pushed.
-- The Step 8 cost/currency slice is intentionally uncommitted and unpushed. Modified tracked files: `app_config.py`, `desktop.py`, `localization.py`, `tests/test_settings.py`, `tests/test_ui.py`, `usage.py`, `widget.py`. New untracked files: `pricing.py`, `tests/test_pricing.py`. `AGENTS.md` remains worktree-modified (excluded from `27ceb81`; see Last Completed Step).
-- Verification: 90 tests pass, `py_compile` passes, `git diff --check` passes, four isolated smokes (zh+CAD, en+USD/EUR/CNY) exit 0 with live quota, and panel/Settings/Analytics screenshots were inspected in both languages.
+- Branch: `main`, HEAD `918f8cf` ("feat: simplify estimated cost and add currency selection"), seven commits ahead of `origin/main`; nothing was pushed.
+- The Step 9 character-presentation slice is intentionally uncommitted and unpushed. Modified tracked files: `pet.py`, `tools/render_states.py`, `tests/test_ui.py`. New untracked files: `pet_geometry.py`, `tests/test_pet_geometry.py`. `AGENTS.md` remains worktree-modified (excluded from both `27ceb81` and `918f8cf`).
+- Verification: 102 tests pass, `py_compile` passes, `git diff --check` passes, synthetic renders at 100%/200% for all six states plus Token Mode inspected, and a live isolated zh_CN smoke exits 0.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -78,7 +81,7 @@ None in progress. Step 8 cost/currency is complete and verified but uncommitted 
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 9 only when authorized: character scale / chibi presentation (then high-DPI rendering).
+1. Implement V1.1.0 order step 10 only when authorized: dedicated high-DPI / asset-pipeline rendering on the scale foundation.
 2. Do not combine that slice with Bongo-Cat animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 

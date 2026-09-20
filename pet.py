@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt,QTimer,QPoint,QRectF
 from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QPen,QKeySequence,QShortcut,QCursor
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
+import pet_geometry as geometry
 from token_format import format_tokens
 
 
@@ -15,13 +16,14 @@ class DesktopPet(QWidget):
         self.panel=panel
         self.setWindowFlags(Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(242,378)
+        self.setFixedSize(*geometry.window_size())
+        # Keep full-resolution sources; paintEvent scales them into the small
+        # logical sprite box each frame so high-DPI screens stay sharp.
         self.sprite=QPixmap(str(Path(__file__).parent/'assets/skirk-pet.png'))
-        self.sprite=self.sprite.scaled(214,290,Qt.KeepAspectRatio,Qt.SmoothTransformation)
         self.sprites={'idle':self.sprite}
         for state in ('typing','microphone','music'):
             image=QPixmap(str(Path(__file__).parent/f'assets/skirk-{state}.png'))
-            if not image.isNull():self.sprites[state]=image.scaled(214,290,Qt.KeepAspectRatio,Qt.SmoothTransformation)
+            if not image.isNull():self.sprites[state]=image
         self.current_state='idle'
         self.hover_since=None
         self.left_since=None
@@ -41,7 +43,10 @@ class DesktopPet(QWidget):
         self.pressed=None
         screen=QApplication.primaryScreen().availableGeometry()
         position=panel.prefs.get('pet_position')
-        self.move_clamped(QPoint(*position) if isinstance(position,list) and len(position)==2 else QPoint(screen.right()-280,screen.bottom()-400))
+        width,height=geometry.window_size()
+        default=QPoint(screen.right()-width+1-geometry.MARGIN_RIGHT,
+                       screen.bottom()-height+1-geometry.MARGIN_BOTTOM)
+        self.move_clamped(QPoint(*position) if isinstance(position,list) and len(position)==2 else default)
         for name,d in [('Left',(-10,0)),('Right',(10,0)),('Up',(0,-10)),('Down',(0,10))]:
             QShortcut(QKeySequence('Alt+'+name),self,activated=lambda delta=d:self.move_clamped(self.pos()+QPoint(*delta)))
         QShortcut(QKeySequence('Return'),self,activated=self.toggle_panel)
@@ -120,12 +125,14 @@ class DesktopPet(QWidget):
     def paintEvent(self,event):
         p=QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
         if self.token_bubble_visible():
             context=self.working_context or {}
             tokens=context.get('tokens') or {}
             p.setPen(QPen(QColor('#777AA4'),1))
             p.setBrush(QColor(29,33,57,235))
-            p.drawRoundedRect(QRectF(1,1,240,70),16,16)
+            bx,by,bw,bh=geometry.bubble_rect()
+            p.drawRoundedRect(QRectF(bx,by,bw,bh),16,16)
             p.setPen(QColor('#EEF2FF'))
             p.setFont(QFont('Microsoft YaHei UI',9,QFont.DemiBold))
             title=context.get('title') or self.tr_text('codex_working')
@@ -141,16 +148,18 @@ class DesktopPet(QWidget):
             quota=self.panel.five.value.text().replace(' '+self.tr_text('left'),'')
             p.drawText(QRectF(13,47,220,18),
                        f"● {self.tr_text('working')} · {self.tr_text('context_short')} {context_used} · 5h {quota}")
-        offset=math.sin(self.phase)*3 if self.motion else 0
+        offset=math.sin(self.phase)*geometry.BOB_AMPLITUDE if self.motion else 0
         p.save()
         if self.reaction:
-            p.translate(121,225);p.rotate(math.sin(self.phase*3)*self.reaction*4);p.translate(-121,-225)
+            px,py=geometry.REACTION_PIVOT
+            p.translate(px,py);p.rotate(math.sin(self.phase*3)*self.reaction*4);p.translate(-px,-py)
         sprite=self.sprites.get(self.current_state,self.sprite)
-        # New poses share the original bounding box and baseline. Idle rendering
-        # and its approved asset are left byte-for-byte unchanged.
+        # Every state shares one logical sprite box around one feet anchor;
+        # only approved-asset pixels change between states, never the geometry.
         if self.current_state=='typing' and self.motion:
-            offset+=math.sin(self.phase*8)*1.5
-        p.drawPixmap(QPoint((self.width()-sprite.width())//2,82+round(offset)),sprite)
+            offset+=math.sin(self.phase*8)*geometry.TYPING_AMPLITUDE
+        sx,sy,sw,sh=geometry.sprite_rect(round(offset))
+        p.drawPixmap(QRectF(sx,sy,sw,sh).toRect(),sprite)
         p.restore()
 
     def mousePressEvent(self,event):
@@ -203,4 +212,6 @@ class DesktopPet(QWidget):
     def move_clamped(self,point):
         screen=QApplication.screenAt(point+QPoint(121,30)) or QApplication.primaryScreen()
         r=screen.availableGeometry()
-        self.move(max(r.left(),min(point.x(),r.right()-self.width()+1)),max(r.top(),min(point.y(),r.bottom()-self.height()+1)))
+        x,y=geometry.clamp_position(point.x(),point.y(),self.width(),self.height(),
+                                    (r.left(),r.top(),r.right(),r.bottom()))
+        self.move(x,y)

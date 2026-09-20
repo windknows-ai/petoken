@@ -297,6 +297,45 @@ class UiTests(unittest.TestCase):
                 self.assertIsNone(re.search(r'(?<!&)&(?!&)', value),
                     f'{language}.{key} contains a single & that Qt would swallow as a mnemonic')
 
+    def test_pet_uses_half_scale_window_and_full_res_sources(self):
+        import pet_geometry as geometry
+        self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),geometry.window_size())
+        self.assertEqual(geometry.window_size(),(242,232))
+        for state in ('idle','typing','microphone','music'):
+            source=self.panel.pet.sprites[state]
+            self.assertFalse(source.isNull(),state)
+            self.assertGreater(source.width(),500,state)
+
+    def test_pet_paints_every_state_without_changing_geometry(self):
+        import pet_geometry as geometry
+        before=(self.panel.pet.width(),self.panel.pet.height())
+        for state in ('idle','typing','microphone','music','working','usage'):
+            self.panel.pet.preview_state=state
+            self.panel.pet.update_activity()
+            self.app.processEvents()
+            image=self.panel.pet.grab().toImage()
+            self.assertFalse(image.isNull(),state)
+        self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),before)
+        self.assertEqual(geometry.sprite_rect(),(67,80,107,145))
+        self.panel.pet.preview_state=None
+
+    def test_pet_drag_clamp_and_saved_position_recovery(self):
+        from PySide6.QtCore import QPoint
+        screen=self.app.primaryScreen().availableGeometry()
+        self.panel.pet.move_clamped(QPoint(-5000,-5000))
+        pos=self.panel.pet.pos()
+        self.assertGreaterEqual(pos.x(),screen.left())
+        self.assertGreaterEqual(pos.y(),screen.top())
+        self.panel.pet.move_clamped(QPoint(screen.right()+5000,screen.bottom()+5000))
+        pos=self.panel.pet.pos()
+        self.assertLessEqual(pos.x()+self.panel.pet.width(),screen.right()+1)
+        self.assertLessEqual(pos.y()+self.panel.pet.height(),screen.bottom()+1)
+        # An old V1.0-era saved top-left keeps the smaller window on screen.
+        self.panel.pet.move_clamped(QPoint(screen.right()-280,screen.bottom()-400))
+        pos=self.panel.pet.pos()
+        self.assertLessEqual(pos.x()+self.panel.pet.width(),screen.right()+1)
+        self.assertLessEqual(pos.y()+self.panel.pet.height(),screen.bottom()+1)
+
     def test_pet_title_and_analytics_menu_follow_language(self):
         self.panel.prefs['language']='en'
         self.panel.apply_language();self.app.processEvents()
