@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — Daily / Token mode slice complete)
+`V1.1.0` (UI and interaction refinement — coherent working-context slice complete)
 
 ## Current Stage
 
-Pre-development cleanup is committed locally at `9b7300b`. OpenCode completed V1.1.0 Step 1 architecture inspection. Codex completed and verified the approved foundation and centralized Daily / Token mode slices; this checkpoint commit records both slices without pushing them. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode completed V1.1.0 Step 1 architecture inspection. Local checkpoint `859b654` records the approved foundation and Daily / Token mode slices and was not pushed. Codex then completed and verified coherent working-session/project/Token binding without committing that new slice. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -29,10 +29,14 @@ Pre-development cleanup is committed locally at `9b7300b`. OpenCode completed V1
 - Verification passed: 22 tests, `py_compile`, isolated live smoke, and `git diff --check`. The existing visual baseline was preserved.
 - Codex added centralized `AppModeState`, explicit Codex lifecycle detection across unarchived desktop sessions, working-state priority, and Daily-mode bubble hiding. UIA task presence plus a running lifecycle event is required; a visible idle Codex window is insufficient.
 - Daily / Token verification passed: 30 tests, `py_compile`, live Token smoke, logical/visual Daily bubble checks, and detector cold/warm timing. No visual redesign was performed.
+- Checkpoint commit `859b654fca36fc792b2846bb1acb27ffcdd50ba7` was created locally with a clean post-commit working tree; no push and no version change.
+- Token Mode now prefers a foreground UIA-matched working thread, otherwise the most recently active working thread. The chosen session supplies one structured `working_context` containing project identity and that session's fork-deduplicated Token data.
+- Project identity priority is explicit project metadata, Git origin repository name, cwd basename, then unavailable. No full paths or inferred window-title project names are exposed.
+- Working-context recovery verification passed: 39 tests, `py_compile`, isolated live smoke, and visual bubble inspection. With two working sessions detected, the live bubble selected the foreground thread and showed that thread's matching title, `Web Project`, and 31.40M session Tokens.
 
 ## Current Work / Partial Work
 
-No implementation is currently in progress. Stop point is immediately before active-project identity integration.
+No implementation is currently in progress. Stop point is immediately before Global / Project / Conversation scope work.
 
 ## Important Decisions
 
@@ -43,9 +47,8 @@ No implementation is currently in progress. Stop point is immediately before act
 
 ## Current Git State
 
-- Branch: `main`; this checkpoint commit follows cleanup checkpoint `9b7300b` and is not pushed.
-- The checkpoint contains the approved V1.1.0 version/settings/localization foundation and Daily / Token mode work, their tests, and repository state documentation.
-- The working tree is clean at this checkpoint before active-project identity work begins.
+- Branch: `main`, checkpoint HEAD `859b654`, two commits ahead of `origin/main`; neither local checkpoint was pushed.
+- The post-checkpoint working-context slice is intentionally uncommitted. Modified tracked files: `PROGRESS.md`, `HANDOFF.md`, `usage.py`, `widget.py`, `pet.py`, `tests/test_app_mode.py`, and `tests/test_ui.py`. New untracked file: `tests/test_working_context.py`.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -54,12 +57,13 @@ No implementation is currently in progress. Stop point is immediately before act
 - GitHub release is titled "Petoken v1.0.0" and flagged Pre-release (delivery record documented a full release); confirm whether this is intended.
 - Repository visibility changed from private (per V1.0.0 PROGRESS) to public; confirm intended.
 - Working-state recovery is bounded: an unclean session with no `task_complete` can remain active for at most five minutes while a task window exists; a genuinely running tool that writes no rollout events for more than five minutes can temporarily fall back to Daily until the next event.
-- Global mode may be activated by one session while the existing UIA-followed panel displays another project. Correctly associating the detected working session with its project and live usage is the next V1.1.0 step.
+- The prior project/Token mismatch is resolved for the pet bubble. The expanded dashboard intentionally retains its existing explicit task/project scope until the dedicated three-scope slice.
+- Some local sessions have neither project metadata nor Git origin nor cwd; their project is shown as unavailable instead of being invented.
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 4: expose the detected working session's project identity to Token Mode and pair the visible project name with the matching live token usage.
-2. Do not combine that slice with new scopes, currency changes, character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
+1. Implement V1.1.0 order step 5: exact Global / Project / Conversation scopes with deduplicated totals and clear selection semantics.
+2. Do not combine that slice with formatting, currency changes, character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent

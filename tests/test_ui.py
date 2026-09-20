@@ -87,5 +87,17 @@ class UiTests(unittest.TestCase):
         self.panel.app_mode.update(False,True,now=4.1)
         self.assertFalse(pet.token_bubble_visible())
 
+    def test_token_bubble_uses_one_coherent_working_context(self):
+        pet=self.panel.pet
+        self.panel.app_mode.update(True,True,now=1)
+        self.panel.app_mode.update(True,True,now=1.5)
+        pet.update_data(dict(project='Panel Project',title='Panel Task',tokens={'total_tokens':999},
+            working_context=dict(project='Working Project',title='Working Task',model='gpt-6-astra',
+                effort='high',tokens={'total_tokens':220,'input_tokens':200,'output_tokens':20})))
+        self.assertEqual(pet.working_context['project'],'Working Project')
+        self.assertEqual(pet.working_context['tokens']['total_tokens'],220)
+        self.assertIn('Working Project',pet.toolTip())
+        self.assertNotIn('Panel Project',pet.toolTip())
+
 
 if __name__=='__main__':unittest.main()

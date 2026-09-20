@@ -1,9 +1,9 @@
 # Project Progress
 
-Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, and centralized Daily / Token mode slices are complete and verified; work is stopped before active-project identity integration.
+Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, and coherent working-context slices are complete and verified; work is stopped before the three-scope implementation.
 
 ## Current Objective
-Continue V1.1.0 from the next authorized slice. Daily / Token mode now has one authoritative state source and conservative Codex-working detection; the next specification step is to associate the active project identity with Token Mode.
+Continue V1.1.0 from the next authorized slice. Token Mode now binds one selected working session to its structured project identity and that same session's Token data; the next specification step is Global / Project / Conversation scopes.
 
 ## Completed
 - Isolated repository cloned; personal website untouched. GitHub upload permission verified; current repo visibility private.
@@ -36,12 +36,18 @@ Continue V1.1.0 from the next authorized slice. Daily / Token mode now has one a
 - Codex working detection now combines a fresh successful UIA scan containing a real task window with explicit `task_started` / `task_complete` lifecycle events from any unarchived desktop/vscode rollout. Old formats without lifecycle markers may use a 15-second recent-token fallback. Initial reads inspect at most the last 2 MB and subsequent reads are incremental/cached.
 - Activity priority is now usage panel > Codex working > microphone > music > typing > idle. Codex working and typing remain distinct states; the existing idle asset is used as the temporary working visual until the later animation slice.
 - The existing token bubble is painted only in Token Mode. Daily Mode keeps the approved character and hides the bubble without changing its Token-mode geometry.
+- Local checkpoint `859b654fca36fc792b2846bb1acb27ffcdd50ba7` records the approved foundation and Daily / Token slices; the working tree was clean immediately after the commit and it was not pushed.
+- Token Mode now selects one coherent working context: prefer the fresh UIA title when it matches a working thread; otherwise select the working thread with the newest rollout activity. A switch between two still-working threads must remain stable for 0.4 seconds; if the selected thread completes, another verified working thread takes over immediately.
+- Project names come from structured metadata in this order: explicit local project name, Git origin repository name, cwd basename, then unavailable. Full paths and arbitrary window text are never used as project names.
+- The bubble's title, project, model, context percentage and session-total Token values now come from the same selected `SessionUsage`. Fork-inherited events remain excluded and nullable fields remain nullable. Existing expanded-panel task/project scope remains independent and unchanged.
+- Token bubble text now shows project plus session Tokens and an explicit Working status while preserving the existing bubble geometry and styling.
 
 ## Files Modified
 Historical V1.0.0 scope: AGENTS.md, PROGRESS.md, DESIGN.md, docs/implementation-plan.md, usage.py, analytics.py, analytics_view.py, desktop.py, widget.py, pet.py, activity.py, assets/, tests/, tools/, requirements*.txt, .gitignore.
 Lifecycle continuation: AGENTS.md, PROGRESS.md, README.md, DESIGN.md, CHANGELOG.md (new), ROADMAP.md (new), HANDOFF.md (new), docs/implementation-plan.md, docs/TOKEN_ACCOUNTING.md, docs/RELEASE_NOTES_v1.0.0.md, THIRD_PARTY_NOTICES.md, widget.py, pet.py, analytics_view.py, build.ps1.
 V1.1.0 foundation slice: app_config.py (new), localization.py (new), desktop.py, widget.py, tests/test_settings.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 V1.1.0 Daily / Token slice: app_mode.py (new), activity.py, usage.py, widget.py, pet.py, tests/test_app_mode.py (new), tests/test_activity.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
+V1.1.0 working-context slice: usage.py, widget.py, pet.py, tests/test_app_mode.py, tests/test_ui.py, tests/test_working_context.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 
 ## Important Decisions
 - Source: local Codex `state_*.sqlite` + JSONL sessions; UIA document LegacyIAccessible Name follows actual active task. Initial URL is stale and must never select the task.
@@ -54,9 +60,11 @@ V1.1.0 Daily / Token slice: app_mode.py (new), activity.py, usage.py, widget.py,
 - Continuation decisions: canonical name `petoken`, canonical repository `windknows-ai/petoken`. Rename user-facing branding only; preserve the persisted `CodexWisp` settings directory, module/class/internal identifiers, and historical `Codex Wisp` names in V1.0.0 release documentation. Version stays V1.0.0; no increment for documentation/branding work.
 - Daily / Token mode is centralized in `AppModeState`; UI components consume that state and do not independently infer Codex activity.
 - A visible Codex window alone never activates Token Mode. Explicit session lifecycle plus fresh UIA task presence is the primary rule; missing/stale/unreadable sources are conservative and cannot activate it.
+- Working-session selection and project/Token binding happen in `CodexStore`; the pet consumes a single `working_context` object and does not combine independently selected values.
+- The existing dashboard keeps its explicit task/project scope. Only the Token Mode pet bubble follows the selected global working session in this slice.
 
 ## Current State
-V1.0.0 is finished and verified. OpenCode completed V1.1.0 Step 1 architecture inspection. Codex completed the approved foundation and Daily / Token slices, which are recorded together in the local checkpoint commit immediately after cleanup checkpoint `9b7300b`. The checkpoint is not pushed and leaves the repository working tree clean before the next slice. `99_Implementation_Notes.md` is maintained in the external specification folder and is not part of this Git repository.
+V1.0.0 is finished and verified. OpenCode completed V1.1.0 Step 1 architecture inspection. Checkpoint `859b654` records the approved foundation and Daily / Token slices and remains local. Codex completed the working-context slice after that checkpoint without committing it. `99_Implementation_Notes.md` is maintained in the external specification folder and is not part of this Git repository.
 
 ## Known Issues
 - Media playback detection depends on Windows System Media Transport Controls, so players that do not integrate with Windows media controls cannot be detected reliably.
@@ -82,10 +90,12 @@ V1.0.0 is finished and verified. OpenCode completed V1.1.0 Step 1 architecture i
 - An initial smoke run exposed a removed `json` import used by the smoke-report callback. The import was restored and the complete test/compile/smoke sequence passed on rerun.
 - Daily / Token verification: 30 tests pass (22 prior + 8 targeted); all project/test Python files pass `py_compile`; isolated live smoke reports `app_mode: token`, `reason: task_started`, correct live usage/quota, and no keyboard-hook error. Token and Daily pet screenshots were inspected: the Token bubble is unchanged and the Daily bubble is absent.
 - Live detector timing on current local data: about 4.07 ms for the bounded cold scan and 0.06 ms for a warm incremental check.
+- Working-context recovery verification: the uncommitted implementation was complete rather than partial. All 39 tests pass (30 prior + 9 targeted), all Python files pass `py_compile`, and an isolated live smoke detected two working sessions, selected the foreground thread, and reported its matching title, `Web Project`, 31,399,745 session Tokens, explicit project metadata source, live quota, and no keyboard-hook error. The bubble screenshot was inspected and kept the existing 242×378 pet / 240×70 bubble geometry.
+- Initial fixture runs exposed that Python's SQLite context manager does not close Windows file handles and that display names must not reuse case-normalizing path logic. Production read-only connections now close explicitly, and cwd fallback extracts its basename without altering case; all tests passed after both fixes.
 
 ## Remaining Work
-- Make active project identity available to Token Mode and associate the displayed live token usage with the detected working project/session.
+- Implement the exact Global / Project / Conversation scope model while preserving the coherent working context and current accounting semantics.
 - Continue later V1.1.0 steps only when authorized. Do not start V1.2.0.
 
 ## Next Step
-Implement V1.1.0 order step 4 only: expose the detected working session's project identity to Token Mode and show the matching project name beside its live token usage. Preserve the current mode/detection rules; do not begin scopes, currency, assets, Bongo-Cat, subtitles, or V1.2.0.
+Implement V1.1.0 order step 5 only: add Global / Project / Conversation Token scopes with accurate totals, selection semantics, and no duplicate accounting. Preserve working-context binding; do not begin formatting, currency, assets, Bongo-Cat, subtitles, or V1.2.0.

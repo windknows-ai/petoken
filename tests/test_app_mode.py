@@ -28,7 +28,7 @@ class AppModeTests(unittest.TestCase):
             path.write_text(lifecycle("task_started"), encoding="utf-8")
             now = path.stat().st_mtime
             signal = CodexActivityDetector().detect(
-                [{"id": "thread-1", "rollout_path": str(path)}], True, True, now)
+                [{"id": "thread-1", "name":"Task", "rollout_path": str(path)}], "Task", True, now)
         self.assertTrue(signal["active"])
         self.assertEqual(ActivityState().state(now=1, codex_working=signal["active"]), "working")
 
@@ -38,7 +38,7 @@ class AppModeTests(unittest.TestCase):
             path.write_text(lifecycle("task_started") + lifecycle("task_complete"), encoding="utf-8")
             now = path.stat().st_mtime
             signal = CodexActivityDetector().detect(
-                [{"id": "thread-1", "rollout_path": str(path)}], True, True, now)
+                [{"id": "thread-1", "name":"Task", "rollout_path": str(path)}], "Task", True, now)
         self.assertFalse(signal["active"])
         self.assertEqual(signal["reason"], "no_running_session")
 
@@ -48,12 +48,12 @@ class AppModeTests(unittest.TestCase):
             path.write_text(lifecycle("task_started"), encoding="utf-8")
             detector = CodexActivityDetector()
             self.assertTrue(detector.detect(
-                [{"id": "thread-1", "rollout_path": str(path)}], True, True,
+                [{"id": "thread-1", "name":"Task", "rollout_path": str(path)}], "Task", True,
                 path.stat().st_mtime)["active"])
             with path.open("a", encoding="utf-8") as stream:
                 stream.write(lifecycle("task_complete"))
             self.assertFalse(detector.detect(
-                [{"id": "thread-1", "rollout_path": str(path)}], True, True,
+                [{"id": "thread-1", "name":"Task", "rollout_path": str(path)}], "Task", True,
                 path.stat().st_mtime)["active"])
 
     def test_any_running_desktop_session_makes_global_signal_active(self):
@@ -64,9 +64,9 @@ class AppModeTests(unittest.TestCase):
             running.write_text(lifecycle("task_started"), encoding="utf-8")
             now = max(idle.stat().st_mtime, running.stat().st_mtime)
             signal = CodexActivityDetector().detect([
-                {"id": "idle", "rollout_path": str(idle)},
-                {"id": "running", "rollout_path": str(running)},
-            ], True, True, now)
+                {"id": "idle", "name":"Idle", "rollout_path": str(idle)},
+                {"id": "running", "name":"Running", "rollout_path": str(running)},
+            ], "Idle", True, now)
         self.assertTrue(signal["active"])
         self.assertEqual(signal["thread"], "running")
 
@@ -76,11 +76,27 @@ class AppModeTests(unittest.TestCase):
             path.write_text(lifecycle("task_started"), encoding="utf-8")
             os.utime(path, (100, 100))
             signal = CodexActivityDetector().detect(
-                [{"id": "thread-1", "rollout_path": str(path)}], True, True, now=500)
+                [{"id": "thread-1", "name":"Task", "rollout_path": str(path)}], "Task", True, now=500)
         self.assertFalse(signal["active"])
         state = AppModeState()
         state.update(True, reliable=False, now=1)
         self.assertEqual(state.update(True, reliable=False, now=2), DAILY_MODE)
+
+    def test_working_session_switch_is_debounced_as_one_context(self):
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "first.jsonl"
+            second = Path(directory) / "second.jsonl"
+            first.write_text(lifecycle("task_started"), encoding="utf-8")
+            second.write_text(lifecycle("task_started"), encoding="utf-8")
+            now=max(first.stat().st_mtime,second.stat().st_mtime)
+            rows=[{"id":"a","name":"Task A","rollout_path":str(first)},
+                  {"id":"b","name":"Task B","rollout_path":str(second)}]
+            detector=CodexActivityDetector()
+            self.assertEqual(detector.detect(rows,"Task A",True,now)["thread"],"a")
+            pending=detector.detect(rows,"Task B",True,now+.1)
+            switched=detector.detect(rows,"Task B",True,now+.6)
+        self.assertEqual((pending["thread"],pending["selection"]),("a","debounced_previous"))
+        self.assertEqual((switched["thread"],switched["selection"]),("b","foreground"))
 
 
 if __name__ == "__main__":

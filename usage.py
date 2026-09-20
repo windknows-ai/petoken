@@ -6,6 +6,7 @@ import os
 import sqlite3
 import time
 import hashlib
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 from analytics import TOKEN_KEYS, normalize_usage, derive, aggregate, summarize
@@ -62,6 +63,28 @@ def select_thread(rows, title, pinned):
     if len(matches) == 1:
         return matches[0], 'follow'
     return (rows[0], 'recent') if rows else (None, 'empty')
+
+
+def project_identity(row, state):
+    assignments = state.get('thread-project-assignments', {}) if isinstance(state, dict) else {}
+    projects = state.get('local-projects', {}) if isinstance(state, dict) else {}
+    project_id = (assignments.get(row.get('id')) or {}).get('projectId') or row.get('project_id')
+    project = projects.get(project_id, {}) if isinstance(projects, dict) else {}
+    name = project.get('name') if isinstance(project, dict) else None
+    if isinstance(name, str) and name.strip():
+        return name.strip(), 'project_metadata', project_id
+    origin = row.get('git_origin_url')
+    if isinstance(origin, str) and origin.strip():
+        repository = origin.strip().rstrip('/\\').rsplit('/',1)[-1].rsplit(':',1)[-1]
+        repository = repository.removesuffix('.git').strip()
+        if repository:
+            return repository, 'git_origin', project_id
+    cwd = row.get('cwd')
+    if isinstance(cwd, str) and cwd.strip():
+        directory = Path(cwd.strip().removeprefix('\\\\?\\').rstrip('/\\')).name.strip()
+        if directory:
+            return directory, 'cwd_basename', project_id
+    return None, 'unavailable', project_id
 
 
 def clean_path(value):
@@ -237,9 +260,13 @@ class CodexActivityDetector:
     STALE_SECONDS = 300
     LEGACY_TOKEN_SECONDS = 15
     TAIL_BYTES = 2 * 1024 * 1024
+    SWITCH_SECONDS = .4
 
     def __init__(self):
         self.files = {}
+        self.selected_thread = None
+        self.pending_thread = None
+        self.pending_since = None
 
     @staticmethod
     def _event_time(value):
@@ -294,13 +321,47 @@ class CodexActivityDetector:
         entry['mtime'] = stat.st_mtime
         return entry
 
-    def detect(self, rows, task_visible, detection_valid, now=None):
+    def _select(self, candidates, rows, active_title, now):
+        by_id = {row.get('id'):row for row in rows}
+        foreground = [candidate for candidate in candidates
+                      if active_title in (by_id[candidate['thread']].get('name'),
+                                          by_id[candidate['thread']].get('title'))]
+        if foreground:
+            candidate = max(foreground, key=lambda item:(item['activity_at'],item['thread']))
+            selection = 'foreground'
+        else:
+            candidate = max(candidates, key=lambda item:(item['activity_at'],item['thread']))
+            selection = 'most_recent'
+        active = {item['thread']:item for item in candidates}
+        if self.selected_thread not in active:
+            self.selected_thread = candidate['thread']
+            self.pending_thread = None
+            self.pending_since = None
+        elif candidate['thread'] != self.selected_thread:
+            if candidate['thread'] != self.pending_thread:
+                self.pending_thread = candidate['thread']
+                self.pending_since = now
+            elif now-self.pending_since >= self.SWITCH_SECONDS:
+                self.selected_thread = candidate['thread']
+                self.pending_thread = None
+                self.pending_since = None
+        else:
+            self.pending_thread = None
+            self.pending_since = None
+        selected = dict(active[self.selected_thread])
+        selected['selection'] = selection if selected['thread'] == candidate['thread'] else 'debounced_previous'
+        selected['working_count'] = len(candidates)
+        return selected
+
+    def detect(self, rows, active_title, detection_valid, now=None):
         now = time.time() if now is None else now
         if not detection_valid:
+            self.selected_thread = None
             return dict(active=False, valid=False, reason='uia_unavailable')
-        if not task_visible:
+        if not active_title:
+            self.selected_thread = None
             return dict(active=False, valid=True, reason='no_task_window')
-        fallback = None
+        candidates = []
         for row in rows:
             path = row.get('rollout_path')
             if not path:
@@ -312,13 +373,18 @@ class CodexActivityDetector:
             except OSError:
                 continue
             if entry['working'] is True:
-                return dict(active=True, valid=True, reason='task_started',
-                            thread=row.get('id'), sample=entry['lifecycle_at'])
-            if (entry['working'] is None and entry['token_at'] is not None
+                candidates.append(dict(active=True, valid=True, reason='task_started',
+                    thread=row.get('id'), sample=entry['lifecycle_at'], activity_at=entry['mtime']))
+            elif (entry['working'] is None and entry['token_at'] is not None
                     and now-entry['token_at'] <= self.LEGACY_TOKEN_SECONDS):
-                fallback = dict(active=True, valid=True, reason='recent_token_legacy',
-                                thread=row.get('id'))
-        return fallback or dict(active=False, valid=True, reason='no_running_session')
+                candidates.append(dict(active=True, valid=True, reason='recent_token_legacy',
+                    thread=row.get('id'), activity_at=entry['token_at']))
+        if candidates:
+            return self._select(candidates, rows, active_title, now)
+        self.selected_thread = None
+        self.pending_thread = None
+        self.pending_since = None
+        return dict(active=False, valid=True, reason='no_running_session')
 
 
 class CodexStore:
@@ -348,21 +414,43 @@ class CodexStore:
                         codex_activity=dict(active=False,valid=False,reason='no_database'))
         db = max(databases, key=lambda p: int(p.stem.split('_')[-1]))
         try:
-            with sqlite3.connect(db.as_uri()+'?mode=ro', uri=True, timeout=.2) as c:
+            with closing(sqlite3.connect(db.as_uri()+'?mode=ro', uri=True, timeout=.2)) as c:
                 c.row_factory = sqlite3.Row
                 columns = {r[1] for r in c.execute('pragma table_info(threads)')}
-                fields = [x for x in ('id','name','title','cwd','rollout_path','model','reasoning_effort','source','project_id','updated_at','archived') if x in columns]
+                fields = [x for x in ('id','name','title','cwd','rollout_path','model','reasoning_effort','source','project_id','git_origin_url','updated_at','archived') if x in columns]
                 rows = [dict(r) for r in c.execute(f"select {','.join(fields)} from threads order by updated_at desc")]
         except sqlite3.Error:
             return dict(status='Codex 数据库暂时不可读，下一秒重试。', rows=[],
                         codex_activity=dict(active=False,valid=False,reason='database_unavailable'))
         desktop = [r for r in rows if r.get('source') in ('vscode','desktop') and not r.get('archived')]
-        codex_activity = self.activity.detect(desktop, bool(active_title), activity_detection_valid)
+        codex_activity = self.activity.detect(desktop, active_title, activity_detection_valid)
         chosen, mode = select_thread(desktop, active_title, pinned)
+        state = self.state
+        working_row = next((row for row in desktop if row.get('id') == codex_activity.get('thread')), None)
+        working_context = None
+        if working_row:
+            key = working_row.get('rollout_path')
+            if key not in self.sessions:
+                self.sessions[key] = SessionUsage(key, self.prices)
+            working_session = self.sessions[key]
+            working_session.refresh()
+            working_summary = summarize(unique_records([working_session]))
+            working_project, project_source, working_project_id = project_identity(working_row, state)
+            last_tokens = working_session.last.get('total_tokens')
+            working_context = dict(
+                thread=working_row.get('id'),
+                title=working_row.get('name') or (working_row.get('title') or '').split('\n')[0][:60] or None,
+                project=working_project, project_source=project_source, project_id=working_project_id,
+                status='working', tokens=working_summary['tokens'], available=working_session.available,
+                model=working_session.model or working_row.get('model'),
+                effort=working_session.effort or working_row.get('reasoning_effort'),
+                context=(min(100,max(0,100*last_tokens/working_session.window))
+                         if last_tokens is not None and working_session.window else None),
+                sample=working_session.sample, selection=codex_activity.get('selection'),
+                activity_reason=codex_activity.get('reason'))
         if not chosen:
             return dict(status='固定的任务已不可用，请重新选择。' if pinned else '还没有本地桌面任务。',
-                        rows=desktop, codex_activity=codex_activity)
-        state = self.state
+                        rows=desktop, codex_activity=codex_activity, working_context=working_context)
         assignments = state.get('thread-project-assignments', {})
         project_id = (assignments.get(chosen['id']) or {}).get('projectId') or chosen.get('project_id')
         project = (state.get('local-projects') or {}).get(project_id, {})
@@ -374,7 +462,8 @@ class CodexStore:
             relevant = [r for r in rows if (
                 (project_id and ((assignments.get(r['id']) or {}).get('projectId') or r.get('project_id')) == project_id)
                 or clean_path(r.get('cwd', '')) in roots)]
-        for row in (rows if include_history else relevant):
+        refresh_rows = rows if include_history else relevant + ([working_row] if working_row and working_row not in relevant else [])
+        for row in refresh_rows:
             key = row['rollout_path']
             if key not in self.sessions:
                 self.sessions[key] = SessionUsage(key, self.prices)
@@ -413,7 +502,8 @@ class CodexStore:
                     excluded_forks=excluded_forks, count=len(sessions), sample=current.sample,
                     limits=current.limits, analytics=analysis, history=history, session_names=names,
                     current_session=summarize(unique_records([current])), raw_total=current.raw_total,raw_last=current.raw_last,
-                    notes=sorted(set().union(*(s.notes for s in sessions))), codex_activity=codex_activity)
+                    notes=sorted(set().union(*(s.notes for s in sessions))), codex_activity=codex_activity,
+                    working_context=working_context)
 
 
 def sample_age(timestamp):

@@ -735,6 +735,9 @@ def main():
             report = dict(visible=panel.isVisible(), task=panel.snapshot.get('title'),
                           has_usage=panel.snapshot.get('available'), mode=panel.snapshot.get('mode'),
                           app_mode=panel.app_mode.mode, codex_activity=panel.codex_activity,
+                          working_context={k:(v.get('total_tokens') if k=='tokens' else v)
+                              for k,v in (panel.snapshot.get('working_context') or {}).items()
+                              if k in ('thread','title','project','project_source','tokens','selection')},
                           quota_live=bool(panel.quota.get('sampled')),
                           activity_status=panel.activity.status,
                           keyboard_hook_error=panel.activity.keyboard.error,

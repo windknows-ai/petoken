@@ -7,6 +7,13 @@ from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QPen,QKeySequence,QShort
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 
 
+def compact_tokens(value):
+    if value is None:return 'N/A'
+    if value>=1_000_000:return f'{value/1_000_000:.2f}M'
+    if value>=10_000:return f'{value/1_000:.1f}K'
+    return f'{value:,}'
+
+
 class DesktopPet(QWidget):
     def __init__(self,panel):
         super().__init__()
@@ -37,6 +44,7 @@ class DesktopPet(QWidget):
         self.timer.timeout.connect(self.tick)
         self.timer.setInterval(50)
         self.snapshot={}
+        self.working_context=None
         self.pressed=None
         screen=QApplication.primaryScreen().availableGeometry()
         position=panel.prefs.get('pet_position')
@@ -84,8 +92,13 @@ class DesktopPet(QWidget):
 
     def update_data(self,data):
         self.snapshot=data
-        t=data.get('tokens',{})
-        self.setToolTip(f"{data.get('project','Codex')} · {data.get('title','等待任务')}\n{data.get('model','—')} · {data.get('effort','—')}\n"
+        if data.get('working_context'):
+            self.working_context=data['working_context']
+        elif not self.token_bubble_visible():
+            self.working_context=None
+        context=self.working_context or data
+        t=context.get('tokens',{})
+        self.setToolTip(f"{context.get('project') or 'Project unavailable'} · {context.get('title') or 'Codex Working'}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"
                        f"Total {t.get('total_tokens','N/A')} · Input {t.get('input_tokens','N/A')} · Output {t.get('output_tokens','N/A')}\n点击展开用量 · 拖动移动 · 右键菜单")
         self.update()
 
@@ -97,22 +110,25 @@ class DesktopPet(QWidget):
         p=QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         if self.token_bubble_visible():
+            context=self.working_context or {}
+            tokens=context.get('tokens') or {}
             p.setPen(QPen(QColor('#777AA4'),1))
             p.setBrush(QColor(29,33,57,235))
             p.drawRoundedRect(QRectF(1,1,240,70),16,16)
             p.setPen(QColor('#EEF2FF'))
             p.setFont(QFont('Microsoft YaHei UI',9,QFont.DemiBold))
-            title=self.snapshot.get('title') or '丝柯克 · 等待 Codex'
+            title=context.get('title') or 'Codex Working'
             p.drawText(QRectF(13,8,216,22),Qt.AlignLeft|Qt.AlignVCenter,p.fontMetrics().elidedText(title,Qt.ElideRight,216))
             p.setFont(QFont('Segoe UI',8))
             p.setPen(QColor('#B9A7F8'))
-            project=self.snapshot.get('project','点击查看用量')
-            p.drawText(QRectF(13,30,216,16),p.fontMetrics().elidedText(project,Qt.ElideRight,216))
+            project=context.get('project') or 'Project unavailable'
+            project_tokens=f"{project} · {compact_tokens(tokens.get('total_tokens'))} Tokens"
+            p.drawText(QRectF(13,30,216,16),p.fontMetrics().elidedText(project_tokens,Qt.ElideRight,216))
             p.setPen(QColor('#91E4F2'))
-            context=self.snapshot.get('context')
-            context='—' if context is None else f'{context:.0f}%'
+            context_used=context.get('context')
+            context_used='—' if context_used is None else f'{context_used:.0f}%'
             quota=self.panel.five.value.text().replace(' left','')
-            p.drawText(QRectF(13,47,220,18),f'Context {context}  ·  5h {quota} left')
+            p.drawText(QRectF(13,47,220,18),f'● Working · Ctx {context_used} · 5h {quota}')
         offset=math.sin(self.phase)*3 if self.motion else 0
         p.save()
         if self.reaction:
