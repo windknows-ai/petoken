@@ -391,6 +391,51 @@ class UiTests(unittest.TestCase):
         self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),before)
         self.panel.pet.preview_state=None
 
+    def test_reset_to_defaults_needs_confirm_and_restores_form(self):
+        self.panel.prefs['language']='en'
+        settings=Settings(self.panel)
+        settings.scope.setCurrentIndex(settings.scope.findData('global'))
+        settings.token_format.setCurrentIndex(settings.token_format.findData('full'))
+        settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
+        self.assertEqual(settings.reset_button.text(),'Reset to Defaults')
+        settings.reset_button.click()
+        self.assertEqual(settings.reset_button.text(),'Click again to confirm reset')
+        self.assertEqual(settings.scope.currentData(),'global')
+        settings.reset_button.click()
+        self.assertEqual(settings.scope.currentData(),'conversation')
+        self.assertEqual(settings.language.currentData(),'zh_CN')
+        self.assertEqual(settings.token_format.currentData(),'compact')
+        self.assertEqual(settings.currency.currentData(),'CAD')
+        self.assertEqual(settings.windowTitle(),'petoken · 设置')
+        with patch('widget.write_preferences') as write:
+            settings.save()
+        saved=write.call_args.args[0]
+        self.assertEqual((saved['scope'],saved['language'],saved['token_number_format'],
+                          saved['currency']),('conversation','zh_CN','compact','CAD'))
+        settings.deleteLater()
+
+    def test_final_art_states_share_geometry_and_taps_differ(self):
+        import pet_assets as assets
+        import pet_geometry as geometry
+        from types import SimpleNamespace
+        from activity import ActivityState
+        self.panel.activity=SimpleNamespace(state=ActivityState(),close=lambda:None,
+            status={'microphone':None,'music':None,'music_text':None})
+        grabs=set()
+        for state in ('idle','typing','codex_working','working','microphone','music','guitar','usage'):
+            self.panel.pet.preview_state=state
+            self.panel.pet.update_activity()
+            self.app.processEvents()
+            image=self.panel.pet.grab().toImage()
+            self.assertFalse(image.isNull(),state)
+            grabs.add(image.cacheKey() if hasattr(image,'cacheKey') else image.sizeInBytes())
+            self.assertEqual((self.panel.pet.width(),self.panel.pet.height()),
+                             geometry.window_size(),state)
+        self.assertEqual(geometry.anchor(),(121,209))
+        self.assertGreater(len(grabs),1)
+        self.panel.pet.preview_state=None
+        self.assertEqual(assets.resolve_path(assets.entry_for('idle')),'assets/v1_1/idle.png')
+
     def test_pet_title_and_analytics_menu_follow_language(self):
         self.panel.prefs['language']='en'
         self.panel.apply_language();self.app.processEvents()

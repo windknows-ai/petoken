@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — through music-text capability complete; responsive committed, music-text uncommitted; not pushed)
+`V1.1.0` (UI and interaction refinement — COMPLETE and verified with final artwork; completion committed locally; not pushed, not published)
 
 ## Current Stage
 
-OpenCode is the active continuation agent (Codex at usage limit). Responsive polish was committed as `5af3a98`; the Step 14 music-text capability (verified SMTC `subtitle` field, memory-only state, Music-visible pill, honest unavailable path) is complete and verified but intentionally uncommitted. No recording/transcription/scraping; no live media text was available in this environment. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). V1.1.0 is COMPLETE: final chibi artwork integrated, acceptance rechecked to PASS, APP_VERSION `1.1.0`, completion commit created locally. NOT pushed, no Release, no binaries published — publication awaits explicit authorization. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -66,10 +66,12 @@ OpenCode is the active continuation agent (Codex at usage limit). Responsive pol
 - Responsive checkpoint `5af3a98` committed locally (4 files: layout/persistence/tests/docs work; message "fix: harden responsive panel layout"). `AGENTS.md` excluded again, untouched.
 - Step 14 implemented by OpenCode, uncommitted: `summarize_music_text` + `ActivityMonitor.read_music_text` (SMTC `subtitle` field only, recomputed each 0.5 s poll, failure → None); pet `music_subtitle()` gate (Music-visible only, verbatim, memory-only) + one-line pill (elided ≤208 px, bubble styling, no box when absent); render tool `pet-music-text.png` with synthetic labeled content.
 - Music verification passed: 155 tests, `py_compile`, `git diff --check`, 100%/200% pill inspected, no-media smoke exits 0. Real `subtitle` field confirmed in the installed projection; no app populates it here (0 sessions), so live text is architecture-verified, not end-to-end observed.
+- Music checkpoint `2d3394f` committed locally (7 files: capability/tests/tool/docs work; message "feat: add music subtitle capability"). `AGENTS.md` excluded again, untouched.
+- Acceptance performed by OpenCode, uncommitted: full §26 matrix (see 99 notes), Reset to Defaults added (spec 01 §25 gap), 11 edge/combination tests, perf probe, privacy grep, DESIGN/README consistency touch-ups, PyInstaller build + frozen smoke, final screenshot set. Verdict NOT READY (artwork BLOCKED); APP_VERSION stays `1.0.0`.
 
 ## Current Work / Partial Work
 
-None in progress. Step 14 music-text capability is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
+None in progress. No code work remains. Do not start V1.2.0. Do not publish without explicit authorization.
 
 ## Important Decisions
 
@@ -80,9 +82,9 @@ None in progress. Step 14 music-text capability is complete and verified but unc
 
 ## Current Git State
 
-- Branch: `main`, HEAD `5af3a98` ("fix: harden responsive panel layout"), twelve commits ahead of `origin/main`; nothing was pushed.
-- The Step 14 music-text slice is intentionally uncommitted and unpushed. Modified tracked files: `activity.py`, `pet.py`, `tools/render_states.py`, `tests/test_ui.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `tests/test_music_text.py`. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
-- Verification: 155 tests pass, `py_compile` passes, `git diff --check` passes, pill renders at 100%/200% plus music-without-text inspected, isolated zh_CN no-media smoke exits 0, 0 live SMTC sessions observed.
+- Branch: `main`, HEAD is the local V1.1.0 completion commit (see below); nothing was pushed.
+- The completion commit includes: final art integration (7 PNGs), acceptance slice, APP_VERSION 1.1.0, and all V1.1.0 docs. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
+- Verification: 170 tests pass, `py_compile` pass, `git diff --check` pass, PyInstaller build + frozen smoke exit 0, final screenshot set inspected, privacy review clean.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -96,9 +98,9 @@ None in progress. Step 14 music-text capability is complete and verified but unc
 
 ## Exact Next Step
 
-1. Run V1.1.0 order steps 15–16 only when authorized: edge-case testing, animation/visual polish, final acceptance review.
-2. Do not combine that with Working-animation or V1.2.0.
-3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
+1. Await explicit publication authorization (push + GitHub Release + binaries) if the user wants V1.1.0 published.
+2. Do not combine anything with V1.2.0.
+3. V1.1.0 acceptance criteria are verified; the release decision belongs to the user.
 
 ## Last Agent
 

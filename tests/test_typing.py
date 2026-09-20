@@ -6,7 +6,8 @@ from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QApplication
 
 from activity import TAP_MIN_INTERVAL, TYPING_WINDOW, ActivityState
-from pet_assets import AssetEntry, entry_for, existing_frames, frame_for, sprite_for
+from pet_assets import (AssetEntry, entry_for, existing_frames, frame_for,
+                        resolve_path, sprite_for)
 
 
 class TypingInteractionTests(unittest.TestCase):
@@ -73,9 +74,13 @@ class TypingInteractionTests(unittest.TestCase):
     def test_typing_frames_resolve_through_registry(self):
         entry = entry_for('typing')
         self.assertEqual(entry.frames, ('assets/v1_1/typing_1.png', 'assets/v1_1/typing_2.png'))
-        self.assertEqual(existing_frames(entry), [])
-        self.assertIsNone(frame_for('typing', 0))
-        self.assertIsNone(frame_for('typing', 1))
+        self.assertEqual(len(existing_frames(entry)), 2)
+        self.assertIsNotNone(frame_for('typing', 0))
+        self.assertIsNotNone(frame_for('typing', 1))
+        self.assertNotEqual(frame_for('typing', 0).cacheKey(),
+                            frame_for('typing', 1).cacheKey())
+        # No static typing.png supplied: the still pose is the first frame.
+        self.assertEqual(resolve_path(entry), 'assets/v1_1/typing_1.png')
         self.assertIsNotNone(sprite_for('typing'))
 
     def test_present_frames_are_selected_by_phase(self):

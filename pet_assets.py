@@ -94,18 +94,28 @@ def load_path(path):
     return pixmap if not pixmap.isNull() else None
 
 
+def resolve_path(entry):
+    """Return the first loadable path: primary, existing frames, fallback, idle.
+
+    A state with frames but no still file uses its first frame as the static
+    pose (e.g. motion-paused typing). Pure path selection, directly
+    unit-testable without touching artwork. Returns None only when even the
+    pinned idle fallback cannot load.
+    """
+    for candidate in [entry.path] + existing_frames(entry) + [entry.fallback, IDLE_FALLBACK]:
+        if load_path(candidate) is not None:
+            return candidate
+    return None
+
+
 def sprite_for(state):
-    """Resolve ``state`` to a pixmap: primary, then state fallback, then idle.
+    """Resolve ``state`` to a pixmap via :func:`resolve_path`.
 
     Never raises and never fabricates a path. Returns None only when even
     the pinned idle fallback cannot load (i.e. repository assets deleted).
     """
-    entry = entry_for(state)
-    for candidate in (entry.path, entry.fallback, IDLE_FALLBACK):
-        pixmap = load_path(candidate)
-        if pixmap is not None:
-            return pixmap
-    return None
+    path = resolve_path(entry_for(state))
+    return load_path(path) if path is not None else None
 
 
 _FRAME_CACHE = {}
@@ -139,5 +149,13 @@ def frame_for(state_or_entry, phase):
 
 
 def load_sprites():
-    """Build the DesktopPet sprite table keyed by activity state name."""
-    return {state: sprite_for(state) for state in PREVIEW_STATES}
+    """Build the DesktopPet sprite table.
+
+    Keys are registry states plus activity aliases (``working``,
+    ``usage``), so the renderer and QA can address every pose by name
+    while activity logic keeps its own vocabulary.
+    """
+    table = {entry.state: sprite_for(entry.state) for entry in REGISTRY}
+    table['working'] = table['codex_working']
+    table['usage'] = table['idle']
+    return table

@@ -8,7 +8,7 @@ from localization import DEFAULT_LANGUAGE, normalize_language
 from pricing import DEFAULT_CURRENCY, normalize_currency
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 SETTINGS_SCHEMA_VERSION = 1
 DEFAULT_PREFERENCES = {
     "settings_schema_version": SETTINGS_SCHEMA_VERSION,

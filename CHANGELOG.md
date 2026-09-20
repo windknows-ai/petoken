@@ -21,6 +21,20 @@ First formal foundation release of `petoken` (previously Codex Wisp).
 ### Fixed
 - (First release: no prior regressions.)
 
-## V1.1.0 — targeted (not released)
+## V1.1.0 — 2026-09-20
 
-UI / interaction refinement is the next major update. Its requirements are defined in the active external specification `D:\Desktop\petoken\V1.1.0`; do not mark it released until implemented and verified.
+UI / interaction refinement, verified against `D:\Desktop\petoken\V1.1.0` (not yet published to GitHub; release at user authorization).
+
+### Added
+- Daily / Token modes with debounced transitions and a bound Working Context (project, model, context, session Tokens).
+- Global / Project / Conversation scopes; Full / Compact Token formatting with units.
+- Simplified Chinese / English UI with live switching; USD / CAD / EUR / CNY Estimated Cost from an internal table.
+- Compact two-line Token card; grouped, resizable expanded panel with size persistence; Reset to Defaults.
+- V1.1 chibi character set (idle, typing frames, Working, microphone, music, guitar) with shared anchor and DPI-aware rendering; reactive tap typing.
+- Music subtitle capability from platform SMTC metadata when provided.
+
+### Changed
+- Smaller pet footprint (50% logical scale), centralized theme, manual pricing controls removed from Settings.
+
+### Fixed
+- Responsive tall-window spacing, malformed panel-size crash, render-tool Token pose ordering.

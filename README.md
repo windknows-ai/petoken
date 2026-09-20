@@ -9,7 +9,7 @@ petoken 是一个 Windows 桌宠：跟随当前打开的 Codex 任务，按需�
 - 自动跟随当前 Codex 任务（Windows 辅助功能标题），支持固定任务与任务/项目范围。
 - 本地增量解析数字用量事件，不发送模型请求、不导出对话、不读取凭据；缓存输入与推理 token 不重复计入总量。
 - 完整 Token Analytics：原始字段、派生指标、模型 / 会话 / 日期分组、本地 lifetime，未知值显示 `N/A` 而非假零。
-- 待机 / 打字 / 麦克风 / 音乐状态带进入与退出防抖；默认始终是批准的角色。
+- Codex 工作 / 待机 / 打字 / 麦克风 / 音乐状态带进入与退出防抖；默认始终是批准的角色。
 
 ## 使用
 
@@ -21,7 +21,7 @@ petoken 是一个 Windows 桌宠：跟随当前打开的 Codex 任务，按需�
 
 ## 数据与隐私
 
-只读取：Codex 只读 SQLite 任务元数据与 JSONL 数字用量事件、只读 `account/rateLimits/read` 结果、Windows 任务标题与活动布尔状态、加拿大央行公开 USD/CAD 汇率。不保存按键内容、音频或媒体名称，也不上传本地用量。
+只读取：Codex 只读 SQLite 任务元数据与 JSONL 数字用量事件、只读 `account/rateLimits/read` 结果、Windows 任务标题与活动布尔状态、媒体会话标题/作者/字幕元数据（仅内存显示）、加拿大央行公开汇率（USD/CAD/EUR/CNY）。不保存按键内容、音频、字幕或媒体名称，也不上传本地用量。
 
 ## 从源码运行
 
@@ -42,7 +42,7 @@ py -3.13 -m venv .venv
 
 ## 版本与文档
 
-- 当前版本：V1.0.0（[CHANGELOG](CHANGELOG.md)）
+- 当前版本：V1.1.0（[CHANGELOG](CHANGELOG.md)，详见 [V1.1.0 发布说明](docs/RELEASE_NOTES_v1.1.0.md)）
 - Token 公式与字段：[docs/TOKEN_ACCOUNTING.md](docs/TOKEN_ACCOUNTING.md)
 - 设计与交互约定：[DESIGN.md](DESIGN.md)
 - 角色图片与归属：[docs/ARTWORK.md](docs/ARTWORK.md)

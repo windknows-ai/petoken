@@ -1,13 +1,13 @@
 # petoken design contract
 
-The approved idle character and its default bubble are the immutable visual baseline. `assets/skirk-pet.png` must retain SHA-256 `7ce0d2fbd0eb89d2f6786c9bb1d5bada1aff7d89ea2f5dd079cce8a26483e1a0`. New behavior changes pose temporarily; it does not replace, repaint or permanently cover the idle identity.
+The approved idle character and its default bubble are the immutable visual baseline. `assets/skirk-pet.png` must retain SHA-256 `7ce0d2fbd0eb89d2f6786c9bb1d5bada1aff7d89ea2f5dd079cce8a26483e1a0`. New behavior changes pose temporarily; it does not replace, repaint or permanently cover the idle identity. V1.1.0 runtime states resolve to the approved chibi set in `assets/v1_1/` (idle, typing frames, working, microphone, music, guitar) through the central asset registry; V1.0 files remain only as fallback and history.
 
 ## Visual language
 
 - Silver `#EEF2FF`, ice `#91E4F2`, violet `#B9A7F8`, midnight `#171B32`, muted ink `#A7AEC8`, rose `#F3A7CB`.
 - Native Qt controls, Segoe UI labels, Cascadia Mono numbers and Microsoft YaHei UI fallback.
-- Transparent 242 × 378 logical-pixel pet window; small rounded status bubble above the character.
-- The separate 360-pixel panel uses restrained glow, compact hierarchy and scrolls on shorter screens. The detailed analytics window owns dense tables.
+- Transparent 242 × 216 logical-pixel pet window; compact two-line status card above the character in Token Mode only (Daily Mode shows the pet alone). All states share one 107 × 145 sprite box around one feet/ground anchor.
+- The separate expanded panel (default 340 wide, resizable 300–480 × 380–800, compact fixed 250) uses restrained glow, grouped cards, compact hierarchy and scrolls on shorter screens. The detailed analytics window owns dense tables.
 - All windows scale with Windows DPI and clamp restored positions to a visible screen.
 
 ## Supported states
@@ -15,12 +15,13 @@ The approved idle character and its default bubble are the immutable visual base
 Only these states exist in this version:
 
 1. `usage`: while the adjacent usage panel is actively hovered/opened.
-2. `microphone`: an active Windows capture session.
-3. `music`: an active Windows system-media playback session.
-4. `typing`: recent non-modifier keyboard activity.
-5. `idle`: the approved default.
+2. `working`: explicit Codex task lifecycle activity (distinct from typing).
+3. `microphone`: an active Windows capture session.
+4. `music`: an active Windows system-media playback session, with an optional verified subtitle line from platform media metadata.
+5. `typing`: recent non-modifier keyboard activity, with alternating tap phases.
+6. `idle`: the approved default.
 
-The order above is the state priority. Microphone/music require a stable signal before entry and delay exit; typing expires shortly after the last key. Missing/stale platform signals never pin the pet in an activity state. No input text, audio stream, media title or extra pet state is collected.
+The order above is the state priority. Microphone/music require a stable signal before entry and delay exit; typing expires shortly after the last key. Missing/stale platform signals never pin the pet in an activity state. No input text, audio stream, or extra pet state is collected; media title/artist/subtitle metadata is read memory-only for Music display and never stored.
 
 ## Usage reveal
 

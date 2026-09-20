@@ -40,6 +40,12 @@ def main(output):
         panel.pet.update_activity()
         app.processEvents()
         panel.pet.grab().save(str(output / f'pet-{state}.png'))
+    # Guitar has no independent activity trigger yet; render the registered
+    # pose directly so the asset is still visually verified.
+    panel.pet.preview_state = 'guitar'
+    panel.pet.update_activity()
+    app.processEvents()
+    panel.pet.grab().save(str(output / 'pet-guitar.png'))
     # Typing tap phases via synthetic timestamp-only pulses (no key content).
     # With no V1.1 frame files present these are fallback-state renders.
     from types import SimpleNamespace
@@ -47,7 +53,13 @@ def main(output):
     panel.activity = SimpleNamespace(state=ActivityState(), close=lambda: None,
                                        status={'microphone': None, 'music': True,
                                                'music_text': None})
+    # Frame-accurate typing renders need motion on: the frame branch only
+    # runs when motion is enabled (motion pause shows the static pose).
+    panel.pet.motion = True
     panel.pet.preview_state = 'typing'
+    panel.pet.update_activity()
+    app.processEvents()
+    panel.pet.grab().save(str(output / 'pet-typing.png'))
     base = time.monotonic()
     panel.activity.state.key(base)
     panel.pet.update_activity()
@@ -57,6 +69,7 @@ def main(output):
     panel.pet.update_activity()
     app.processEvents()
     panel.pet.grab().save(str(output / 'pet-typing-tap0.png'))
+    panel.pet.motion = False
     # Music subtitle pill with synthetic clearly-labeled test content.
     panel.activity.status['music_text'] = {
         'text': 'Synthetic QA subtitle line', 'source': 'qa-stub',
@@ -69,6 +82,7 @@ def main(output):
     panel.pet.preview_state = None
     panel.app_mode.update(True, True)
     panel.app_mode.update(True, True, panel.app_mode.pending_since + 1.0)
+    panel.pet.update_activity()
     panel.pet.update_data(dict(panel.snapshot, working_context=dict(
         project='petoken', title='Visual fixture', model='gpt-6-astra',
         effort='high', context=42, tokens=tokens)))

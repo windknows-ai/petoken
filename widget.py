@@ -21,11 +21,12 @@ from usage import CodexStore, quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
-from localization import normalize_language, scope_text, text
-from pricing import (SUPPORTED_CURRENCIES, convert_usd, format_cost,
+from localization import DEFAULT_LANGUAGE, normalize_language, scope_text, text
+from pricing import (DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, convert_usd, format_cost,
                      normalize_currency, normalize_rates)
 import theme
-from token_format import format_token_value, format_tokens, normalize_token_format
+from token_format import (DEFAULT_TOKEN_NUMBER_FORMAT, format_token_value,
+                          format_tokens, normalize_token_format)
 
 INK, MUTED, ICE, VIOLET, BG = theme.INK, theme.MUTED, theme.ICE, theme.VIOLET, theme.BG
 PREF_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home()/'.local/share')))/'CodexWisp'
@@ -260,6 +261,12 @@ class Settings(QDialog):
         self.buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         self.buttons.accepted.connect(self.save)
         self.buttons.rejected.connect(self.reject)
+        self.reset_armed = False
+        self.reset_button = button('', '', self.reset_to_defaults)
+        reset_row = QHBoxLayout()
+        reset_row.addStretch()
+        reset_row.addWidget(self.reset_button)
+        layout.addLayout(reset_row)
         layout.addWidget(self.buttons)
         self.language.currentIndexChanged.connect(self.apply_language)
         self.apply_language()
@@ -287,6 +294,25 @@ class Settings(QDialog):
         self.note.setText(t('settings_note'))
         self.buttons.button(QDialogButtonBox.Save).setText(t('save'))
         self.buttons.button(QDialogButtonBox.Cancel).setText(t('cancel'))
+        self.reset_button.setText(t('confirm_reset' if self.reset_armed else 'reset_defaults'))
+        self.reset_button.setToolTip(t('confirm_reset' if self.reset_armed else 'reset_defaults'))
+
+    def reset_to_defaults(self):
+        # Two-click inline confirmation (no system-language modal dialog):
+        # first click arms, second click restores factory defaults into the
+        # form. Nothing persists until Save.
+        if not self.reset_armed:
+            self.reset_armed = True
+            self.apply_language()
+            return
+        self.reset_armed = False
+        self.task.setCurrentIndex(0)
+        self.scope.setCurrentIndex(self.scope.findData('conversation'))
+        self.language.setCurrentIndex(self.language.findData(DEFAULT_LANGUAGE))
+        self.token_format.setCurrentIndex(
+            self.token_format.findData(DEFAULT_TOKEN_NUMBER_FORMAT))
+        self.currency.setCurrentIndex(self.currency.findData(DEFAULT_CURRENCY))
+        self.apply_language()
 
     def save(self):
         panel = self.parentWidget()

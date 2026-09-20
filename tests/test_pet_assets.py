@@ -38,12 +38,31 @@ class PetAssetTests(unittest.TestCase):
         self.assertNotEqual(working.path, typing.path)
         self.assertNotEqual(working.fallback, typing.fallback)
 
-    def test_missing_v1_1_asset_falls_back_without_error(self):
-        for entry in (assets.entry_for('typing'), assets.entry_for('guitar')):
-            self.assertFalse((ROOT / entry.path).exists())
-            ok, _ = assets.validate_path(entry.path)
-            self.assertFalse(ok)
-            self.assertIsNotNone(assets.sprite_for(entry.state))
+    def test_final_v1_1_primaries_resolve_for_every_state(self):
+        for entry in assets.REGISTRY:
+            self.assertTrue((ROOT / entry.path).is_file()
+                            or assets.existing_frames(entry), entry.state)
+            pixmap = assets.sprite_for(entry.state)
+            self.assertIsNotNone(pixmap, entry.state)
+            self.assertFalse(pixmap.isNull(), entry.state)
+            self.assertEqual((pixmap.width(), pixmap.height()), (1254, 1254))
+        self.assertEqual(len(assets.existing_frames(assets.entry_for('typing'))), 2)
+
+    def test_typing_frames_come_from_final_art(self):
+        self.assertIsNotNone(assets.frame_for('typing', 0))
+        self.assertIsNotNone(assets.frame_for('typing', 1))
+        self.assertNotEqual(
+            assets.frame_for('typing', 0).cacheKey(),
+            assets.frame_for('typing', 1).cacheKey())
+
+    def test_missing_primary_falls_back_without_error(self):
+        entry = assets.AssetEntry('typing', 'assets/v1_1/absent.png',
+                                  'assets/skirk-typing.png')
+        self.assertEqual(assets.resolve_path(entry), 'assets/skirk-typing.png')
+        self.assertEqual(assets.resolve_path(assets.entry_for('idle')),
+                         'assets/v1_1/idle.png')
+        self.assertFalse(assets.validate_path(entry.path)[0])
+        self.assertIsNotNone(assets.sprite_for('typing'))
 
     def test_unknown_state_resolves_to_idle(self):
         idle = assets.sprite_for('idle')
