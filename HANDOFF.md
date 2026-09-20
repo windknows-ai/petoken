@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — through floating UI + expanded redesign complete; typing committed, redesign uncommitted; not pushed)
+`V1.1.0` (UI and interaction refinement — through responsive polish complete; redesign committed, responsive uncommitted; not pushed)
 
 ## Current Stage
 
-OpenCode is the active continuation agent (Codex at usage limit). Typing was committed as `13f8892`; the Step 12 redesign (compact Token card, grouped panel, central palette, corner-drag resizing) is complete and verified but intentionally uncommitted. No data-semantics change. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). Redesign was committed as `74cddea`; the Step 13 responsive polish (top-pinned tall layouts, crash-safe size restore, restart/compact persistence, min-width stress) is complete and verified but intentionally uncommitted. No data-semantics or visual-language change. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -60,10 +60,13 @@ OpenCode is the active continuation agent (Codex at usage limit). Typing was com
 - Typing checkpoint `13f8892` committed locally (9 files: interaction/frames/tests/tool/docs work; message "feat: add reactive typing interaction"). `AGENTS.md` excluded again, untouched.
 - Step 12 implemented by OpenCode, uncommitted: new `theme.py` (one palette/radii/font source); compact Token card 240×58 (project·status + ctx right on line one, live Tokens on line two; was 240×70 three-row); window 242×216; grouped token/quota cards; smaller hierarchy type (brand 14, number 28, cost 22); corner-drag `⋰` resizing (300–480 × 380–800, compact fixed 250, debounced `panel_size` persist); Analytics palette-only swap with identical values.
 - Redesign verification passed: 136 tests, `py_compile`, `git diff --check`, full matrix inspected, no data-semantics change. One scratch render script bypassed isolation and persisted real user settings once (valid app-managed state; harnesses must stay isolated).
+- Redesign checkpoint `74cddea` committed locally (11 files: theme/card/panel/tests/docs work; message "feat: redesign compact token interface"). `AGENTS.md` excluded again, untouched.
+- Step 13 implemented by OpenCode, uncommitted: `body.addStretch(1)` pins content top in tall windows; `PANEL_MIN/MAX/DEFAULT` + `valid_panel_size()` centralize bounds and make malformed `panel_size` uncrashable (clamp or default); grip/init/compact paths share the helper; 7 responsive tests (bounds, restore/restart, invalid recovery, compact preservation, grip clamp, 48-combo min-width stress).
+- Responsive verification passed: 143 tests, `py_compile`, `git diff --check`, matrix above, restart persistence by test, no semantics change.
 
 ## Current Work / Partial Work
 
-None in progress. Step 12 redesign is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
+None in progress. Step 13 responsive polish is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
 
 ## Important Decisions
 
@@ -74,9 +77,9 @@ None in progress. Step 12 redesign is complete and verified but uncommitted (see
 
 ## Current Git State
 
-- Branch: `main`, HEAD `13f8892` ("feat: add reactive typing interaction"), ten commits ahead of `origin/main`; nothing was pushed.
-- The Step 12 redesign slice is intentionally uncommitted and unpushed. Modified tracked files: `pet_geometry.py`, `pet.py`, `widget.py`, `analytics_view.py`, `tests/test_pet_geometry.py`, `tests/test_pet_assets.py`, `tests/test_ui.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `theme.py`, `tests/test_redesign.py`. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
-- Verification: 136 tests pass, `py_compile` passes, `git diff --check` passes, full screenshot matrix (Daily/Token/panel/Settings/Analytics × zh/en × 100%/200%, plus compact + long-name) inspected, live isolated smokes exit 0.
+- Branch: `main`, HEAD `74cddea` ("feat: redesign compact token interface"), eleven commits ahead of `origin/main`; nothing was pushed.
+- The Step 13 responsive slice is intentionally uncommitted and unpushed. Modified tracked files: `widget.py`, `PROGRESS.md`, `HANDOFF.md`. New untracked files: `tests/test_responsive.py`. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
+- Verification: 143 tests pass, `py_compile` passes, `git diff --check` passes, min/max/typical sizes × zh/en × Full/Compact × 3 scopes × 4 currencies inspected plus Token card at 100/125/150/175/200%, live isolated smokes exit 0.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -90,8 +93,8 @@ None in progress. Step 12 redesign is complete and verified but uncommitted (see
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 13 only when authorized: free resizing + responsive polish (corner-drag foundation already landed).
-2. Do not combine that slice with Working-animation, music subtitles, or V1.2.0.
+1. Implement V1.1.0 order step 14 only when authorized: Music Mode subtitle capability (or clean feature-ready module).
+2. Do not combine that slice with Working-animation or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent

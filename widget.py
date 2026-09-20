@@ -75,6 +75,22 @@ def button(text, tip, slot):
     return w
 
 
+PANEL_MIN = (300, 380)
+PANEL_MAX = (480, 800)
+PANEL_DEFAULT = (340, 640)
+
+
+def valid_panel_size(value):
+    """Clamp a saved expanded-panel size into supported bounds, or None when
+    the saved value is malformed. Never raises on user-edited settings."""
+    try:
+        width, height = int(value[0]), int(value[1])
+    except (TypeError, ValueError, IndexError, KeyError):
+        return None
+    return [max(PANEL_MIN[0], min(width, PANEL_MAX[0])),
+            max(PANEL_MIN[1], min(height, PANEL_MAX[1]))]
+
+
 def read_preferences():
     return load_preferences(PREF_DIR/'settings.json')
 
@@ -413,6 +429,9 @@ class Panel(QWidget):
         quota_box.addWidget(self.five)
         quota_box.addWidget(self.week)
         body.addWidget(quota_card)
+        # Pin content to the top so tall windows keep one compact visual
+        # group instead of spreading sections apart.
+        body.addStretch(1)
         self.body_scroll = QScrollArea()
         self.body_scroll.viewport().setStyleSheet(f'background:{BG};')
         self.body_scroll.setWidgetResizable(True)
@@ -483,11 +502,7 @@ class Panel(QWidget):
         self.size_timer.timeout.connect(self.persist)
         self.compact = bool(self.prefs.get('compact', False))
         self.apply_language()
-        size = self.prefs.get('panel_size')
-        if isinstance(size, list) and len(size) == 2:
-            self.resize(max(300, min(int(size[0]), 480)), max(250, min(int(size[1]), 800)))
-        else:
-            self.resize(340, 640)
+        self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
         self.apply_compact()
         if not self.pin.isChecked():
             self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
@@ -766,11 +781,9 @@ class Panel(QWidget):
         if self.compact:
             self.setFixedHeight(250)
         else:
-            self.setMinimumSize(300, 380)
-            self.setMaximumSize(480, 800)
-            size = self.prefs.get('panel_size')
-            if isinstance(size, list) and len(size) == 2:
-                self.resize(max(300, min(int(size[0]), 480)), max(380, min(int(size[1]), 800)))
+            self.setMinimumSize(*PANEL_MIN)
+            self.setMaximumSize(*PANEL_MAX)
+            self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
         QTimer.singleShot(0, lambda:self.move_clamped(self.pos()))
 
     def toggle_compact(self):
@@ -799,8 +812,8 @@ class Panel(QWidget):
         if event.buttons() & Qt.LeftButton and hasattr(self, 'resize_start'):
             origin, size = self.resize_start
             delta = event.globalPosition().toPoint() - origin
-            self.resize(max(300, min(size.width() + delta.x(), 480)),
-                        max(380, min(size.height() + delta.y(), 800)))
+            self.resize(max(PANEL_MIN[0], min(size.width() + delta.x(), PANEL_MAX[0])),
+                        max(PANEL_MIN[1], min(size.height() + delta.y(), PANEL_MAX[1])))
             self.prefs['panel_size'] = [self.width(), self.height()]
             self.size_timer.start(600)
 
