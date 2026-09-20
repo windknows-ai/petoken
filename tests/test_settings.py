@@ -62,6 +62,21 @@ class SettingsTests(unittest.TestCase):
         save_preferences(self.path, {"token_number_format": "future-format"})
         self.assertEqual(load_preferences(self.path)["token_number_format"], "compact")
 
+    def test_currency_persists_and_invalid_falls_back_to_cad(self):
+        save_preferences(self.path, {"currency": "EUR"})
+        self.assertEqual(load_preferences(self.path)["currency"], "EUR")
+        save_preferences(self.path, {"currency": "GBP"})
+        self.assertEqual(load_preferences(self.path)["currency"], "CAD")
+        self.assertEqual(load_preferences_from({"currency": "CNY"})["currency"], "CNY")
+        self.assertEqual(load_preferences_from({})["currency"], "CAD")
+
+    def test_legacy_pricing_keys_load_safely_and_are_preserved(self):
+        legacy = {"manual_fx": 1.25, "prices": {"gpt-6-astra": [1, 2, 3, 4]}, "currency": "USD"}
+        loaded = load_preferences_from(legacy)
+        self.assertEqual(loaded["manual_fx"], 1.25)
+        self.assertEqual(loaded["prices"], {"gpt-6-astra": [1, 2, 3, 4]})
+        self.assertEqual(loaded["currency"], "USD")
+
 
 def load_preferences_from(data):
     with tempfile.TemporaryDirectory() as directory:

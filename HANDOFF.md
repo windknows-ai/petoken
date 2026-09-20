@@ -8,11 +8,11 @@ Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — Token formatting, Analytics units, and zh_CN / en visible localization complete; not pushed)
+`V1.1.0` (UI and interaction refinement — through Estimated Cost + USD/CAD/EUR/CNY complete; localization committed, cost slice uncommitted; not pushed)
 
 ## Current Stage
 
-OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and performed V1.1.0 implementation through the localization slice. Local checkpoints `859b654`, `f061ccf`, `f6da971`, and `896ed09` record foundations/modes, Working Context, scopes, and formatting/units; none was pushed. Codex began the zh_CN / en visible-language pass on top of `896ed09` and was interrupted by usage limits; OpenCode continued from that exact working tree without restarting or replacing Codex work and completed the slice. All localization changes remain uncommitted. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+OpenCode is the active continuation agent (Codex at usage limit). Localization was committed as `27ceb81`; the Step 8 cost/currency slice (internal pricing table, USD-canonical conversion, Currency setting, no manual pricing in normal Settings) is complete and verified but intentionally uncommitted. Nothing was pushed. Visual references are resolved by `04_Visual_Reference_Specification.md`.
 
 ## Last Completed Step
 
@@ -45,10 +45,13 @@ OpenCode performed the pre-implementation Step 1 architecture inspection only; C
 - Codex began the zh_CN / en visible-language pass on top of `896ed09` (catalog expansion, settings/panel/Settings/Analytics/pet localization, status/note keys, 7 tests) and stopped at its usage limit before final verification/reporting; PROGRESS/99 notes were not yet updated.
 - OpenCode recovered the exact tree, confirmed `896ed09` clean and all localization work uncommitted, ran the targeted tests green before editing, and finished surgically: centralized pet Analytics menu text, Analytics token column headers (`header_*_tokens`), Settings FX label (`fx_rate_label`), and Qt-mnemonic escaping (`Date && History`). Added 4 tests; updated 1 Codex tab-text expectation for the escaping.
 - Localization verification passed: 74 tests, `py_compile`, `git diff --check`, isolated zh_CN and en smokes (both exit 0, live quota, no keyboard error), and panel/pet/Settings/Analytics screenshots inspected in both languages with no clipping.
+- Localization checkpoint `27ceb81` committed locally (12 files: catalog/UI/tests/PROGRESS/HANDOFF work; message "feat: add bilingual UI localization"). `AGENTS.md` diff is +755/-0 append-only (Codex `## Codex Instructions (auto-synced)` bootstrap section after line 126, verified via `git diff --numstat`/`git diff`); unrelated to localization, tool-generated, so excluded from the commit and left unmodified in the working tree (not reverted).
+- Step 8 cost/currency implemented and verified by OpenCode, uncommitted: new `pricing.py` (moved `MODEL_PRICES`/`estimate_usd` from `usage.py` with identical math, plus USD-canonical currency layer); `usage.py` keeps `PRICES`/`estimate_usd` aliases and dropped the custom-price override plumbing; `desktop.fetch_fx` returns `{date, source, rates:{CAD,EUR,CNY}}` from verified BoC series (USD legs derived); `app_config` persists `currency` (default CAD, invalid falls back); Settings exposes only a Currency combo (manual FX + per-model price controls removed; legacy keys preserved untouched); cost display converts once (`≈ CA$…` etc.) with honest USD fallback when a rate is missing.
+- Cost verification passed: 90 tests, `py_compile`, `git diff --check`, and four isolated smokes (zh+CAD, en+USD/EUR/CNY) with live BoC rates, no scope/cost mismatch, and no manual pricing controls in Settings.
 
 ## Current Work / Partial Work
 
-None in progress. The V1.1.0 zh_CN / en visible-language pass is complete and verified (main panel, desktop pet, Settings, Analytics, menus, statuses, errors, tooltips) without changing usage semantics. Not committed, not pushed.
+None in progress. Step 8 cost/currency is complete and verified but uncommitted (see Git state). Do not start V1.2.0.
 
 ## Important Decisions
 
@@ -59,9 +62,9 @@ None in progress. The V1.1.0 zh_CN / en visible-language pass is complete and ve
 
 ## Current Git State
 
-- Branch: `main`, checkpoint HEAD `896ed09`, five commits ahead of `origin/main`; no local checkpoint was pushed.
-- The post-checkpoint localization slice is intentionally uncommitted and unpushed. Modified tracked files: `AGENTS.md` (Codex auto-synced instructions section), `HANDOFF.md`, `PROGRESS.md`, `analytics.py`, `analytics_view.py`, `app_config.py`, `desktop.py`, `localization.py`, `pet.py`, `tests/test_settings.py`, `tests/test_ui.py`, `usage.py`, and `widget.py`. No new untracked files.
-- Verification: 74 tests pass, `py_compile` passes, `git diff --check` passes, isolated zh_CN and en smokes exit 0 with live quota, and all four surfaces were screenshot-inspected in both languages.
+- Branch: `main`, HEAD `27ceb81` ("feat: add bilingual UI localization"), six commits ahead of `origin/main`; nothing was pushed.
+- The Step 8 cost/currency slice is intentionally uncommitted and unpushed. Modified tracked files: `app_config.py`, `desktop.py`, `localization.py`, `tests/test_settings.py`, `tests/test_ui.py`, `usage.py`, `widget.py`. New untracked files: `pricing.py`, `tests/test_pricing.py`. `AGENTS.md` remains worktree-modified (excluded from `27ceb81`; see Last Completed Step).
+- Verification: 90 tests pass, `py_compile` passes, `git diff --check` passes, four isolated smokes (zh+CAD, en+USD/EUR/CNY) exit 0 with live quota, and panel/Settings/Analytics screenshots were inspected in both languages.
 - External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
 
 ## Known Issues / Blockers
@@ -75,10 +78,10 @@ None in progress. The V1.1.0 zh_CN / en visible-language pass is complete and ve
 
 ## Exact Next Step
 
-1. Implement V1.1.0 order step 8 only when authorized: simplify cost estimation internally and add USD/CAD/EUR/CNY selection.
-2. Do not combine that slice with character assets, Bongo-Cat animation, music subtitles, or V1.2.0.
+1. Implement V1.1.0 order step 9 only when authorized: character scale / chibi presentation (then high-DPI rendering).
+2. Do not combine that slice with Bongo-Cat animation, music subtitles, or V1.2.0.
 3. Do not mark V1.1.0 complete until all V1.1.0 acceptance criteria are verified.
 
 ## Last Agent
 
-OpenCode (continuation: completed the localization slice Codex began before its usage limit; Codex did all prior V1.1.0 implementation).
+OpenCode (active continuation agent; Codex at usage limit).

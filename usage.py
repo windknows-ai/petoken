@@ -10,33 +10,7 @@ from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 from analytics import TOKEN_KEYS, normalize_usage, derive, aggregate, summarize
-
-# USD / million tokens, verified 2026-09-16:
-# https://developers.openai.com/api/docs/pricing
-# Order: uncached input, cached input, cache writes, output.
-PRICES = {
-    'gpt-6-astra': (10, 1, 12.5, 50),
-    'gpt-5.6-sol': (4, .4, 5, 20),
-    'gpt-5.6-terra': (2, .2, 2.5, 12),
-    'gpt-5.6-luna': (.2, .02, .25, 1.2),
-}
-
-
-def estimate_usd(tokens, model, tier=None, request_input=None, prices=None):
-    rates = (prices or PRICES).get(model)
-    if rates is None:
-        return None
-    if any(tokens.get(k) is None for k in ('input_tokens','cached_input_tokens','output_tokens')):
-        return None
-    inp, cached, writes, out = rates
-    if (request_input if request_input is not None else tokens.get('input_tokens', 0)) > 272000:
-        inp, cached, writes, out = inp * 2, cached * 2, writes * 2, out * 1.5
-    cache = max(0, tokens.get('cached_input_tokens') or 0)
-    write = max(0, tokens.get('cache_write_input_tokens') or 0)
-    plain = max(0, tokens.get('input_tokens', 0) - cache - write)
-    # Reasoning is already included in output_tokens.
-    cost = (plain * inp + cache * cached + write * writes + tokens.get('output_tokens', 0) * out) / 1_000_000
-    return cost * (2 if tier in ('priority', 'fast') else .5 if tier in ('flex', 'batch') else 1)
+from pricing import MODEL_PRICES as PRICES, estimate_usd
 
 
 def quota_window(limits, minutes, now=None):
@@ -133,9 +107,8 @@ def distinct_sessions(rows, cache):
 
 
 class SessionUsage:
-    def __init__(self, path, prices=None):
+    def __init__(self, path):
         self.path = Path(path)
-        self.prices = prices
         self.offset = 0
         self.total = {}
         self.previous = {}
@@ -242,7 +215,7 @@ class SessionUsage:
                 self.known[key]+=value
                 self.coverage[key]+=1
         self.total = {k:self.known[k] if self.coverage[k]==len(self.records) else None for k in TOKEN_KEYS}
-        cost = estimate_usd(delta, model, self.tier, self.last.get('input_tokens'), self.prices)
+        cost = estimate_usd(delta, model, self.tier, self.last.get('input_tokens'))
         record['usd']=cost
         if cost is None:
             if delta.get('total_tokens'):
@@ -256,7 +229,7 @@ class SessionUsage:
         try:
             size = self.path.stat().st_size
             if size < self.offset:
-                self.__init__(self.path, self.prices)
+                self.__init__(self.path)
             if size == self.offset:
                 return
             with self.path.open('rb') as f:
@@ -409,9 +382,8 @@ class CodexActivityDetector:
 
 
 class CodexStore:
-    def __init__(self, home=None, prices=None):
+    def __init__(self, home=None):
         self.home = Path(home or os.environ.get('CODEX_HOME') or Path.home()/'.codex')
-        self.prices = prices
         self.sessions = {}
         self.state_stamp = None
         self.state = {}
@@ -458,7 +430,7 @@ class CodexStore:
         if working_row:
             key = working_row.get('rollout_path')
             if key not in self.sessions:
-                self.sessions[key] = SessionUsage(key, self.prices)
+                self.sessions[key] = SessionUsage(key)
             working_session = self.sessions[key]
             working_session.refresh()
             working_summary = summarize(unique_records([working_session]))
@@ -509,7 +481,7 @@ class CodexStore:
             if not key:
                 continue
             if key not in self.sessions:
-                self.sessions[key] = SessionUsage(key, self.prices)
+                self.sessions[key] = SessionUsage(key)
             self.sessions[key].refresh()
         sessions = distinct_sessions(relevant, self.sessions)
         current = self.sessions.get(chosen.get('rollout_path')) if chosen else None

@@ -14,14 +14,16 @@ from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRectF, QLockFil
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QHBoxLayout, QGridLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
-    QFormLayout, QComboBox, QDoubleSpinBox, QCheckBox, QDialogButtonBox, QScrollArea)
+    QFormLayout, QComboBox, QDialogButtonBox, QScrollArea)
 
 from desktop import ActiveTask, RateLimits, fetch_fx
-from usage import CodexStore, PRICES, quota_window, sample_age
+from usage import CodexStore, quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
 from localization import normalize_language, scope_text, text
+from pricing import (SUPPORTED_CURRENCIES, convert_usd, format_cost,
+                     normalize_currency, normalize_rates)
 from token_format import format_token_value, format_tokens, normalize_token_format
 
 INK = '#EEF2FF'
@@ -228,37 +230,13 @@ class Settings(QDialog):
             normalize_token_format(panel.prefs.get('token_number_format'))))
         self.token_format_label = label()
         self.form.addRow(self.token_format_label, self.token_format)
-        self.fx = QDoubleSpinBox()
-        self.fx.setRange(.01, 9.9999)
-        self.fx.setDecimals(4)
-        self.fx.setValue(panel.fx_rate()['rate'])
-        self.manual = QCheckBox()
-        self.manual.setChecked(bool(panel.prefs.get('manual_fx')))
-        self.fx.setEnabled(self.manual.isChecked())
-        self.manual.toggled.connect(self.fx.setEnabled)
-        self.fx_label = label()
-        self.form.addRow(self.fx_label, self.fx)
-        self.form.addRow(self.manual)
-        self.price_model = panel.snapshot.get('model')
-        self.custom = QCheckBox()
-        self.custom.setChecked(self.price_model in panel.prefs.get('prices', {}))
-        self.model_label = label()
-        self.form.addRow(self.model_label, self.custom)
-        self.price_fields = []
-        self.price_labels = []
-        rates = panel.prefs.get('prices', {}).get(self.price_model, PRICES.get(self.price_model, (0,0,0,0)))
-        for value in rates:
-            spin = QDoubleSpinBox()
-            spin.setRange(0, 10000)
-            spin.setDecimals(4)
-            spin.setValue(value)
-            spin.setEnabled(self.custom.isChecked())
-            self.custom.toggled.connect(spin.setEnabled)
-            self.price_fields.append(spin)
-            price_label = label()
-            self.price_labels.append(price_label)
-            self.form.addRow(price_label, spin)
-        self.custom.setEnabled(bool(self.price_model))
+        self.currency = QComboBox()
+        for code in SUPPORTED_CURRENCIES:
+            self.currency.addItem(code, code)
+        self.currency.setCurrentIndex(self.currency.findData(
+            normalize_currency(panel.prefs.get('currency'))))
+        self.currency_label = label()
+        self.form.addRow(self.currency_label, self.currency)
         layout.addLayout(self.form)
         self.note = label('', 'muted')
         self.note.setWordWrap(True)
@@ -289,12 +267,9 @@ class Settings(QDialog):
         self.scope_label.setText(t('token_scope'))
         self.language_label.setText(t('language'))
         self.token_format_label.setText(t('token_number_format'))
-        self.fx_label.setText(t('fx_rate_label'))
-        self.manual.setText(t('manual_fx'))
-        self.custom.setText(t('custom_price'))
-        self.model_label.setText(self.price_model or t('model_unrecorded'))
-        for price_label, key in zip(self.price_labels, ('price_input','price_cached','price_write','price_output')):
-            price_label.setText(f"{t(key)} · USD / 1M")
+        self.currency_label.setText(t('currency'))
+        for index, code in enumerate(SUPPORTED_CURRENCIES):
+            self.currency.setItemText(index, code)
         self.note.setText(t('settings_note'))
         self.buttons.button(QDialogButtonBox.Save).setText(t('save'))
         self.buttons.button(QDialogButtonBox.Cancel).setText(t('cancel'))
@@ -305,13 +280,9 @@ class Settings(QDialog):
         prefs.update(pinned=self.task.currentData(), scope=self.scope.currentData(),
                      language=normalize_language(self.language.currentData()),
                      token_number_format=self.token_format.currentData(),
-                     manual_fx=self.fx.value() if self.manual.isChecked() else None)
-        prices = dict(prefs.get('prices', {}))
-        if self.custom.isChecked() and self.price_model:
-            prices[self.price_model] = [field.value() for field in self.price_fields]
-        else:
-            prices.pop(self.price_model, None)
-        prefs['prices'] = prices
+                     currency=self.currency.currentData())
+        # Legacy `manual_fx` / `prices` keys stay untouched in the file for
+        # backward-compatible loading, but no longer drive pricing or FX.
         try:
             write_preferences(prefs)
         except OSError:
@@ -333,7 +304,8 @@ class Panel(QWidget):
         self.analytics_window = None
         self.want_history = threading.Event()
         self.quota = {}
-        self.fx_data = self.prefs.get('fx_cache') or dict(rate=1.3917, date='2026-09-15', source='Bank of Canada · bundled')
+        self.fx_data = self.prefs.get('fx_cache') or dict(
+            date='2026-09-15', source='Bank of Canada · bundled', rates={'CAD': 1.3917})
         self.closing = False
         self.stop = threading.Event()
         self.reset_store = threading.Event()
@@ -556,7 +528,7 @@ class Panel(QWidget):
         self.context.set_title(t('context_used'))
         self.five.set_title(t('five_hour_limit'))
         self.week.set_title(t('weekly_limit'))
-        self.cost_label.setText(t('estimated_cost')+' · CAD')
+        self.cost_label.setText(t('estimated_cost')+f" · {normalize_currency(self.prefs.get('currency'))}")
         self.pin.setToolTip(t('pin_toggle'))
         self.pin.setAccessibleName(t('pin_toggle'))
         self.status.setText(t('checking_wait'))
@@ -580,7 +552,7 @@ class Panel(QWidget):
                 prefs = dict(self.prefs)
                 if store is None or self.reset_store.is_set():
                     self.reset_store.clear()
-                    store = CodexStore(prices=PRICES | prefs.get('prices', {}))
+                    store = CodexStore()
                 detection_valid = time.time()-self.active.seen < 5
                 active = self.active.title if detection_valid else ''
                 self.bridge.data.emit(store.read(active, prefs.get('pinned',''), prefs.get('scope','conversation'),
@@ -603,9 +575,13 @@ class Panel(QWidget):
         self.persist()
         self.refresh_cost()
 
-    def fx_rate(self):
-        manual = self.prefs.get('manual_fx')
-        return dict(rate=manual, date=self.tr_text('manual'), source=self.tr_text('custom')) if manual else self.fx_data
+    @property
+    def currency(self):
+        return normalize_currency(self.prefs.get('currency'))
+
+    @property
+    def fx(self):
+        return normalize_rates(self.fx_data)
 
     def receive_limits(self, data):
         self.quota.update(data)
@@ -663,15 +639,26 @@ class Panel(QWidget):
         if not d.get('available'):
             self.cost.setText('—')
             return
-        fx = self.fx_rate()
+        currency = self.currency
+        fx = self.fx
+        value = convert_usd(d.get('usd', 0), currency, fx['rates'])
+        if value is None:
+            # Honest fallback: no usable rate for the selected currency.
+            currency = 'USD'
+            value = d.get('usd', 0)
+            rate_line = self.tr_text('fx_unavailable_usd')
+        else:
+            rate = 1.0 if currency == 'USD' else fx['rates'][currency]
+            rate_line = (self.tr_text('one_usd_equals', rate=f'{rate:.4f}', currency=currency) +
+                         f" · {fx['date']}\n{fx['source']}")
         partial = bool(d.get('unknown') or d.get('partial') or 'note_cache_write_unavailable' in d.get('notes',[]))
-        self.cost.setText(f"≈ ${d.get('usd',0)*fx['rate']:,.2f}")
-        self.cost_label.setText(self.tr_text('partial_estimate' if partial else 'estimated_cost')+' · CAD')
+        self.cost.setText('≈ ' + format_cost(value, currency))
+        self.cost_label.setText(self.tr_text('partial_estimate' if partial else 'estimated_cost')+f' · {currency}')
         tip = (self.tr_text('local_conversations',
                 scope=scope_text(d.get('scope'), self.language, recorded=d.get('scope') == 'global'),
                 count=d.get('count',1))+'\n'+
-               self.tr_text('known_price_usd', usd=f"{d.get('usd',0):,.4f}")+
-               f"\n1 USD = {fx['rate']:.4f} CAD · {fx['date']}\n{fx['source']}\n"+
+               self.tr_text('known_price_usd', usd=f"{d.get('usd',0):,.4f}")+'\n'+
+               rate_line+'\n'+
                self.tr_text('not_subscription_bill'))
         if d.get('unknown'):
             names = ', '.join(self.tr_text(name) if name == 'unknown_breakdown' else name for name in d['unknown'])

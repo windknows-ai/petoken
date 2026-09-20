@@ -4,7 +4,7 @@ import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from PySide6.QtWidgets import QApplication, QLabel, QPushButton
+from PySide6.QtWidgets import QApplication, QCheckBox, QDoubleSpinBox, QLabel, QPushButton
 from PySide6.QtGui import QImage
 from PySide6.QtCore import QPoint
 from widget import Panel, Settings
@@ -229,14 +229,66 @@ class UiTests(unittest.TestCase):
             ('input_tokens','cached_tokens','uncached_tokens','write_tokens',
              'output_tokens','reasoning_tokens','nonreasoning_tokens','total_tokens')])
 
-    def test_settings_fx_label_is_centralized_and_stable_across_languages(self):
+    def test_settings_currency_selector_replaces_manual_pricing(self):
         self.panel.prefs['language']='en'
         settings=Settings(self.panel)
-        self.assertEqual(settings.fx_label.text(),text('fx_rate_label','en'))
-        settings.language.setCurrentIndex(settings.language.findData('zh_CN'))
-        self.app.processEvents()
-        self.assertEqual(settings.fx_label.text(),text('fx_rate_label','zh_CN'))
-        settings.reject()
+        self.assertEqual([settings.currency.itemText(i) for i in range(settings.currency.count())],
+                         ['USD','CAD','EUR','CNY'])
+        self.assertEqual(settings.currency_label.text(),'Currency')
+        self.assertEqual(settings.findChildren(QDoubleSpinBox),[])
+        self.assertEqual(settings.findChildren(QCheckBox),[])
+        settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
+        with patch('widget.write_preferences') as write:
+            settings.save()
+        self.assertEqual(self.panel.prefs['currency'],'EUR')
+        self.assertEqual(write.call_args.args[0]['currency'],'EUR')
+        self.assertIn('EUR',self.panel.cost_label.text())
+        settings.deleteLater()
+
+    def test_currency_change_does_not_alter_token_counts(self):
+        data=self.localized_fixture()
+        self.panel.fx_data=dict(date='2026-09-18',source='Bank of Canada',
+                                rates={'CAD':1.4,'EUR':1.2,'CNY':0.2})
+        shown={}
+        for code in ('USD','CAD','EUR','CNY'):
+            self.panel.prefs['currency']=code
+            self.panel.render(data)
+            shown[code]=(self.panel.total.text(),self.panel.input.text(),
+                         self.panel.output.text(),self.panel.cost.text(),
+                         self.panel.cost_label.text())
+        totals={v[:3] for v in shown.values()}
+        self.assertEqual(len(totals),1)
+        self.assertTrue(shown['USD'][3].startswith('≈ $'))
+        self.assertTrue(shown['CAD'][3].startswith('≈ CA$'))
+        self.assertTrue(shown['EUR'][3].startswith('≈ \u20ac'))
+        self.assertTrue(shown['CNY'][3].startswith('≈ \u00a5'))
+        self.assertTrue(all(v[4].endswith(code) for code,v in
+                            zip(('USD','CAD','EUR','CNY'),shown.values())))
+
+    def test_missing_rate_falls_back_to_usd_honestly(self):
+        data=self.localized_fixture()
+        self.panel.fx_data=dict(date='2026-09-15',source='Bank of Canada · bundled',
+                                rates={'CAD':1.3917})
+        self.panel.prefs['currency']='EUR'
+        self.panel.render(data)
+        self.assertTrue(self.panel.cost.text().startswith('≈ $'))
+        self.assertIn('USD',self.panel.cost_label.text())
+        self.assertIn(text('fx_unavailable_usd',self.panel.language),self.panel.cost.toolTip())
+
+    def test_language_change_does_not_alter_cost_numerics(self):
+        data=self.localized_fixture()
+        self.panel.fx_data=dict(date='2026-09-18',source='Bank of Canada',
+                                rates={'CAD':1.4,'EUR':1.2,'CNY':0.2})
+        self.panel.prefs['currency']='EUR'
+        self.panel.prefs['language']='zh_CN'
+        self.panel.apply_language()
+        self.panel.render(data)
+        before=(self.panel.cost.text(),data['usd'])
+        self.panel.prefs['language']='en'
+        self.panel.apply_language()
+        self.panel.render(data)
+        self.assertEqual((self.panel.cost.text(),data['usd']),before)
+        self.assertIn('EUR',self.panel.cost_label.text())
 
     def test_catalog_has_no_unescaped_qt_mnemonics(self):
         import re

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from localization import DEFAULT_LANGUAGE, normalize_language
+from pricing import DEFAULT_CURRENCY, normalize_currency
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 
 APP_VERSION = "1.0.0"
@@ -14,6 +15,7 @@ DEFAULT_PREFERENCES = {
     "language": DEFAULT_LANGUAGE,
     "scope": "conversation",
     "token_number_format": DEFAULT_TOKEN_NUMBER_FORMAT,
+    "currency": DEFAULT_CURRENCY,
 }
 
 
@@ -28,6 +30,7 @@ def normalize_preferences(data):
     preferences["token_number_format"] = normalize_token_format(
         preferences.get("token_number_format"))
     preferences["language"] = normalize_language(preferences.get("language"))
+    preferences["currency"] = normalize_currency(preferences.get("currency"))
     return preferences
 
 

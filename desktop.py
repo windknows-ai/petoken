@@ -187,14 +187,37 @@ class RateLimits:
 
 
 FX_URL = 'https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1'
+# Bank of Canada daily series, verified 2026-09-19: FXUSDCAD (USD in CAD),
+# FXEURCAD (EUR in CAD), FXCNYCAD (CNY in CAD). USD rates derive from CAD legs.
+FX_SERIES = {
+    'CAD': ('FXUSDCAD', lambda usd_cad, leg: usd_cad),
+    'EUR': ('FXEURCAD', lambda usd_cad, leg: usd_cad / leg),
+    'CNY': ('FXCNYCAD', lambda usd_cad, leg: usd_cad / leg),
+}
 
 
-def fetch_fx():
-    request = urllib.request.Request(FX_URL, headers={'User-Agent': 'Codex-Wisp/1.0'})
+def fetch_series(name):
+    request = urllib.request.Request(
+        f'https://www.bankofcanada.ca/valet/observations/{name}/json?recent=1',
+        headers={'User-Agent': 'Codex-Wisp/1.0'})
     with urllib.request.urlopen(request, timeout=10) as response:
         data = json.load(response)
     observation = data['observations'][-1]
-    rate = float(observation['FXUSDCAD']['v'])
+    rate = float(observation[name]['v'])
     if not 0 < rate < 10:
-        raise ValueError('Invalid USD/CAD rate')
-    return dict(rate=rate, date=observation['d'], source='Bank of Canada')
+        raise ValueError(f'Invalid {name} rate')
+    return rate, observation['d']
+
+
+def fetch_fx():
+    usd_cad, date = fetch_series('FXUSDCAD')
+    rates = {'CAD': usd_cad}
+    for currency, (series, convert) in FX_SERIES.items():
+        if currency == 'CAD':
+            continue
+        try:
+            leg, leg_date = fetch_series(series)
+            rates[currency] = convert(usd_cad, leg)
+        except Exception:
+            pass  # That currency honestly falls back to cached rates or USD.
+    return dict(date=date, source='Bank of Canada', rates=rates)
