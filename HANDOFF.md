@@ -36,15 +36,15 @@ Astra-6 is the primary reviewer, technical lead, acceptance reviewer, and roadma
 
 ## Current Approved Slice
 
-`Completed Astra fixed-anchor / size / clarity / R1-R9 correction slice`
+`Final V1.1 requirement — adjustable character size (OpenCode)`
 
-The desktop pet is the only full character and permanent spatial anchor. Its satellite opens beside it. R1-R9 corrections and validation are complete. No further implementation slice is authorized.
+Persistent `pet_scale_percent` (default 100% = current approved size, range 50–150%), Settings slider with live preview, anchor-preserving resize, panel re-dock. No redesign, no analytics change, no version change, no V1.2.0.
 
 ## Implementation Status
 
-`CORRECTION SLICE PASS; VERSION RELEASE ACCEPTANCE STILL PARTIAL`
+`COMPLETED — AWAITING ASTRA-6 FINAL V1.1 REVIEW`
 
-The initial review failures have been fixed and verified in the authorized correction slice. Remaining version-level requirements are listed in the review addendum. No push, GitHub Release or binary publication is authorized.
+The pet-scale slice is implemented, verified (232 tests, isolated live smoke, 50/75/100/150% visual QA at two DPRs inspected), and committed locally as one scoped checkpoint. No push, tag, GitHub Release or binary publication. V1.2.0 not started.
 
 ## Last Review Verdict
 
@@ -66,9 +66,9 @@ Astra-6 remains the default reviewer/planner. ROADMAP.md is planning context onl
 
 ## Exact Next Action
 
-- Both agents: STOP implementation after this correction checkpoint; preserve the remaining AGENTS.md/ROADMAP.md working-tree changes.
-- Astra-6: default review/planning role resumes. Determine the next bounded V1.1 acceptance slice only when requested.
-- User: explicitly authorizes any push, GitHub Release, binary publication, or next-version start.
+- OpenCode: STOP after the pet-scale checkpoint; no further implementation without explicit authorization.
+- Astra-6: final V1.1 review of the pet-scale slice plus remaining version-level gaps in `docs/REVIEW_V1.1.0_ASTRA.md`.
+- User: explicitly authorizes any push, tag, GitHub Release, binary publication, or V1.2.0 start.
 
 ## Last Completed Step
 
@@ -126,6 +126,7 @@ Astra-6 remains the default reviewer/planner. ROADMAP.md is planning context onl
 - Acceptance performed by OpenCode, uncommitted: full §26 matrix (see 99 notes), Reset to Defaults added (spec 01 §25 gap), 11 edge/combination tests, perf probe, privacy grep, DESIGN/README consistency touch-ups, PyInstaller build + frozen smoke, final screenshot set. Verdict NOT READY (artwork BLOCKED); APP_VERSION stays `1.0.0`.
 - V1.1 polish slice implemented and verified by OpenCode, committed locally as one checkpoint: panel bounds widened to 360×400–560×760 (default 420×600) with airier margins/spacing; theme lifted to a softer companion palette with rounder radii (surface 26, card 20, badge 12, button 10); surface gradient changed to a smooth vertical two-stop (less banding); pet painter gains TextAntialiasing and a theme-derived bubble fill; the ◇/◆ cost-row button now pins the panel open (`panel_pinned`, suppresses cursor-leave auto-hide, restores visible at startup, manual close still works); Always on Top is a persisted user setting (Settings checkbox + pet context-menu toggle, default on, one-time legacy `topmost` migration) applied to pet and panel via `apply_topmost`; new `always_on_top`/`panel_pin`/`panel_unpin` strings in zh_CN/en (`pin_toggle` retired). 14 new tests in `tests/test_panel_persist.py`; legitimate expectation updates in responsive/redesign/UI tests. 184 tests pass; isolated live smoke exits 0 at the new default size; 100%/200% screenshot matrix (`.private/polish-slice/`) inspected.
 - V1.1 companion-redesign slice implemented and verified by OpenCode, committed locally as one checkpoint: three mock candidates prototyped (`.private/companion-redesign-concepts/`, A character-left / B overlap / C bottom-anchor); B chosen. `CHARACTER_SCALE` 0.5→0.68 (pet 242×268); new `CompanionStage` paints the live pet state in the panel over a transparent 230 px gutter bleeding ~16 px past the surface edge (a radial glow backdrop was tried and removed after screenshots showed banding rings); landscape bounds 480×420–600×640, default 560×500; token/quota sections card-free with `io_line` + Working/Idle status line; `showEvent`/`hideEvent` coupling keeps exactly one character visible (was-visible tracking, timer start/stop); panel opens centered on the pet for flicker-free hover; compact hides stage+scroll. 12 new tests in `tests/test_companion.py`; legitimate updates across geometry/asset/UI/redesign/responsive/acceptance/persist tests. 196 tests pass; isolated live smoke exits 0 at 560×500; 100%/200% matrix (`.private/companion-qa/`) inspected. Known tradeoff: quota strips sit below the scroll fold at default size.
+- Final V1.1 pet-scale requirement implemented and verified by OpenCode, committed locally as one scoped checkpoint: `pet_scale_percent` (100% default = Astra-approved 256-square size, 50–150% range, invalid → 100%); proportional scaling of window/sprite/anchor/bubble/fonts/amplitudes from unchanged base constants; single-DPR-resample rendering preserved; anchor-preserving resize with panel re-dock; Settings slider + live % + cancel-revert + Reset 100%. 22 new tests in `tests/test_pet_scale.py`. 232 tests pass; isolated smoke exits 0; 50/75/100/150% QA inspected at two DPRs. Astra's geometry/anchoring/rendering work preserved untouched.
 
 ## Current Work / Partial Work
 

@@ -28,7 +28,10 @@ class DesktopPet(QWidget):
         self.setWindowFlags(flags)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setFixedSize(*geometry.window_size())
+        # 100% is the approved V1.1 size; the user setting only scales it.
+        self.pet_scale = geometry.normalize_pet_scale(
+            panel.prefs.get('pet_scale_percent', geometry.PET_SCALE_DEFAULT))
+        self.setFixedSize(*geometry.scaled_window_size(self.pet_scale))
         # Full-resolution sources from the central registry; paintEvent scales
         # them into the small logical sprite box each frame so high-DPI
         # screens stay sharp. Missing art can never crash the pet: unresolvable
@@ -68,6 +71,29 @@ class DesktopPet(QWidget):
 
     def tr_text(self,key,**values):
         return text(key,self.panel.prefs.get('language'),**values)
+
+    def _px(self, logical):
+        """Scale one logical pixel value by the user character size."""
+        return max(1, round(logical * self.pet_scale / 100))
+
+    def apply_pet_scale(self, percent):
+        """Resize the visible character around its feet anchor.
+
+        The anchor's screen position is preserved so the pet never teleports;
+        the panel re-docks to the new bounds. Returns True when resized.
+        """
+        percent = geometry.normalize_pet_scale(percent)
+        if percent == self.pet_scale:
+            return False
+        anchor_global = self.pos() + QPoint(*geometry.scaled_anchor(self.pet_scale))
+        self.pet_scale = percent
+        self.setFixedSize(*geometry.scaled_window_size(percent))
+        self._render_cache.clear()
+        self.move_clamped(anchor_global - QPoint(*geometry.scaled_anchor(percent)))
+        if self.panel.isVisible():
+            self.panel.anchor_to_pet()
+        self.update()
+        return True
 
     def typing_phase(self):
         monitor=getattr(self.panel,'activity',None)
@@ -168,52 +194,55 @@ class DesktopPet(QWidget):
             style=self.panel.prefs.get('token_number_format')
             p.setPen(QPen(QColor(theme.BORDER),1))
             p.setBrush(bubble)
-            bx,by,bw,bh=geometry.bubble_rect()
+            bx,by,bw,bh=geometry.scaled_bubble_rect(self.pet_scale)
             p.drawRoundedRect(QRectF(bx,by,bw,bh),theme.RADIUS_CARD,theme.RADIUS_CARD)
-            width=geometry.BUBBLE_TEXT_WIDTH
+            width=geometry.scaled_bubble_text_width(self.pet_scale)
             project=context.get('project') or self.tr_text('project_unavailable')
             status=self.tr_text('working' if context else 'unknown')
             used=context.get('context')
             ctx_text=f"{self.tr_text('context_short')} {'—' if used is None else f'{used:.0f}%'}"
-            main_font=QFont('Microsoft YaHei UI',9,QFont.DemiBold)
+            main_font=QFont('Microsoft YaHei UI',self._px(9),QFont.DemiBold)
             p.setFont(main_font)
             metrics=p.fontMetrics()
             dot='● '
             dot_w=metrics.horizontalAdvance(dot)
-            ctx_w=QFontMetrics(QFont('Segoe UI',8)).horizontalAdvance(ctx_text)
+            ctx_w=QFontMetrics(QFont('Segoe UI',self._px(8))).horizontalAdvance(ctx_text)
             status_text=f' · {status}'
             status_w=metrics.horizontalAdvance(status_text)
-            shown=metrics.elidedText(project,Qt.ElideRight,max(0,width-dot_w-status_w-ctx_w-8))
-            x=bx+12.0
+            shown=metrics.elidedText(project,Qt.ElideRight,max(0,width-dot_w-status_w-ctx_w-self._px(8)))
+            pad=self._px(12)
+            x=bx+pad
             p.setPen(QColor(STATE_DOT.get(self.current_state, theme.ICE)))
-            p.drawText(QRectF(x,7,width,20),Qt.AlignLeft|Qt.AlignVCenter,dot)
+            p.drawText(QRectF(x,self._px(7),width,self._px(20)),Qt.AlignLeft|Qt.AlignVCenter,dot)
             x+=dot_w
             p.setPen(QColor(theme.INK))
-            p.drawText(QRectF(x,7,width,20),Qt.AlignLeft|Qt.AlignVCenter,shown+status_text)
+            p.drawText(QRectF(x,self._px(7),width,self._px(20)),Qt.AlignLeft|Qt.AlignVCenter,shown+status_text)
             p.setPen(QColor(theme.MUTED))
-            p.setFont(QFont('Segoe UI',8))
-            p.drawText(QRectF(bx+12,7,width,20),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
+            p.setFont(QFont('Segoe UI',self._px(8)))
+            p.drawText(QRectF(bx+pad,self._px(7),width,self._px(20)),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
             total=format_tokens(tokens.get('total_tokens'),style)
             p.setPen(QColor(theme.INK))
-            p.setFont(QFont('Segoe UI',12,QFont.DemiBold))
-            p.drawText(QRectF(bx+12,30,width,22),Qt.AlignLeft|Qt.AlignVCenter,
+            p.setFont(QFont('Segoe UI',self._px(12),QFont.DemiBold))
+            p.drawText(QRectF(bx+pad,self._px(30),width,self._px(22)),Qt.AlignLeft|Qt.AlignVCenter,
                        p.fontMetrics().elidedText(total,Qt.ElideRight,width))
         elif (subtitle:=self.music_subtitle()) is not None:
             # One small secondary pill in the idle card area. No text means no
             # box at all; Token Mode never reaches this branch.
-            p.setFont(QFont('Segoe UI',8))
-            shown=p.fontMetrics().elidedText(subtitle,Qt.ElideRight,208)
-            pill_w=min(232,p.fontMetrics().horizontalAdvance(shown)+24)
+            p.setFont(QFont('Segoe UI',self._px(8)))
+            shown=p.fontMetrics().elidedText(subtitle,Qt.ElideRight,self._px(208))
+            pill_w=min(self._px(232),p.fontMetrics().horizontalAdvance(shown)+self._px(24))
             pill_x=(self.width()-pill_w)/2
+            pill_y, pill_h, pill_r = self._px(16), self._px(26), self._px(13)
             p.setPen(QPen(QColor(theme.BORDER),1))
             p.setBrush(bubble)
-            p.drawRoundedRect(QRectF(pill_x,16,pill_w,26),13,13)
+            p.drawRoundedRect(QRectF(pill_x,pill_y,pill_w,pill_h),pill_r,pill_r)
             p.setPen(QColor(theme.INK))
-            p.drawText(QRectF(pill_x,16,pill_w,26),Qt.AlignCenter,shown)
-        offset=math.sin(self.phase)*geometry.BOB_AMPLITUDE if self.motion else 0
+            p.drawText(QRectF(pill_x,pill_y,pill_w,pill_h),Qt.AlignCenter,shown)
+        bob_amp, typing_amp = geometry.scaled_amplitudes(self.pet_scale)
+        offset=math.sin(self.phase)*bob_amp if self.motion else 0
         p.save()
         if self.reaction:
-            px,py=geometry.REACTION_PIVOT
+            px,py=geometry.scaled_reaction_pivot(self.pet_scale)
             p.translate(px,py);p.rotate(math.sin(self.phase*3)*self.reaction*4);p.translate(-px,-py)
         sprite=self.sprites.get(self.current_state,self.sprite)
         # Every state shares one logical sprite box around one feet anchor;
@@ -228,11 +257,11 @@ class DesktopPet(QWidget):
                 # tilt around the feet anchor plus a small lateral shift. The
                 # source art is never modified; motion stays inside the box.
                 tilt=1.2 if self.typing_phase() else -1.2
-                tap_shift=2 if self.typing_phase() else -2
-                ax,ay=geometry.anchor()
+                tap_shift=self._px(2) if self.typing_phase() else -self._px(2)
+                ax,ay=geometry.scaled_anchor(self.pet_scale)
                 p.translate(ax,ay);p.rotate(tilt);p.translate(-ax,-ay)
-                offset+=math.sin(self.phase*8)*geometry.TYPING_AMPLITUDE
-        sx,sy,sw,sh=geometry.sprite_rect(round(offset))
+                offset+=math.sin(self.phase*8)*typing_amp
+        sx,sy,sw,sh=geometry.scaled_sprite_rect(self.pet_scale,round(offset))
         if sprite is not None and not sprite.isNull():
             rendered=self.render_sprite(sprite)
             size=rendered.deviceIndependentSize()
@@ -245,14 +274,17 @@ class DesktopPet(QWidget):
     def render_sprite(self, sprite):
         # Resample the original once at the actual screen density, never a
         # thumbnail or a previous DPR's scaled image. Preserve alpha and ratio.
+        # The target is the user-scaled sprite box, so every state scales
+        # identically regardless of source dimensions.
         dpr=self.devicePixelRatioF()
         if self._render_dpr!=dpr:
             self._render_cache.clear()
             self._render_dpr=dpr
-        key=sprite.cacheKey()
+        key=(sprite.cacheKey(),self.pet_scale)
         if key not in self._render_cache:
-            target=QSize(geometry.device_pixels(geometry.SPRITE_WIDTH,dpr),
-                         geometry.device_pixels(geometry.SPRITE_HEIGHT,dpr))
+            side=geometry.scaled_sprite_rect(self.pet_scale)[2]
+            target=QSize(geometry.device_pixels(side,dpr),
+                         geometry.device_pixels(side,dpr))
             result=sprite.scaled(target,Qt.KeepAspectRatio,Qt.SmoothTransformation)
             result.setDevicePixelRatio(dpr)
             self._render_cache[key]=result

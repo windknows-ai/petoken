@@ -14,12 +14,13 @@ from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRect, QRectF, Q
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
-    QFormLayout, QComboBox, QCheckBox, QDialogButtonBox, QScrollArea)
+    QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea)
 
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import CodexStore, quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
 import pet_assets as assets
+import pet_geometry as pet_geometry
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
 from activity import activity_diagnostics
@@ -62,6 +63,8 @@ QScrollArea {{ border:0; background:transparent; }}
 QCheckBox {{ spacing:8px; }}
 QCheckBox::indicator {{ width:16px; height:16px; border:1px solid {theme.BORDER_CONTROL}; border-radius:5px; background:{theme.CONTROL_BG}; }}
 QCheckBox::indicator:checked {{ background:{theme.ICE}; border-color:{theme.ICE}; }}
+QSlider::groove:horizontal {{ background:{theme.TRACK}; height:6px; border-radius:3px; }}
+QSlider::handle:horizontal {{ background:{theme.ICE}; width:16px; height:16px; margin:-5px 0; border-radius:8px; border:none; }}
 '''
 
 
@@ -298,6 +301,26 @@ class Settings(QDialog):
         self.topmost.setChecked(bool(panel.prefs.get('always_on_top', True)))
         self.topmost_label = label()
         self.form.addRow(self.topmost_label, self.topmost)
+        self._initial_scale = pet_geometry.normalize_pet_scale(
+            panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
+        self.pet_scale = QSlider(Qt.Horizontal)
+        self.pet_scale.setRange(pet_geometry.PET_SCALE_MIN, pet_geometry.PET_SCALE_MAX)
+        self.pet_scale.setSingleStep(5)
+        self.pet_scale.setPageStep(25)
+        self.pet_scale.setTickPosition(QSlider.TicksBelow)
+        self.pet_scale.setTickInterval(25)
+        self.pet_scale.setValue(self._initial_scale)
+        self.pet_scale_value = label(f'{self._initial_scale}%')
+        self.pet_scale_value.setFixedWidth(48)
+        self.pet_scale_value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        scale_row = QHBoxLayout()
+        scale_row.addWidget(self.pet_scale, 1)
+        scale_row.addWidget(self.pet_scale_value)
+        scale_box = QWidget()
+        scale_box.setLayout(scale_row)
+        self.pet_scale_label = label()
+        self.form.addRow(self.pet_scale_label, scale_box)
+        self.pet_scale.valueChanged.connect(self._preview_pet_scale)
         layout.addLayout(self.form)
         self.note = label('', 'muted')
         self.note.setWordWrap(True)
@@ -320,6 +343,20 @@ class Settings(QDialog):
     def tr_text(self, key, **values):
         return text(key, self.language.currentData(), **values)
 
+    def _preview_pet_scale(self, value):
+        # Live preview only: the pet resizes immediately, but nothing is
+        # written to disk until Save. Cancel restores the saved value.
+        self.pet_scale_value.setText(f'{int(value)}%')
+        pet = getattr(self.parentWidget(), 'pet', None)
+        if pet is not None:
+            pet.apply_pet_scale(int(value))
+
+    def reject(self):
+        pet = getattr(self.parentWidget(), 'pet', None)
+        if pet is not None:
+            pet.apply_pet_scale(self._initial_scale)
+        super().reject()
+
     def apply_language(self):
         t = self.tr_text
         self.setWindowTitle(t('settings_title'))
@@ -340,6 +377,10 @@ class Settings(QDialog):
         self.topmost_label.setText(t('always_on_top'))
         self.topmost.setToolTip(t('always_on_top'))
         self.topmost.setAccessibleName(t('always_on_top'))
+        self.pet_scale_label.setText(t('character_size'))
+        self.pet_scale.setToolTip(t('character_size'))
+        self.pet_scale.setAccessibleName(t('character_size'))
+        self.pet_scale_value.setText(f'{int(self.pet_scale.value())}%')
         self.note.setText(t('settings_note'))
         self.buttons.button(QDialogButtonBox.Save).setText(t('save'))
         self.buttons.button(QDialogButtonBox.Cancel).setText(t('cancel'))
@@ -362,6 +403,7 @@ class Settings(QDialog):
             self.token_format.findData(DEFAULT_TOKEN_NUMBER_FORMAT))
         self.currency.setCurrentIndex(self.currency.findData(DEFAULT_CURRENCY))
         self.topmost.setChecked(True)
+        self.pet_scale.setValue(pet_geometry.PET_SCALE_DEFAULT)
         self.apply_language()
 
     def save(self):
@@ -371,7 +413,8 @@ class Settings(QDialog):
                      language=normalize_language(self.language.currentData()),
                      token_number_format=self.token_format.currentData(),
                      currency=self.currency.currentData(),
-                     always_on_top=self.topmost.isChecked())
+                     always_on_top=self.topmost.isChecked(),
+                     pet_scale_percent=int(self.pet_scale.value()))
         # Legacy `manual_fx` / `prices` keys stay untouched in the file for
         # backward-compatible loading, but no longer drive pricing or FX.
         try:
@@ -380,6 +423,9 @@ class Settings(QDialog):
             self.error.setText(self.tr_text('settings_save_error'))
             return
         panel.prefs = prefs
+        pet = getattr(panel, 'pet', None)
+        if pet is not None:
+            pet.apply_pet_scale(prefs['pet_scale_percent'])
         panel.reset_store.set()
         panel.apply_language()
         panel.apply_topmost()

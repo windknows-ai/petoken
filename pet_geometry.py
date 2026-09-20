@@ -14,6 +14,13 @@ BASELINE_SPRITE_Y = 82
 # Motion amplitude scale; artwork has its own square logical bounds.
 CHARACTER_SCALE = 1.0
 
+# User-adjustable character size. 100% is the approved V1.1 size defined by
+# the constants below; the window, sprite box, anchor, bubble and amplitudes
+# all scale proportionally so the composition never distorts.
+PET_SCALE_DEFAULT = 100
+PET_SCALE_MIN = 50
+PET_SCALE_MAX = 150
+
 WINDOW_WIDTH = 272
 # Compact Token card (V1.1 step 12): project + status on line one, live
 # Tokens on line two. Smaller than the V1.0 240x70 bubble.
@@ -58,6 +65,69 @@ def anchor():
 
 def device_pixels(logical, dpr):
     return max(1, round(logical * dpr))
+
+
+def normalize_pet_scale(value):
+    """Normalize a saved character-size percentage into the supported range.
+
+    Missing or corrupted values fall back to 100% (the approved size), so an
+    upgrade never silently resizes an existing user's pet. Never raises.
+    """
+    try:
+        if isinstance(value, bool):
+            return PET_SCALE_DEFAULT
+        scale = int(round(float(value)))
+    except (TypeError, ValueError, ArithmeticError):
+        return PET_SCALE_DEFAULT
+    return max(PET_SCALE_MIN, min(scale, PET_SCALE_MAX))
+
+
+def _scaled(logical, percent):
+    return max(1, round(logical * percent / 100))
+
+
+def scaled_window_size(percent=PET_SCALE_DEFAULT):
+    percent = normalize_pet_scale(percent)
+    return (_scaled(WINDOW_WIDTH, percent), _scaled(WINDOW_HEIGHT, percent))
+
+
+def scaled_sprite_rect(percent=PET_SCALE_DEFAULT, offset_y=0):
+    percent = normalize_pet_scale(percent)
+    width, height = scaled_window_size(percent)
+    side = _scaled(SPRITE_WIDTH, percent)
+    x = (width - side) // 2
+    y = _scaled(SPRITE_Y, percent) + offset_y
+    return (x, y, side, side)
+
+
+def scaled_anchor(percent=PET_SCALE_DEFAULT):
+    percent = normalize_pet_scale(percent)
+    width, _ = scaled_window_size(percent)
+    x, y, w, h = scaled_sprite_rect(percent)
+    return (width // 2, y + h)
+
+
+def scaled_bubble_rect(percent=PET_SCALE_DEFAULT):
+    percent = normalize_pet_scale(percent)
+    bx, by, bw, bh = BUBBLE_RECT
+    return (_scaled(bx, percent), _scaled(by, percent),
+            _scaled(bw, percent), _scaled(bh, percent))
+
+
+def scaled_bubble_text_width(percent=PET_SCALE_DEFAULT):
+    return _scaled(BUBBLE_TEXT_WIDTH, normalize_pet_scale(percent))
+
+
+def scaled_reaction_pivot(percent=PET_SCALE_DEFAULT):
+    percent = normalize_pet_scale(percent)
+    width, _ = scaled_window_size(percent)
+    x, y, w, h = scaled_sprite_rect(percent)
+    return (width // 2, y + h // 2)
+
+
+def scaled_amplitudes(percent=PET_SCALE_DEFAULT):
+    percent = normalize_pet_scale(percent)
+    return (BOB_AMPLITUDE * percent / 100, TYPING_AMPLITUDE * percent / 100)
 
 
 def clamp_position(x, y, width, height, screen):

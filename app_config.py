@@ -7,6 +7,7 @@ from pathlib import Path
 from localization import DEFAULT_LANGUAGE, normalize_language
 from pricing import DEFAULT_CURRENCY, normalize_currency
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
+from pet_geometry import PET_SCALE_DEFAULT, normalize_pet_scale
 
 APP_VERSION = "1.1.0"
 SETTINGS_SCHEMA_VERSION = 1
@@ -18,6 +19,7 @@ DEFAULT_PREFERENCES = {
     "currency": DEFAULT_CURRENCY,
     "always_on_top": True,
     "panel_pinned": False,
+    "pet_scale_percent": PET_SCALE_DEFAULT,
 }
 
 
@@ -36,6 +38,8 @@ def normalize_preferences(data):
         preferences["always_on_top"] = True
     if not isinstance(preferences.get("panel_pinned"), bool):
         preferences["panel_pinned"] = False
+    preferences["pet_scale_percent"] = normalize_pet_scale(
+        preferences.get("pet_scale_percent"))
     schema = preferences.get("settings_schema_version")
     if isinstance(schema, bool) or not isinstance(schema, int) or schema < 1:
         preferences["settings_schema_version"] = SETTINGS_SCHEMA_VERSION
