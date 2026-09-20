@@ -23,6 +23,7 @@ class SettingsTests(unittest.TestCase):
 
     def test_missing_file_uses_new_field_defaults(self):
         self.assertEqual(load_preferences(self.path), DEFAULT_PREFERENCES)
+        self.assertEqual(DEFAULT_PREFERENCES["scope"], "conversation")
 
     def test_legacy_settings_migrate_without_losing_unknown_fields(self):
         legacy = {"scope": "project", "topmost": False, "future_setting": {"kept": True}}

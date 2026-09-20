@@ -28,6 +28,11 @@ ICE = '#91E4F2'
 VIOLET = '#B9A7F8'
 BG = '#171B32'
 PREF_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home()/'.local/share')))/'CodexWisp'
+SCOPE_LABELS = {
+    'global': '全局（本地记录）',
+    'project': '项目',
+    'conversation': '会话',
+}
 
 STYLE = f'''
 QWidget {{ color:{INK}; font-family:"Segoe UI","Microsoft YaHei UI"; font-size:12px; }}
@@ -210,9 +215,11 @@ class Settings(QDialog):
         self.task.setMaximumWidth(325)
         form.addRow('跟随 / 固定任务', self.task)
         self.scope = QComboBox()
-        self.scope.addItem('当前任务', 'task')
-        self.scope.addItem('整个项目（本地记录）', 'project')
-        self.scope.setCurrentIndex(1 if panel.prefs.get('scope') == 'project' else 0)
+        for key in ('global','project','conversation'):
+            self.scope.addItem(SCOPE_LABELS[key], key)
+        selected_scope = {'task':'conversation'}.get(panel.prefs.get('scope'), panel.prefs.get('scope'))
+        selected_index = self.scope.findData(selected_scope)
+        self.scope.setCurrentIndex(selected_index if selected_index >= 0 else self.scope.findData('conversation'))
         form.addRow('Tokens 与费用范围', self.scope)
         self.fx = QDoubleSpinBox()
         self.fx.setRange(.01, 9.9999)
@@ -475,7 +482,7 @@ class Panel(QWidget):
                     store = CodexStore(prices=PRICES | prefs.get('prices', {}))
                 detection_valid = time.time()-self.active.seen < 5
                 active = self.active.title if detection_valid else ''
-                self.bridge.data.emit(store.read(active, prefs.get('pinned',''), prefs.get('scope','task'),
+                self.bridge.data.emit(store.read(active, prefs.get('pinned',''), prefs.get('scope','conversation'),
                                                  self.want_history.is_set(), detection_valid))
             except Exception:
                 self.bridge.data.emit(dict(status='读取暂时失败，下一秒重试。', rows=[]))
@@ -535,7 +542,7 @@ class Panel(QWidget):
         self.total.setToolTip(self.total.toolTip()+'\n'+HELP['total_tokens'])
         self.input.setToolTip(self.input.toolTip()+f"\nCached input: {compact_number(tokens.get('cached_input_tokens'))}")
         self.output.setToolTip(self.output.toolTip()+'\n已包含 reasoning output，不重复相加。')
-        self.scope_button.setText('整个项目 ▾' if data.get('scope')=='project' else '当前任务 ▾')
+        self.scope_button.setText(SCOPE_LABELS.get(data.get('scope'),'会话')+' ▾')
         self.context.update_value(data.get('context'), 'used',
             f"当前任务 · {data.get('context_tokens')} / {data.get('context_window')} tokens\n最近一次记录的上下文占用，非累计 token；与 CLI 的保留空间算法可能略有不同。")
         self.refresh_cost()
@@ -555,7 +562,7 @@ class Panel(QWidget):
         partial = bool(d.get('unknown') or d.get('partial') or any('write split unavailable' in x for x in d.get('notes',[])))
         self.cost.setText(f"≈ ${d.get('usd',0)*fx['rate']:,.2f}")
         self.cost_label.setText(('部分估算' if partial else 'API 等价估算')+' · CAD')
-        tip = (f"{'项目' if d.get('scope')=='project' else '任务'} · {d.get('count',1)} 个本地会话\n"
+        tip = (f"{SCOPE_LABELS.get(d.get('scope'),'会话')} · {d.get('count',1)} 个本地会话\n"
                f"已知单价部分 USD ${d.get('usd',0):,.4f}\n1 USD = {fx['rate']:.4f} CAD · {fx['date']}\n{fx['source']}\n"
                '不是订阅账单；按已记录的模型和服务档位折算，不含工具费用。')
         if d.get('unknown'):
@@ -592,10 +599,12 @@ class Panel(QWidget):
 
     def scope_menu(self):
         menu = QMenu(self)
-        for text,key in [('当前任务', 'task'),('整个项目（本地记录）','project')]:
+        selected = {'task':'conversation'}.get(self.prefs.get('scope'), self.prefs.get('scope'))
+        for key in ('global','project','conversation'):
+            text = SCOPE_LABELS[key]
             action = menu.addAction(text)
             action.setCheckable(True)
-            action.setChecked(self.prefs.get('scope','task') == key)
+            action.setChecked(selected == key)
             action.triggered.connect(lambda checked=False,k=key:self.change_scope(k))
         menu.exec(self.scope_button.mapToGlobal(QPoint(0,self.scope_button.height())))
 
@@ -735,6 +744,7 @@ def main():
             report = dict(visible=panel.isVisible(), task=panel.snapshot.get('title'),
                           has_usage=panel.snapshot.get('available'), mode=panel.snapshot.get('mode'),
                           app_mode=panel.app_mode.mode, codex_activity=panel.codex_activity,
+                          scope_identity=panel.snapshot.get('scope_identity'),
                           working_context={k:(v.get('total_tokens') if k=='tokens' else v)
                               for k,v in (panel.snapshot.get('working_context') or {}).items()
                               if k in ('thread','title','project','project_source','tokens','selection')},

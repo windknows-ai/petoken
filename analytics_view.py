@@ -97,8 +97,9 @@ class AnalyticsWindow(QDialog):
     def update_data(self,d):
         a=d.get('analytics')
         if not a:return
-        self.heading.setText('TOKEN ANALYTICS · '+('整个项目' if d.get('scope')=='project' else '当前任务'))
-        self.subtitle.setText(f"{d.get('title','')} · {d.get('project','')} · {a['events']} 个去重用量事件\n模型、会话与完整用量使用当前统计范围；日期与历史使用本地索引全部记录。")
+        scope_name={'global':'全局（本地记录）','project':'项目','conversation':'会话'}.get(d.get('scope'),'会话')
+        self.heading.setText('TOKEN ANALYTICS · '+scope_name)
+        self.subtitle.setText(f"{d.get('title','')} · {d.get('project','')} · {a['events']} 个去重用量事件\n模型、会话、日期与历史均使用当前统计范围；全局仅代表本地可读取记录。")
         rows=[]
         fields=[('Official OpenAI','total_tokens','Total Tokens'),('Official OpenAI','input_tokens','Input Tokens'),
             ('Official OpenAI','cached_input_tokens','Cached Input / Cache Read'),('Official OpenAI','uncached_input_tokens','Uncached Input'),

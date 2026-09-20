@@ -75,16 +75,26 @@ def project_identity(row, state):
         return name.strip(), 'project_metadata', project_id
     origin = row.get('git_origin_url')
     if isinstance(origin, str) and origin.strip():
-        repository = origin.strip().rstrip('/\\').rsplit('/',1)[-1].rsplit(':',1)[-1]
+        normalized_origin = origin.strip().rstrip('/\\')
+        repository = normalized_origin.rsplit('/',1)[-1].rsplit(':',1)[-1]
         repository = repository.removesuffix('.git').strip()
         if repository:
-            return repository, 'git_origin', project_id
+            return repository, 'git_origin', project_id or 'git:'+normalized_origin.lower()
     cwd = row.get('cwd')
     if isinstance(cwd, str) and cwd.strip():
+        normalized_cwd = clean_path(cwd.strip())
         directory = Path(cwd.strip().removeprefix('\\\\?\\').rstrip('/\\')).name.strip()
         if directory:
-            return directory, 'cwd_basename', project_id
+            return directory, 'cwd_basename', project_id or 'cwd:'+normalized_cwd
     return None, 'unavailable', project_id
+
+
+def conversation_title(row):
+    name = row.get('name')
+    if isinstance(name, str) and name.strip():
+        return name.strip()
+    title = row.get('title')
+    return title.split('\n',1)[0].strip() if isinstance(title, str) and title.strip() else None
 
 
 def clean_path(value):
@@ -109,6 +119,17 @@ def unique_records(sessions):
                 continue
             seen.add(key);result.append(r)
     return result
+
+
+def distinct_sessions(rows, cache):
+    """Use one most-complete local file for each stable session ID."""
+    selected = {}
+    for row in rows:
+        session = cache[row['rollout_path']]
+        current = selected.get(session.session_id)
+        if current is None or (len(session.records), session.offset) > (len(current.records), current.offset):
+            selected[session.session_id] = session
+    return list(selected.values())
 
 
 class SessionUsage:
@@ -398,8 +419,11 @@ class CodexStore:
         self.history_cache = {}
         self.activity = CodexActivityDetector()
 
-    def read(self, active_title='', pinned='', scope='task', include_history=False,
+    def read(self, active_title='', pinned='', scope='conversation', include_history=False,
              activity_detection_valid=False):
+        scope = {'task':'conversation'}.get(scope, scope)
+        if scope not in ('global','project','conversation'):
+            scope = 'conversation'
         state_path = self.home/'.codex-global-state.json'
         try:
             stamp = state_path.stat().st_mtime_ns
@@ -423,10 +447,13 @@ class CodexStore:
             return dict(status='Codex 数据库暂时不可读，下一秒重试。', rows=[],
                         codex_activity=dict(active=False,valid=False,reason='database_unavailable'))
         desktop = [r for r in rows if r.get('source') in ('vscode','desktop') and not r.get('archived')]
+        eligible = [r for r in rows if r.get('rollout_path')]
         codex_activity = self.activity.detect(desktop, active_title, activity_detection_valid)
         chosen, mode = select_thread(desktop, active_title, pinned)
         state = self.state
         working_row = next((row for row in desktop if row.get('id') == codex_activity.get('thread')), None)
+        if scope == 'project' and not pinned and working_row:
+            chosen, mode = working_row, 'working'
         working_context = None
         if working_row:
             key = working_row.get('rollout_path')
@@ -439,7 +466,7 @@ class CodexStore:
             last_tokens = working_session.last.get('total_tokens')
             working_context = dict(
                 thread=working_row.get('id'),
-                title=working_row.get('name') or (working_row.get('title') or '').split('\n')[0][:60] or None,
+                title=conversation_title(working_row),
                 project=working_project, project_source=project_source, project_id=working_project_id,
                 status='working', tokens=working_summary['tokens'], available=working_session.available,
                 model=working_session.model or working_row.get('model'),
@@ -448,60 +475,86 @@ class CodexStore:
                          if last_tokens is not None and working_session.window else None),
                 sample=working_session.sample, selection=codex_activity.get('selection'),
                 activity_reason=codex_activity.get('reason'))
-        if not chosen:
+        if scope != 'global' and not chosen:
+            identity = dict(scope_type=scope, unavailable=True)
+            if scope == 'conversation':
+                identity['thread_id'] = pinned or None
             return dict(status='固定的任务已不可用，请重新选择。' if pinned else '还没有本地桌面任务。',
-                        rows=desktop, codex_activity=codex_activity, working_context=working_context)
-        assignments = state.get('thread-project-assignments', {})
-        project_id = (assignments.get(chosen['id']) or {}).get('projectId') or chosen.get('project_id')
-        project = (state.get('local-projects') or {}).get(project_id, {})
-        root = clean_path(chosen.get('cwd', ''))
-        project_name = project.get('name') or Path(root).name
-        relevant = [chosen]
-        if scope == 'project':
-            roots = {clean_path(p) for p in project.get('rootPaths', [])} or {root}
-            relevant = [r for r in rows if (
-                (project_id and ((assignments.get(r['id']) or {}).get('projectId') or r.get('project_id')) == project_id)
-                or clean_path(r.get('cwd', '')) in roots)]
-        refresh_rows = rows if include_history else relevant + ([working_row] if working_row and working_row not in relevant else [])
+                        rows=desktop, scope=scope, scope_identity=identity,
+                        codex_activity=codex_activity, working_context=working_context)
+
+        chosen_project, chosen_project_source, chosen_project_id = (
+            project_identity(chosen, state) if chosen else (None, 'unavailable', None))
+        if scope == 'global':
+            relevant = eligible
+            scope_identity = dict(scope_type='global', locally_recorded=True)
+        elif scope == 'project':
+            scope_identity = dict(scope_type='project', project_id=chosen_project_id,
+                project_name=chosen_project, project_source=chosen_project_source)
+            if chosen_project_id is None:
+                scope_identity['unavailable'] = True
+                return dict(status='当前会话没有可靠的项目身份。', rows=desktop, scope=scope,
+                            scope_identity=scope_identity, codex_activity=codex_activity,
+                            working_context=working_context)
+            relevant = [r for r in eligible if project_identity(r, state)[2] == chosen_project_id]
+        else:
+            relevant = [chosen]
+            scope_identity = dict(scope_type='conversation', thread_id=chosen.get('id'),
+                conversation_title=conversation_title(chosen), project_id=chosen_project_id,
+                project_name=chosen_project, project_source=chosen_project_source)
+
+        refresh_rows = relevant + ([working_row] if working_row and working_row not in relevant else [])
         for row in refresh_rows:
-            key = row['rollout_path']
+            key = row.get('rollout_path')
+            if not key:
+                continue
             if key not in self.sessions:
                 self.sessions[key] = SessionUsage(key, self.prices)
             self.sessions[key].refresh()
-        current = self.sessions[chosen['rollout_path']]
-        sessions = list({self.sessions[r['rollout_path']].session_id:self.sessions[r['rollout_path']] for r in relevant}.values())
+        sessions = distinct_sessions(relevant, self.sessions)
+        current = self.sessions.get(chosen.get('rollout_path')) if chosen else None
+        if current is None and sessions:
+            current = sessions[0]
         records = unique_records(sessions)
         excluded_forks = sum(len(s.records) for s in sessions)-len(records)
-        signature = tuple((s.session_id,s.offset) for s in sessions)
+        signature = tuple(sorted((s.session_id,s.offset) for s in sessions))
         if self.analytics_cache.get('signature') != signature:
             self.analytics_cache = dict(signature=signature,summary=aggregate(records))
         analysis = self.analytics_cache['summary']
         tokens = analysis['tokens']
         unknown = sorted({r.get('model') or 'unknown / missing token breakdown' for r in records if r.get('usd') is None and r['tokens'].get('total_tokens')})
-        last_tokens = current.last.get('total_tokens')
-        context = min(100, max(0, 100*last_tokens/current.window)) if last_tokens is not None and current.window else None
-        history = None
-        if include_history:
-            all_sessions = list({self.sessions[r['rollout_path']].session_id:self.sessions[r['rollout_path']] for r in rows}.values())
-            history_signature=tuple((s.session_id,s.offset) for s in all_sessions)
-            # Calendar ranges must also advance at local midnight without new tokens.
-            history_signature+=(time.strftime('%Y-%m-%d'),)
-            if self.history_cache.get('signature') != history_signature:
-                self.history_cache=dict(signature=history_signature,summary=aggregate(unique_records(all_sessions)))
-            history=self.history_cache['summary']
-            history['partial'] = any(s.partial for s in all_sessions)
-        names = {self.sessions[r['rollout_path']].session_id:r.get('name') or r.get('title','').split('\n')[0][:60] for r in (rows if include_history else relevant)}
-        return dict(rows=desktop, status='', mode=mode, thread=chosen['id'],
-                    title=chosen.get('name') or chosen.get('title','').split('\n')[0][:60] or '未命名任务',
-                    project=project_name, scope=scope, tokens=tokens,
-                    available=any(s.available for s in sessions),
-                    model=current.model or chosen.get('model'), effort=current.effort or chosen.get('reasoning_effort'),
-                    tier=current.tier, context=context, context_tokens=last_tokens, context_window=current.window,
+        last_tokens = current.last.get('total_tokens') if current else None
+        context = (min(100, max(0, 100*last_tokens/current.window))
+                   if current and last_tokens is not None and current.window else None)
+        partial = any(s.partial or not s.available for s in sessions)
+        history = dict(analysis, partial=partial) if include_history else None
+        names = {self.sessions[r['rollout_path']].session_id:conversation_title(r)
+                 for r in relevant}
+        available = any(s.available for s in sessions)
+        scope_result = dict(identity=scope_identity, tokens=tokens, analytics=analysis,
+                            available=available, count=len(sessions), partial=partial)
+        if scope == 'global':
+            display_project, display_title = 'All Codex Usage', 'Locally recorded history'
+        elif scope == 'project':
+            display_project = display_title = chosen_project or 'Project unavailable'
+        else:
+            display_project = chosen_project or 'Project unavailable'
+            display_title = conversation_title(chosen) or 'Untitled conversation'
+        current_summary = summarize(unique_records([current])) if current else summarize([])
+        return dict(rows=desktop, status='' if relevant else '还没有本地用量记录。', mode=mode,
+                    thread=chosen.get('id') if chosen else None, title=display_title,
+                    project=display_project, scope=scope, scope_identity=scope_identity,
+                    scope_result=scope_result, tokens=tokens, available=available,
+                    model=(current.model or chosen.get('model')) if current and chosen else None,
+                    effort=(current.effort or chosen.get('reasoning_effort')) if current and chosen else None,
+                    tier=current.tier if current else None, context=context,
+                    context_tokens=last_tokens, context_window=current.window if current else None,
                     usd=sum(r.get('usd') or 0 for r in records), unknown=unknown,
-                    partial=any(s.partial or not s.available for s in sessions),
-                    excluded_forks=excluded_forks, count=len(sessions), sample=current.sample,
-                    limits=current.limits, analytics=analysis, history=history, session_names=names,
-                    current_session=summarize(unique_records([current])), raw_total=current.raw_total,raw_last=current.raw_last,
+                    partial=partial, excluded_forks=excluded_forks, count=len(sessions),
+                    sample=current.sample if current else None,
+                    limits=current.limits if current else None, analytics=analysis, history=history,
+                    session_names=names, current_session=current_summary,
+                    raw_total=current.raw_total if current else {}, raw_last=current.raw_last if current else {},
                     notes=sorted(set().union(*(s.notes for s in sessions))), codex_activity=codex_activity,
                     working_context=working_context)
 

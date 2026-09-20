@@ -11,6 +11,7 @@ SETTINGS_SCHEMA_VERSION = 1
 DEFAULT_PREFERENCES = {
     "settings_schema_version": SETTINGS_SCHEMA_VERSION,
     "language": DEFAULT_LANGUAGE,
+    "scope": "conversation",
 }
 
 

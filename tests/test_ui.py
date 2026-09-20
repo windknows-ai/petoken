@@ -99,5 +99,17 @@ class UiTests(unittest.TestCase):
         self.assertIn('Working Project',pet.toolTip())
         self.assertNotIn('Panel Project',pet.toolTip())
 
+    def test_scope_selector_exposes_global_project_and_conversation(self):
+        settings=Settings(self.panel)
+        self.assertEqual([settings.scope.itemData(i) for i in range(settings.scope.count())],
+                         ['global','project','conversation'])
+        settings.reject()
+
+    def test_unknown_scope_preference_falls_back_to_conversation(self):
+        self.panel.prefs['scope']='unknown-future-value'
+        settings=Settings(self.panel)
+        self.assertEqual(settings.scope.currentData(),'conversation')
+        settings.reject()
+
 
 if __name__=='__main__':unittest.main()

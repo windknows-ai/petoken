@@ -1,9 +1,9 @@
 # Project Progress
 
-Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, and coherent working-context slices are complete and verified; work is stopped before the three-scope implementation.
+Status: IN PROGRESS — V1.0.0 delivered and verified. The V1.1.0 architecture, foundation, Daily / Token mode, coherent Working Context, and Global / Project / Conversation scope slices are complete and verified; work is stopped before Token number formatting and units.
 
 ## Current Objective
-Continue V1.1.0 from the next authorized slice. Token Mode now binds one selected working session to its structured project identity and that same session's Token data; the next specification step is Global / Project / Conversation scopes.
+Continue V1.1.0 from implementation-order step 6. Analytics now has one deduplicated Global / Project / Conversation scope system while the compact Token bubble remains bound to the independent active Working Context.
 
 ## Completed
 - Isolated repository cloned; personal website untouched. GitHub upload permission verified; current repo visibility private.
@@ -39,8 +39,14 @@ Continue V1.1.0 from the next authorized slice. Token Mode now binds one selecte
 - Local checkpoint `859b654fca36fc792b2846bb1acb27ffcdd50ba7` records the approved foundation and Daily / Token slices; the working tree was clean immediately after the commit and it was not pushed.
 - Token Mode now selects one coherent working context: prefer the fresh UIA title when it matches a working thread; otherwise select the working thread with the newest rollout activity. A switch between two still-working threads must remain stable for 0.4 seconds; if the selected thread completes, another verified working thread takes over immediately.
 - Project names come from structured metadata in this order: explicit local project name, Git origin repository name, cwd basename, then unavailable. Full paths and arbitrary window text are never used as project names.
-- The bubble's title, project, model, context percentage and session-total Token values now come from the same selected `SessionUsage`. Fork-inherited events remain excluded and nullable fields remain nullable. Existing expanded-panel task/project scope remains independent and unchanged.
+- The bubble's title, project, model, context percentage and session-total Token values now come from the same selected `SessionUsage`. Fork-inherited events remain excluded and nullable fields remain nullable. This Working Context stays independent from the expanded panel's newer three-scope analytics selection.
 - Token bubble text now shows project plus session Tokens and an explicit Working status while preserving the existing bubble geometry and styling.
+- Approved Working Context checkpoint `f061ccf11362425fff9da379f45a4d36469b5f4c` was committed locally without pushing or changing `APP_VERSION`.
+- Token analytics now normalizes legacy `task` scope to Conversation and exposes exactly Global, Project, and Conversation. The selected scope and all of its identity/statistics travel in one read result; changing analytics scope never changes the active Working Context.
+- Global aggregates normalized records from every locally indexed row with a rollout path. It uses one most-complete file per stable session ID, then `unique_records()` to remove duplicate and inherited fork events before aggregating. It is explicitly labeled as locally recorded, not cloud/account lifetime.
+- Project resolves the selected/default working conversation through the shared project resolver, then aggregates only rows with the same stable explicit project ID, Git-origin identity, or normalized cwd identity. Equal display names do not merge distinct projects.
+- Conversation uses one exact selected thread ID and never falls back to Project or Global. Missing selections and unavailable project identities return an explicit unavailable state without unrelated Tokens.
+- Scope history, model and session breakdowns now use the same selected scope. Nullable accounting, cache/reasoning subset rules, calendar-day ranges, and fork exclusion remain unchanged.
 
 ## Files Modified
 Historical V1.0.0 scope: AGENTS.md, PROGRESS.md, DESIGN.md, docs/implementation-plan.md, usage.py, analytics.py, analytics_view.py, desktop.py, widget.py, pet.py, activity.py, assets/, tests/, tools/, requirements*.txt, .gitignore.
@@ -48,6 +54,7 @@ Lifecycle continuation: AGENTS.md, PROGRESS.md, README.md, DESIGN.md, CHANGELOG.
 V1.1.0 foundation slice: app_config.py (new), localization.py (new), desktop.py, widget.py, tests/test_settings.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 V1.1.0 Daily / Token slice: app_mode.py (new), activity.py, usage.py, widget.py, pet.py, tests/test_app_mode.py (new), tests/test_activity.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 V1.1.0 working-context slice: usage.py, widget.py, pet.py, tests/test_app_mode.py, tests/test_ui.py, tests/test_working_context.py (new), PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
+V1.1.0 scope slice: app_config.py, usage.py, widget.py, analytics_view.py, tests/test_scopes.py (new), tests/test_settings.py, tests/test_ui.py, PROGRESS.md, HANDOFF.md, and external `V1.1.0/99_Implementation_Notes.md`.
 
 ## Important Decisions
 - Source: local Codex `state_*.sqlite` + JSONL sessions; UIA document LegacyIAccessible Name follows actual active task. Initial URL is stale and must never select the task.
@@ -61,10 +68,12 @@ V1.1.0 working-context slice: usage.py, widget.py, pet.py, tests/test_app_mode.p
 - Daily / Token mode is centralized in `AppModeState`; UI components consume that state and do not independently infer Codex activity.
 - A visible Codex window alone never activates Token Mode. Explicit session lifecycle plus fresh UIA task presence is the primary rule; missing/stale/unreadable sources are conservative and cannot activate it.
 - Working-session selection and project/Token binding happen in `CodexStore`; the pet consumes a single `working_context` object and does not combine independently selected values.
-- The existing dashboard keeps its explicit task/project scope. Only the Token Mode pet bubble follows the selected global working session in this slice.
+- The Token Mode pet bubble follows the selected global working session; analytics scope is an independent user selection and cannot change active-work detection.
+- Scope identity is structured rather than label-based: Global carries `scope_type` and a local-recorded flag; Project carries stable ID/name/source; Conversation carries thread ID/title and its parent project identity. Formatted labels are presentation only.
+- Existing settings remain compatible: missing scope defaults to Conversation, legacy `task` is interpreted as Conversation, and malformed values safely fall back to Conversation. The persisted `pinned` value remains the stable conversation selector.
 
 ## Current State
-V1.0.0 is finished and verified. OpenCode completed V1.1.0 Step 1 architecture inspection. Checkpoint `859b654` records the approved foundation and Daily / Token slices and remains local. Codex completed the working-context slice after that checkpoint without committing it. `99_Implementation_Notes.md` is maintained in the external specification folder and is not part of this Git repository.
+V1.0.0 is finished and verified. OpenCode performed the pre-implementation Step 1 architecture inspection only; Codex verified it and has performed all V1.1.0 implementation work. Checkpoint `859b654` records the foundation and Daily / Token slices; checkpoint `f061ccf` records Working Context. The completed scope slice remains intentionally uncommitted. `99_Implementation_Notes.md` is maintained outside this Git repository.
 
 ## Known Issues
 - Media playback detection depends on Windows System Media Transport Controls, so players that do not integrate with Windows media controls cannot be detected reliably.
@@ -92,10 +101,11 @@ V1.0.0 is finished and verified. OpenCode completed V1.1.0 Step 1 architecture i
 - Live detector timing on current local data: about 4.07 ms for the bounded cold scan and 0.06 ms for a warm incremental check.
 - Working-context recovery verification: the uncommitted implementation was complete rather than partial. All 39 tests pass (30 prior + 9 targeted), all Python files pass `py_compile`, and an isolated live smoke detected two working sessions, selected the foreground thread, and reported its matching title, `Web Project`, 31,399,745 session Tokens, explicit project metadata source, live quota, and no keyboard-hook error. The bubble screenshot was inspected and kept the existing 242×378 pet / 240×70 bubble geometry.
 - Initial fixture runs exposed that Python's SQLite context manager does not close Windows file handles and that display names must not reuse case-normalizing path logic. Production read-only connections now close explicitly, and cwd fallback extracts its basename without altering case; all tests passed after both fixes.
+- Scope verification: 52 tests pass (39 checkpoint tests + 13 scope/settings/UI tests); all project/test Python files pass `py_compile`. Isolated Global smoke exits 0, reports `scope_type=global` with the local-recorded limitation, aggregates 1,698 unique events / 186,031,972 Tokens, keeps live quota/activity signals, and independently shows the active `Web Project` Working Context in the pet bubble. Panel, pet and expanded analytics screenshots were inspected.
 
 ## Remaining Work
-- Implement the exact Global / Project / Conversation scope model while preserving the coherent working context and current accounting semantics.
+- Implement compact/full Token number formatting and consistent metric units.
 - Continue later V1.1.0 steps only when authorized. Do not start V1.2.0.
 
 ## Next Step
-Implement V1.1.0 order step 5 only: add Global / Project / Conversation Token scopes with accurate totals, selection semantics, and no duplicate accounting. Preserve working-context binding; do not begin formatting, currency, assets, Bongo-Cat, subtitles, or V1.2.0.
+Implement V1.1.0 order step 6 only: add the persisted Full / Compact Token number format and consistent units in Token Analysis. Do not begin the full localization pass, currency work, assets, Bongo-Cat, subtitles, or V1.2.0.
