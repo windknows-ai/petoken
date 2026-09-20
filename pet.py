@@ -15,7 +15,10 @@ class DesktopPet(QWidget):
     def __init__(self,panel):
         super().__init__()
         self.panel=panel
-        self.setWindowFlags(Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
+        flags=Qt.Tool|Qt.FramelessWindowHint
+        if panel.prefs.get('always_on_top',True):
+            flags|=Qt.WindowStaysOnTopHint
+        self.setWindowFlags(flags)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFixedSize(*geometry.window_size())
         # Full-resolution sources from the central registry; paintEvent scales
@@ -104,7 +107,8 @@ class DesktopPet(QWidget):
             self.hover_since=None
             self.dismiss_until_leave=False
             self.left_since=self.left_since or now
-            if self.panel.isVisible() and now-self.left_since>.7 and not QApplication.activeModalWidget():
+            if self.panel.isVisible() and now-self.left_since>.7 and not QApplication.activeModalWidget() \
+                    and not self.panel.is_pinned():
                 self.panel.hide()
         else:
             self.left_since=None
@@ -143,13 +147,16 @@ class DesktopPet(QWidget):
     def paintEvent(self,event):
         p=QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.TextAntialiasing)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
+        bubble=QColor(theme.CARD)
+        bubble.setAlpha(235)
         if self.token_bubble_visible():
             context=self.working_context or {}
             tokens=context.get('tokens') or {}
             style=self.panel.prefs.get('token_number_format')
             p.setPen(QPen(QColor(theme.BORDER),1))
-            p.setBrush(QColor(29,33,57,235))
+            p.setBrush(bubble)
             bx,by,bw,bh=geometry.bubble_rect()
             p.drawRoundedRect(QRectF(bx,by,bw,bh),theme.RADIUS_CARD,theme.RADIUS_CARD)
             width=geometry.BUBBLE_TEXT_WIDTH
@@ -188,7 +195,7 @@ class DesktopPet(QWidget):
             pill_w=min(232,p.fontMetrics().horizontalAdvance(shown)+24)
             pill_x=(self.width()-pill_w)/2
             p.setPen(QPen(QColor(theme.BORDER),1))
-            p.setBrush(QColor(29,33,57,235))
+            p.setBrush(bubble)
             p.drawRoundedRect(QRectF(pill_x,16,pill_w,26),13,13)
             p.setPen(QColor(theme.INK))
             p.drawText(QRectF(pill_x,16,pill_w,26),Qt.AlignCenter,shown)
@@ -254,11 +261,18 @@ class DesktopPet(QWidget):
         menu.addAction(self.tr_text('pet_toggle_panel'),self.toggle_panel)
         menu.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
         menu.addAction(self.tr_text('pet_settings'),self.panel.open_settings)
+        topmost=menu.addAction(self.tr_text('always_on_top'));topmost.setCheckable(True)
+        topmost.setChecked(bool(self.panel.prefs.get('always_on_top',True)))
+        topmost.triggered.connect(self.toggle_topmost)
         motion=menu.addAction(self.tr_text('idle_motion'));motion.setCheckable(True);motion.setChecked(self.motion)
         motion.triggered.connect(self.toggle_motion)
         menu.addAction(self.tr_text('hide_pet'),self.hide)
         menu.addSeparator();menu.addAction(self.tr_text('exit'),self.panel.shutdown)
         menu.exec(event.globalPos())
+
+    def toggle_topmost(self,enabled):
+        self.panel.set_always_on_top(enabled)
+        self.update()
 
     def toggle_motion(self,enabled):
         self.motion=enabled

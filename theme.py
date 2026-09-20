@@ -1,54 +1,54 @@
 """Central visual tokens for the petoken desktop companion.
 
-One compact palette source (spec 04: dark navy / violet / cyan). Components
-reference these names instead of scattering hex literals, so the visual
-language stays consistent. Values match the verified V1.0 direction; this
-module centralizes them without redesigning anything by itself.
+Soft companion direction (V1.1 polish slice): the same dark navy / violet /
+cyan family, but lifted, rounder, and calmer — a cute pet-companion surface
+instead of a dense enterprise dashboard. Components reference these names
+instead of scattering hex literals, so the visual language stays consistent.
 """
 from __future__ import annotations
 
 # Core roles.
-INK = '#EEF2FF'        # primary text, near-white
-MUTED = '#A7AEC8'      # secondary text, cool gray-lavender
+INK = '#F0F3FF'        # primary text, near-white
+MUTED = '#B3B9D4'      # secondary text, soft lavender-gray
 ICE = '#91E4F2'        # live / positive accent, ice cyan
-VIOLET = '#B9A7F8'     # emphasis accent, soft lavender
-BG = '#171B32'         # main background, very dark navy
+VIOLET = '#C0AEFA'     # emphasis accent, light lavender
+BG = '#1C2140'         # main background, soft dark navy
 
-# Surfaces (slightly lighter navy cards/panels).
-SURFACE_TOP = '#242641'
-SURFACE_BOTTOM = '#22243D'
-CARD = '#232740'
-TABLE_BG = '#1C2139'
-TABLE_ALT = '#242B45'
-TABLE_HEADER = '#303752'
-BADGE_BG = '#34304F'
-CONTROL_BG = '#282D48'
+# Surfaces (lifted lavender-tinted navy cards/panels).
+SURFACE_TOP = '#2D3157'
+SURFACE_BOTTOM = '#272B4D'
+CARD = '#2B2F52'
+TABLE_BG = '#21263F'
+TABLE_ALT = '#292F52'
+TABLE_HEADER = '#363D66'
+BADGE_BG = '#3B3460'
+CONTROL_BG = '#2D3252'
 
-# Borders (thin lavender/violet, never heavy).
-BORDER = '#515473'
-BORDER_SOFT = '#575076'
-BORDER_CONTROL = '#555C80'
-TRACK = '#33374F'      # progress-bar track
-DIVIDER = '#3C405B'
-GRID = '#3A415F'
+# Borders (soft lavender, defined but never harsh).
+BORDER = '#5E628A'
+BORDER_SOFT = '#6B6594'
+BORDER_CONTROL = '#5F6690'
+TRACK = '#3A4063'      # progress-bar track
+DIVIDER = '#454B70'
+GRID = '#434A70'
 
 # Interaction.
-TAB_PANE_BORDER = '#4C5575'
-TAB_SELECTED_BG = '#41486C'
-HOVER_BG = '#383B57'
-HOVER_BORDER = '#555A7B'
-CHECKED_BG = '#34344F'
-MENU_BG = '#232740'
-MENU_SELECTED = '#3D4263'
-TOOLTIP_BG = '#252B46'
-TOOLTIP_BORDER = '#626A8C'
+TAB_PANE_BORDER = '#555C82'
+TAB_SELECTED_BG = '#485074'
+HOVER_BG = '#3E4468'
+HOVER_BORDER = '#60668C'
+CHECKED_BG = '#3A3A5C'
+MENU_BG = '#2A2E50'
+MENU_SELECTED = '#454B74'
+TOOLTIP_BG = '#2B3052'
+TOOLTIP_BORDER = '#6E76A0'
 SCROLL_BG = BG
 
-# Corner radii: one consistent set.
-RADIUS_SURFACE = 23
-RADIUS_CARD = 16
-RADIUS_BADGE = 8
-RADIUS_BUTTON = 8
+# Corner radii: one consistent set, rounder for the companion feel.
+RADIUS_SURFACE = 26
+RADIUS_CARD = 20
+RADIUS_BADGE = 12
+RADIUS_BUTTON = 10
 RADIUS_BAR = 3
 
 # Font stacks. Hierarchy comes from size/weight/spacing/contrast.

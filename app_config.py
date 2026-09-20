@@ -16,14 +16,26 @@ DEFAULT_PREFERENCES = {
     "scope": "conversation",
     "token_number_format": DEFAULT_TOKEN_NUMBER_FORMAT,
     "currency": DEFAULT_CURRENCY,
+    "always_on_top": True,
+    "panel_pinned": False,
 }
 
 
 def normalize_preferences(data):
     """Merge safe defaults while retaining every existing preference."""
-    preferences = dict(data) if isinstance(data, dict) else {}
+    raw = data if isinstance(data, dict) else {}
+    preferences = dict(raw)
     for key, value in DEFAULT_PREFERENCES.items():
         preferences.setdefault(key, value)
+    # One-time migration: the V1.1 `topmost` pin-double-duty becomes the
+    # explicit always-on-top preference. An explicit new value always wins;
+    # the legacy key itself stays untouched in the file.
+    if "always_on_top" not in raw and "topmost" in raw:
+        preferences["always_on_top"] = bool(raw["topmost"])
+    if not isinstance(preferences.get("always_on_top"), bool):
+        preferences["always_on_top"] = True
+    if not isinstance(preferences.get("panel_pinned"), bool):
+        preferences["panel_pinned"] = False
     schema = preferences.get("settings_schema_version")
     if isinstance(schema, bool) or not isinstance(schema, int) or schema < 1:
         preferences["settings_schema_version"] = SETTINGS_SCHEMA_VERSION

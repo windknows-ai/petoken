@@ -178,7 +178,7 @@ class RedesignTests(unittest.TestCase):
             self.app.processEvents()
 
     def test_resize_stays_within_minimums_and_persists(self):
-        self.assertEqual((self.panel.minimumWidth(), self.panel.minimumHeight()), (300, 380))
+        self.assertEqual((self.panel.minimumWidth(), self.panel.minimumHeight()), (360, 400))
         self.panel.show()
         self.app.processEvents()
         self.panel.resize(400, 700)

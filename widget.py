@@ -14,7 +14,7 @@ from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRectF, QLockFil
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QHBoxLayout, QGridLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
-    QFormLayout, QComboBox, QDialogButtonBox, QScrollArea)
+    QFormLayout, QComboBox, QCheckBox, QDialogButtonBox, QScrollArea)
 
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import CodexStore, quota_window, sample_age
@@ -32,16 +32,16 @@ INK, MUTED, ICE, VIOLET, BG = theme.INK, theme.MUTED, theme.ICE, theme.VIOLET, t
 PREF_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home()/'.local/share')))/'CodexWisp'
 STYLE = f'''
 QWidget {{ color:{theme.INK}; font-family:{theme.FONT_UI}; font-size:12px; }}
-QWidget#surface {{ background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 {theme.SURFACE_TOP},stop:.5 {theme.BG},stop:1 {theme.SURFACE_BOTTOM}); border:1px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
+QWidget#surface {{ background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 {theme.SURFACE_TOP},stop:1 {theme.SURFACE_BOTTOM}); border:1px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
 QLabel {{ background:transparent; border:none; }}
 QLabel#muted {{ color:{theme.MUTED}; font-size:11px; }}
 QLabel#brand {{ color:{theme.INK}; font-size:14px; font-weight:600; letter-spacing:2px; }}
-QLabel#number {{ font-family:{theme.FONT_NUM}; font-size:28px; font-weight:600; }}
+QLabel#number {{ font-family:{theme.FONT_NUM}; font-size:30px; font-weight:600; }}
 QLabel#smallnumber {{ font-family:{theme.FONT_NUM}; font-size:16px; }}
 QLabel#cost {{ color:{theme.ICE}; font-family:{theme.FONT_NUM}; font-size:22px; font-weight:600; }}
-QLabel#badge {{ color:{theme.VIOLET}; background:{theme.BADGE_BG}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_BADGE}px; padding:4px 8px; font-size:11px; }}
+QLabel#badge {{ color:{theme.VIOLET}; background:{theme.BADGE_BG}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_BADGE}px; padding:4px 10px; font-size:11px; }}
 QFrame#card {{ background:{theme.CARD}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_CARD}px; }}
-QPushButton {{ background:transparent; border:1px solid transparent; border-radius:{theme.RADIUS_BUTTON}px; padding:5px 8px; min-height:22px; }}
+QPushButton {{ background:transparent; border:1px solid transparent; border-radius:{theme.RADIUS_BUTTON}px; padding:5px 8px; min-height:24px; }}
 QPushButton:hover {{ background:{theme.HOVER_BG}; border-color:{theme.HOVER_BORDER}; }}
 QPushButton:focus {{ border-color:{theme.ICE}; }}
 QPushButton:checked {{ background:{theme.CHECKED_BG}; color:{theme.ICE}; border-color:#515777; }}
@@ -49,14 +49,17 @@ QFrame#divider {{ background:{theme.DIVIDER}; max-height:1px; border:0; }}
 QProgressBar {{ background:{theme.TRACK}; border:0; border-radius:{theme.RADIUS_BAR}px; min-height:5px; max-height:5px; }}
 QProgressBar::chunk {{ background:{theme.ICE}; border-radius:{theme.RADIUS_BAR}px; }}
 QMenu {{ background:{theme.MENU_BG}; border:1px solid #515777; padding:6px; }}
-QMenu::item {{ padding:9px 18px; border-radius:6px; }}
+QMenu::item {{ padding:9px 18px; border-radius:8px; }}
 QMenu::item:selected {{ background:{theme.MENU_SELECTED}; }}
 QToolTip {{ background:{theme.TOOLTIP_BG}; color:{theme.INK}; border:1px solid {theme.TOOLTIP_BORDER}; padding:7px; }}
 QDialog {{ background:{theme.BG}; }}
-QComboBox {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:6px; padding:6px; min-height:24px; }}
+QComboBox {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:6px; min-height:24px; }}
 QComboBox:focus {{ border-color:{theme.ICE}; }}
 QComboBox QAbstractItemView {{ background:{theme.CONTROL_BG}; selection-background-color:#4B527A; }}
 QScrollArea {{ border:0; background:transparent; }}
+QCheckBox {{ spacing:8px; }}
+QCheckBox::indicator {{ width:16px; height:16px; border:1px solid {theme.BORDER_CONTROL}; border-radius:5px; background:{theme.CONTROL_BG}; }}
+QCheckBox::indicator:checked {{ background:{theme.ICE}; border-color:{theme.ICE}; }}
 '''
 
 
@@ -76,9 +79,9 @@ def button(text, tip, slot):
     return w
 
 
-PANEL_MIN = (300, 380)
-PANEL_MAX = (480, 800)
-PANEL_DEFAULT = (340, 640)
+PANEL_MIN = (360, 400)
+PANEL_MAX = (560, 760)
+PANEL_DEFAULT = (420, 600)
 
 
 def valid_panel_size(value):
@@ -171,7 +174,7 @@ class Meter(QWidget):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setSpacing(8)
         row = QHBoxLayout()
         self.title = label(title)
         row.addWidget(self.title)
@@ -252,6 +255,10 @@ class Settings(QDialog):
             normalize_currency(panel.prefs.get('currency'))))
         self.currency_label = label()
         self.form.addRow(self.currency_label, self.currency)
+        self.topmost = QCheckBox()
+        self.topmost.setChecked(bool(panel.prefs.get('always_on_top', True)))
+        self.topmost_label = label()
+        self.form.addRow(self.topmost_label, self.topmost)
         layout.addLayout(self.form)
         self.note = label('', 'muted')
         self.note.setWordWrap(True)
@@ -291,6 +298,9 @@ class Settings(QDialog):
         self.currency_label.setText(t('currency'))
         for index, code in enumerate(SUPPORTED_CURRENCIES):
             self.currency.setItemText(index, code)
+        self.topmost_label.setText(t('always_on_top'))
+        self.topmost.setToolTip(t('always_on_top'))
+        self.topmost.setAccessibleName(t('always_on_top'))
         self.note.setText(t('settings_note'))
         self.buttons.button(QDialogButtonBox.Save).setText(t('save'))
         self.buttons.button(QDialogButtonBox.Cancel).setText(t('cancel'))
@@ -312,6 +322,7 @@ class Settings(QDialog):
         self.token_format.setCurrentIndex(
             self.token_format.findData(DEFAULT_TOKEN_NUMBER_FORMAT))
         self.currency.setCurrentIndex(self.currency.findData(DEFAULT_CURRENCY))
+        self.topmost.setChecked(True)
         self.apply_language()
 
     def save(self):
@@ -320,7 +331,8 @@ class Settings(QDialog):
         prefs.update(pinned=self.task.currentData(), scope=self.scope.currentData(),
                      language=normalize_language(self.language.currentData()),
                      token_number_format=self.token_format.currentData(),
-                     currency=self.currency.currentData())
+                     currency=self.currency.currentData(),
+                     always_on_top=self.topmost.isChecked())
         # Legacy `manual_fx` / `prices` keys stay untouched in the file for
         # backward-compatible loading, but no longer drive pricing or FX.
         try:
@@ -361,18 +373,18 @@ class Panel(QWidget):
         self.setMaximumSize(480, 800)
         self.setStyleSheet(STYLE)
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(6, 6, 6, 6)
+        outer.setContentsMargins(8, 8, 8, 8)
         self.surface = QWidget()
         self.surface.setObjectName('surface')
         outer.addWidget(self.surface)
         layout = QVBoxLayout(self.surface)
-        layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(10)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(12)
         self.header = QWidget()
         self.header.setCursor(Qt.SizeAllCursor)
         head = QHBoxLayout(self.header)
         head.setContentsMargins(0,0,0,0)
-        head.setSpacing(9)
+        head.setSpacing(12)
         self.spirit = Spirit()
         head.addWidget(self.spirit)
         brand = QVBoxLayout()
@@ -401,7 +413,7 @@ class Panel(QWidget):
         self.body.setStyleSheet(f'background:{BG};')
         body = QVBoxLayout(self.body)
         body.setContentsMargins(0,0,0,0)
-        body.setSpacing(10)
+        body.setSpacing(12)
         model_row = QHBoxLayout()
         self.model = label('—')
         self.model.setStyleSheet(f'color:{ICE}; font-size:13px;')
@@ -413,8 +425,8 @@ class Panel(QWidget):
         token_card = QFrame()
         token_card.setObjectName('card')
         token_box = QVBoxLayout(token_card)
-        token_box.setContentsMargins(12, 10, 12, 10)
-        token_box.setSpacing(6)
+        token_box.setContentsMargins(16, 14, 16, 14)
+        token_box.setSpacing(8)
         token_header = QHBoxLayout()
         self.total_header = label('', 'muted')
         token_header.addWidget(self.total_header)
@@ -446,8 +458,8 @@ class Panel(QWidget):
         quota_card = QFrame()
         quota_card.setObjectName('card')
         quota_box = QVBoxLayout(quota_card)
-        quota_box.setContentsMargins(12, 10, 12, 10)
-        quota_box.setSpacing(10)
+        quota_box.setContentsMargins(16, 14, 16, 14)
+        quota_box.setSpacing(12)
         self.context = Meter('', VIOLET)
         self.five = Meter('', ICE)
         self.week = Meter('', VIOLET)
@@ -473,9 +485,9 @@ class Panel(QWidget):
         cost_left.addWidget(self.cost)
         cost_row.addLayout(cost_left)
         cost_row.addStretch()
-        self.pin = button('◇', '', self.toggle_top)
+        self.pin = button('◇', '', self.toggle_pin)
         self.pin.setCheckable(True)
-        self.pin.setChecked(self.prefs.get('topmost', True))
+        self.pin.setChecked(bool(self.prefs.get('panel_pinned', False)))
         self.pin.setFixedSize(34,34)
         cost_row.addWidget(self.pin)
         layout.addLayout(cost_row)
@@ -530,12 +542,16 @@ class Panel(QWidget):
         self.apply_language()
         self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
         self.apply_compact()
-        if not self.pin.isChecked():
-            self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+        self.apply_topmost()
         if isinstance(self.prefs.get('position'), list) and len(self.prefs['position']) == 2:
             self.move_clamped(QPoint(*map(int,self.prefs['position'])))
         else:
             self.reset_position()
+        if self.is_pinned():
+            # A pinned panel is persistent: restore it visible across restarts
+            # instead of waiting for the next hover.
+            self.show()
+            self.raise_()
         self.active = ActiveTask()
         self.rates = RateLimits(self.bridge.limits.emit)
         from activity import ActivityMonitor
@@ -589,8 +605,7 @@ class Panel(QWidget):
         self.five.set_title(t('five_hour_limit'))
         self.week.set_title(t('weekly_limit'))
         self.cost_label.setText(t('estimated_cost')+f" · {normalize_currency(self.prefs.get('currency'))}")
-        self.pin.setToolTip(t('pin_toggle'))
-        self.pin.setAccessibleName(t('pin_toggle'))
+        self.update_pin_button()
         self.status.setText(t('checking_wait'))
         self.settings_button.setToolTip(t('settings_help'))
         self.settings_button.setAccessibleName(t('settings_help'))
@@ -789,14 +804,38 @@ class Panel(QWidget):
         if hasattr(self,'pet'):
             self.pet.hide() if self.pet.isVisible() else self.pet.show()
 
-    def toggle_top(self):
-        self.prefs['topmost'] = self.pin.isChecked()
-        self.setWindowFlag(Qt.WindowStaysOnTopHint, self.pin.isChecked())
-        self.show()
-        if hasattr(self,'pet'):
-            visible=self.pet.isVisible()
-            self.pet.setWindowFlag(Qt.WindowStaysOnTopHint,self.pin.isChecked())
-            if visible:self.pet.show()
+    def is_pinned(self):
+        """Whether the expanded panel stays open independent of hover."""
+        return bool(self.prefs.get('panel_pinned', False))
+
+    def update_pin_button(self):
+        pinned = self.is_pinned()
+        self.pin.setChecked(pinned)
+        self.pin.setText('◆' if pinned else '◇')
+        tip = self.tr_text('panel_unpin' if pinned else 'panel_pin')
+        self.pin.setToolTip(tip)
+        self.pin.setAccessibleName(tip)
+
+    def toggle_pin(self):
+        self.prefs['panel_pinned'] = not self.is_pinned()
+        self.update_pin_button()
+        self.persist()
+
+    def apply_topmost(self):
+        """Apply the persistent always-on-top preference to panel and pet."""
+        on_top = bool(self.prefs.get('always_on_top', True))
+        self.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
+        if self.isVisible():
+            self.show()
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            pet.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
+            if pet.isVisible():
+                pet.show()
+
+    def set_always_on_top(self, enabled):
+        self.prefs['always_on_top'] = bool(enabled)
+        self.apply_topmost()
         self.persist()
 
     def apply_compact(self):

@@ -1,18 +1,62 @@
 # Handoff
 
-Concise agent-to-agent recovery snapshot. This is NOT a substitute for `PROGRESS.md`, `CHANGELOG.md`, `AGENTS.md`, or the external version specifications.
+Concise current execution/review snapshot. This is NOT a substitute for `PROGRESS.md`, `CHANGELOG.md`, `AGENTS.md`, or the external version specifications.
 
-## Current Version
+## Current Implementer
 
-`V1.0.0` (released, verified baseline of `petoken`, formerly Codex Wisp)
+`OpenCode`
+
+OpenCode is the primary implementation agent. It implements only explicitly approved slices, validates them, updates project-state documentation, and stops for review.
+
+## Review / Planning Agent
+
+`Codex / Astra-6`
+
+Astra-6 is the primary reviewer, technical lead, acceptance reviewer, and roadmap planner. Its default role is read/review/plan rather than implementation.
+
+## Current Released Version
+
+`V1.0.0` (published verified baseline of `petoken`, formerly Codex Wisp)
 
 ## Current Target Version
 
-`V1.1.0` (UI and interaction refinement — COMPLETE and verified with final artwork; completion committed locally; not pushed, not published)
+`V1.1.0` (implementation COMPLETE locally and verified with final artwork; completion committed locally; not pushed, not published)
 
-## Current Stage
+## Current Approved Slice
 
-OpenCode is the active continuation agent (Codex at usage limit). V1.1.0 is COMPLETE: final chibi artwork integrated, acceptance rechecked to PASS, APP_VERSION `1.1.0`, completion commit created locally. NOT pushed, no Release, no binaries published — publication awaits explicit authorization. Visual references are resolved by `04_Visual_Reference_Specification.md`.
+`V1.1 polish slice (user-authorized UI / usability corrections)`
+
+Wider panel proportions, rendering crispness, cute companion redesign, user-facing always-on-top, and pinned/persistent panel — on top of the completed V1.1.0, without starting V1.2.0 and without discarding V1.1.0 functionality. OpenCode must not begin any further slice without explicit approval.
+
+## Implementation Status
+
+`COMPLETED — AWAITING REVIEW / PUBLICATION DECISION`
+
+The polish slice is implemented, verified (184 tests, isolated live smoke, 100%/200% screenshot matrix inspected), and committed locally as one checkpoint. V1.1.0 implementation remains complete. No push, GitHub Release, or binary publication has been authorized.
+
+## Last Review Verdict
+
+`Awaiting Codex / Astra-6 review under the new reviewer/planner role`
+
+The prior OpenCode acceptance checks passed, but future roadmap/next-slice decisions belong to Astra-6/user review.
+
+## Required Corrections
+
+`None currently recorded — the user-reviewed UI/usability correction list became the authorized polish slice and is implemented (see Last Completed Step).`
+
+Any new correction list must come from Astra-6 review or explicit user direction.
+
+## Next Planned Slice
+
+`Not authorized yet.`
+
+Astra-6 will review the actual repository and determine the next planned slice. `ROADMAP.md` is planning context only and does not authorize implementation.
+
+## Exact Next Action
+
+- OpenCode: STOP after the authorized polish slice is committed; do not start new work independently.
+- Codex / Astra-6: when available, review the actual completed repository state (V1.1.0 + polish slice) and recommend either publication or the next approved development slice.
+- User: explicitly authorizes any push, GitHub Release, binary publication, or next-version start.
 
 ## Last Completed Step
 
@@ -68,24 +112,27 @@ OpenCode is the active continuation agent (Codex at usage limit). V1.1.0 is COMP
 - Music verification passed: 155 tests, `py_compile`, `git diff --check`, 100%/200% pill inspected, no-media smoke exits 0. Real `subtitle` field confirmed in the installed projection; no app populates it here (0 sessions), so live text is architecture-verified, not end-to-end observed.
 - Music checkpoint `2d3394f` committed locally (7 files: capability/tests/tool/docs work; message "feat: add music subtitle capability"). `AGENTS.md` excluded again, untouched.
 - Acceptance performed by OpenCode, uncommitted: full §26 matrix (see 99 notes), Reset to Defaults added (spec 01 §25 gap), 11 edge/combination tests, perf probe, privacy grep, DESIGN/README consistency touch-ups, PyInstaller build + frozen smoke, final screenshot set. Verdict NOT READY (artwork BLOCKED); APP_VERSION stays `1.0.0`.
+- V1.1 polish slice implemented and verified by OpenCode, committed locally as one checkpoint: panel bounds widened to 360×400–560×760 (default 420×600) with airier margins/spacing; theme lifted to a softer companion palette with rounder radii (surface 26, card 20, badge 12, button 10); surface gradient changed to a smooth vertical two-stop (less banding); pet painter gains TextAntialiasing and a theme-derived bubble fill; the ◇/◆ cost-row button now pins the panel open (`panel_pinned`, suppresses cursor-leave auto-hide, restores visible at startup, manual close still works); Always on Top is a persisted user setting (Settings checkbox + pet context-menu toggle, default on, one-time legacy `topmost` migration) applied to pet and panel via `apply_topmost`; new `always_on_top`/`panel_pin`/`panel_unpin` strings in zh_CN/en (`pin_toggle` retired). 14 new tests in `tests/test_panel_persist.py`; legitimate expectation updates in responsive/redesign/UI tests. 184 tests pass; isolated live smoke exits 0 at the new default size; 100%/200% screenshot matrix (`.private/polish-slice/`) inspected.
 
 ## Current Work / Partial Work
 
-None in progress. No code work remains. Do not start V1.2.0. Do not publish without explicit authorization.
+No implementation slice is currently authorized. The V1.1 polish slice is complete locally and awaits Astra-6 review/planning and/or explicit user publication authorization.
+
+OpenCode must not start V1.2.0 or any new feature slice until Astra-6/user approval.
 
 ## Important Decisions
 
 - Canonical project name: `petoken`. Canonical repository: `windknows-ai/petoken`.
 - Preserve persisted settings directory `.../LocalAppData/CodexWisp` and module/class/internal identifiers; rename only user-facing branding.
 - Preserve historical `Codex Wisp` references in V1.0.0 release documentation and commits.
-- Version stays `V1.0.0`; do not increment during this cleanup.
+- GitHub's currently published release remains V1.0.0 until the user authorizes publication. Local V1.1.0 implementation is complete and `APP_VERSION` is `1.1.0`.
 
 ## Current Git State
 
-- Branch: `main`, HEAD is the local V1.1.0 completion commit (see below); nothing was pushed.
-- The completion commit includes: final art integration (7 PNGs), acceptance slice, APP_VERSION 1.1.0, and all V1.1.0 docs. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
-- Verification: 170 tests pass, `py_compile` pass, `git diff --check` pass, PyInstaller build + frozen smoke exit 0, final screenshot set inspected, privacy review clean.
-- External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` is updated outside this Git repository.
+- Branch: `main`, HEAD is the local polish-slice checkpoint on top of the V1.1.0 completion commit; nothing was pushed.
+- The polish checkpoint includes: wider panel bounds, companion redesign, crispness improvements, always-on-top setting, pinned/persistent panel, 14 new tests, updated bound/checkbox expectations, and PROGRESS/HANDOFF updates. `AGENTS.md` remains worktree-modified (excluded from every checkpoint).
+- Verification: 184 tests pass, `py_compile` pass, `git diff --check` pass, isolated live smoke exit 0, 100%/200% screenshot matrix inspected.
+- External `D:\Desktop\petoken\V1.1.0\99_Implementation_Notes.md` has a polish-slice entry outside this Git repository.
 
 ## Known Issues / Blockers
 
@@ -98,10 +145,15 @@ None in progress. No code work remains. Do not start V1.2.0. Do not publish with
 
 ## Exact Next Step
 
-1. Await explicit publication authorization (push + GitHub Release + binaries) if the user wants V1.1.0 published.
-2. Do not combine anything with V1.2.0.
-3. V1.1.0 acceptance criteria are verified; the release decision belongs to the user.
+1. Codex / Astra-6 reviews the completed V1.1.0 repository state when available and determines the next approved action.
+2. If the user wants V1.1.0 published, publication still requires explicit user authorization for push + GitHub Release + binaries.
+3. OpenCode must not start V1.2.0 or another slice on its own.
+4. Any future implementation task must be an explicitly approved slice.
 
-## Last Agent
+## Last Implementation Agent
 
-OpenCode (active continuation agent; Codex at usage limit).
+OpenCode.
+
+## Review / Planning Agent
+
+Codex / Astra-6.

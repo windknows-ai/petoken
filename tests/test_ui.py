@@ -236,7 +236,10 @@ class UiTests(unittest.TestCase):
                          ['USD','CAD','EUR','CNY'])
         self.assertEqual(settings.currency_label.text(),'Currency')
         self.assertEqual(settings.findChildren(QDoubleSpinBox),[])
-        self.assertEqual(settings.findChildren(QCheckBox),[])
+        boxes=settings.findChildren(QCheckBox)
+        self.assertEqual(len(boxes),1)
+        self.assertIs(boxes[0],settings.topmost)
+        self.assertEqual(settings.topmost_label.text(),'Always on Top')
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
         with patch('widget.write_preferences') as write:
             settings.save()
@@ -397,6 +400,7 @@ class UiTests(unittest.TestCase):
         settings.scope.setCurrentIndex(settings.scope.findData('global'))
         settings.token_format.setCurrentIndex(settings.token_format.findData('full'))
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
+        settings.topmost.setChecked(False)
         self.assertEqual(settings.reset_button.text(),'Reset to Defaults')
         settings.reset_button.click()
         self.assertEqual(settings.reset_button.text(),'Click again to confirm reset')
@@ -406,12 +410,13 @@ class UiTests(unittest.TestCase):
         self.assertEqual(settings.language.currentData(),'zh_CN')
         self.assertEqual(settings.token_format.currentData(),'compact')
         self.assertEqual(settings.currency.currentData(),'CAD')
+        self.assertTrue(settings.topmost.isChecked())
         self.assertEqual(settings.windowTitle(),'petoken · 设置')
         with patch('widget.write_preferences') as write:
             settings.save()
         saved=write.call_args.args[0]
         self.assertEqual((saved['scope'],saved['language'],saved['token_number_format'],
-                          saved['currency']),('conversation','zh_CN','compact','CAD'))
+                          saved['currency'],saved['always_on_top']),('conversation','zh_CN','compact','CAD',True))
         settings.deleteLater()
 
     def test_final_art_states_share_geometry_and_taps_differ(self):
