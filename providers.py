@@ -92,6 +92,41 @@ def is_supported(provider_id, capability):
         return False
 
 
+def active_task(provider_id, task_key, *, working=True,
+                activity_valid=True, activity_at=None, display=None,
+                presentation=None):
+    """One verified working-task entry for Multi-Task enumeration.
+
+    Plain data, no behavior: task_key is the stable provider-scoped
+    internal key (never UI display text by itself); display carries
+    privacy-safe identity metadata; presentation carries
+    provider-local task data (or None fields, never borrowed values).
+    Unknown stays unknown: activity_at may be None.
+    """
+    return dict(provider_id=provider_id, task_key=task_key,
+                working=bool(working),
+                activity_valid=bool(activity_valid),
+                activity_at=activity_at, display=dict(display or {}),
+                presentation=presentation)
+
+
+def active_task_set(provider_id, tasks=(), *, revision=None,
+                    observed_at=None, valid=False, source_available=False,
+                    reason=''):
+    """One provider's coherent verified working-task set.
+
+    Replaced atomically per provider: a newer accepted revision
+    supersedes the whole set, and a late older revision must never
+    restore retired tasks. valid/source_available describe whether
+    this set may prove current work; freshness is evaluated by the
+    consumer from observed_at.
+    """
+    return dict(provider_id=provider_id, tasks=tuple(tasks or ()),
+                provider_revision=revision, observed_at=observed_at,
+                valid=bool(valid),
+                source_available=bool(source_available), reason=reason)
+
+
 class CodexProvider:
     """Thin tagging wrapper around an existing CodexStore. No reshaping."""
 

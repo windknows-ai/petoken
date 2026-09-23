@@ -781,10 +781,10 @@ class ActiveSessionPollerTests(unittest.TestCase):
             poller.poll(prefs, now=NOW_S)
             self.assertTrue(poller.drain(timeout=10),
                             'exhaustion read did not finish')
-            # Exactly one snapshot ran: six generation reads, nothing
-            # cached from the exhausted projection.
-            self.assertEqual(len(calls), 6)
-            self.assertIsNone(adapter._activity_probe)
+            # One selection snapshot (six straddled generation reads,
+            # exhausted to unknown, nothing cached) plus one set-path
+            # snapshot (two stable reads serving the active-task set).
+            self.assertEqual(len(calls), 8)
             out = poller.poll(prefs, now=NOW_S)
         finally:
             del adapter._dv_current
@@ -909,6 +909,592 @@ class ActiveSessionPollerTests(unittest.TestCase):
         self.assertEqual(back['result']['tokens']['total'], 5300)
         self.assertEqual(back['result']['session_id'],
                          'opencode:ses_work')
+
+
+class CodexEnumerationTests(unittest.TestCase):
+    """Slice B: focus-independent verified-lifecycle Codex enumeration.
+
+    The enumeration takes rows only — no title/foreground/UIA input
+    exists — while the legacy detector keeps its foreground behavior
+    untouched beside it."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.home = Path(self.temp.name) / 'codex'
+        self.home.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def _rows(self):
+        import sqlite3
+        from contextlib import closing
+        with closing(sqlite3.connect(self.home / 'state_1.sqlite')) as db:
+            db.row_factory = sqlite3.Row
+            return [dict(r) for r in db.execute('select * from threads')]
+
+    def _append_event(self, thread, kind):
+        import json
+        line = json.dumps(dict(
+            type='event_msg',
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            payload=dict(type=kind))) + '\n'
+        with open(self.home / f'{thread}.jsonl', 'a',
+                   encoding='utf-8') as fh:
+            fh.write(line)
+
+    def test_working_task_enumerated_without_foreground(self):
+        write_home(str(self.home), [{'id': 't1', 'working': True}])
+        store = CodexStore(self.home)
+        found = store.activity.enumerate_working_tasks(self._rows())
+        self.assertEqual([item['thread'] for item in found], ['t1'])
+        self.assertIsNotNone(found[0]['activity_at'])
+
+    def test_foreground_elsewhere_leaves_membership_unchanged(self):
+        write_home(str(self.home), [{'id': 't1', 'working': True},
+                                    {'id': 't2', 'working': True}])
+        store = CodexStore(self.home)
+        rows = self._rows()
+        # Legacy primary selection follows the foreground title when
+        # it matches (isolated detectors so debounce cannot leak
+        # across the two probes), but the enumerated set cannot move
+        # with it.
+        legacy_match = CodexStore(self.home).activity.detect(
+            rows, 't1', True)['thread']
+        legacy_other = CodexStore(self.home).activity.detect(
+            rows, 'no-such-window', True)['thread']
+        first = store.activity.enumerate_working_tasks(rows)
+        second = store.activity.enumerate_working_tasks(rows)
+        self.assertEqual(legacy_match, 't1')
+        self.assertEqual(legacy_other, 't2')
+        self.assertEqual([item['thread'] for item in first],
+                         [item['thread'] for item in second])
+        self.assertEqual([item['thread'] for item in first],
+                         ['t1', 't2'])
+
+    def test_recent_token_without_lifecycle_is_excluded(self):
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_event('t1', 'token_count')
+        store = CodexStore(self.home)
+        rows = self._rows()
+        self.assertEqual(store.activity.enumerate_working_tasks(rows),
+                         [])
+        # Legacy fallback still sees the fresh token for primary
+        # context (backward compatibility, not membership).
+        legacy = store.activity.detect(rows, 't1', True)
+        self.assertTrue(legacy['active'])
+        self.assertEqual(legacy['reason'], 'recent_token_legacy')
+
+    def test_two_working_tasks_both_included(self):
+        write_home(str(self.home), [{'id': 't1', 'working': True},
+                                    {'id': 't2', 'working': True}])
+        store = CodexStore(self.home)
+        found = store.activity.enumerate_working_tasks(self._rows())
+        self.assertEqual(sorted(item['thread'] for item in found),
+                         ['t1', 't2'])
+
+    def test_completion_removes_only_that_task(self):
+        write_home(str(self.home), [{'id': 't1', 'working': True},
+                                    {'id': 't2', 'working': True}])
+        store = CodexStore(self.home)
+        before = store.activity.enumerate_working_tasks(self._rows())
+        self.assertEqual(sorted(item['thread'] for item in before),
+                         ['t1', 't2'])
+        self._append_event('t1', 'task_complete')
+        after = store.activity.enumerate_working_tasks(self._rows())
+        self.assertEqual([item['thread'] for item in after], ['t2'])
+
+    def test_stale_and_missing_files_excluded(self):
+        import os
+        import time
+        write_home(str(self.home), [{'id': 't1', 'working': True}])
+        path = self.home / 't1.jsonl'
+        old = time.time() - 400
+        os.utime(path, (old, old))
+        store = CodexStore(self.home)
+        rows = [dict(id='t1', rollout_path=str(path)),
+                dict(id='ghost', rollout_path=str(path) + '.missing')]
+        self.assertEqual(store.activity.enumerate_working_tasks(rows),
+                         [])
+
+    def test_sensitive_thread_title_never_in_task_surface(self):
+        import json
+        import sqlite3
+        from contextlib import closing
+        write_home(str(self.home), [{'id': 't1', 'working': True}])
+        secret = 'PRIVATE USER PROMPT TITLE'
+        with closing(sqlite3.connect(self.home / 'state_1.sqlite')) as db:
+            db.execute('UPDATE threads SET name=?, title=? WHERE id=?',
+                       (secret, secret, 't1'))
+            db.commit()
+        store = CodexStore(self.home)
+        rows = self._rows()
+        found = store.activity.enumerate_working_tasks(rows)
+        self.assertEqual([item['thread'] for item in found], ['t1'])
+        read = store.read(active_title='nope', scope='global',
+                          activity_detection_valid=True)
+        tasks = read.get('active_tasks') or []
+        self.assertEqual(len(tasks), 1)
+        blob = json.dumps(tasks)
+        self.assertNotIn(secret, blob)
+        self.assertNotIn('t1.jsonl', blob)
+        # Safe task-local metrics still work on the same task.
+        task = tasks[0]
+        self.assertTrue(task['working'])
+        self.assertIn('tokens', task['presentation'])
+        self.assertNotIn('title', task['display'])
+        self.assertNotIn('name', task['display'])
+        self.assertIsNone(task['display'].get('project'))
+        # Legacy working_context path is unchanged by this fix: it
+        # keeps its approved title behavior (documented, not new).
+        self.assertEqual(read['working_context']['title'], secret)
+
+
+class ActiveTaskPollerTests(unittest.TestCase):
+    """Slice B: headless active-task sets through real polls —
+    enumeration, revision/provenance, atomic merge, races, failure
+    isolation, and Auto/manual filtering. Synthetic stores only."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self._pollers = []
+        self._counter = 0
+
+    def tearDown(self):
+        for poller in self._pollers:
+            poller.drain(timeout=10)
+            poller.close()
+        self.temp.cleanup()
+
+    def _codex_home(self, name, threads):
+        home = Path(self.temp.name) / name
+        home.mkdir(exist_ok=True)
+        write_home(str(home), threads)
+        return home
+
+    def _db(self, name, sessions, messages=(), parts=()):
+        path = Path(self.temp.name) / name
+        write_store(path, sessions, messages, parts)
+        return path
+
+    def _poller(self, home, db):
+        poller = ProviderPoller(CodexStore(home), db)
+        self._pollers.append(poller)
+        return poller
+
+    def _sync_poll(self, poller, prefs=None, **kw):
+        out = poller.poll(prefs, **kw)
+        self.assertTrue(poller.drain(), 'provider reads did not finish')
+        out = poller.poll(prefs, **kw)
+        self.assertTrue(poller.drain(), 'provider reads did not finish')
+        return poller.poll(prefs, **kw)
+
+    def _wall_ms(self):
+        import time
+        return int(time.time() * 1000)
+
+    def _keys(self, out):
+        return [t['task_key'] for t in out.get('active_tasks') or []]
+
+    def test_codex_completion_removes_only_that_task(self):
+        home = self._codex_home('codex-a',
+                                [{'id': 't1', 'working': True},
+                                 {'id': 't2', 'working': True}])
+        db = self._db('open-a.db', [make_session('ses_idle')])
+        poller = self._poller(home, db)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(out)), ['t1', 't2'])
+        import json
+        from datetime import datetime, timezone
+        line = json.dumps(dict(
+            type='event_msg',
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            payload=dict(type='task_complete'))) + '\n'
+        with open(home / 't1.jsonl', 'a', encoding='utf-8') as fh:
+            fh.write(line)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(self._keys(out), ['t2'])
+
+    def test_opencode_completion_removes_only_that_task(self):
+        now_ms = self._wall_ms()
+        db = self._db(
+            'open-b.db',
+            [make_session('s1', version='1.18.31',
+                          tokens=(10, 1, 1, 1, 0), updated=now_ms),
+             make_session('s2', version='1.18.31',
+                          tokens=(20, 2, 2, 2, 0), updated=now_ms),
+             make_session('s3', version='1.18.31',
+                          tokens=(30, 3, 3, 3, 0), updated=now_ms)],
+            [make_message('m1', 's1'), make_message('m2', 's2'),
+             make_message('m3', 's3')],
+            [make_part('p1', 's1', created=now_ms - 5000),
+             make_part('p2', 's2', created=now_ms - 5000),
+             make_part('p3', 's3', created=now_ms - 5000)])
+        home = self._codex_home('codex-b', [{'id': 't1'}])
+        poller = self._poller(home, db)
+        out = self._sync_poll(poller, {'scope': 'global'},
+                              now=now_ms / 1000)
+        self.assertEqual(self._keys(out),
+                         ['opencode:s1', 'opencode:s2', 'opencode:s3'])
+        import sqlite3
+        from contextlib import closing
+        with closing(sqlite3.connect(db)) as connection:
+            connection.execute(
+                'UPDATE part SET time_created=?, time_updated=?, data=?'
+                " WHERE id='p2'",
+                (now_ms - 1000000, now_ms - 1000000,
+                 '{"type": "step-finish", "reason": "stop"}'))
+            connection.commit()
+        out = self._sync_poll(poller, {'scope': 'global'},
+                              now=now_ms / 1000)
+        self.assertEqual(self._keys(out),
+                         ['opencode:s1', 'opencode:s3'])
+
+    def test_cross_provider_updates_do_not_erase(self):
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-c',
+                                [{'id': 't1', 'working': True},
+                                 {'id': 't2', 'working': True}])
+        db = self._db(
+            'open-c.db',
+            [make_session('s1', version='1.18.31',
+                          tokens=(10, 1, 1, 1, 0), updated=now_ms),
+             make_session('s2', version='1.18.31',
+                          tokens=(20, 2, 2, 2, 0), updated=now_ms)],
+            [make_message('m1', 's1'), make_message('m2', 's2')],
+            [make_part('p1', 's1', created=now_ms - 5000),
+             make_part('p2', 's2', created=now_ms - 5000)])
+        poller = self._poller(home, db)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(out)),
+                         ['opencode:s1', 'opencode:s2', 't1', 't2'])
+        import sqlite3
+        from contextlib import closing
+        with closing(sqlite3.connect(db)) as connection:
+            connection.execute("DELETE FROM part WHERE id='p1'")
+            connection.commit()
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(out)),
+                         ['opencode:s2', 't1', 't2'])
+        import json
+        from datetime import datetime, timezone
+        line = json.dumps(dict(
+            type='event_msg',
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            payload=dict(type='task_complete'))) + '\n'
+        with open(home / 't1.jsonl', 'a', encoding='utf-8') as fh:
+            fh.write(line)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(out)),
+                         ['opencode:s2', 't2'])
+
+    def test_revision_guard_drops_older_sets(self):
+        from types import SimpleNamespace
+        from providers import active_task, active_task_set
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-d', [{'id': 't1'}])
+        db = self._db(
+            'open-d.db',
+            [make_session('s1', version='1.18.31',
+                          tokens=(10, 1, 1, 1, 0), updated=now_ms),
+             make_session('s2', version='1.18.31',
+                          tokens=(20, 2, 2, 2, 0), updated=now_ms)],
+            [make_message('m1', 's1'), make_message('m2', 's2')],
+            [make_part('p1', 's1', created=now_ms - 5000),
+             make_part('p2', 's2', created=now_ms - 5000)])
+        poller = self._poller(home, db)
+        self._sync_poll(poller, {'scope': 'global'}, now=now_ms / 1000)
+        stored = poller._active_sets['opencode']
+        self.assertEqual(
+            sorted(t['task_key'] for t in stored['tasks']),
+            ['opencode:s1', 'opencode:s2'])
+        current_rev = stored['provider_revision']
+        ghost = active_task('opencode', 'opencode:ghost')
+        # A late older revision cannot resurrect retired tasks. The
+        # store consumes worker outcomes, so the stale set travels in
+        # outcome-tuple shape like a real completion would.
+        poller._store_active_set_locked(
+            'opencode', SimpleNamespace(rid=current_rev - 1,
+                                        now=now_ms / 1000),
+            (None, None, active_task_set(
+                'opencode', [ghost], valid=True,
+                source_available=True)))
+        kept = poller._active_sets['opencode']
+        self.assertEqual(
+            sorted(t['task_key'] for t in kept['tasks']),
+            ['opencode:s1', 'opencode:s2'])
+        self.assertEqual(kept['provider_revision'], current_rev)
+        # A newer revision replaces atomically.
+        solo = active_task('opencode', 'opencode:s1')
+        poller._store_active_set_locked(
+            'opencode', SimpleNamespace(rid=current_rev + 1,
+                                        now=now_ms / 1000),
+            (None, None, active_task_set('opencode', [solo], valid=True,
+                                         source_available=True)))
+        replaced = poller._active_sets['opencode']
+        self.assertEqual([t['task_key'] for t in replaced['tasks']],
+                         ['opencode:s1'])
+
+    def test_codex_failure_retires_only_codex(self):
+        import shutil
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-e',
+                                [{'id': 't1', 'working': True}])
+        db = self._db(
+            'open-e.db',
+            [make_session('s1', version='1.18.31',
+                          tokens=(10, 1, 1, 1, 0), updated=now_ms)],
+            [make_message('m1', 's1')],
+            [make_part('p1', 's1', created=now_ms - 5000)])
+        poller = self._poller(home, db)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(out)), ['opencode:s1', 't1'])
+        # Settle workers before file surgery so no read holds the
+        # store open (deterministic on Windows).
+        self.assertTrue(poller.drain(timeout=10))
+        shutil.rmtree(home)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(self._keys(out), ['opencode:s1'])
+        codex_set = poller._active_sets['codex']
+        self.assertFalse(codex_set['valid'])
+        self.assertEqual(codex_set['tasks'], ())
+
+    def test_opencode_failure_retires_only_opencode(self):
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-f',
+                                [{'id': 't1', 'working': True}])
+        db = self._db(
+            'open-f.db',
+            [make_session('s1', version='1.18.31',
+                          tokens=(10, 1, 1, 1, 0), updated=now_ms)],
+            [make_message('m1', 's1')],
+            [make_part('p1', 's1', created=now_ms - 5000)])
+        poller = self._poller(home, db)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(out)), ['opencode:s1', 't1'])
+        # Settle workers, release the detector handle, then remove
+        # the store: deterministic file surgery on Windows.
+        self.assertTrue(poller.drain(timeout=10))
+        poller.opencode.close()
+        db.unlink()
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(self._keys(out), ['t1'])
+        opencode_set = poller._active_sets['opencode']
+        self.assertFalse(opencode_set['valid'])
+        self.assertEqual(opencode_set['tasks'], ())
+
+    def test_manual_filter_exposes_one_lane(self):
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-g',
+                                [{'id': 't1', 'working': True}])
+        db = self._db(
+            'open-g.db',
+            [make_session('s1', version='1.18.31',
+                          tokens=(10, 1, 1, 1, 0), updated=now_ms)],
+            [make_message('m1', 's1')],
+            [make_part('p1', 's1', created=now_ms - 5000)])
+        poller = self._poller(home, db)
+        auto = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(auto)),
+                         ['opencode:s1', 't1'])
+        manual_codex = self._sync_poll(
+            poller, {'scope': 'global', 'tracking_provider': 'codex'})
+        self.assertEqual(self._keys(manual_codex), ['t1'])
+        manual_open = self._sync_poll(
+            poller, {'scope': 'global', 'tracking_provider': 'opencode'},
+            now=now_ms / 1000)
+        self.assertEqual(self._keys(manual_open), ['opencode:s1'])
+
+    def test_failure_result_carries_no_stale_membership(self):
+        # Reported shape: selection not live + provider unavailable,
+        # yet active_tasks previously held ['t1']. The failure result
+        # must derive membership from the failure state: empty.
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-h',
+                                [{'id': 't1', 'working': True}])
+        db = self._db('open-h.db', [make_session('ses_idle')])
+        poller = self._poller(home, db)
+        live = self._sync_poll(
+            poller, {'scope': 'global', 'tracking_provider': 'codex'})
+        self.assertEqual(self._keys(live), ['t1'])
+        import shutil
+        self.assertTrue(poller.drain(timeout=10))
+        shutil.rmtree(home)
+        out = self._sync_poll(
+            poller, {'scope': 'global', 'tracking_provider': 'codex'})
+        self.assertFalse(out['selection']['live'])
+        self.assertFalse(out['result']['available'])
+        self.assertEqual(out.get('active_tasks'), [])
+        failed = poller._active_sets['codex']
+        self.assertFalse(failed['valid'])
+        self.assertEqual(failed['tasks'], ())
+
+    def test_shutdown_result_carries_no_membership(self):
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-i',
+                                [{'id': 't1', 'working': True}])
+        db = self._db(
+            'open-i.db',
+            [make_session('s1', version='1.18.31',
+                          tokens=(10, 1, 1, 1, 0), updated=now_ms)],
+            [make_message('m1', 's1')],
+            [make_part('p1', 's1', created=now_ms - 5000)])
+        poller = self._poller(home, db)
+        live = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(sorted(self._keys(live)),
+                         ['opencode:s1', 't1'])
+        poller.close()
+        out = poller.poll({'scope': 'global'})
+        self.assertFalse(out['result']['available'])
+        self.assertEqual(out.get('active_tasks'), [])
+        poller.close()
+        self.assertEqual(poller.poll({'scope': 'global'}).get(
+            'active_tasks'), [])
+
+    def test_late_success_after_failure_stays_retired(self):
+        # Newer failure retires A; an older success arriving late must
+        # not resurrect it. Monotonic per-lane acceptance decides.
+        from types import SimpleNamespace
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-j',
+                                [{'id': 't1', 'working': True}])
+        db = self._db('open-j.db', [make_session('ses_idle')])
+        poller = self._poller(home, db)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(self._keys(out), ['t1'])
+        stored = poller._active_sets['codex']
+        current_rev = stored['provider_revision']
+        poller._store_active_set_locked(
+            'codex', SimpleNamespace(rid=current_rev + 1,
+                                     now=now_ms / 1000), None)
+        retired = poller._active_sets['codex']
+        self.assertFalse(retired['valid'])
+        self.assertEqual(retired['tasks'], ())
+        from providers import active_task
+        ghost = dict(active_task('codex', 't1'), working=True,
+                     activity_valid=True)
+        poller._store_active_set_locked(
+            'codex', SimpleNamespace(rid=current_rev,
+                                     now=now_ms / 1000 - 1),
+            {'payload': {'active_tasks': [ghost]}})
+        still = poller._active_sets['codex']
+        self.assertFalse(still['valid'])
+        self.assertEqual(still['tasks'], ())
+        self.assertEqual(still['provider_revision'], current_rev + 1)
+
+    def test_late_failure_cannot_erase_newer_success(self):
+        # Newer success holds A; an older failure arriving late must
+        # not erase it.
+        from types import SimpleNamespace
+        now_ms = self._wall_ms()
+        home = self._codex_home('codex-k',
+                                [{'id': 't1', 'working': True}])
+        db = self._db('open-k.db', [make_session('ses_idle')])
+        poller = self._poller(home, db)
+        out = self._sync_poll(poller, {'scope': 'global'})
+        self.assertEqual(self._keys(out), ['t1'])
+        stored = poller._active_sets['codex']
+        current_rev = stored['provider_revision']
+        poller._store_active_set_locked(
+            'codex', SimpleNamespace(rid=current_rev - 1,
+                                     now=now_ms / 1000 - 1), None)
+        kept = poller._active_sets['codex']
+        self.assertTrue(kept['valid'])
+        self.assertEqual([t['task_key'] for t in kept['tasks']], ['t1'])
+        self.assertEqual(kept['provider_revision'], current_rev)
+
+
+class ActiveTaskFilterTests(unittest.TestCase):
+    """Slice B: headless Auto/manual membership over accepted sets —
+    pure function, immediate, no debounce, no focus input."""
+
+    def _sets(self):
+        from providers import active_task, active_task_set
+        codex = active_task_set(
+            'codex', [active_task('codex', 'A'),
+                      active_task('codex', 'B')],
+            revision=5, observed_at=1000.0, valid=True,
+            source_available=True)
+        opencode = active_task_set(
+            'opencode', [active_task('opencode', 'C'),
+                         active_task('opencode', 'D'),
+                         active_task('opencode', 'E')],
+            revision=7, observed_at=1000.0, valid=True,
+            source_available=True)
+        statuses = {
+            'codex': dict(provider_id='codex', source_available=True),
+            'opencode': dict(provider_id='opencode',
+                             source_available=True)}
+        return {'codex': codex, 'opencode': opencode}, statuses
+
+    def _keys(self, tasks):
+        return [t['task_key'] for t in tasks]
+
+    def test_auto_unions_both_sets(self):
+        from provider_poller import filter_active_tasks
+        sets, statuses = self._sets()
+        merged = filter_active_tasks(
+            sets, statuses, {'codex': 1000.0, 'opencode': 1000.0},
+            'auto', now=1001.0)
+        self.assertEqual(self._keys(merged), ['A', 'B', 'C', 'D', 'E'])
+
+    def test_manual_filters_one_lane(self):
+        from provider_poller import filter_active_tasks
+        sets, statuses = self._sets()
+        success = {'codex': 1000.0, 'opencode': 1000.0}
+        self.assertEqual(
+            self._keys(filter_active_tasks(
+                sets, statuses, success, 'codex', now=1001.0)),
+            ['A', 'B'])
+        self.assertEqual(
+            self._keys(filter_active_tasks(
+                sets, statuses, success, 'opencode', now=1001.0)),
+            ['C', 'D', 'E'])
+
+    def test_preference_switch_is_immediate(self):
+        from provider_poller import filter_active_tasks
+        sets, statuses = self._sets()
+        success = {'codex': 1000.0, 'opencode': 1000.0}
+        first = filter_active_tasks(sets, statuses, success, 'codex',
+                                    now=1001.0)
+        second = filter_active_tasks(sets, statuses, success, 'auto',
+                                     now=1001.0)
+        third = filter_active_tasks(sets, statuses, success, 'opencode',
+                                    now=1001.0)
+        self.assertEqual(self._keys(first), ['A', 'B'])
+        self.assertEqual(self._keys(second), ['A', 'B', 'C', 'D', 'E'])
+        self.assertEqual(self._keys(third), ['C', 'D', 'E'])
+
+    def test_unknown_preference_falls_back_to_auto(self):
+        from provider_poller import filter_active_tasks
+        sets, statuses = self._sets()
+        merged = filter_active_tasks(
+            sets, statuses, {'codex': 1000.0, 'opencode': 1000.0},
+            'claude', now=1001.0)
+        self.assertEqual(self._keys(merged), ['A', 'B', 'C', 'D', 'E'])
+
+    def test_stale_and_invalid_sets_dropped(self):
+        from provider_poller import filter_active_tasks
+        sets, statuses = self._sets()
+        merged = filter_active_tasks(
+            sets, statuses, {'codex': 1000.0, 'opencode': 990.0},
+            'auto', now=1001.0)
+        self.assertEqual(self._keys(merged), ['A', 'B'])
+        sets['codex'] = dict(sets['codex'], valid=False)
+        merged = filter_active_tasks(
+            sets, statuses, {'codex': 1000.0, 'opencode': 1000.0},
+            'auto', now=1001.0)
+        self.assertEqual(self._keys(merged), ['C', 'D', 'E'])
+
+    def test_repeated_calls_are_deterministic(self):
+        from provider_poller import filter_active_tasks
+        sets, statuses = self._sets()
+        success = {'codex': 1000.0, 'opencode': 1000.0}
+        first = filter_active_tasks(sets, statuses, success, 'auto',
+                                    now=1001.0)
+        second = filter_active_tasks(sets, statuses, success, 'auto',
+                                     now=1001.0)
+        self.assertEqual(self._keys(first), self._keys(second))
 
 
 if __name__ == '__main__':

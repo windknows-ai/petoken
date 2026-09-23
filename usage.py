@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from analytics import TOKEN_KEYS, normalize_usage, derive, aggregate, summarize
 from pricing import MODEL_PRICES as PRICES, estimate_usd
+from providers import PROVIDER_CODEX, active_task
 
 
 def quota_window(limits, minutes, now=None):
@@ -381,6 +382,48 @@ class CodexActivityDetector:
         self.pending_since = None
         return dict(active=False, valid=True, reason='no_running_session')
 
+    def enumerate_working_tasks(self, rows, now=None):
+        """Focus-independent verified-lifecycle working-thread enumeration.
+
+        Inspects every row with a readable, recently-written rollout
+        and returns verified working threads in stable order, WITHOUT
+        any title/foreground/UIA input — foreground selection can
+        never change membership. Only explicit lifecycle evidence
+        counts: a thread joins iff its parsed history ends in
+        task_started with no later authoritative task_complete. The
+        legacy recent-token fallback (UNKNOWN lifecycle) is
+        deliberately excluded here; it stays available to detect()
+        for backward-compatible primary-context behavior.
+
+        Shares _refresh parsing with detect(): both callers converge
+        on the same entry state regardless of call order, so legacy
+        detect() outcomes are unchanged by calling this first, after,
+        or not at all. Returns [{thread, activity_at}] with
+        activity_at as the lifecycle-instant epoch (or None when the
+        stored timestamp is unusable).
+        """
+        now = time.time() if now is None else now
+        found = []
+        for row in rows or []:
+            path = row.get('rollout_path')
+            if not path:
+                continue
+            try:
+                if now - Path(path).stat().st_mtime > self.STALE_SECONDS:
+                    continue
+                entry = self._refresh(path)
+            except OSError:
+                continue
+            if entry.get('working') is not True:
+                continue
+            found.append(dict(thread=row.get('id'),
+                              activity_at=self._event_time(
+                                  entry.get('lifecycle_at'))))
+        found.sort(key=lambda item: (item['activity_at'] is None,
+                                     item['activity_at'],
+                                     item['thread']))
+        return found
+
 
 class CodexStore:
     def __init__(self, home=None):
@@ -391,6 +434,41 @@ class CodexStore:
         self.analytics_cache = {}
         self.history_cache = {}
         self.activity = CodexActivityDetector()
+
+    def _task_context(self, row, item, state):
+        """Per-task presentation for one verified working thread.
+
+        Additive Multi-Task plumbing: mirrors the working_context
+        field semantics (same helpers, same fallbacks) for a single
+        enumerated thread, without touching the legacy
+        working-context path. Refreshes only this thread's session;
+        bounded by the verified-working count. The display carries
+        project metadata only: raw thread names/titles (which may
+        contain user-derived content) are deliberately omitted here
+        — Slice C owns visible neutral labels, and the legacy
+        working_context path is unchanged.
+        """
+        key = row.get('rollout_path')
+        session = self.sessions.get(key)
+        if session is None:
+            session = SessionUsage(key)
+            self.sessions[key] = session
+        session.refresh()
+        summary = summarize(unique_records([session]))
+        project, project_source, project_id = project_identity(row, state)
+        last_tokens = session.last.get('total_tokens')
+        return active_task(
+            PROVIDER_CODEX, row.get('id'), working=True,
+            activity_valid=True, activity_at=item.get('activity_at'),
+            display=dict(project=project),
+            presentation=dict(
+                tokens=summary['tokens'],
+                model=session.model or row.get('model'),
+                effort=session.effort or row.get('reasoning_effort'),
+                context=(min(100, max(0, 100 * last_tokens / session.window))
+                         if last_tokens is not None and session.window
+                         else None),
+                available=session.available))
 
     def read(self, active_title='', pinned='', scope='conversation', include_history=False,
              activity_detection_valid=False):
@@ -448,13 +526,21 @@ class CodexStore:
                          if last_tokens is not None and working_session.window else None),
                 sample=working_session.sample, selection=codex_activity.get('selection'),
                 activity_reason=codex_activity.get('reason'))
+        by_id = {row.get('id'): row for row in desktop}
+        active_tasks = []
+        for item in self.activity.enumerate_working_tasks(desktop):
+            row = by_id.get(item['thread'])
+            if row is None:
+                continue
+            active_tasks.append(self._task_context(row, item, state))
         if scope != 'global' and not chosen:
             identity = dict(scope_type=scope, unavailable=True)
             if scope == 'conversation':
                 identity['thread_id'] = pinned or None
             return dict(status='status_pinned_unavailable' if pinned else 'status_no_desktop_task',
                         rows=desktop, scope=scope, scope_identity=identity,
-                        codex_activity=codex_activity, working_context=working_context)
+                        codex_activity=codex_activity, working_context=working_context,
+                        active_tasks=active_tasks)
 
         chosen_project, chosen_project_source, chosen_project_id = (
             project_identity(chosen, state) if chosen else (None, 'unavailable', None))
@@ -468,7 +554,7 @@ class CodexStore:
                 scope_identity['unavailable'] = True
                 return dict(status='status_project_unavailable', rows=desktop, scope=scope,
                             scope_identity=scope_identity, codex_activity=codex_activity,
-                            working_context=working_context)
+                            working_context=working_context, active_tasks=active_tasks)
             relevant = [r for r in eligible if project_identity(r, state)[2] == chosen_project_id]
         else:
             relevant = [chosen]
@@ -533,7 +619,8 @@ class CodexStore:
                     session_names=names, current_session=current_summary,
                     raw_total=current.raw_total if current else {}, raw_last=current.raw_last if current else {},
                     notes=sorted(set().union(*(s.notes for s in sessions))), codex_activity=codex_activity,
-                    working_context=working_context, scope_activity=scope_activity)
+                    working_context=working_context, scope_activity=scope_activity,
+                    active_tasks=active_tasks)
 
 
 def sample_age(timestamp):

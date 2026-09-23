@@ -38,11 +38,13 @@ from concurrent.futures import CancelledError
 from opencode_provider import (OpenCodeProvider, opencode_active_display,
                                opencode_display, opencode_working_context,
                                strip_scope)
-from provider_selection import (ProviderSelection, codex_provider_status,
+from provider_selection import (FRESHNESS_S, ProviderSelection,
+                                codex_provider_status,
                                 normalize_tracking_provider,
                                 opencode_provider_status)
 from providers import (CODEX_CAPABILITIES, PROVIDER_CODEX,
-                       PROVIDER_OPENCODE, CodexProvider, base_result)
+                       PROVIDER_OPENCODE, CodexProvider, active_task_set,
+                       base_result)
 from usage import CodexStore
 
 PROVIDER_KEYS = (PROVIDER_CODEX, PROVIDER_OPENCODE)
@@ -55,6 +57,38 @@ def _normalize_scope(value):
     scope = (value or 'conversation')
     scope = {'task': 'conversation'}.get(scope, scope)
     return scope if scope in _VALID_SCOPES else 'conversation'
+
+
+def filter_active_tasks(active_sets, statuses, success_at, preference,
+                        now=None):
+    """Headless Auto/manual membership over accepted provider sets.
+
+    Pure function (no debounce, no state): Auto unions the tasks of
+    every lane whose set is valid, whose shaped status is
+    source-available, and whose last success is fresh; a manual
+    preference exposes only that lane. Switching filters over
+    already accepted sets is immediate — it never waits for
+    ProviderSelection stability, a fresh detection cycle, or new
+    reads. Unknown preference normalizes to Auto; focus/click state
+    is not an input and cannot affect membership.
+    """
+    now = time.time() if now is None else now
+    preference = normalize_tracking_provider(preference)
+    lanes = ([preference] if preference != 'auto' else list(PROVIDER_KEYS))
+    merged = []
+    for pid in lanes:
+        entry = (active_sets or {}).get(pid) or {}
+        status = (statuses or {}).get(pid) or {}
+        if not entry.get('valid', False):
+            continue
+        if not status.get('source_available', False):
+            continue
+        last = (success_at or {}).get(pid)
+        if not (isinstance(last, (int, float))
+                and now - last <= FRESHNESS_S):
+            continue
+        merged.extend(entry.get('tasks') or [])
+    return merged
 
 
 class _Tick:
@@ -230,6 +264,11 @@ class ProviderPoller:
         self._provenance = {}
         self._activity = None
         self._success_at = {}
+        # Latest accepted per-provider active-task sets: {provider_id:
+        # active-task-set dict}. Replaced atomically per lane with the
+        # accepting request's monotonic id as revision, so an older
+        # result can never overwrite a newer accepted set.
+        self._active_sets = {}
 
     # -- lifecycle ----------------------------------------------------
 
@@ -314,6 +353,15 @@ class ProviderPoller:
                     pass
             self._reads[PROVIDER_CODEX] = _codex_failed()
             self._status[PROVIDER_CODEX] = self._shape(PROVIDER_CODEX)
+            # Retire only this lane's live membership, keeping its
+            # revision so only a newer accepted Codex outcome can
+            # replace it; the OpenCode lane is untouched.
+            previous = self._active_sets.get(PROVIDER_CODEX)
+            self._active_sets[PROVIDER_CODEX] = active_task_set(
+                PROVIDER_CODEX, (),
+                revision=(previous or {}).get('provider_revision', -1),
+                observed_at=time.time(), valid=False,
+                source_available=False, reason='codex_reset_failed')
 
     def bump_generation(self):
         """Invalidate in-flight results after settings/scope changes."""
@@ -420,7 +468,11 @@ class ProviderPoller:
                         activity = ad.activity_snapshot(now=req.now)
                     except Exception:
                         activity = None
-                    return read, activity
+                    try:
+                        tasks = ad.active_tasks(now=req.now)
+                    except Exception:
+                        tasks = None
+                    return read, activity, tasks
             future = _SlotFuture(request)
             future.request = request
             self._jobs[key] = (request, reader, future)
@@ -504,6 +556,7 @@ class ProviderPoller:
                     if key == PROVIDER_OPENCODE:
                         self._activity = None
                     self._status[key] = self._shape(key)
+                    self._store_active_set_locked(key, request, None)
                     continue
                 if key == PROVIDER_CODEX:
                     self._reads[key] = outcome
@@ -511,6 +564,71 @@ class ProviderPoller:
                     self._reads[key], self._activity = outcome[0], outcome[1]
                 self._success_at[key] = request.now
                 self._status[key] = self._shape(key)
+                self._store_active_set_locked(key, request, outcome)
+
+    def _store_active_set_locked(self, key, request, outcome):
+        """Record one lane's coherent active-task set. Caller holds the
+        lock; pure dict work, no I/O.
+
+        The stamped revision is the accepting request's monotonic id,
+        so replacement is monotonic per lane: an older outcome can
+        never overwrite a newer accepted set (late results cannot
+        resurrect retired tasks). Stored validity additionally
+        requires the lane's shaped source-availability, so a set built
+        from a down source never claims to prove current work even
+        when it happens to be empty. ``outcome=None`` is an explicit
+        lane failure: the lane's live membership retires truthfully
+        to an empty invalid set while other lanes stay intact.
+        """
+        previous = self._active_sets.get(key)
+        if (previous is not None and request.rid <= previous.get(
+                'provider_revision', -1)):
+            return
+        if outcome is None:
+            entry = active_task_set(
+                key, (), revision=request.rid, observed_at=request.now,
+                valid=False, source_available=False,
+                reason='lane_failed')
+        elif key == PROVIDER_CODEX:
+            tasks = ((outcome.get('payload') or {}).get('active_tasks')
+                     if isinstance(outcome, dict) else None) or []
+            entry = active_task_set(
+                key, tasks, revision=request.rid,
+                observed_at=request.now, valid=True,
+                source_available=True)
+        else:
+            incoming = (outcome[2] if isinstance(outcome, tuple)
+                        and len(outcome) > 2 else None)
+            if not isinstance(incoming, dict):
+                incoming = active_task_set(
+                    key, (), valid=False,
+                    reason='active_tasks_unavailable')
+            entry = dict(incoming, provider_id=key,
+                         provider_revision=request.rid,
+                         observed_at=request.now)
+        lane_ok = self._status.get(key, {}).get('source_available', False)
+        entry['valid'] = bool(entry.get('valid', False) and lane_ok)
+        self._active_sets[key] = entry
+
+    def _merged_active_tasks(self, preference, now, statuses=None):
+        """Snapshot lane sets/success coherently, then filter to the
+        visible verified working tasks. No lock is held during the
+        pure filter; no I/O happens here.
+
+        Statuses default to the last accepted lane statuses, but a
+        failure path passes its temporary failure statuses instead:
+        the merged membership is then filtered against the failure
+        state being returned, never against stale previous success.
+        """
+        with self._lock:
+            sets = {key: dict(entry)
+                    for key, entry in self._active_sets.items()}
+            if statuses is None:
+                statuses = {key: dict(status)
+                            for key, status in self._status.items()}
+            success = dict(self._success_at)
+        return filter_active_tasks(sets, statuses, success, preference,
+                                   now)
 
     def _shape(self, key):
         """Shape the latest accepted read into a selection status."""
@@ -681,7 +799,9 @@ class ProviderPoller:
         return dict(generation=tick.generation, preference=tick.preference,
                     selection=snapshot, provider_id=result['provider_id'],
                     result=result, codex=codex_read,
-                    opencode=opencode_read, opencode_activity=activity)
+                    opencode=opencode_read, opencode_activity=activity,
+                    active_tasks=self._merged_active_tasks(
+                        tick.preference, tick.now))
 
     def _closed_result(self, tick=None, prefs=None):
         with self._lock:
@@ -700,10 +820,14 @@ class ProviderPoller:
                       status='no_reliable_record', available=False,
                       scope=scope, working_context=None,
                       selection=snapshot, generation=generation)
+        # A closed/shutdown poller proves no current work: its live
+        # active-task membership is empty, never previously accepted
+        # tasks. Historical analytics state elsewhere is untouched.
         return dict(generation=generation, preference=preference,
                     selection=snapshot, provider_id=result['provider_id'],
                     result=result, codex=codex_read,
-                    opencode=opencode_read, opencode_activity=activity)
+                    opencode=opencode_read, opencode_activity=activity,
+                    active_tasks=[])
 
     @staticmethod
     def _failed_status(target):
@@ -744,13 +868,20 @@ class ProviderPoller:
                 inputs, preference=preference, now=tick.now,
                 generation=tick.generation)
             result = self._publish_locked(snapshot, preference, tick.scope,
-                                          tick.pinned, tick.generation)
+                                           tick.pinned, tick.generation)
+            # Filter against the temporary failure statuses being
+            # returned — not the last successful lane statuses — so a
+            # failed lane contributes no live membership while healthy
+            # lanes keep theirs. The set means VERIFIED CURRENTLY
+            # WORKING tasks: entries are never kept with working=False.
             return dict(
                 generation=tick.generation, preference=preference,
                 selection=snapshot, provider_id=result['provider_id'],
                 result=result, codex=self._reads.get(PROVIDER_CODEX),
                 opencode=self._reads.get(PROVIDER_OPENCODE),
-                opencode_activity=self._activity)
+                opencode_activity=self._activity,
+                active_tasks=self._merged_active_tasks(
+                    preference, tick.now, statuses=inputs))
 
     def poll(self, prefs=None, active_title='', detection_valid=False,
              want_history=False, now=None):
@@ -808,7 +939,9 @@ class ProviderPoller:
                         preference=tick.preference, selection=snapshot,
                         provider_id=result['provider_id'], result=result,
                         codex=codex_read, opencode=opencode_read,
-                        opencode_activity=activity)
+                        opencode_activity=activity,
+                        active_tasks=self._merged_active_tasks(
+                            tick.preference, tick.now))
         except Exception:
             return self._coherent_failure(tick)
 
@@ -845,10 +978,12 @@ class ProviderPoller:
                 self._snapshot_statuses(), preference=preference, now=now,
                 generation=tick_generation)
             result = self._publish_locked(snapshot, preference, scope,
-                                          pinned, tick_generation)
+                                           pinned, tick_generation)
             return dict(generation=tick_generation, preference=preference,
                         selection=snapshot, provider_id=result['provider_id'],
-                        result=result)
+                        result=result,
+                        active_tasks=self._merged_active_tasks(
+                            preference, now))
 
     def _current_failure(self, preference, scope, pinned, now=None):
         """Last-resort tagged failure for the current prefs context.

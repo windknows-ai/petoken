@@ -2174,5 +2174,143 @@ class DisplayMappingTests(unittest.TestCase):
             self.assertIsNone(opencode_session_row(read, 'ghost'))
 
 
+class ActiveTaskSetTests(unittest.TestCase):
+    """Slice B: OpenCode verified working-task sets with per-session
+    provider-local projections. Synthetic stores only."""
+
+    def _store(self, directory, sessions, messages=(), parts=()):
+        # NOTE: callers must provider.close() before leaving the
+        # TemporaryDirectory block (Windows cannot delete open files;
+        # addCleanup would run too late).
+        path = write_store(Path(directory) / 'open.db', sessions,
+                           messages, parts)
+        return OpenCodeProvider(path), path
+
+    def test_three_working_sessions_yield_three_keys(self):
+        sessions = [make_session('s1', version='1.18.31',
+                                 tokens=(10, 1, 1, 1, 0),
+                                 updated=BASE_MS),
+                    make_session('s2', version='1.18.31',
+                                 tokens=(20, 2, 2, 2, 0),
+                                 updated=BASE_MS),
+                    make_session('s3', version='1.18.31',
+                                 tokens=(30, 3, 3, 3, 0),
+                                 updated=BASE_MS)]
+        messages = [make_message('m1', 's1'), make_message('m2', 's2'),
+                    make_message('m3', 's3')]
+        parts = [make_part('p1', 's1', created=BASE_MS - 100000),
+                 make_part('p2', 's2', created=BASE_MS - 100000),
+                 make_part('p3', 's3', created=BASE_MS - 100000)]
+        with tempfile.TemporaryDirectory() as directory:
+            provider, _ = self._store(directory, sessions, messages,
+                                      parts)
+            task_set = provider.active_tasks(now=NOW_S)
+            provider.close()
+        self.assertTrue(task_set['valid'])
+        self.assertEqual(task_set['provider_id'], 'opencode')
+        self.assertEqual([t['task_key'] for t in task_set['tasks']],
+                         ['opencode:s1', 'opencode:s2', 'opencode:s3'])
+        for task in task_set['tasks']:
+            self.assertTrue(task['working'])
+            self.assertTrue(task['activity_valid'])
+
+    def test_each_session_gets_own_projection(self):
+        sessions = [make_session('s1', project='proj-a',
+                                 directory='/synthetic/alpha',
+                                 version='1.18.31',
+                                 tokens=(100, 20, 5, 400, 7), cost=0.05,
+                                 updated=BASE_MS),
+                    make_session('s2', project='proj-b',
+                                 directory='/synthetic/beta',
+                                 version='1.18.31',
+                                 tokens=(7, 6, 5, 4, 3), cost=0.01,
+                                 updated=BASE_MS)]
+        with tempfile.TemporaryDirectory() as directory:
+            provider, _ = self._store(
+                directory, sessions,
+                [make_message('m1', 's1'), make_message('m2', 's2')],
+                [make_part('p1', 's1', created=BASE_MS - 100000),
+                 make_part('p2', 's2', created=BASE_MS - 100000)])
+            task_set = provider.active_tasks(now=NOW_S)
+            # Provider-global scope sums are never mislabeled as
+            # task-local: no task carries the scope aggregate.
+            scope = provider.read(scope='global')
+            provider.close()
+        by_key = {t['task_key']: t for t in task_set['tasks']}
+        self.assertEqual(set(by_key), {'opencode:s1', 'opencode:s2'})
+        # Selected-session data is never copied to siblings: each
+        # projection matches its own row exactly.
+        self.assertEqual(by_key['opencode:s1']['presentation']['tokens'],
+                         dict(input=100, output=20, reasoning=5,
+                              cache_read=400, cache_write=7, total=532))
+        self.assertEqual(by_key['opencode:s2']['presentation']['tokens'],
+                         dict(input=7, output=6, reasoning=5, cache_read=4,
+                              cache_write=3, total=25))
+        self.assertEqual(by_key['opencode:s1']['presentation']
+                         ['cost_amount'], 0.05)
+        self.assertEqual(by_key['opencode:s2']['presentation']
+                         ['cost_amount'], 0.01)
+        self.assertEqual(by_key['opencode:s1']['display']['project'],
+                         'alpha')
+        self.assertEqual(by_key['opencode:s2']['display']['project'],
+                         'beta')
+        self.assertNotEqual(
+            by_key['opencode:s1']['presentation']['tokens']['input'],
+            scope['tokens']['input'])
+
+    def test_unavailable_values_stay_unknown(self):
+        row = make_session('s1', version='1.18.31',
+                           tokens=(100, 20, 5, 400, 0), updated=BASE_MS)
+        row['tokens_cache_read'] = None
+        with tempfile.TemporaryDirectory() as directory:
+            provider, _ = self._store(
+                directory, [row], [make_message('m1', 's1')],
+                [make_part('p1', 's1', created=BASE_MS - 100000)])
+            task_set = provider.active_tasks(now=NOW_S)
+            provider.close()
+        (task,) = task_set['tasks']
+        self.assertIsNone(task['presentation']['tokens']['cache_read'])
+        self.assertIsNone(task['presentation']['tokens']['total'])
+
+    def test_unverified_version_keeps_membership_without_total(self):
+        with tempfile.TemporaryDirectory() as directory:
+            provider, _ = self._store(
+                directory,
+                [make_session('s1', version='9.9.9',
+                              tokens=(100, 20, 5, 400, 7),
+                              updated=BASE_MS)],
+                [make_message('m1', 's1')],
+                [make_part('p1', 's1', created=BASE_MS - 100000)])
+            task_set = provider.active_tasks(now=NOW_S)
+            provider.close()
+        self.assertTrue(task_set['valid'])
+        (task,) = task_set['tasks']
+        self.assertTrue(task['working'])
+        self.assertIsNone(task['presentation']['tokens']['total'])
+
+    def test_unknown_store_yields_invalid_empty_set(self):
+        with tempfile.TemporaryDirectory() as directory:
+            provider = OpenCodeProvider(Path(directory) / 'absent.db')
+            try:
+                task_set = provider.active_tasks(now=NOW_S)
+            finally:
+                provider.close()
+        self.assertFalse(task_set['valid'])
+        self.assertEqual(task_set['tasks'], ())
+        self.assertEqual(task_set['provider_id'], 'opencode')
+
+    def test_unchanged_store_reuses_without_rescan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            provider, _ = self._store(
+                directory, [make_session('s1', updated=BASE_MS)], (),
+                [make_part('p1', 's1', created=BASE_MS - 100000)])
+            first = provider.active_tasks(now=NOW_S)
+            second = provider.active_tasks(now=NOW_S)
+            self.assertEqual(provider.activity_scans, 1)
+            provider.close()
+        self.assertEqual([t['task_key'] for t in first['tasks']],
+                         [t['task_key'] for t in second['tasks']])
+
+
 if __name__ == '__main__':
     unittest.main()

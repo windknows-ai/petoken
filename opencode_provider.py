@@ -59,7 +59,8 @@ from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 
-from providers import PROVIDER_OPENCODE, base_result
+from providers import (PROVIDER_OPENCODE, active_task, active_task_set,
+                       base_result)
 
 PROVIDER_ID = PROVIDER_OPENCODE
 
@@ -1184,6 +1185,54 @@ class OpenCodeProvider:
             outcome['primary_session_id'] = scoped_session_id(best[1])
         return outcome
 
+    def active_tasks(self, now=None):
+        """Coherent verified working-task set for Multi-Task panels.
+
+        Runs one activity snapshot and projects each working entry's
+        own session row (tokens, recorded total, cost, model, version)
+        from the freshly refreshed cache — no extra store I/O beyond
+        the snapshot itself. Entries with UNKNOWN/invalid snapshots
+        yield an empty invalid set (never verified working). Session
+        rows stay sanitized metadata; titles/paths/content are never
+        projected. A task key is the scoped session id; display
+        carries only the directory basename (or nothing).
+        """
+        snapshot = self.activity_snapshot(now=now)
+        if not snapshot.get('valid'):
+            return active_task_set(
+                PROVIDER_ID, (), valid=False,
+                reason=snapshot.get('reason') or 'activity_unavailable')
+        tasks = []
+        for entry in snapshot.get('sessions') or []:
+            if not entry.get('working'):
+                continue
+            row = self._sessions.get(strip_scope(entry['session_id']))
+            if not isinstance(row, dict) or not row.get('id'):
+                continue
+            five = [row.get(column) for column in TOKEN_COLUMNS]
+            instant = entry.get('instant')
+            tasks.append(active_task(
+                PROVIDER_ID, scoped_session_id(row['id']),
+                working=True, activity_valid=True,
+                activity_at=(instant / 1000 if isinstance(
+                    instant, (int, float)) and instant >= 0 else None),
+                display=dict(project=_display_basename(
+                    row.get('directory'))),
+                presentation=dict(
+                    tokens=dict(input=row.get('tokens_input'),
+                                output=row.get('tokens_output'),
+                                reasoning=row.get('tokens_reasoning'),
+                                cache_read=row.get('tokens_cache_read'),
+                                cache_write=row.get(
+                                    'tokens_cache_write'),
+                                total=_recorded_total(
+                                    row.get('version'), five)),
+                    cost_amount=row.get('cost'),
+                    model=(parse_model(row.get('model')) or {}).get('id'),
+                    version=row.get('version'))))
+        return active_task_set(PROVIDER_ID, tasks, valid=True,
+                               source_available=True)
+
     def _dv_current(self, file_id):
         """Commit generation for this file, opening the detector on
         first use. Returns None when the file is gone, the detector
@@ -1307,7 +1356,8 @@ class OpenCodeProvider:
             finish_reason=latest[1] if latest else None,
             newest_part_age_s=((now_ms - max(newest_parts)) / 1000
                                if newest_parts else None),
-            unknown=session_unknown)
+            unknown=session_unknown,
+            instant=instant)
         return entry, instant
 
     def read(self, pinned='', scope='conversation', include_history=False,
