@@ -162,18 +162,43 @@ class DesktopPet(QWidget):
 
     def update_data(self,data):
         self.snapshot=data
-        if data.get('working_context'):
-            self.working_context=data['working_context']
-        elif data.get('status') or not data.get('available') or not self.token_bubble_visible():
-            self.working_context=None
+        # An explicitly absent working_context retires the previous
+        # live context at once: hysteresis may preserve animation
+        # timing, never a false Working label or stale token data.
+        self.working_context=(data or {}).get('working_context') or None
         context=self.working_context or data
         t=context.get('tokens',{})
         style=self.panel.prefs.get('token_number_format')
+        # The provider is read from the context itself only: a retained
+        # context is always self-described, and a missing one never
+        # inherits the new panel payload's provider.
+        provider = (context or {}).get('provider_id')
+        if provider == 'opencode':
+            # Raw OpenCode categories under their own names; total is
+            # the recorded five-category sum for verified versions with
+            # complete data (N/A otherwise — never billed/context).
+            total_text=format_tokens(t.get('total'),style)
+            in_text=format_tokens(t.get('input'),style)
+            out_text=format_tokens(t.get('output'),style)
+            provider_line='OpenCode · '
+            if context.get('thread') or context.get('session_id'):
+                # No verified human-readable session title exists, so
+                # the prominent tooltip shows the localized
+                # Active-session label instead of a raw session ID.
+                # Exact IDs stay in analytics and details views.
+                title=self.tr_text('active_session')
+            else:
+                title=context.get('title') or self.tr_text('codex_working')
+        else:
+            total_text=format_tokens(t.get('total_tokens'),style)
+            in_text=format_tokens(t.get('input_tokens'),style)
+            out_text=format_tokens(t.get('output_tokens'),style)
+            provider_line='Codex · ' if provider == 'codex' else ''
+            title=context.get('title') or self.tr_text('codex_working')
         project=context.get('project') or self.tr_text('project_unavailable')
-        title=context.get('title') or self.tr_text('codex_working')
-        self.setToolTip(f"{project} · {title}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"+
-                       self.tr_text('pet_tooltip_tokens',total=format_tokens(t.get('total_tokens'),style),
-                           input=format_tokens(t.get('input_tokens'),style),output=format_tokens(t.get('output_tokens'),style))+
+        self.setToolTip(provider_line+f"{project} · {title}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"+
+                       self.tr_text('pet_tooltip_tokens',total=total_text,
+                           input=in_text,output=out_text)+
                        '\n'+self.tr_text('pet_tooltip_actions'))
         self.update()
 
@@ -220,7 +245,9 @@ class DesktopPet(QWidget):
             p.setPen(QColor(theme.MUTED))
             p.setFont(QFont('Segoe UI',self._px(8)))
             p.drawText(QRectF(bx+pad,self._px(7),width,self._px(20)),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
-            total=format_tokens(tokens.get('total_tokens'),style)
+            total=(format_tokens(tokens.get('total'),style)
+                   if context.get('provider_id') == 'opencode'
+                   else format_tokens(tokens.get('total_tokens'),style))
             p.setPen(QColor(theme.INK))
             p.setFont(QFont('Segoe UI',self._px(12),QFont.DemiBold))
             p.drawText(QRectF(bx+pad,self._px(30),width,self._px(22)),Qt.AlignLeft|Qt.AlignVCenter,

@@ -2,6 +2,26 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V1.2.0 — 2026-09-22 (local release candidate; not yet published)
+
+Dual-provider companion: the pet follows Codex and OpenCode tasks side by side, verified against `D:\Desktop\petoken\V1.2.0`, implementation accepted for release preparation.
+
+### Added
+- Second usage provider (OpenCode, read-only local SQLite): automatic/manual tracking across Auto / Codex / OpenCode with working-first Auto ranking; Conversation scope may present the verified live session as an explicitly marked Active session when the requested scope names no session.
+- OpenCode Token Analytics: five raw categories (Input / Output / Reasoning / Cache Read / Cache Write) with independent coverage, source-backed recorded Total for verified session versions (see Boundaries), recorded cost with unknown currency, per-session breakdown and daily history with coverage markers.
+- Commit-aware OpenCode activity invalidation (persistent read-only `data_version` generation, file-identity replacement guard, straddle-safe projection, `activity_unstable` unknown on retry exhaustion, terminal detector shutdown on poller close).
+- OpenCode mode hides the unsupported Context, 5-hour/weekly, reset, and quota-refresh UI in every view (available, unavailable, stale, Full, Compact); it returns immediately on Codex. Prominent OpenCode titles/tooltips use the localized Active-session label instead of raw session IDs (exact IDs stay in selection, attribution, and analytics).
+
+### Changed
+- Settings gains provider tracking selection (default Auto); existing preferences, panel layout, character set and Codex behavior are preserved.
+
+### Fixed
+- No waiting/unavailable panel over verified live OpenCode context; no stale Working from same-size updates, same-max deletes, retained-writer WAL commits, replacements, or straddled projections; no detector reopen after shutdown; no late results repainting newer UI.
+
+### Boundaries (unchanged guarantees)
+- No combined cross-provider totals; OpenCode Total is a recorded usage total (five stored categories summed, verified 1.18.31/1.18.32 sessions with complete data only — never billed, never context) and stays N/A whenever inputs or version semantics are unverified; unknown stays unknown (never zero-filled); recorded cost has no currency inference or conversion; no quotas, context windows or reset timers for OpenCode.
+- Local-only metadata reads (allowlisted columns, no prompts/responses/tool contents/credentials/paths/titles); nothing is uploaded.
+
 ## V1.0.0 — 2026-09-17
 
 First formal foundation release of `petoken` (previously Codex Wisp).

@@ -1,5 +1,6 @@
 """Expanded analytics. Every primary value is exact or explicitly unavailable."""
 import json
+from datetime import date, datetime, timedelta
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QHeaderView,
@@ -8,6 +9,18 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QHeader
 from localization import scope_text, text
 import theme
 from token_format import format_ratio, format_tokens
+
+# OpenCode raw categories in display order: (token key, header key).
+OPENCODE_COLUMNS = (
+    ('input', 'header_input_tokens'),
+    ('output', 'header_output_tokens'),
+    ('reasoning', 'header_reasoning_tokens'),
+    ('cache_read', 'header_cached_tokens'),
+    ('cache_write', 'header_write_tokens'),
+)
+_OPENCODE_COVERAGE_KEYS = (
+    'coverage_complete', 'coverage_partial', 'coverage_unknown',
+    'coverage_unavailable')
 
 
 def help_text(metric, language):
@@ -127,9 +140,12 @@ class AnalyticsWindow(QDialog):
 
     def update_data(self, data):
         self.snapshot = data
+        if (data.get('provider_id') or 'codex') == 'opencode':
+            self.update_opencode(data)
+            return
         analysis = data.get('analytics')
         if data.get('status') or not analysis or not data.get('available'):
-            self.heading.setText(self.tr_text('analytics_heading', scope=scope_text(
+            self.heading.setText(self.tr_text('analytics_heading_provider', provider='Codex', scope=scope_text(
                 data.get('scope', self.parentWidget().prefs.get('scope')), self.language)))
             self.subtitle.setText(self.tr_text(data.get('status') or 'no_reliable_record'))
             for widget in (self.metrics, self.models, self.sessions, self.ranges, self.days):
@@ -140,10 +156,26 @@ class AnalyticsWindow(QDialog):
             return
         t = self.tr_text
         token_style = self.parentWidget().prefs.get('token_number_format')
+        # The OpenCode view uses fewer columns; restore the Codex layout
+        # explicitly so provider switches never leak column counts.
+        token_headers = [t('header_input_tokens'), t('header_cached_tokens'), t('header_uncached_tokens'),
+                         t('header_write_tokens'), t('header_output_tokens'), t('header_reasoning_tokens'),
+                         t('header_nonreasoning_tokens'), t('header_total_tokens')]
+        self.models.setColumnCount(9)
+        set_headers(self.models, [t('header_model')] + token_headers)
+        self.sessions.setColumnCount(9)
+        set_headers(self.sessions, [t('header_conversation')] + token_headers)
+        self.ranges.setColumnCount(6)
+        set_headers(self.ranges, [t('header_range'), t('header_total_tokens'), t('header_input_tokens'),
+                                  t('header_cached_tokens'), t('header_output_tokens'), t('header_reasoning_tokens')])
+        self.days.setColumnCount(7)
+        set_headers(self.days, [t('header_date_local'), t('header_total_tokens'), t('header_input_tokens'),
+                                t('header_cached_tokens'), t('header_write_tokens'), t('header_output_tokens'),
+                                t('header_reasoning_tokens')])
         scope_name = scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')
         title = t(data.get('title')) if data.get('title') in ('display_local_history', 'display_untitled') else data.get('title', '')
         project = t(data.get('project')) if data.get('project') in ('display_all_usage', 'project_unavailable') else data.get('project', '')
-        self.heading.setText(t('analytics_heading', scope=scope_name))
+        self.heading.setText(t('analytics_heading_provider', provider='Codex', scope=scope_name))
         self.subtitle.setText(t('analytics_subtitle', title=title, project=project, events=analysis['events']))
         fields = [
             ('group_official', 'total_tokens', 'metric_total'), ('group_official', 'input_tokens', 'metric_input'),
@@ -209,3 +241,348 @@ class AnalyticsWindow(QDialog):
             self.raw.setPlainText(raw)
             self.raw.verticalScrollBar().setValue(position)
         self.note.setText('N/A · ' + (' | '.join(localized_notes) or t('analytics_default_note')))
+
+    # -- OpenCode provider-local analytics (Slice 6) --------------------
+
+    def _opencode_coverage(self, coverage):
+        key = f'coverage_{coverage}'
+        return self.tr_text(key if key in _OPENCODE_COVERAGE_KEYS else 'coverage_unknown')
+
+    def _opencode_cell(self, value, token_style):
+        return format_tokens(value, token_style)
+
+    def _opencode_merge(self, pairs):
+        """Merge (value, coverage-word) pairs without inventing data:
+        unknown when nothing is known, complete only when everything is
+        known and complete, otherwise partial."""
+        known = [value for value, _ in pairs if value is not None]
+        if not known:
+            return None, self.tr_text('coverage_unknown')
+        if len(known) == len(pairs) and all(
+                word == self.tr_text('coverage_complete') for _, word in pairs):
+            return sum(known), self.tr_text('coverage_complete')
+        return sum(known), self.tr_text('coverage_partial')
+
+    def _opencode_cost_text(self, cost):
+        amount = (cost or {}).get('amount')
+        if amount is None or isinstance(amount, bool):
+            return 'N/A'
+        if amount == 0:
+            return '0'
+        return f'{amount:,.4f}'
+
+    def _opencode_cost_value(self, amount):
+        if amount is None or isinstance(amount, bool):
+            return 'N/A'
+        if amount == 0:
+            return '0'
+        return f'{amount:,.4f}'
+
+    def _opencode_cost_merge(self, amounts):
+        """Aggregate recorded session costs: sum known amounts only, with
+        coverage complete when every session reported one, partial when
+        known and unknown mix, unknown when none did. Token coverage is
+        tracked independently and never consulted here."""
+        known = [amount for amount in amounts
+                 if amount is not None and not isinstance(amount, bool)]
+        if not known:
+            return None, self.tr_text('coverage_unknown')
+        if len(known) == len(amounts):
+            return sum(known), self.tr_text('coverage_complete')
+        return sum(known), self.tr_text('coverage_partial')
+
+    def _opencode_word_summary(self, words):
+        """Summarize per-category coverage words without hiding them:
+        the summary never replaces the per-cell coverage behind it."""
+        complete_word = self.tr_text('coverage_complete')
+        unknown_word = self.tr_text('coverage_unknown')
+        if all(word == unknown_word for word in words):
+            return unknown_word
+        if all(word == complete_word for word in words):
+            return complete_word
+        return self.tr_text('coverage_partial')
+
+    def _opencode_history_cell(self, value, word, token_style):
+        """One history value with independently inspectable coverage:
+        complete values render normally with a coverage tooltip, partial
+        values carry a visible partial marker plus tooltip, unknown
+        values stay N/A, real zeros stay zero."""
+        complete_word = self.tr_text('coverage_complete')
+        if value is None:
+            return 'N/A', word
+        text = format_tokens(value, token_style)
+        if word == complete_word:
+            return (text, word)
+        return f'{text} · {word}', word
+
+    def update_opencode(self, data):
+        """Render one OpenCode scoped snapshot: raw categories, the
+        recorded Total for verified versions (N/A otherwise), no
+        derived ratios, recorded cost with unknown currency.
+        Every value comes from this provider-tagged snapshot; switching
+        provider/scope replaces the whole view atomically."""
+        t = self.tr_text
+        token_style = self.parentWidget().prefs.get('token_number_format')
+        scope_name = scope_text(data.get('scope'), self.language,
+                                recorded=data.get('scope') == 'global')
+        heading = t('analytics_heading_provider', provider='OpenCode',
+                    scope=scope_name)
+        self.heading.setText(heading)
+        columns = [t(header) for _, header in OPENCODE_COLUMNS]
+        history_columns = columns + [t('header_total_tokens'), t('header_type_coverage')]
+        self.models.setColumnCount(9)
+        set_headers(self.models, [t('header_model')] + history_columns + [t('metric_recorded_cost')])
+        self.sessions.setColumnCount(9)
+        set_headers(self.sessions, [t('header_conversation')] + history_columns + [t('metric_recorded_cost')])
+        self.ranges.setColumnCount(8)
+        set_headers(self.ranges, [t('header_range')] + history_columns)
+        self.days.setColumnCount(8)
+        set_headers(self.days, [t('header_date_local')] + history_columns)
+        selection = data.get('selection') or {}
+        if data.get('presentation') == 'active_session':
+            # The live session is panel-visible, but the requested scope
+            # genuinely holds no data: keep the independent scope view
+            # honest instead of relabeling live values as scope data.
+            scope_status = data.get('scope_status') or 'no_reliable_record'
+            self.subtitle.setText(t(scope_status))
+            for widget in (self.metrics, self.models, self.sessions, self.ranges, self.days):
+                widget.setRowCount(0)
+            self.raw.setPlainText(json.dumps(
+                self._opencode_raw(data), ensure_ascii=False, indent=2))
+            self.history_note.setText(t(scope_status))
+            self.note.setText(t('analytics_opencode_note'))
+            return
+        if data.get('status') or not data.get('available'):
+            self.subtitle.setText(t(data.get('status') or 'no_reliable_record'))
+            for widget in (self.metrics, self.models, self.sessions, self.ranges, self.days):
+                widget.setRowCount(0)
+            self.raw.setPlainText(json.dumps(
+                self._opencode_raw(data), ensure_ascii=False, indent=2))
+            self.history_note.setText(t(data.get('status') or 'no_reliable_record'))
+            self.note.setText(t('analytics_opencode_note'))
+            return
+        title = t(data.get('title')) if data.get('title') in ('display_local_history', 'display_untitled') else data.get('title', '')
+        project = t(data.get('project')) if data.get('project') in ('display_all_usage', 'project_unavailable') else data.get('project', '')
+        breakdown = data.get('breakdown_sessions') or []
+        if selection.get('live'):
+            freshness = t('working')
+        elif selection.get('stale'):
+            freshness = t('status_stale')
+        elif selection.get('activity_unknown'):
+            freshness = t('unknown')
+        else:
+            freshness = t('idle')
+        self.subtitle.setText(t('analytics_subtitle_opencode', title=title, project=project,
+                                count=len(breakdown), freshness=freshness))
+        tokens = data.get('tokens') or {}
+        coverage = data.get('token_coverage') or {}
+        rows = []
+        for key, header_key in OPENCODE_COLUMNS:
+            word = self._opencode_coverage(coverage.get(key))
+            rows.append((f"{t('group_opencode_raw')} · {t(header_key)}",
+                         (self._opencode_cell(tokens.get(key), token_style),
+                          '' if word == t('coverage_complete') else t('help_partial_coverage')),
+                         word))
+        rows.append((f"{t('group_opencode_raw')} · {t('metric_total')}",
+                     (self._opencode_cell(tokens.get('total'), token_style),
+                      t('help_opencode_total')),
+                     self._opencode_coverage(coverage.get('total'))))
+        cost = data.get('cost') or {}
+        cost_tip = (f"{cost.get('recorded_sessions', 0)}/{cost.get('total_sessions', 0)} "
+                    f"{t('records')}\n{t('help_recorded_cost')}\n{t('help_unknown_currency')}")
+        rows.append((f"{t('group_opencode_raw')} · {t('metric_recorded_cost')}",
+                     (self._opencode_cost_text(cost), cost_tip),
+                     self._opencode_coverage(
+                         {'recorded': 'complete', 'partial': 'partial'}.get(cost.get('coverage'), 'unknown'))))
+        populate(self.metrics, rows)
+        by_model = {}
+        for row in breakdown:
+            by_model.setdefault(row.get('model'), []).append(row)
+        complete_word = t('coverage_complete')
+        unknown_word = t('coverage_unknown')
+        models = []
+        for model_id in sorted(by_model, key=lambda name: (name is None, name)):
+            name = t('unknown_model') if model_id is None else model_id
+            cells = []
+            for key, _ in OPENCODE_COLUMNS:
+                value, word = self._opencode_merge(
+                    [(row['tokens'].get(key),
+                      complete_word if row['tokens'].get(key) is not None else unknown_word)
+                     for row in by_model[model_id]])
+                cells.append((self._opencode_cell(value, token_style),
+                              '' if word == complete_word else word))
+            _, summary = self._opencode_merge(
+                [(row['tokens'].get(key),
+                  complete_word if row['tokens'].get(key) is not None else unknown_word)
+                 for row in by_model[model_id] for key, _ in OPENCODE_COLUMNS])
+            cost_value, cost_word = self._opencode_cost_merge(
+                [row.get('cost_amount') for row in by_model[model_id]])
+            # Recorded model total: the adapter's per-session recorded
+            # totals summed only when every session in the group has
+            # one; otherwise N/A (never a partial sum, never borrowed).
+            row_totals = [row.get('total') for row in by_model[model_id]]
+            if all(value is not None for value in row_totals):
+                total_text = self._opencode_cell(sum(row_totals),
+                                                 token_style)
+            else:
+                total_text = 'N/A'
+            models.append([(name, name if model_id is None else model_id)] + cells + [
+                (total_text, t('help_opencode_total')), summary,
+                (self._opencode_cost_value(cost_value),
+                 '' if cost_word == complete_word else cost_word)])
+        populate(self.models, models)
+        sessions = []
+        for row in sorted(breakdown, key=lambda entry: entry.get('session_id') or ''):
+            cells = []
+            for key, _ in OPENCODE_COLUMNS:
+                value = row['tokens'].get(key)
+                cells.append((self._opencode_cell(value, token_style),
+                              '' if value is not None else unknown_word))
+            _, summary = self._opencode_merge(
+                [(row['tokens'].get(key),
+                  complete_word if row['tokens'].get(key) is not None else unknown_word)
+                 for key, _ in OPENCODE_COLUMNS])
+            cost_value, cost_word = self._opencode_cost_merge([row.get('cost_amount')])
+            total_value = row.get('total')
+            sessions.append([(row['session_id'], row['session_id'])] + cells + [
+                (self._opencode_cell(total_value, token_style),
+                 t('help_opencode_total')), summary,
+                (self._opencode_cost_value(cost_value),
+                 '' if cost_word == complete_word else cost_word)])
+        populate(self.sessions, sessions)
+        self._opencode_history(data, token_style)
+        self.raw.setPlainText(json.dumps(
+            self._opencode_raw(data), ensure_ascii=False, indent=2))
+        self.note.setText(t('analytics_opencode_note'))
+
+    def _opencode_history(self, data, token_style):
+        t = self.tr_text
+        history = data.get('history') or {}
+        daily = history.get('daily')
+        coverage_map = history.get('daily_coverage') or {}
+        if not daily:
+            self.ranges.setRowCount(0)
+            self.days.setRowCount(0)
+            self.history_note.setText(t('history_loading') if data.get('available') else t('history_unavailable'))
+            return
+        tokens = data.get('tokens') or {}
+        coverage = data.get('token_coverage') or {}
+        lifetime = []
+        lifetime_words = []
+        for key, _ in OPENCODE_COLUMNS:
+            word = self._opencode_coverage(coverage.get(key))
+            lifetime_words.append(word)
+            lifetime.append(self._opencode_history_cell(tokens.get(key), word, token_style))
+        # Lifetime aggregates the scope's own session rollups, so its
+        # Total is the recorded sum when available; day/range rows stay
+        # N/A because they aggregate upstream message deltas, never
+        # stored rollups.
+        lifetime.append(self._opencode_history_cell(
+            tokens.get('total'),
+            self._opencode_coverage(coverage.get('total')), token_style))
+        lifetime.append(self._opencode_word_summary(lifetime_words))
+        ranges = [[t('range_lifetime')] + lifetime]
+        skipped_total = history.get('skipped_message_rows') or 0
+        attributed = sum((daily.get(day) or {}).get('skipped', 0) for day in daily)
+        unattributed_skips = max(0, skipped_total - attributed)
+        today = date.today()
+        windows = [(t('range_today'), {today.isoformat()}),
+                   (t('range_last7'), {(today - timedelta(days=offset)).isoformat() for offset in range(7)}),
+                   (t('range_last30'), {(today - timedelta(days=offset)).isoformat() for offset in range(30)})]
+        for name, days in windows:
+            # A day with only skipped records still counts as evidence:
+            # otherwise a skipped-only day inside the window would let
+            # the range claim complete. Values always sum known numbers
+            # only; skipped-only days contribute N/A/unknown.
+            contributing = [day for day in days
+                            if day in daily and ((daily[day].get('messages', 0) or 0) > 0
+                                                 or (daily[day].get('skipped', 0) or 0) > 0)]
+            cells = []
+            words = []
+            for key, _ in OPENCODE_COLUMNS:
+                day_coverages = [(coverage_map.get(day) or {}).get(key)
+                                 for day in contributing]
+                known = [daily[day][key] for day in contributing
+                         if daily[day].get(key) is not None]
+                value = sum(known) if known else None
+                if value is None:
+                    word = t('coverage_unknown')
+                elif all(word == t('coverage_complete') for word in day_coverages):
+                    word = t('coverage_complete')
+                else:
+                    word = t('coverage_partial')
+                if (unattributed_skips and contributing
+                        and word == t('coverage_complete')):
+                    # Skipped rows that cannot be attributed to a day must
+                    # never let a range claim complete.
+                    word = t('coverage_partial')
+                words.append(word)
+                cells.append(self._opencode_history_cell(value, word, token_style))
+            cells += ['N/A', self._opencode_word_summary(words)]
+            ranges.append([name] + cells)
+        populate(self.ranges, ranges)
+        days = []
+        for day_key in sorted(daily):
+            values = daily[day_key]
+            day_coverages = coverage_map.get(day_key) or {}
+            row = [day_key]
+            words = []
+            for key, _ in OPENCODE_COLUMNS:
+                word = self._opencode_coverage(day_coverages.get(key))
+                words.append(word)
+                row.append(self._opencode_history_cell(values.get(key), word, token_style))
+            row += ['N/A', self._opencode_word_summary(words)]
+            days.append(row)
+        populate(self.days, days)
+        parts = [t('history_loaded')]
+        if history.get('as_of'):
+            try:
+                stamped = datetime.fromtimestamp(history['as_of']).strftime('%Y-%m-%d %H:%M')
+            except (OverflowError, OSError, ValueError, TypeError):
+                stamped = 'N/A'
+            parts.append(t('history_cached_as_of', time=stamped))
+        elif history.get('cached'):
+            parts.append(t('history_cached_as_of', time='N/A'))
+        if history.get('refresh_pending'):
+            parts.append(t('history_refresh_pending'))
+        if history.get('skipped_message_rows'):
+            parts.append(t('history_skipped_rows', count=history['skipped_message_rows']))
+        self.history_note.setText(' '.join(parts))
+
+    def _opencode_raw(self, data):
+        """Allowlisted metadata only: identities, raw categories plus
+        coverage, recorded cost without currency, freshness and history
+        markers, generation and notes. Never paths, content, credentials
+        or share links."""
+        identity = data.get('scope_identity') or {}
+        scope_identity = {key: identity.get(key) for key in
+                          ('scope_type', 'requested_scope', 'session_id',
+                           'project_id', 'project_name')
+                          if identity.get(key) is not None}
+        detail = data.get('model_detail') or {}
+        history = data.get('history') or {}
+        selection = data.get('selection') or {}
+        cost = data.get('cost') or {}
+        return dict(
+            source=self.tr_text('raw_source_opencode'),
+            provider=data.get('provider_id'), scope=data.get('scope'),
+            scope_identity=scope_identity,
+            presentation=data.get('presentation'),
+            scope_status=data.get('scope_status'),
+            title=data.get('title'), project=data.get('project'),
+            session_id=data.get('session_id'),
+            model=data.get('model'),
+            model_detail={key: detail.get(key) for key in
+                          ('provider', 'variant', 'agent')},
+            tokens=data.get('tokens'), token_coverage=data.get('token_coverage'),
+            cost=dict(amount=cost.get('amount'), coverage=cost.get('coverage'),
+                      recorded_sessions=cost.get('recorded_sessions'),
+                      total_sessions=cost.get('total_sessions')),
+            freshness=dict(live=bool(selection.get('live')),
+                           stale=bool(selection.get('stale'))),
+            history=dict(as_of=history.get('as_of'), cached=bool(history.get('cached')),
+                         refresh_pending=bool(history.get('refresh_pending')),
+                         skipped_message_rows=history.get('skipped_message_rows', 0),
+                         daily_coverage=history.get('daily_coverage')),
+            generation=data.get('generation'),
+            notes=list(data.get('notes') or ()))

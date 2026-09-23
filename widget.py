@@ -17,12 +17,14 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
     QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea)
 
 from desktop import ActiveTask, RateLimits, fetch_fx
-from usage import CodexStore, quota_window, sample_age
+from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
 import pet_assets as assets
 import pet_geometry as pet_geometry
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
+from provider_poller import ProviderPoller
+from provider_selection import normalize_tracking_provider
 from activity import activity_diagnostics
 from localization import DEFAULT_LANGUAGE, normalize_language, scope_text, text
 from pricing import (DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, convert_usd, format_cost,
@@ -281,6 +283,13 @@ class Settings(QDialog):
         self.scope.setCurrentIndex(selected_index if selected_index >= 0 else self.scope.findData('conversation'))
         self.scope_label = label()
         self.form.addRow(self.scope_label, self.scope)
+        self.tracking = QComboBox()
+        for key in ('auto','codex','opencode'):
+            self.tracking.addItem('', key)
+        self.tracking.setCurrentIndex(max(0, self.tracking.findData(
+            normalize_tracking_provider(panel.prefs.get('tracking_provider')))))
+        self.tracking_label = label()
+        self.form.addRow(self.tracking_label, self.tracking)
         self.language = QComboBox()
         initial_language = normalize_language(panel.prefs.get('language'))
         self.language.addItem(text('language_zh_CN', initial_language), 'zh_CN')
@@ -381,6 +390,9 @@ class Settings(QDialog):
         self.task.setItemText(0, t('task_auto'))
         for index, scope in enumerate(('global','project','conversation')):
             self.scope.setItemText(index, scope_text(scope, self.language.currentData(), recorded=scope == 'global'))
+        for index, key in enumerate(('auto','codex','opencode')):
+            self.tracking.setItemText(index, t(f'tracking_{key}'))
+        self.tracking_label.setText(t('tracking_provider'))
         self.language.setItemText(0, t('language_zh_CN'))
         self.language.setItemText(1, t('language_en'))
         self.token_format.setItemText(self.token_format.findData('full'), t('token_format_full'))
@@ -419,6 +431,7 @@ class Settings(QDialog):
         self.reset_armed = False
         self.task.setCurrentIndex(0)
         self.scope.setCurrentIndex(self.scope.findData('conversation'))
+        self.tracking.setCurrentIndex(self.tracking.findData('auto'))
         self.language.setCurrentIndex(self.language.findData(DEFAULT_LANGUAGE))
         self.token_format.setCurrentIndex(
             self.token_format.findData(DEFAULT_TOKEN_NUMBER_FORMAT))
@@ -430,7 +443,10 @@ class Settings(QDialog):
     def save(self):
         panel = self.parentWidget()
         prefs = dict(panel.prefs)
+        old_tracking = normalize_tracking_provider(panel.prefs.get('tracking_provider'))
+        tracking = normalize_tracking_provider(self.tracking.currentData())
         prefs.update(pinned=self.task.currentData(), scope=self.scope.currentData(),
+                     tracking_provider=tracking,
                      language=normalize_language(self.language.currentData()),
                      token_number_format=self.token_format.currentData(),
                      currency=self.currency.currentData(),
@@ -444,6 +460,18 @@ class Settings(QDialog):
             self.error.setText(self.tr_text('settings_save_error'))
             return
         panel.prefs = prefs
+        # Every save retires outstanding requests for the previous
+        # settings, even when only scope/pinned changed: the new epoch
+        # makes late completions identifiable as old. Only a changed-to-
+        # explicit tracking choice stamps use time. The snapshot
+        # publishes synchronously — no slow poll is awaited.
+        poller = getattr(panel, 'provider_poller', None)
+        if poller is not None:
+            snapshot = poller.apply_settings(
+                prefs,
+                mark_provider=(tracking if tracking != old_tracking
+                               and tracking != 'auto' else None))
+            panel.bridge.data.emit(snapshot['result'])
         pet = getattr(panel, 'pet', None)
         if pet is not None:
             pet.apply_pet_scale(prefs['pet_scale_percent'])
@@ -459,6 +487,9 @@ class Panel(QWidget):
         self.prefs = read_preferences()
         self.app_mode = AppModeState()
         self.codex_activity = dict(active=False, valid=False, reason='starting')
+        self.provider_poller = ProviderPoller()
+        self._render_generation = None
+        self.quota_provider = None
         self.snapshot = {}
         self.analytics_window = None
         self.want_history = threading.Event()
@@ -597,7 +628,8 @@ class Panel(QWidget):
         self.details_button = button('', '', self.open_analytics)
         details_row.addWidget(self.details_button)
         body.addLayout(details_row)
-        body.addWidget(divider())
+        self.quota_divider = divider()
+        body.addWidget(self.quota_divider)
         self.context = Meter('', VIOLET)
         self.five = Meter('', ICE)
         self.week = Meter('', VIOLET)
@@ -783,21 +815,43 @@ class Panel(QWidget):
         if self.snapshot:
             self.render(self.snapshot)
 
+    def read_loop_once(self):
+        """One production provider-loop iteration.
+
+        Always returns a context-tagged snapshot (generation plus the
+        tick's preference/scope/pinned): fallback construction lives in
+        ProviderPoller.loop_tick, so no caller can emit an untagged
+        provider payload to the Qt bridge. Never stamps use-time.
+        """
+        prefs = dict(self.prefs)
+        reset_requested = False
+        if self.reset_store.is_set():
+            self.reset_store.clear()
+            reset_requested = True
+        detection_valid = time.time()-self.active.seen < 5
+        active = self.active.title if detection_valid else ''
+        return self.provider_poller.loop_tick(
+            prefs, active_title=active,
+            detection_valid=detection_valid,
+            want_history=self.want_history.is_set(),
+            reset_requested=reset_requested)
+
     def read_loop(self):
-        store = None
+        # One sequential background loop polls both providers through the
+        # shared poller: each provider fails independently, selection is
+        # computed off the GUI thread, and exactly one atomic snapshot
+        # is published per tick with a rising generation.
         while not self.stop.is_set():
             start = time.monotonic()
             try:
-                prefs = dict(self.prefs)
-                if store is None or self.reset_store.is_set():
-                    self.reset_store.clear()
-                    store = CodexStore()
-                detection_valid = time.time()-self.active.seen < 5
-                active = self.active.title if detection_valid else ''
-                self.bridge.data.emit(store.read(active, prefs.get('pinned',''), prefs.get('scope','conversation'),
-                                                 self.want_history.is_set(), detection_valid))
+                snapshot = self.read_loop_once()
+                self.bridge.data.emit(snapshot['result'])
             except Exception:
-                self.bridge.data.emit(dict(status='status_read_failed', rows=[]))
+                # All expected failures already return tagged snapshots
+                # from loop_tick. An unexpected error here (torn-down
+                # prefs/bridge during shutdown) must never emit an
+                # untagged payload that could overwrite newer UI.
+                pass
             self.stop.wait(max(0,1-(time.monotonic()-start)))
 
     def fx_loop(self):
@@ -824,20 +878,58 @@ class Panel(QWidget):
 
     def receive_limits(self, data):
         self.quota.update(data)
+        # Quota payloads are Codex-sidecar data; the provider tag keeps a
+        # late Codex payload from ever rendering under OpenCode.
+        if isinstance(data, dict) and data.get('provider_id'):
+            self.quota_provider = data['provider_id']
         self.refresh_status()
 
     def render(self, data):
+        data = data or {}
+        generation = data.get('generation')
+        # Legacy generation-less payloads (synthetic fixtures, old local
+        # callers) still render below; the production provider loop can
+        # no longer produce them — read_loop_once always returns a
+        # poller-tagged generation — so this path can never bypass the
+        # multi-provider generation guard for live emissions.
+        if (generation is not None and self._render_generation is not None
+                and generation < self._render_generation):
+            return  # Late result: never restore an older provider/scope.
+        if generation is not None:
+            self._render_generation = generation
         self.snapshot = data
-        self.codex_activity = data.get('codex_activity') or dict(active=False,valid=False,reason='missing')
-        self.app_mode.update(self.codex_activity.get('active',False), self.codex_activity.get('valid',False))
+        provider = data.get('provider_id') or 'codex'
+        provider_label = 'OpenCode' if provider == 'opencode' else 'Codex'
+        self.apply_provider_chrome(provider)
+        selection = data.get('selection')
+        if selection is None:
+            # Legacy/raw shape (synthetic fixtures, old callers): the
+            # long-standing Codex behavior below is unchanged.
+            self.codex_activity = data.get('codex_activity') or dict(active=False,valid=False,reason='missing')
+            self.app_mode.update(self.codex_activity.get('active',False), self.codex_activity.get('valid',False))
+        else:
+            # Slice 5: the shared selection drives mode; widgets never
+            # re-derive activity from provider payloads here.
+            live = bool(selection.get('live'))
+            reliable = bool(selection.get('selected')
+                            and selection.get('source_available')
+                            and not selection.get('stale')
+                            and not selection.get('activity_unknown'))
+            self.app_mode.update(live, reliable)
+            self.codex_activity = dict(active=live, valid=reliable,
+                                       reason=selection.get('reason', ''))
         if hasattr(self,'pet'):
             self.pet.update_data(data)
+        if provider == 'opencode':
+            self.render_opencode(data, selection or {}, provider_label)
+            return
         if data.get('status') or not data.get('available'):
             status = self.tr_text(data.get('status') or 'no_reliable_record')
-            self.connection.setText(status)
+            self.connection.setText(f'{provider_label} · {status}')
             self.connection.setToolTip(status)
             self.title.setFullText(self.tr_text('waiting_available_task'))
-            self.project.setText('CODEX')
+            self.project.setText(provider_label.upper())
+            self.project.setToolTip(provider_label.upper())
             for w in (self.total,self.model,self.effort,self.cost,self.compact_total,
                         self.compact_cost):
                 w.setText('—')
@@ -851,11 +943,17 @@ class Panel(QWidget):
             self.context.update_value(None, tip=status)
             if self.analytics_window:
                 self.analytics_window.update_data(data)
+            # Same-transaction clearing: provider-specific quota, cost,
+            # context and status widgets must not keep previous values.
+            self.refresh_cost()
+            self.refresh_status()
             return
         modes = {'follow':'mode_follow', 'fixed':'mode_fixed', 'recent':'mode_recent', 'working':'mode_working'}
-        self.connection.setText(self.tr_text(modes.get(data.get('mode'),'waiting_data')))
+        self.connection.setText(f'{provider_label} · {self.tr_text(modes.get(data.get("mode"),"waiting_data"))}')
         self.connection.setToolTip(self.tr_text('task_detection_tip'))
-        self.project.setText(self.display_text(data.get('project'), 'waiting_codex').upper())
+        project_text = self.display_text(data.get('project'), 'waiting_codex').upper()
+        self.project.setText(project_text)
+        self.project.setToolTip(project_text)
         self.title.setFullText(self.display_text(data.get('title'), 'unnamed_task'))
         self.model.setText(data.get('model') or self.tr_text('model_not_recorded'))
         self.model.setToolTip(self.tr_text('model_tip'))
@@ -880,12 +978,29 @@ class Panel(QWidget):
             self.io_line.setText('—')
             self.io_line.setToolTip(self.tr_text('no_reliable_record'))
         activity = data.get('scope_activity') or {}
+        if selection is not None:
+            # Selection owns liveness: scope activity never overrides it.
+            if selection.get('live'):
+                activity = dict(valid=True, active=True)
+            elif selection.get('stale'):
+                activity = dict(valid=True, active=False, stale=True)
+            elif selection.get('activity_unknown'):
+                activity = dict(valid=False, active=False)
+            else:
+                activity = dict(valid=True, active=False)
         working = bool(activity.get('valid') and activity.get('active'))
         self.status_dot.setVisible(True)
         self.status_text.setVisible(True)
         self.status_dot.setStyleSheet(f'color:{ICE if working else MUTED};')
-        self.status_text.setText(self.tr_text('working' if working else
-            ('idle' if activity.get('valid') else 'unknown')))
+        if working:
+            state_key = 'working'
+        elif activity.get('stale'):
+            state_key = 'status_stale'
+        elif activity.get('valid'):
+            state_key = 'idle'
+        else:
+            state_key = 'unknown'
+        self.status_text.setText(self.tr_text(state_key))
         self.scope_button.setText(scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')+' ▾')
         self.context.update_value(data.get('context'), 'used', self.tr_text('context_tip',
             used=data.get('context_tokens'), window=data.get('context_window')))
@@ -897,10 +1012,146 @@ class Panel(QWidget):
             ratio='N/A' if hit is None else f'{hit:.1f}%',
             work=format_tokens(derived.get('new_work'), token_style)))
         if self.analytics_window and self.analytics_window.isVisible():
-            self.analytics_window.update_data(data)
+            self.analytics_window.update_data(
+                self.analytics_payload(data, provider))
+
+    def analytics_payload(self, data, provider):
+        # Each analytics snapshot is provider-tagged: Codex payloads keep
+        # the Codex tables, OpenCode payloads render the raw-category
+        # view. The snapshot carries provider/scope/selection/generation,
+        # so switches replace the view atomically and late results are
+        # rejected by the render guard before reaching the window.
+        return data
+
+    def apply_provider_chrome(self, provider):
+        """Show quota/context chrome only where a verified source exists.
+
+        OpenCode has no verified quota, context, reset, or refresh
+        source, so its Context meter, 5-hour/week meters, their
+        divider, and the quota-refresh status stay hidden in every
+        OpenCode view (available, unavailable, stale, Full, Compact) —
+        the metrics body ends at Token Analytics. Switching back to
+        Codex restores them at once. Recorded cost and neutral controls
+        are untouched. Late quota callbacks only repaint hidden text;
+        visibility is owned here on every render.
+        """
+        visible = (provider or 'codex') != 'opencode'
+        for widget in (self.quota_divider, self.context, self.five,
+                       self.week, self.status):
+            widget.setVisible(visible)
+
+    def render_opencode(self, data, selection, provider_label):
+        status = self.tr_text(data.get('status') or 'no_reliable_record')
+        if data.get('status') or not data.get('available'):
+            self.connection.setText(f'{provider_label} · {status}')
+            self.connection.setToolTip(status)
+            self.title.setFullText(self.tr_text('waiting_available_task'))
+            self.project.setText(provider_label.upper())
+            self.project.setToolTip(provider_label.upper())
+            for w in (self.total,self.model,self.effort,self.cost,self.compact_total,
+                        self.compact_cost):
+                w.setText('—')
+                w.setToolTip(status)
+            self.io_line.setText('—')
+            self.io_line.setToolTip(status)
+            self.insights.setText(self.tr_text('cache_hit_new_work', ratio='N/A', work='N/A'))
+            self.scope_button.setText(scope_text(data.get('scope', self.prefs.get('scope')), self.language)+' ▾')
+            self.status_dot.setVisible(False)
+            self.status_text.setVisible(False)
+            self.context.update_value(None, tip=status)
+            if self.analytics_window:
+                self.analytics_window.update_data(
+                    self.analytics_payload(data, 'opencode'))
+            self.refresh_cost()
+            self.refresh_status()
+            return
+        live = bool(selection.get('live'))
+        stale = bool(selection.get('stale'))
+        unknown = bool(selection.get('activity_unknown'))
+        scope = data.get('scope', self.prefs.get('scope'))
+        if data.get('presentation') == 'active_session':
+            # Verified live session shown while the requested scope names
+            # no session: label the live context as such; the scope
+            # button keeps the requested (independent) scope.
+            self.connection.setText(f'{provider_label} · {self.tr_text("active_session")}')
+            self.connection.setToolTip(f'{provider_label} · {self.tr_text("active_session")}')
+        else:
+            self.connection.setText(f'{provider_label} · {scope_text(scope, self.language)}')
+            self.connection.setToolTip(f'{provider_label} · {scope_text(scope, self.language)}')
+        self.project.setText(self.display_text(data.get('project'), 'waiting_codex').upper())
+        self.project.setToolTip(self.display_text(data.get('project'), 'waiting_codex').upper())
+        if data.get('session_id'):
+            # The adapter deliberately excludes session titles (user
+            # text), so no verified human-readable title exists: the
+            # prominent title shows the localized Active-session label
+            # instead of a raw session ID. The exact ID stays in
+            # selection, attribution, scoped analytics, and details.
+            self.title.setFullText(self.tr_text('active_session'))
+        else:
+            self.title.setFullText(self.display_text(data.get('title'), 'unnamed_task'))
+        self.model.setText(data.get('model') or self.tr_text('model_not_recorded'))
+        detail = data.get('model_detail') or {}
+        self.model.setToolTip(self.tr_text('model_tip')+'\n'+self.tr_text(
+            'opencode_model_tip', provider=detail.get('provider') or '—',
+            variant=detail.get('variant') or '—', agent=detail.get('agent') or '—'))
+        self.effort.setText(data.get('effort') or '—')
+        self.effort.setToolTip(self.tr_text('effort_tip'))
+        tokens = data.get('tokens') or {}
+        token_style = self.prefs.get('token_number_format')
+        # Raw categories plus the recorded Total (verified versions
+        # with complete data; N/A otherwise — never billed/context).
+        total_text = format_token_value(tokens.get('total'), token_style)
+        splits_tip = (f"{self.tr_text('header_input_tokens')}: {format_tokens(tokens.get('input'), token_style)}\n"
+                      f"{self.tr_text('header_output_tokens')}: {format_tokens(tokens.get('output'), token_style)}\n"
+                      f"{self.tr_text('header_reasoning_tokens')}: {format_tokens(tokens.get('reasoning'), token_style)}\n"
+                      f"{self.tr_text('header_cached_tokens')}: {format_tokens(tokens.get('cache_read'), token_style)}\n"
+                      f"{self.tr_text('header_write_tokens')}: {format_tokens(tokens.get('cache_write'), token_style)}\n"
+                      f"{self.tr_text('total_unavailable_note')}")
+        self.total.setText(total_text)
+        self.total.setToolTip(splits_tip)
+        self.compact_total.setText(total_text)
+        self.compact_total.setToolTip(splits_tip)
+        self.io_line.setText(f"{self.tr_text('input')} {format_tokens(tokens.get('input'), token_style)} · {self.tr_text('output')} {format_tokens(tokens.get('output'), token_style)}")
+        self.io_line.setToolTip(splits_tip)
+        self.scope_button.setText(scope_text(scope, self.language, recorded=scope == 'global')+' ▾')
+        self.status_dot.setVisible(True)
+        self.status_text.setVisible(True)
+        self.status_dot.setStyleSheet(f'color:{ICE if live else MUTED};')
+        if live:
+            state_key = 'working'
+        elif stale:
+            state_key = 'status_stale'
+        elif unknown:
+            state_key = 'unknown'
+        else:
+            state_key = 'idle'
+        self.status_text.setText(self.tr_text(state_key))
+        self.context.update_value(None, tip=self.tr_text('context_tip', used=None, window=None))
+        self.insights.setText(self.tr_text('cache_hit_new_work', ratio='N/A', work='N/A'))
+        self.insights.setToolTip(self.tr_text('total_unavailable_note'))
+        self.refresh_cost()
+        self.refresh_status()
+        if self.analytics_window and self.analytics_window.isVisible():
+            self.analytics_window.update_data(
+                self.analytics_payload(data, 'opencode'))
 
     def refresh_cost(self):
         d = self.snapshot
+        if (d.get('provider_id') or 'codex') == 'opencode':
+            # Currency is unstated: no symbol, no conversion. The
+            # recorded amount survives in the tooltip; Slice 6 owns
+            # cost-provenance display.
+            amount = (d.get('cost') or {}).get('amount')
+            tip = (self.tr_text('opencode_cost_tip', amount=f'{amount:,.4f}')
+                   if isinstance(amount, (int, float)) and not isinstance(amount, bool)
+                   else self.tr_text('no_reliable_record'))
+            for w in (self.cost, self.compact_cost):
+                w.setText('—')
+                w.setToolTip(tip)
+            for w in (self.cost_label, self.compact_cost_label):
+                w.setText('—')
+                w.setToolTip(tip)
+            return
         if not d.get('available'):
             self.cost.setText('—')
             self.compact_cost.setText('—')
@@ -940,10 +1191,15 @@ class Panel(QWidget):
 
     def refresh_status(self):
         quota = self.quota
-        limits = quota.get('limits') or self.snapshot.get('limits')
-        sampled = quota.get('sampled',0)
+        # Codex quota widgets blank unless the Codex provider is both
+        # selected and the quota source: no Codex limits, countdowns or
+        # errors may linger under OpenCode (or a late mismatched payload).
+        quota_usable = ((self.snapshot.get('provider_id') or 'codex') == 'codex'
+                        and (self.quota_provider or 'codex') == 'codex')
+        limits = (quota.get('limits') or self.snapshot.get('limits')) if quota_usable else None
+        sampled = quota.get('sampled',0) if quota_usable else 0
         age = time.time()-sampled
-        stale = age > 10 or bool(quota.get('error'))
+        stale = age > 10 or bool(quota.get('error')) if quota_usable else True
         for widget,minutes in ((self.five,300),(self.week,10080)):
             w = quota_window(limits, minutes)
             if not w:
@@ -962,8 +1218,24 @@ class Panel(QWidget):
                 widget.reset.setText(self.tr_text('awaiting_reset') if w['expired'] else self.tr_text('reset_in', duration=duration))
                 widget.reset.setVisible(True)
         self.status.setText(self.tr_text('quota_waiting') if stale else self.tr_text('syncing', time=time.strftime('%H:%M:%S')))
+        if (self.snapshot.get('provider_id') or 'codex') == 'opencode':
+            # Quota sync, token-event clock and sidecar errors are Codex
+            # concepts: the tooltip reports provider/scope/freshness from
+            # existing vocabulary instead of borrowing them.
+            selection = self.snapshot.get('selection') or {}
+            if selection.get('live'):
+                state_key = 'working'
+            elif selection.get('stale'):
+                state_key = 'status_stale'
+            elif selection.get('activity_unknown'):
+                state_key = 'unknown'
+            else:
+                state_key = 'idle'
+            self.status.setToolTip(
+                f"OpenCode · {scope_text(self.snapshot.get('scope', self.prefs.get('scope')), self.language)} · {self.tr_text(state_key)}")
+            return
         token_age = sample_age(self.snapshot.get('sample'))
-        error = quota.get('error')
+        error = quota.get('error') if quota_usable else None
         if error in ('quota_error',):
             error = self.tr_text(error)
         self.status.setToolTip((self.tr_text('token_last_written', seconds=int(token_age))+'\n' if token_age is not None else self.tr_text('no_token_events')+'\n')+
@@ -982,6 +1254,12 @@ class Panel(QWidget):
     def change_scope(self, scope):
         self.prefs['scope'] = scope
         self.persist()
+        poller = getattr(self, 'provider_poller', None)
+        if poller is not None:
+            # Retire outstanding requests for the old scope and repaint
+            # from cached state at once instead of waiting a poll tick.
+            snapshot = poller.apply_settings(dict(self.prefs))
+            self.bridge.data.emit(snapshot['result'])
 
     def open_settings(self):
         self.show()
@@ -991,7 +1269,9 @@ class Panel(QWidget):
         self.want_history.set()
         if self.analytics_window is None:
             self.analytics_window=AnalyticsWindow(self)
-        self.analytics_window.update_data(self.snapshot)
+        data = self.snapshot
+        provider = (data.get('provider_id') or 'codex') if isinstance(data, dict) else 'codex'
+        self.analytics_window.update_data(self.analytics_payload(data, provider))
         self.analytics_window.show()
         self.analytics_window.raise_()
 
@@ -1225,6 +1505,8 @@ class Panel(QWidget):
         self.stop.set()
         self.active.stop.set()
         self.activity.close()
+        if getattr(self, 'provider_poller', None) is not None:
+            self.provider_poller.close()
         if hasattr(self,'pet'):
             self.prefs['pet_position']=[self.pet.x(),self.pet.y()]
             self.pet.close()

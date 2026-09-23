@@ -1,5 +1,179 @@
 # Handoff
 
+## Latest — V1.2.0 docs correction CORRECTED, awaiting focused Astra re-review (2026-09-22)
+
+- README provider-use step fixed; stale PROGRESS passages marked historical (records preserved). Rebuilt + refreshed `dist/Petoken-v1.2.0-Windows-x64.zip`; frozen launch/exit clean. No code/behavior changes. No commit/push/tag/release.
+- Current candidate artifacts (verified on disk 2026-09-22): exe 4,019,845 bytes, SHA-256 `3E5D04C405D6EBA84E8BD43100D1E2B1441F827BC79436C289E161FBBE34243F`; `dist/Petoken-v1.2.0-Windows-x64.zip` 64,647,578 bytes, SHA-256 `D6AA69071D1123A65AC4D93BDB3035A9DEF6AC0D583B1D54ED0D3BDC9C6F7270`. The older candidate hashes below (`7990DFC2…A5CA` / `A8BDAA57…3981`) are SUPERSEDED — deliver only the current ZIP above.
+- Exact Next Action: focused Astra re-review of docs + new package. Remote publication needs separate explicit user authorization.
+
+## Latest — V1.2.0 manual-QA correction CORRECTED, awaiting Astra re-review (2026-09-22)
+
+- Quota/context chrome hidden in every OpenCode view (+ Codex restore incl. unavailable); neutral Active-session titles/tooltips with raw-ID retention; source-backed recorded Total (1.18.31/1.18.32 + complete; N/A otherwise; upstream totals never used); live SQL-exact reconciliation.
+- Validation: FULL 571 green (62.6 s native, no offscreen); compile + diff-check clean; UI inspected (neutral title, live recorded Total, no quota area). Fresh `build.ps1 -Package` (exit 0): exe `7990DFC2…A5CA` (4,019,845 B), `dist/Petoken-v1.2.0-Windows-x64.zip` `A8BDAA57…3981` (64,647,684 B); frozen available (live Active session) + absent (`no_provider` Daily) smokes clean; package privacy-checked. Prior candidate hash retired. No commit/push/tag/release.
+- Exact Next Action: Astra re-reviews and decides release. Remote publication needs separate explicit user authorization.
+
+## Latest — V1.2.0 local release candidate PREPARED, awaiting Astra review (2026-09-22)
+
+- `APP_VERSION` 1.2.0; CHANGELOG V1.2.0 entry; README/ROADMAP updated; no behavior changes. FULL 556 green (60.2 s); compile + diff-check clean. Fresh `build.ps1 -Package` (exit 0): exe SHA-256 `9537605B…81D63B8D`, zip SHA-256 `D740A418…F536377AB`; frozen available (live Active session) + absent (`no_provider` Daily) smokes clean; package privacy-checked. No commit/push/tag/release.
+- Exact Next Action: Astra reviews the release candidate. Remote publication needs separate explicit user authorization.
+
+## Latest — V1.2 final-gate micro-blockers CORRECTED, awaiting Astra re-review (2026-09-22)
+
+- (1) Exhaustion now reports `activity_unstable` unknown with rows discarded (never working/idle), stable recovery preserved. (2) Terminal `shutdown()` blocks detector reopen after poller close; reusable `close()` kept; close stays prompt. 5 new focused regressions; all prior regressions retained.
+- Validation: FULL 556 green (63.3 s native, no offscreen); compile + diff-check clean; no build/visual QA in this pass (frozen binary predates these micro-fixes). APP_VERSION 1.1.0. No commit/push/tag/release.
+- Exact Next Action: Astra re-reviews the two micro-blockers and decides release. No further implementation without approval.
+
+## Latest — V1.2 remaining cache blocker CORRECTED, awaiting Astra re-review (2026-09-22)
+
+- Stat-only key retired: reuse now requires persistent-reader `data_version` equality (probe-validated against every committed class incl. the exact same-size UPDATE + restored-mtime repro), file-identity reopen on replacement, straddle-safe projection, 60 s backstop as supplement only. Active-session presentation preserved and re-verified; test sync hardened (drain-before-close, detector release on swaps/poller close).
+- Validation: FULL 551 green (61.6 s native, no offscreen); 50 modules compile; diff-check clean; live-store ~124 ms first / ~8 ms steady; source + live Manual/Auto + fresh `build.ps1 -Package` (exit 0) + frozen available/absent smokes, no QtCore error; privacy clean. APP_VERSION 1.1.0. No commit/push/tag/release.
+- Exact Next Action: Astra performs final acceptance re-review and decides release. No further implementation without approval.
+
+## Latest — V1.2 final-acceptance blockers CORRECTED, awaiting Astra re-review (2026-09-22)
+
+- Both BLOCKED items fixed: (1) live OpenCode session now presents as explicitly marked `active_session` (single-row coherent, Total/currency N/A, scope/analytics independent, dishonest-waiting removed; stale/unknown/missing stay honest; Codex untouched); (2) activity probe uses storage-byte invalidation (file id + main/wal size+mtime, revision, window, 60 s backstop; ~8 ms steady on the live 1.4 GB store, reused agrees with fresh).
+- Validation: FULL 548 green (60 s native, no offscreen; one loaded-run UI timeout flake, green in isolation + rerun); 50 modules compile; diff-check clean; fresh frozen rebuild + available/absent smokes exit 0, no QtCore error; live Manual + Auto verified coherent; privacy clean (temp prefs homes, `.private` ignored). APP_VERSION 1.1.0. No commit/push/tag/release.
+- Exact Next Action: Astra performs final acceptance re-review and decides release. No further implementation without approval.
+
+## Latest — V1.2 Slice 7 FINAL ACCEPTANCE READY FOR REVIEW (2026-09-22)
+
+- FULL 519 green; 50 modules compile; diff-check clean; fresh DLL-safe build + source/frozen/absent smokes exit 0; live Codex + OpenCode working verified with SQL-exact reconciliation; UI matrix pairwise-covered (fractional-DPR/physical-drag unavailable, recorded); perf +0.62pp idle / −0.34pp active with flat memory (PASS); privacy clean; settings byte-identical. APP_VERSION 1.1.0. No commit/push/tag/release.
+- Exact Next Action: GPT-5.6 performs final acceptance review and decides release. No further implementation without approval.
+
+## Latest OpenCode slice — V1.2 Slice 6 corrections COMPLETE (2026-09-22)
+
+- Both BLOCKED items fixed, no Slice 7: authoritative history column order (headers and rows from one category definition; Cache Write kept; Total N/A), per-cell daily/range/lifetime coverage with skipped-row caps, recorded-cost columns with independent coverage, sanitized daily coverage in raw view. Follow-up: skipped-only days count as range evidence (ranges partial, day N/A/unknown, Today untouched); screenshot gates check loadable images with matching dimensions, not byte sizes. 10 new tests + 4 inspected screenshots; slice6 31 + coupled 178 + FULL 513 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: GPT-5.6 re-reviews the Slice 6 corrections and authorizes Slice 7 or reports corrections. Slice 7 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 6 provider-local analytics COMPLETE (2026-09-22)
+
+- OpenCode raw-category analytics in the existing window (history + sanitized breakdown forwarded; Codex path byte-identical plus heading label; atomic switches; late results never reach the window; 30 s floor intact). 21 new tests + inspected populated/partial screenshots; focused 110 + FULL 503 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: GPT-5.6 reviews Slice 6 and authorizes Slice 7 or reports corrections. Slice 7 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 5 provider-local reset fence COMPLETE (2026-09-22)
+
+- Remaining BLOCKED item fixed, no Slice 6: failed Codex reset advances only a Codex-local request fence (global epoch untouched, OpenCode never cancelled/retired, old adapter kept, Codex-only failed marking, same-iteration OpenCode independence). 2 new held/simultaneous-lane regressions + updated reset bound; test_slice5_final 46 + focused 92 + Qt UI 51 + FULL 482 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: GPT-5.6 re-reviews the provider-local reset fence and authorizes Slice 6 or reports corrections. Slice 6 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 5 current-failure semantics COMPLETE (2026-09-22)
+
+- Both BLOCKED items fixed, no Slice 6: coherent current failures via selection authority (`_coherent_failure`: manual lane-bound, Auto whole-tick, always tagged/live-False/working-None/unavailable/no-stamp) + failure-atomic provider-isolated Codex reset (old adapter kept, Codex-only marking, same-iteration OpenCode independence). 13 new + 2 updated tests; FULL 480 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: GPT-5.6 re-reviews the current-failure semantics correction and authorizes Slice 6 or reports corrections. Slice 6 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 5 fallback correction COMPLETE (2026-09-22)
+
+- Single BLOCKED item fixed, no Slice 6: `ProviderPoller.loop_tick()` centralizes fallback ownership (pre-reset tick on reset failure, own-tick poll-body fallbacks, preference-bound last-resort, never stamping use) + `Panel.read_loop_once()` helper; loop outer handler emits nothing; render legacy path retained but unreachable from production. 16 new tests (poller isolation/honesty/binding/reset/closed + Qt bridge obsolete-both-directions/current/initial/scope/pinned/no-None/static-guard/closing) + FULL 467 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: GPT-5.6 re-reviews the fallback correction and authorizes Slice 6 or reports corrections. Slice 6 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 5 final correction COMPLETE (2026-09-21)
+
+- Both BLOCKED items fixed, no Slice 6: immutable whole-tick capture/publication with provenance-compatible cached publish (honest pending, live working preserved when valid; reset/poll-fallback epoch-safe) + daemon-worker shutdown (pool replaced, close idempotent/no-join/no-mutation, child-held-forever exits promptly). 15 new tests (races both directions + Qt bridge rejection, compat, late, reset, settings paths, fallback, close, subprocess) + FULL 451 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 re-reviews final corrected Slice 5 and authorizes Slice 6 or reports corrections. Slice 6 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 5 corrections COMPLETE (2026-09-20)
+
+- All four BLOCKED items fixed, no Slice 6 work: bounded parallel providers (2-thread pool, strict single-flight, non-blocking collect, freshness expiry); immutable request contexts with retired-context discard, epoch invalidation + cancel, synchronous Settings.save/change_scope publish from cache; pet retires context on explicit absence with self-described provider only; every render exit ends with provider-aware cost/quota refresh. 12 new tests + updated helpers; FULL suite 436 green; phase flake documented (isolated-pass, retained traceback, animation untouched); compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 re-reviews corrected Slice 5 and authorizes Slice 6 or reports corrections. Slice 6 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 5 UI wiring COMPLETE (2026-09-20)
+
+- Poller + display + panel/pet/Settings wiring done per plan (atomic snapshots, N/A boundaries, no leakage, analytics pending marker, tracking combo, generation guards). 30 new tests (poller/display/settings/Qt incl. 6-shot zh/en matrix, inspected); FULL suite 424 green (one timing flake, isolated-pass); compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 reviews Slice 5 (wiring, UI tests, screenshots in `.private/ui-slice5/`, `docs/PROVIDERS.md` §18) and authorizes Slice 6 or reports corrections. Slice 6+ NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 4 dual-layer correction COMPLETE (2026-09-20)
+
+- Remaining blocker fixed: OpenCode shaper checks outer reason AND inner payload.status (safe-read, non-dict safe); either-layer failure forces source/working/validity down, cached data kept; benign markers never invalidate. Parameterized regressions (3 errors × outer/inner/mixed) through the real chain + controls; focused suites 152 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 re-reviews the dual-layer correction and authorizes Slice 5 or reports corrections. Slice 5 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 4 validity-boundary addendum COMPLETE (2026-09-20)
+
+- Single BLOCKED item fixed: dual-layer source-failure detection in both shapers (outer reason + payload status); outer-only failure invalidates live beside cached data; pinned scope stays benign (verified). 2 new regressions, focused suites 131 green; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 re-reviews the validity-boundary fix and authorizes Slice 5 or reports corrections. Slice 5 NOT authorized.
+
+## Latest OpenCode slice — V1.2 Slice 4 final corrections COMPLETE (2026-09-20)
+
+- All three BLOCKED items fixed, no Slice 5 work: fail-closed validity/source boundary (None/missing/failure paths, False defaults, explicit fixtures, e2e); same-message state-machine lifecycle (FIFO, deterministic ties, unknown-safe, coherent snapshot); part-driven recall (stale-row/fresh-open regressed) + attributable recency with idle-edit proofs. 16 new/updated focused tests, FULL suite 387 green; live re-verified; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 performs final Slice 4 review (`provider_selection.py`, `tests/test_provider_selection.py`, `OpenCodeProvider.activity_snapshot`, `docs/PROVIDERS.md` §13–15) and authorizes Slice 5 or reports corrections. Slice 5 NOT authorized.
+
+## Latest Astra Slice 4 correction re-review — BLOCKED (validity only)
+
+- 59 targeted activity/selection tests pass. Manual override, late reevaluation, message-scoped timestamp handling and explicit heuristic policy corrections pass the bounded review.
+- Remaining prior blocker: codex_provider_status(None) / missing codex_activity yield source_available/activity_valid True; explicit source error plus cached success payload can still yield Live. Missing validity also defaults True in the generic selector. Missing evidence must be unknown; source failures must override cached working claims while scope failures remain separate.
+- Exact next action: OpenCode follows `D:\Desktop\petoken\V1.2.0\09_Slice_4_Validity_ReReview.md`, adds the focused shaper/selector regressions and stops for re-review. Slice 5 held. Astra changed review docs only; no full tests/builds/implementation/commit/push.
+
+## Latest OpenCode slice — V1.2 Slice 4 corrections COMPLETE (2026-09-20)
+
+- All five BLOCKED items fixed, no Slice 5 work: manual bypass; validity separation (source/scoped/validity + unknown output); late-batch freshness reevaluation + preference + tag matching; message-scoped coherent lifecycle with timestamp validation; explicit policy + attributable recency with metadata-edit proofs. 20 new/updated focused tests, FULL suite 371 green; live re-verified; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 re-reviews corrected Slice 4 (`provider_selection.py`, `tests/test_provider_selection.py`, `OpenCodeProvider.activity_snapshot`, `docs/PROVIDERS.md` §13–14) and authorizes Slice 5 or reports corrections. Slice 5+ NOT authorized.
+
+## Latest Astra review — Slice 4 BLOCKED for Slice 5
+
+- 39 targeted activity/selection tests pass, but synthetic probes reproduce delayed manual override, rejected late batch retaining expired Live, lost unknown-activity validity, valid working context excluded by missing analytics scope, incorrect cross-message start/finish pairing, future timestamp false work and malformed timestamp TypeError.
+- Correct these and separate heuristic policy/verified activity recency; 900s/60s and the prefilter are sample-based policy, not proven provider semantics. Settings/mode diffs stayed scoped and 0.4s/2s hysteresis unchanged. No UI/accounting/pricing expansion observed.
+- Exact next action: OpenCode follows `D:\Desktop\petoken\V1.2.0\08_Slice_4_Review_Gate.md`, corrects Slice 4 and stops for re-review. Slice 5 not authorized. Astra modified review documents only; no build/visual QA/implementation/commit/push.
+
+## Latest OpenCode slice — V1.2 Slice 4 activity + selection COMPLETE (2026-09-20)
+
+- Activity snapshot + pure selection logic done (untracked `opencode_provider.py` method, new `provider_selection.py`); expiry 900 s / grace 60 s justified from live step data; preference persisted via existing tolerant settings (no UI); AppModeState timing preserved. 11 activity + 28 selection tests (fake clock), FULL suite 351 green; live snapshot verified; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 reviews Slice 4 (`provider_selection.py`, `tests/test_provider_selection.py`, `OpenCodeProvider.activity_snapshot`, `docs/PROVIDERS.md` §13, settings hook, `app_mode.py` rename) and authorizes Slice 5 or reports corrections. Slice 5+ NOT authorized. OpenCode must not implement further slices without explicit approval.
+
+## Latest Astra verdict — Slice 3 second corrections PASS
+
+- Both previously blocking issues closed in this bounded review: retained-WAL update/delete/rollback reads are fresh; rapid history changes coalesce behind a 30-second floor with stable cached/as_of and explicit refresh_pending. Nine targeted tests plus independent retained-WAL/fake-clock boundary probe passed; unchanged post-floor data did not rescan.
+- Exact next action: OpenCode follows `D:\Desktop\petoken\V1.2.0\07_OpenCode_Slice_4_Handoff.md` for activity/lifecycle + provider selection only, then stops for review. This supersedes earlier BLOCKED/held Slice 4 instructions below. No full suite/build, implementation edit, commit or push by Astra.
+
+## Latest OpenCode slice — V1.2 Slice 3 second corrections COMPLETE (2026-09-20)
+
+- Both re-review BLOCKED items fixed in `opencode_provider.py` (untracked), no Slice 4 work: detector removed (always-project + diff; WAL premise reproduced locally — version stays 2, stat identical, SELECT sees new values); genuine 30 s floor (pending coalescing, frozen as_of, one post-floor rescan; revisions mark pending; no-waste expiry). 42 adapter + 12 provider tests, 99 coupled green; live SQL reconciliation still exact; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 re-reviews the corrected Slice 3 (`opencode_provider.py`, `tests/test_opencode_provider.py`, `docs/PROVIDERS.md` §10–12) and either passes the Slice 3 gate or reports corrections. Slice 4 (`06_Slice_3_Review_and_Slice_4_Gate.md`) remains NOT authorized. OpenCode must not implement slices 4–7 without explicit approval.
+
+## Latest Astra re-review — Slice 3 corrections: BLOCKED
+
+- 49 focused adapter/provider tests passed independently; original all-unknown/zero and malformed-number/date regressions are covered. No full suite/build or implementation edit.
+- Remaining revision blocker reproduced with a persistent WAL writer: after input 100 -> 7, main-file identity and newly opened connection data_version both stay unchanged (2); refresh returns cached 100. data_version values from separate connections cannot serve as a persistent change detector. Correct WAL-aware invalidation and test WAL update/deletion/rollback with the writer kept open.
+- Remaining history-bound blocker: three full history scans in two simulated seconds after successive message updates. Fingerprint changes bypass the claimed 30-second minimum interval; refresh also clears the history cache on ordinary changes. Mark dirty/coalesce updates, retain as_of/coverage and serve cached data until a genuine per-selection rescan budget allows refresh. Test continuous writes and session revisions as well as unchanged data.
+- Exact next action: OpenCode fixes these two Slice 3 blockers and returns for re-review. Slice 4 remains unauthorized. No commit/push by Astra.
+
+## Latest Astra review — V1.2 Slice 3: BLOCKED for Slice 4
+
+- Independently ran 34 adapter/provider tests: PASS. Synthetic adversarial probes reproduced all-unknown tokens becoming 0 (session and daily), same-size replacement retaining stale input 100 instead of 7, malformed token TypeError and out-of-range timestamp OSError. Two unchanged history reads also perform two full selected-message scans.
+- Exact next action: OpenCode corrects Slice 3 and adds focused regressions, then returns for Astra review. Requirements and a held, NOT authorized Slice 4 handoff: `D:\Desktop\petoken\V1.2.0\06_Slice_3_Review_and_Slice_4_Gate.md`. Slice 4 remains activity/lifecycle + selection only after this gate passes.
+- Read-only connections, project-id grouping, raw-category separation and recorded amount/currency=None are sound directions. Nullable/incremental claims need the corrections above. No implementation edits, full tests/builds, commit or push by Astra. This verdict supersedes earlier progression instructions.
+
+## Latest OpenCode slice — V1.2 Slice 3 corrections COMPLETE (2026-09-20)
+
+- All four BLOCKED items fixed in `opencode_provider.py` (untracked), no Slice 4 work: unknown-never-zero sums + daily coverage; identity/data_version coherent snapshots (same-size/larger replacement, rollback, deletion); corrupt-cell validation without zero-fill; fingerprinted 30 s-bounded history cache with explicit freshness. 37 adapter + 12 provider tests, 94 coupled green; live SQL reconciliation still exact; compile/diff clean. No commit/push/version bump/build.
+- Exact Next Action: Astra-6 re-reviews the corrected Slice 3 (`opencode_provider.py`, `tests/test_opencode_provider.py`, `docs/PROVIDERS.md` §10–11) and either passes the Slice 3 gate or reports corrections. Slice 4 (`06_Slice_3_Review_and_Slice_4_Gate.md`) remains NOT authorized. OpenCode must not implement slices 4–7 without explicit approval.
+
+## Latest Astra review — V1.2 Slice 2
+
+- PASS WITH CONDITIONS for Slice 3. Actual wrapper preserves full Codex payload/raw/nullable fields; the base envelope assumes no token formula. Capabilities are separated for the current Codex-only stage; no accidental OpenCode accounting was introduced.
+- Independently ran only tests/test_providers.py: 10/10 PASS. A synthetic probe confirmed the working-context parity test is vacuous (both None; activity invalid/uia_unavailable). OpenCode must add deterministic non-null context/argument parity and unavailable-scope versus working-context coverage before adapter work.
+- Exact next action: follow `D:\Desktop\petoken\V1.2.0\05_OpenCode_Slice_3_Handoff.md`. Verify OpenCode accounting/project/fork/revision mappings before aggregation; unknown currency stays unknown; update capability lookup consistently; no UI/selector/activity activation or combined totals.
+- Review only: no implementation changes or full tests/builds; no commit/push. This block supersedes earlier Slice-2-awaiting-review instructions.
+
+## Latest Astra review — V1.2 Slice 1
+
+- Verdict: PASS WITH CONDITIONS for Slice 2 only (Codex wrapper). SQLite metadata is sufficient to proceed; this is not approval of OpenCode token semantics, project grouping or automatic activity.
+- Corrections: cache_read 501.7M > input 18.3M contradicts the claimed subset; step-finish/tool-calls is not proven session completion. Project identity mapping, fork/revision handling and bounded activity expiry require further evidence. Unknown cost currency stays None/N/A, with no symbol/conversion assumption.
+- Exact next action: OpenCode follows `D:\Desktop\petoken\V1.2.0\04_OpenCode_Slice_2_Handoff.md`: correct discovery confidence labels, implement the minimal Codex wrapper and focused parity tests, then STOP for Astra review. No OpenCode adapter/UI/selector in Slice 2.
+- Astra reviewed documents and relevant Git diff only; no implementation, tests/builds, database probing, commit or push. This review supersedes earlier PROVEN/no-blocker claims and Slice-1-awaiting-review instructions below.
+
+## V1.1.0 delivered — current state (OpenCode delivery, 2026-09-20)
+
+- Current Released Version: **V1.1.0** (pushed, tagged `v1.1.0` on `3cf7eb5`, full GitHub Release "Petoken v1.1.0", ZIP published; release SHAs/URL in PROGRESS.md delivery record).
+- Current Target Version: **V1.2.0 — PLANNING ONLY**. Implementation Status: **NOT STARTED**.
+- Current Implementer: OpenCode. Review / Planning Agent: Codex / Astra-6.
+- Exact Next Action: Astra-6 reviews the Slice 3 adapter (see top block) and authorizes Slice 4 or reports corrections. OpenCode must not implement slices 4–7 without explicit approval. No commit/push per handoff.
+
+## Current planning handoff — 2026-09-20 (supersedes older status below)
+
+- Baseline: completed V1.1 per the user's current instruction; implementation checkpoint `fcd9288`; current HEAD `3cf7eb5` after concurrent documentation/workflow commits. ROADMAP records user acceptance/release. Older unpublished/PARTIAL statements below are historical, not the current planning gate; remote publication was not rechecked.
+- Current implementer: OpenCode. Planner/reviewer: Codex / Astra-6. V1.2 plan approved; OpenCode is assigned Slice 1 discovery/documentation only. Astra does not implement.
+- V1.2 plan APPROVED: focused Codex + OpenCode support, seven slices, no new art or unrelated integrations. Specifications: `D:\Desktop\petoken\V1.2.0\00_Scope_and_Behavior.md`, `01_Provider_Architecture.md`, `02_Implementation_and_Acceptance.md`; findings in `99_Implementation_Notes.md`. Original prompt preserved.
+- Exact next action: OpenCode follows `D:\Desktop\petoken\V1.2.0\03_OpenCode_Slice_1_Handoff.md`, verifies metadata/activity/recency, documents evidence and stops for Astra review. Shared-file handoff prepared; no OpenCode session was launched or messaged. No adapter implementation, commit, version change or publication.
+- This session changed planning/state documents only. Existing AGENTS/CHANGELOG/DESIGN/release-note changes preserved; ROADMAP planning updated in place. No tests/builds/visual QA run, as requested. Existing historical reports below remain for recovery, not renewed task authorization.
+
 ## Latest authorized correction - COMPLETE
 
 - Astra temporarily implemented this slice; OpenCode stayed paused. Correction acceptance PASS: enlarged aspect-preserving 256-square pet, one real character as spatial anchor, right-first adjacent satellite, R1-R9 and scope-aware verifier fixed. Default role returns to Astra review/planning after this slice.

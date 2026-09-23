@@ -1,4 +1,9 @@
-"""Central Daily / Token mode state with small transition hysteresis."""
+"""Central Daily / Token mode state with small transition hysteresis.
+
+The activity input is provider-agnostic: any selected provider's live
+claim feeds the same 0.4-second activation / 2-second deactivation
+timing (V1.2 slice 4 generalizes the input without changing timing).
+"""
 import time
 
 DAILY_MODE = "daily"
@@ -17,9 +22,9 @@ class AppModeState:
     def is_token(self):
         return self.mode == TOKEN_MODE
 
-    def update(self, codex_active, reliable=True, now=None):
+    def update(self, active, reliable=True, now=None):
         now = time.monotonic() if now is None else now
-        target = TOKEN_MODE if reliable and codex_active else DAILY_MODE
+        target = TOKEN_MODE if reliable and active else DAILY_MODE
         if target == self.mode:
             self.pending = None
             self.pending_since = None

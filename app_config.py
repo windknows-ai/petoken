@@ -6,15 +6,18 @@ from pathlib import Path
 
 from localization import DEFAULT_LANGUAGE, normalize_language
 from pricing import DEFAULT_CURRENCY, normalize_currency
+from provider_selection import (DEFAULT_TRACKING_PROVIDER,
+                                normalize_tracking_provider)
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 from pet_geometry import PET_SCALE_DEFAULT, normalize_pet_scale
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 SETTINGS_SCHEMA_VERSION = 1
 DEFAULT_PREFERENCES = {
     "settings_schema_version": SETTINGS_SCHEMA_VERSION,
     "language": DEFAULT_LANGUAGE,
     "scope": "conversation",
+    "tracking_provider": DEFAULT_TRACKING_PROVIDER,
     "token_number_format": DEFAULT_TOKEN_NUMBER_FORMAT,
     "currency": DEFAULT_CURRENCY,
     "always_on_top": True,
@@ -45,6 +48,8 @@ def normalize_preferences(data):
         preferences["settings_schema_version"] = SETTINGS_SCHEMA_VERSION
     preferences["token_number_format"] = normalize_token_format(
         preferences.get("token_number_format"))
+    preferences["tracking_provider"] = normalize_tracking_provider(
+        preferences.get("tracking_provider"))
     preferences["language"] = normalize_language(preferences.get("language"))
     preferences["currency"] = normalize_currency(preferences.get("currency"))
     return preferences

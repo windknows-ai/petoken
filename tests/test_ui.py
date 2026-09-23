@@ -1,7 +1,9 @@
 import hashlib
 import tempfile
+import threading
 import time
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 from PySide6.QtWidgets import QApplication, QCheckBox, QDoubleSpinBox, QLabel, QPushButton
@@ -11,6 +13,11 @@ from widget import Panel, Settings
 from pet import DesktopPet
 from analytics import aggregate,normalize_usage
 from localization import STRINGS, text
+from provider_poller import ProviderPoller
+from tests.test_opencode_provider import (BASE_MS, make_message, make_part,
+                                          make_session, write_store)
+from tests.test_providers import write_home
+from usage import CodexStore
 
 
 class UiTests(unittest.TestCase):
@@ -457,6 +464,1043 @@ class UiTests(unittest.TestCase):
         self.panel.apply_language();self.app.processEvents()
         self.assertEqual(self.panel.pet.windowTitle(),text('pet_title','zh_CN'))
         self.assertEqual(self.panel.pet.tr_text('analytics_button'),text('analytics_button','zh_CN'))
+
+
+NOW_S = BASE_MS / 1000 + 100
+
+
+class ProviderUiTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.pref_patch = patch('widget.PREF_DIR', Path(self.temp.name))
+        self.pref_patch.start()
+        self.panel = Panel(live=False)
+        self.panel.pet = DesktopPet(self.panel)
+        self.panel.pet.activity_timer.stop()
+        self.work = Path(self.temp.name) / 'stores'
+        self.work.mkdir()
+
+    def tearDown(self):
+        self.panel.provider_poller.drain(timeout=10)
+        self.panel.provider_poller.close()
+        self.panel.pet.close(); self.panel.tray.hide()
+        if self.panel.analytics_window: self.panel.analytics_window.close()
+        self.panel.closing = True; self.panel.close()
+        self.panel.deleteLater(); self.app.processEvents()
+        self.pref_patch.stop(); self.temp.cleanup()
+
+    def _home(self, name, threads):
+        home = self.work / name
+        home.mkdir(exist_ok=True)
+        write_home(str(home), threads)
+        return CodexStore(home)
+
+    def _db(self, name, sessions, messages=(), parts=()):
+        path = self.work / name
+        write_store(path, sessions, messages, parts)
+        return path
+
+    def _attach(self, threads, sessions, messages=(), parts=()):
+        self.panel.provider_poller.drain(timeout=10)
+        self.panel.provider_poller.close()
+        home = self._home(f'codex-{len(list(self.work.iterdir()))}', threads)
+        db = self._db(f'open-{len(list(self.work.iterdir()))}.db', sessions,
+                      messages, parts)
+        self.panel.provider_poller = ProviderPoller(home, db)
+        return self.panel.provider_poller
+
+    def _poll_render(self, prefs=None, now=None, **kw):
+        # Three rounds guarantee one full fresh round-trip even when a
+        # previous-epoch job is still draining (see poller tests).
+        prefs = dict({'scope': 'global'}, **(prefs or {}))
+        poller = self.panel.provider_poller
+        poller.poll(prefs, now=now, **kw)
+        self.assertTrue(poller.drain(), 'provider reads did not finish')
+        poller.poll(prefs, now=now, **kw)
+        self.assertTrue(poller.drain(), 'provider reads did not finish')
+        out = poller.poll(prefs, now=now, **kw)
+        self.panel.render(out['result'])
+        self.app.processEvents()
+        return out
+
+    def _apply_render(self, prefs_update, mark=None):
+        """Production settings path: persist, apply, synchronous emit."""
+        self.panel.prefs.update(prefs_update)
+        out = self.panel.provider_poller.apply_settings(
+            dict(self.panel.prefs), mark_provider=mark)
+        self.panel.render(out['result'])
+        self.app.processEvents()
+        return out
+
+    def test_settings_tracking_defaults_options_and_labels(self):
+        settings = Settings(self.panel)
+        self.assertEqual([settings.tracking.itemData(i)
+                          for i in range(settings.tracking.count())],
+                         ['auto', 'codex', 'opencode'])
+        self.assertEqual(settings.tracking.currentData(), 'auto')
+        self.assertEqual(settings.tracking_label.text(),
+                         text('tracking_provider', 'zh_CN'))
+        settings.language.setCurrentIndex(
+            settings.language.findData('en'))
+        settings.apply_language()
+        self.assertEqual(
+            [settings.tracking.itemText(i)
+             for i in range(settings.tracking.count())],
+            [text('tracking_auto', 'en'), text('tracking_codex', 'en'),
+             text('tracking_opencode', 'en')])
+        settings.reject()
+
+    def test_settings_tracking_save_cancel_reset(self):
+        import json
+        import widget as widget_module
+        poller = self._attach([{'id': 't1'}], [make_session('ses_1')])
+        settings = Settings(self.panel)
+        settings.tracking.setCurrentIndex(settings.tracking.findData('opencode'))
+        before_generation = poller.generation
+        settings.save()
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'opencode')
+        prefs_file = widget_module.PREF_DIR / 'settings.json'
+        loaded = json.loads(prefs_file.read_text(encoding='utf-8'))
+        self.assertEqual(loaded.get('tracking_provider'), 'opencode')
+        self.assertIn('opencode', poller.selection.last_use)
+        self.assertGreater(poller.generation, before_generation)
+        # Cancel discards: change the form, reject, prefs keep opencode.
+        settings = Settings(self.panel)
+        settings.tracking.setCurrentIndex(settings.tracking.findData('codex'))
+        settings.reject()
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'opencode')
+        # Reset returns to Auto (two-click confirm), then persists.
+        settings = Settings(self.panel)
+        settings.reset_to_defaults(); settings.reset_to_defaults()
+        self.assertEqual(settings.tracking.currentData(), 'auto')
+        settings.save()
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'auto')
+
+    def test_codex_opencode_codex_switch_stays_coherent(self):
+        self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_1', updated=BASE_MS)],
+            [make_message('m1', 'ses_1')],
+            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        codex = self._poll_render(active_title='t1', detection_valid=True)
+        self.assertIn('Codex', self.panel.connection.text())
+        codex_total = self.panel.total.text()
+        self.assertNotEqual(codex_total, 'N/A')
+        self.panel.prefs['tracking_provider'] = 'opencode'
+        self.panel.provider_poller.mark_used('opencode')
+        self.panel.provider_poller.bump_generation()
+        opencode = self._poll_render({'scope': 'conversation',
+                                      'pinned': 'ses_1',
+                                      'tracking_provider': 'opencode'},
+                                     now=NOW_S)
+        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertEqual(self.panel.total.text(), 'N/A')
+        self.assertEqual(self.panel.model.text(), 'test-model')
+        self.assertNotIn('gpt-6-astra', self.panel.model.text())
+        self.assertNotIn('gpt-6-astra', self.panel.title.toolTip())
+        self.panel.prefs['tracking_provider'] = 'codex'
+        self.panel.provider_poller.mark_used('codex')
+        self.panel.provider_poller.bump_generation()
+        back = self._poll_render({'tracking_provider': 'codex'},
+                                 active_title='t1', detection_valid=True)
+        self.assertIn('Codex', self.panel.connection.text())
+        self.assertEqual(self.panel.total.text(), codex_total)
+        self.assertNotIn('test-model', self.panel.model.text())
+
+    def test_both_working_both_idle_and_manual_unavailable(self):
+        self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_1', updated=BASE_MS)],
+            [make_message('m1', 'ses_1')],
+            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        both = self._poll_render(active_title='t1', detection_valid=True,
+                                 now=NOW_S)
+        self.assertTrue(both['selection']['live'])
+        self.assertEqual(self.panel.status_text.text(),
+                         text('working', self.panel.language))
+        # Both idle: Daily, historical, no live bubble arming.
+        idle = self._poll_render(
+            {'scope': 'global'}, detection_valid=False, now=NOW_S + 10000)
+        self.assertFalse(idle['selection']['live'])
+        self.assertEqual(self.panel.app_mode.pending, None)
+        self.assertEqual(self.panel.app_mode.mode, 'daily')
+        self.assertEqual(self.panel.status_text.text(),
+                         text('idle', self.panel.language))
+        # Manual to a down provider: unavailable, never the other side.
+        # Same poller keeps generations monotonic so the render lands.
+        self.panel.prefs['tracking_provider'] = 'opencode'
+        from opencode_provider import OpenCodeProvider as OcProvider
+        self.panel.provider_poller.opencode.close()
+        self.panel.provider_poller.opencode = OcProvider(
+            self.work / 'absent.db')
+        snap = self._poll_render({'tracking_provider': 'opencode'},
+                                 now=NOW_S + 10000)
+        self.assertIsNone(snap['selection']['selected'])
+        self.assertFalse(snap['selection']['live'])
+        self.assertIn('OpenCode', self.panel.connection.text())
+
+    def test_working_session_separate_from_pinned_scope(self):
+        self._attach(
+            [{'id': 't1', 'working': True}, {'id': 't2'}],
+            [make_session('ses_a', project='proj-a',
+                          directory='/synthetic/alpha',
+                          tokens=(10, 1, 1, 1, 0)),
+             make_session('ses_b', project='proj-b',
+                          directory='/synthetic/beta',
+                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
+            [make_message('m1', 'ses_b')],
+            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
+        # Codex: analytics inspects t2, bubble follows working t1.
+        self._poll_render({'scope': 'conversation', 'pinned': 't2'},
+                          active_title='t1', detection_valid=True)
+        self.assertIn('t1', self.panel.pet.toolTip())
+        # OpenCode: analytics inspects ses_a, bubble follows ses_b.
+        self.panel.prefs['tracking_provider'] = 'opencode'
+        self.panel.provider_poller.mark_used('opencode')
+        self.panel.provider_poller.bump_generation()
+        self._poll_render({'scope': 'conversation', 'pinned': 'ses_a',
+                           'tracking_provider': 'opencode'}, now=NOW_S)
+        self.assertIn('OpenCode', self.panel.pet.toolTip())
+        self.assertIn('beta', self.panel.pet.toolTip())
+        self.assertNotIn('alpha', self.panel.pet.toolTip())
+        self.assertIn(text('active_session', self.panel.language),
+                      self.panel.pet.toolTip())
+        self.assertNotIn('ses_b', self.panel.pet.toolTip())
+        self.assertEqual(self.panel.title.text(),
+                         text('active_session', self.panel.language))
+        self.assertNotIn('ses_a', self.panel.title.toolTip())
+
+    def test_missing_scope_with_valid_working_codex(self):
+        self._attach([{'id': 't1', 'working': True}, {'id': 't2'}], [])
+        out = self._poll_render({'scope': 'conversation', 'pinned': 'ghost'},
+                                active_title='t1', detection_valid=True)
+        self.assertTrue(out['selection']['live'])
+        self.assertIn('t1', self.panel.pet.toolTip())
+        self.assertIn('Codex', self.panel.connection.text())
+
+    def test_valid_history_with_unknown_activity_opencode(self):
+        path = self.work / 'noparts.db'
+        write_store(path, [make_session('ses_1', tokens=(100, 20, 5, 400, 0))],
+                    with_part_table=False)
+        home = self._home('codex-idle', [{'id': 't1'}])
+        self.panel.provider_poller.drain(timeout=10)
+        self.panel.provider_poller.close()
+        self.panel.provider_poller = ProviderPoller(home, path)
+        out = self._poll_render({'tracking_provider': 'opencode'})
+        self.assertFalse(out['selection']['live'])
+        self.assertEqual(self.panel.status_text.text(),
+                         text('unknown', self.panel.language))
+        # History still renders: scope sum visible without a live claim.
+        self.assertIn('100', self.panel.io_line.text())
+
+    def test_source_failure_clears_live_keeps_history_honest(self):
+        poller = self._attach([{'id': 't1', 'working': True}],
+                              [make_session('ses_1', updated=BASE_MS)])
+        live = self._poll_render(active_title='t1', detection_valid=True,
+                                 now=NOW_S)
+        self.assertTrue(live['selection']['live'])
+        from unittest.mock import patch
+        from providers import CodexProvider
+        with patch.object(CodexProvider, 'read',
+                          side_effect=RuntimeError('boom')):
+            failed = self._poll_render(now=NOW_S)
+        # Live is removed at once; the surviving provider's own scope
+        # data renders (N/A total, no Codex numbers lingering).
+        self.assertFalse(failed['selection']['live'])
+        self.assertIsNone(failed['result'].get('working_context'))
+        self.assertNotIn('gpt-6-astra', self.panel.model.text())
+        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertEqual(self.panel.total.text(), 'N/A')
+
+    def test_late_generation_quota_and_scope_ignored(self):
+        self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_1', updated=BASE_MS)],
+            [make_message('m1', 'ses_1')],
+            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        first = self._poll_render(active_title='t1', detection_valid=True,
+                                  now=NOW_S)
+        first_total = self.panel.total.text()
+        stale = dict(first['result'])
+        stale['generation'] = first['generation'] - 1
+        stale['scope'] = 'project'
+        self.panel.render(stale)
+        self.app.processEvents()
+        self.assertEqual(self.panel.total.text(), first_total)
+        # Late Codex quota under OpenCode selection renders N/A.
+        self.panel.prefs['tracking_provider'] = 'opencode'
+        self.panel.provider_poller.mark_used('opencode')
+        self.panel.provider_poller.bump_generation()
+        self._poll_render({'tracking_provider': 'opencode'}, now=NOW_S)
+        self.panel.receive_limits(dict(provider_id='codex', sampled=time.time(),
+                                       limits={'primary': {'usedPercent': 30,
+                                                           'windowDurationMins': 300,
+                                                           'resetsAt': time.time() + 1800}}))
+        self.app.processEvents()
+        self.assertEqual(self.panel.five.value.text(), '—')
+        self.assertFalse(self.panel.five.reset.isVisible())
+
+    def test_opencode_na_boundaries_and_real_zero(self):
+        self._attach(
+            [{'id': 't1'}],
+            [make_session('ses_zero', tokens=(0, 0, 0, 0, 0), cost=0.0,
+                          updated=BASE_MS)],
+            [make_message('m1', 'ses_zero')],
+            [make_part('p1', 'ses_zero', created=BASE_MS - 100000)])
+        out = self._poll_render({'scope': 'conversation',
+                                 'pinned': 'ses_zero',
+                                 'tracking_provider': 'opencode'}, now=NOW_S)
+        self.assertTrue(out['selection']['live'])
+        self.assertEqual(self.panel.total.text(), 'N/A')
+        self.assertEqual(self.panel.cost.text(), '—')
+        self.assertIn('0.0000', self.panel.cost.toolTip())
+        self.assertEqual(self.panel.context.value.text(), '—')
+        # Real zeros render as 0, missing values as N/A.
+        self.assertIn(' 0 ', f" {self.panel.io_line.text()} ")
+        self.assertEqual(self.panel.five.value.text(), '—')
+        self.assertFalse(self.panel.five.reset.isVisible())
+        self.assertNotIn('$', self.panel.cost.text())
+        self.assertNotIn('CA$', self.panel.cost.toolTip())
+
+    def test_long_names_keep_layout_usable(self):
+        long_name = 'x' * 200
+        self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_1', project='p', directory='/synthetic/' + long_name,
+                          updated=BASE_MS)],
+            [make_message('m1', 'ses_1')],
+            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        width_before = self.panel.width()
+        self._poll_render({'scope': 'conversation', 'pinned': 'ses_1',
+                           'tracking_provider': 'opencode'}, now=NOW_S)
+        self.app.processEvents()
+        self.assertEqual(self.panel.width(), width_before)
+        self.assertLessEqual(len(self.panel.project.text()), 200)
+        self.assertIn(long_name.upper(), self.panel.project.toolTip())
+        self.panel.show(); self.app.processEvents()
+
+    def test_provider_switch_preserves_pet_and_chrome(self):
+        poller = self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_1', updated=BASE_MS)],
+            [make_message('m1', 'ses_1')],
+            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        self._poll_render(active_title='t1', detection_valid=True, now=NOW_S)
+        pet_pos = self.panel.pet.pos()
+        pet_size = self.panel.pet.size()
+        pin_before = self.panel.is_pinned()
+        self.panel.prefs['tracking_provider'] = 'opencode'
+        poller.mark_used('opencode')
+        poller.bump_generation()
+        self._poll_render({'tracking_provider': 'opencode'}, now=NOW_S)
+        self.panel.prefs['tracking_provider'] = 'auto'
+        poller.bump_generation()
+        self._poll_render(now=NOW_S)
+        self.assertEqual(self.panel.pet.pos(), pet_pos)
+        self.assertEqual(self.panel.pet.size(), pet_size)
+        self.assertEqual(self.panel.is_pinned(), pin_before)
+        self.panel.show(); self.app.processEvents()
+        self.panel.toggle_compact(); self.app.processEvents()
+        from widget import COMPACT_HEIGHT
+        self.assertEqual(self.panel.height(), COMPACT_HEIGHT)
+        self.panel.toggle_compact(); self.app.processEvents()
+        self.assertTrue(self.panel.body_scroll.isVisible())
+
+    def test_synthetic_bilingual_panel_matrix_screenshots(self):
+        import os
+        from opencode_provider import OpenCodeProvider
+        shots = os.path.join(os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))), '.private',
+            'ui-slice5')
+        os.makedirs(shots, exist_ok=True)
+
+        def build():
+            return self._attach(
+                [{'id': 't1', 'working': True}],
+                [make_session('ses_1', updated=BASE_MS)],
+                [make_message('m1', 'ses_1')],
+                [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+
+        self.panel.resize(560, 500)
+        for language in ('zh_CN', 'en'):
+            poller = build()
+            self.panel.prefs['language'] = language
+            self.panel.prefs['tracking_provider'] = 'auto'
+            self.panel.apply_language()
+            codex = self._poll_render(active_title='t1',
+                                      detection_valid=True)
+            self._shot(shots, f'{language}-codex-live', language,
+                       codex['result'])
+            self.panel.prefs['tracking_provider'] = 'opencode'
+            poller.mark_used('opencode')
+            poller.bump_generation()
+            opencode = self._poll_render(
+                {'scope': 'conversation', 'pinned': 'ses_1',
+                 'tracking_provider': 'opencode'}, now=NOW_S)
+            self._shot(shots, f'{language}-opencode-live', language,
+                       opencode['result'])
+            self.panel.provider_poller.opencode.close()
+            self.panel.provider_poller.opencode = OpenCodeProvider(
+                os.path.join(self.temp.name, 'absent.db'))
+            missing = self._poll_render({'tracking_provider': 'opencode'},
+                                        now=NOW_S)
+            self._shot(shots, f'{language}-opencode-unavailable', language,
+                       missing['result'])
+
+    def _shot(self, shots, name, language, result):
+        import os
+        self.panel.prefs['language'] = language
+        self.panel.apply_language()
+        self.panel.render(result)
+        self.app.processEvents()
+        path = os.path.join(shots, f'{name}.png')
+        self.assertTrue(self.panel.grab().save(path, 'PNG'), name)
+        self.assertGreater(os.path.getsize(path), 10000, name)
+
+    def test_settings_save_applies_immediately_without_poll(self):
+        self._attach([{'id': 't1', 'working': True}],
+                     [make_session('ses_1', updated=BASE_MS)],
+                     [make_message('m1', 'ses_1')],
+                     [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        self._poll_render(active_title='t1', detection_valid=True)
+        self.assertIn('Codex', self.panel.connection.text())
+        settings = Settings(self.panel)
+        settings.tracking.setCurrentIndex(
+            settings.tracking.findData('opencode'))
+        settings.save()
+        # No manual poll or render invoked: save published synchronously.
+        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('opencode',
+                      self.panel.provider_poller.selection.last_use)
+        settings = Settings(self.panel)
+        settings.tracking.setCurrentIndex(
+            settings.tracking.findData('codex'))
+        settings.save()
+        self.assertIn('Codex', self.panel.connection.text())
+
+    def test_token_mode_switch_retires_pet_context(self):
+        self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_1', updated=BASE_MS)],
+            [make_message('m1', 'ses_1')],
+            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        self._poll_render(active_title='t1', detection_valid=True)
+        tick = time.monotonic()
+        self.panel.app_mode.update(True, True, now=tick)
+        self.panel.app_mode.update(True, True, now=tick + 0.5)
+        self.assertTrue(self.panel.pet.token_bubble_visible())
+        self.assertEqual(self.panel.pet.working_context['thread'], 't1')
+        # Switch to available-but-idle OpenCode while Token Mode is
+        # still inside its deactivation delay.
+        self._apply_render({'tracking_provider': 'opencode'},
+                           mark='opencode')
+        self.assertTrue(self.panel.pet.token_bubble_visible())
+        self.assertIsNone(self.panel.pet.working_context)
+        self.assertNotIn('t1', self.panel.pet.toolTip())
+        # Scope data stays provider-labeled; t1 is gone, not relabeled.
+        self.assertIn('OpenCode', self.panel.pet.toolTip())
+
+    def test_missing_working_row_clears_bubble(self):
+        import sqlite3
+        from contextlib import closing
+        path = self._db('orphan.db',
+                        [make_session('ses_x', project='proj-x',
+                                      directory='/synthetic/xray',
+                                      updated=BASE_MS)],
+                        [make_message('m1', 'ses_x')],
+                        [make_part('p1', 'ses_x', created=BASE_MS - 100000)])
+        home = self._home('codex-missing-row', [{'id': 't1'}])
+        from provider_poller import ProviderPoller as Poller
+        self.panel.provider_poller.drain(timeout=10)
+        self.panel.provider_poller.close()
+        self.panel.provider_poller = Poller(home, path)
+        with closing(sqlite3.connect(path, timeout=5)) as db:
+            db.execute("DELETE FROM session WHERE id='ses_x'")
+            db.commit()
+        out = self._poll_render({'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        self.assertIsNone(out['result'].get('working_context'))
+        self.assertIn('N/A', self.panel.pet.toolTip())
+
+    def test_quota_clears_atomically_on_unavailable_switch(self):
+        self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_1', updated=BASE_MS)],
+            [make_message('m1', 'ses_1')],
+            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        self._poll_render(active_title='t1', detection_valid=True)
+        self.panel.receive_limits(dict(
+            sampled=time.time(),
+            limits={'primary': {'usedPercent': 30, 'windowDurationMins': 300,
+                                'resetsAt': time.time() + 18000}}))
+        self.app.processEvents()
+        self.panel.show(); self.app.processEvents()
+        self.assertIn('70%', self.panel.five.value.text())
+        self.assertTrue(self.panel.five.reset.isVisible())
+        from opencode_provider import OpenCodeProvider as OcProvider
+        self.panel.provider_poller.opencode.close()
+        self.panel.provider_poller.opencode = OcProvider(
+            self.work / 'absent.db')
+        self._apply_render({'tracking_provider': 'opencode'},
+                           mark='opencode')
+        # Same-transaction clearing: no timer tick or quota callback
+        # runs between render and these assertions.
+        self.assertEqual(self.panel.five.value.text(), '—')
+        self.assertFalse(self.panel.five.reset.isVisible())
+        self.assertEqual(self.panel.cost.text(), '—')
+        self.assertEqual(self.panel.context.value.text(), '—')
+        self.assertIn('OpenCode', self.panel.connection.text())
+
+    def test_codex_unavailable_preserves_quota(self):
+        self._attach([{'id': 't1', 'working': True}],
+                     [make_session('ses_1')])
+        self._poll_render(active_title='t1', detection_valid=True)
+        self.panel.show(); self.app.processEvents()
+        self.panel.receive_limits(dict(
+            sampled=time.time(),
+            limits={'primary': {'usedPercent': 30, 'windowDurationMins': 300,
+                                'resetsAt': time.time() + 18000}}))
+        self.app.processEvents()
+        self.assertIn('70%', self.panel.five.value.text())
+        gone = self.work / 'codex-gone'
+        gone.mkdir(exist_ok=True)
+        write_home(str(gone), [{'id': 't9'}])
+        import shutil
+        shutil.rmtree(gone)
+        from providers import CodexProvider
+        from usage import CodexStore
+        self.panel.provider_poller.codex = CodexProvider(CodexStore(gone))
+        out = self._poll_render({'tracking_provider': 'codex'})
+        self.assertFalse(out['selection']['live'])
+        self.assertIn('70%', self.panel.five.value.text())
+        self.assertTrue(self.panel.five.reset.isVisible())
+
+    def test_change_scope_mid_read_via_control(self):
+        import threading
+        from providers import CodexProvider
+        poller = self._attach(
+            [{'id': 't1', 'working': True}, {'id': 't2'}],
+            [make_session('ses_1')])
+        self._poll_render({'scope': 'conversation', 'pinned': 't2'},
+                          active_title='t1', detection_valid=True)
+        # Settle the render's trailing submit first: _poll_render leaves
+        # its last poll in flight, and a held poll started on an
+        # occupied slot would never enter the blocking read (worker
+        # entry would time out under load).
+        self.assertTrue(poller.drain(timeout=10))
+        entered, release = self._hold(CodexProvider)
+        try:
+            thread, _ = self._poll_thread(
+                {'scope': 'conversation', 'pinned': 't2'},
+                active_title='t1', detection_valid=True)
+            self.assertTrue(entered.wait(timeout=10))
+            thread.join(timeout=10)
+            self.assertFalse(thread.is_alive())
+            # Real quick control mid-read: invalidates (epoch + generation
+            # advance at once), then repaints from cache without waiting
+            # for the blocked read.
+            before = poller.generation
+            self.panel.change_scope('project')
+            self.assertEqual(self.panel.prefs['scope'], 'project')
+            self.assertGreater(poller.generation, before)
+            release.set()
+            self.assertTrue(poller.drain())
+            out = self._poll_render({'scope': 'project'},
+                                    active_title='t1', detection_valid=True)
+            self.assertEqual(out['result'].get('scope'), 'project')
+            from localization import scope_text
+            self.assertIn(
+                scope_text('project', self.panel.language),
+                self.panel.scope_button.text())
+        finally:
+            release.set()
+
+    def _hold(self, target):
+        import threading
+        entered, release = threading.Event(), threading.Event()
+        orig = target.read
+        def blocking(inner_self, *args, **kwargs):
+            entered.set()
+            self.assertTrue(release.wait(timeout=30))
+            return orig(inner_self, *args, **kwargs)
+        target.read = blocking
+        self.addCleanup(setattr, target, 'read', orig)
+        return entered, release
+
+    def _poll_thread(self, prefs, **kw):
+        outcome = {}
+        thread = threading.Thread(
+            target=lambda: outcome.setdefault(
+                'out', self.panel.provider_poller.poll(prefs, **kw)),
+            daemon=True)
+        thread.start()
+        return thread, outcome
+
+    def test_bubble_binds_activity_session_not_scope_title(self):
+        self._attach(
+            [{'id': 't1', 'working': True}, {'id': 't2'}],
+            [make_session('ses_a', project='proj-a',
+                          directory='/synthetic/alpha',
+                          tokens=(10, 1, 1, 1, 0)),
+             make_session('ses_b', project='proj-b',
+                          directory='/synthetic/beta',
+                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
+            [make_message('m1', 'ses_b')],
+            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
+        # Codex side first: scope title t2, bubble follows working t1.
+        self._poll_render({'scope': 'conversation', 'pinned': 't2'},
+                          active_title='t1', detection_valid=True)
+        self.assertIn('t2', self.panel.title.text())
+        self.assertIn('t1', self.panel.pet.toolTip())
+        # OpenCode side: differing projects/tokens prove the binding.
+        self.panel.prefs['tracking_provider'] = 'opencode'
+        self.panel.provider_poller.mark_used('opencode')
+        self.panel.provider_poller.bump_generation()
+        out = self._poll_render({'scope': 'conversation', 'pinned': 'ses_a',
+                                 'tracking_provider': 'opencode'}, now=NOW_S)
+        context = out['result']['working_context']
+        self.assertEqual((context['thread'], context['project'],
+                          context['tokens']['input']), ('ses_b', 'beta', 20))
+        self.assertIn('beta', self.panel.pet.toolTip())
+        self.assertNotIn('alpha', self.panel.pet.toolTip())
+
+    def _live_work(self, sessions=None, messages=None, parts=None):
+        if sessions is None:
+            sessions = [make_session(
+                'ses_work', project='proj-w',
+                directory='/synthetic/work', tokens=(100, 20, 5, 400, 7),
+                cost=0.05, updated=BASE_MS)]
+        if messages is None:
+            messages = [make_message('m1', 'ses_work')]
+        if parts is None:
+            parts = [make_part('p1', 'ses_work',
+                               created=BASE_MS - 100000)]
+        return self._attach([{'id': 't1'}], sessions, messages, parts)
+
+    def _assert_active_panel(self):
+        self.assertIn(text('active_session', self.panel.language),
+                      self.panel.connection.text())
+        # Prominent surfaces never show raw session IDs; the exact ID
+        # stays in selection, attribution, and analytics instead.
+        self.assertEqual(self.panel.title.text(),
+                         text('active_session', self.panel.language))
+        self.assertIn(text('active_session', self.panel.language),
+                      self.panel.title.toolTip())
+        self.assertNotIn('ses_work', self.panel.title.toolTip())
+        self.assertEqual(self.panel.model.text(), 'test-model')
+        self.assertIn('100', self.panel.io_line.text())
+        self.assertEqual(self.panel.total.text(), 'N/A')
+        self.assertEqual(self.panel.status_text.text(),
+                         text('working', self.panel.language))
+
+    def test_live_opencode_without_pin_shows_active_session(self):
+        self._live_work()
+        out = self._poll_render({'scope': 'conversation',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        self.assertTrue(out['selection']['live'])
+        self.assertEqual(out['result'].get('presentation'),
+                         'active_session')
+        self._assert_active_panel()
+        # Auto with the same saved Conversation/no-pin preferences.
+        self.panel.prefs['tracking_provider'] = 'auto'
+        self.panel.provider_poller.mark_used('opencode')
+        self.panel.provider_poller.bump_generation()
+        auto = self._poll_render({'scope': 'conversation'}, now=NOW_S)
+        self.assertEqual(auto['selection']['selected'], 'opencode')
+        self.assertTrue(auto['selection']['live'])
+        self.assertEqual(auto['result'].get('presentation'),
+                         'active_session')
+        self._assert_active_panel()
+
+    def test_codex_pin_does_not_hide_live_opencode(self):
+        self._live_work()
+        out = self._poll_render({'scope': 'conversation', 'pinned': 't1',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        self.assertTrue(out['selection']['live'])
+        self._assert_active_panel()
+        self.assertEqual(out['result']['session_id'],
+                         'opencode:ses_work')
+        self.assertEqual(out['result']['tokens']['input'], 100)
+
+    def test_matching_pin_keeps_scoped_view(self):
+        self._live_work()
+        out = self._poll_render({'scope': 'conversation',
+                                 'pinned': 'ses_work',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        result = out['result']
+        self.assertTrue(result['available'])
+        self.assertIsNone(result.get('presentation'))
+        self.assertEqual(result['scope_identity']['scope_type'],
+                         'conversation')
+        self.assertNotIn(text('active_session', self.panel.language),
+                         self.panel.connection.text())
+        self.assertEqual(self.panel.title.text(),
+                         text('active_session', self.panel.language))
+        # The pinned session's exact ID stays in selection/attribution,
+        # never in the prominent title.
+        self.assertNotIn('ses_work', self.panel.title.toolTip())
+        self.assertEqual(out['result']['session_id'],
+                         'opencode:ses_work')
+
+    def test_other_pin_shows_scope_with_live_bubble(self):
+        self._live_work(
+            [make_session('ses_work', project='proj-w',
+                          directory='/synthetic/work',
+                          tokens=(100, 20, 5, 400, 7), cost=0.05,
+                          updated=BASE_MS),
+             make_session('ses_idle', project='proj-i',
+                          directory='/synthetic/idle',
+                          tokens=(10, 1, 1, 1, 0), cost=0.01)],
+            [make_message('m1', 'ses_work')],
+            [make_part('p1', 'ses_work', created=BASE_MS - 100000)])
+        out = self._poll_render({'scope': 'conversation',
+                                 'pinned': 'ses_idle',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        result = out['result']
+        self.assertTrue(result['available'])
+        self.assertIsNone(result.get('presentation'))
+        # Panel shows the pinned scope's own values, never the live row;
+        # the prominent title stays neutral while the exact pinned ID
+        # remains in selection and analytics.
+        self.assertEqual(self.panel.title.text(),
+                         text('active_session', self.panel.language))
+        self.assertNotIn('ses_idle', self.panel.title.toolTip())
+        self.assertNotIn('ses_work', self.panel.title.toolTip())
+        self.assertEqual(result['session_id'], 'opencode:ses_idle')
+        self.assertIn('10', self.panel.io_line.text())
+        # The bubble follows the live working session instead.
+        self.assertEqual(result['working_context']['thread'], 'ses_work')
+        self.assertIn('work', self.panel.pet.toolTip())
+        self.assertIn(text('active_session', self.panel.language),
+                      self.panel.pet.toolTip())
+        self.assertNotIn('ses_work', self.panel.pet.toolTip())
+
+    def test_opencode_hides_quota_context_everywhere(self):
+        self._live_work()
+        self.panel.show()
+        self.app.processEvents()
+        quotas = dict(
+            sampled=time.time(),
+            limits={'primary': {'usedPercent': 30,
+                                'windowDurationMins': 300,
+                                'resetsAt': time.time() + 18000}})
+        self.panel.receive_limits(quotas)
+        self.app.processEvents()
+        out = self._poll_render({'scope': 'conversation',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        self.assertTrue(out['result']['available'])
+        for language in ('zh_CN', 'en'):
+            self.panel.prefs['language'] = language
+            self.panel.apply_language()
+            self.panel.render(out['result'])
+            self.app.processEvents()
+            self.assertFalse(self.panel.context.isVisible())
+            self.assertFalse(self.panel.five.isVisible())
+            self.assertFalse(self.panel.week.isVisible())
+            self.assertFalse(self.panel.quota_divider.isVisible())
+            self.assertFalse(self.panel.status.isVisible())
+            # Metrics body ends at Token Analytics; recorded cost stays.
+            self.assertTrue(self.panel.cost.isVisible())
+            self.assertTrue(self.panel.details_button.isVisible())
+        # Late quota updates while in OpenCode repaint hidden text only.
+        self.panel.receive_limits(quotas)
+        self.app.processEvents()
+        self.assertFalse(self.panel.five.isVisible())
+        self.assertFalse(self.panel.status.isVisible())
+        # Stale OpenCode (source older than the freshness gate) keeps
+        # the area hidden instead of a waiting refresh status.
+        from opencode_provider import OpenCodeProvider
+        self.assertTrue(
+            self.panel.provider_poller.drain(timeout=10))
+        entered, release = self._hold(OpenCodeProvider)
+        try:
+            thread, _ = self._poll_thread(
+                {'scope': 'conversation',
+                 'tracking_provider': 'opencode'}, now=NOW_S)
+            self.assertTrue(entered.wait(timeout=10))
+            thread.join(timeout=10)
+            self.assertFalse(thread.is_alive())
+            poller = self.panel.provider_poller
+            stale = poller.poll(
+                {'scope': 'conversation',
+                 'tracking_provider': 'opencode'}, now=NOW_S + 10)
+            self.panel.render(stale['result'])
+            self.app.processEvents()
+            self.assertFalse(stale['selection']['live'])
+            self.assertTrue(stale['selection']['stale'])
+            self.assertFalse(self.panel.context.isVisible())
+            self.assertFalse(self.panel.five.isVisible())
+            self.assertFalse(self.panel.week.isVisible())
+            self.assertFalse(self.panel.status.isVisible())
+        finally:
+            release.set()
+            self.assertTrue(
+                self.panel.provider_poller.drain(timeout=10))
+        # Compact layout: twins carry cost/total, quota stays hidden.
+        self.panel.toggle_compact()
+        self.app.processEvents()
+        self.assertTrue(self.panel.compact_box.isVisible())
+        self.assertFalse(self.panel.five.isVisible())
+        self.assertFalse(self.panel.status.isVisible())
+        self.panel.toggle_compact()
+        self.app.processEvents()
+        self.assertFalse(self.panel.context.isVisible())
+        self.assertFalse(self.panel.five.isVisible())
+        # Unavailable OpenCode keeps the area hidden, never N/A meters.
+        from opencode_provider import OpenCodeProvider as OcProvider
+        self.panel.provider_poller.opencode.close()
+        self.panel.provider_poller.opencode = OcProvider(
+            self.work / 'absent.db')
+        gone = self._poll_render({'tracking_provider': 'opencode'},
+                                 now=NOW_S)
+        self.assertFalse(gone['result']['available'])
+        self.assertFalse(self.panel.context.isVisible())
+        self.assertFalse(self.panel.five.isVisible())
+        self.assertFalse(self.panel.week.isVisible())
+        self.assertFalse(self.panel.status.isVisible())
+        # Switching back to Codex restores quota/context immediately.
+        # A re-attached poller is a fresh producer: like an app
+        # relaunch it restarts the render-generation guard, while its
+        # own generations stay monotonic afterward.
+        self._attach([{'id': 't1', 'working': True}],
+                     [make_session('ses_1')])
+        self.panel.provider_poller.mark_used('codex')
+        self.panel._render_generation = None
+        self.panel.receive_limits(quotas)
+        self.app.processEvents()
+        codex = self._poll_render({'tracking_provider': 'codex'},
+                                  active_title='t1', detection_valid=True)
+        self.assertTrue(codex['selection']['live'])
+        self.assertTrue(self.panel.context.isVisible())
+        self.assertTrue(self.panel.five.isVisible())
+        self.assertTrue(self.panel.week.isVisible())
+        self.assertTrue(self.panel.quota_divider.isVisible())
+        self.assertTrue(self.panel.status.isVisible())
+        self.assertIn('70%', self.panel.five.value.text())
+
+    def test_verified_live_total_shows_recorded_sum(self):
+        self._live_work(
+            [make_session('ses_big', project='proj-w',
+                          directory='/synthetic/work',
+                          version='1.18.31',
+                          tokens=(1000, 200, 30, 4000, 70), cost=0.05,
+                          updated=BASE_MS)],
+            [make_message('m1', 'ses_big')],
+            [make_part('p1', 'ses_big', created=BASE_MS - 100000)])
+        out = self._poll_render({'scope': 'conversation',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        result = out['result']
+        self.assertTrue(result['available'])
+        self.assertEqual(result['presentation'], 'active_session')
+        self.assertEqual(result['tokens']['total'], 5300)
+        self.assertEqual(self.panel.total.text(), '5.30K')
+        self.assertIn('1.00K', self.panel.total.toolTip())
+        self.assertIn(text('total_unavailable_note', self.panel.language),
+                      self.panel.total.toolTip())
+        # Splits stay raw and separate beside the recorded total.
+        self.assertIn('1.00K', self.panel.io_line.text())
+        # Pet tooltip carries the recorded total under a neutral title.
+        self.assertIn('5.30K', self.panel.pet.toolTip())
+        self.assertIn(text('active_session', self.panel.language),
+                      self.panel.pet.toolTip())
+        self.assertNotIn('ses_big', self.panel.pet.toolTip())
+        # Recorded cost preserved; quota/context hidden.
+        self.assertEqual(result['cost']['amount'], 0.05)
+        self.assertFalse(self.panel.context.isVisible())
+        self.assertFalse(self.panel.five.isVisible())
+        self.assertFalse(self.panel.status.isVisible())
+
+    def test_idle_unknown_and_missing_stay_honest(self):
+        self._attach([{'id': 't1'}],
+                     [make_session('ses_idle', updated=BASE_MS)])
+        idle = self._poll_render({'scope': 'conversation',
+                                  'tracking_provider': 'opencode'},
+                                 now=NOW_S)
+        # Idle with no live lane: honest unavailable, never a fabricated
+        # scope view (transient store contention under load may surface
+        # the preference-bound pending shape instead of the scope miss).
+        self.assertFalse(idle['result']['available'])
+        self.assertIn(self.panel.connection.text(),
+                      [f"OpenCode · {text('waiting_available_task', self.panel.language)}",
+                       f"OpenCode · {text('no_reliable_record', self.panel.language)}"])
+        self.assertEqual(self.panel.total.text(), '—')
+        self.assertFalse(self.panel.status_dot.isVisible())
+        self.assertIsNone(idle['result'].get('working_context'))
+        # Unknown activity with a matching scope stays unknown, never
+        # working: scoped values render without a live claim.
+        path = self.work / 'noparts.db'
+        write_store(path, [make_session('ses_1', tokens=(100, 20, 5, 400, 0))],
+                    with_part_table=False)
+        home = self._home('codex-idle', [{'id': 't1'}])
+        self.panel.provider_poller.drain(timeout=10)
+        self.panel.provider_poller.close()
+        self.panel.provider_poller = ProviderPoller(home, path)
+        unknown = self._poll_render({'scope': 'conversation',
+                                     'pinned': 'ses_1',
+                                     'tracking_provider': 'opencode'},
+                                    now=NOW_S)
+        self.assertFalse(unknown['selection']['live'])
+        self.assertEqual(self.panel.status_text.text(),
+                         text('unknown', self.panel.language))
+        # A deleted session row clears the live panel, never a stale one.
+        self._live_work()
+        live = self._poll_render({'scope': 'conversation',
+                                  'tracking_provider': 'opencode'},
+                                 now=NOW_S)
+        self.assertTrue(live['result']['available'])
+        import sqlite3
+        from contextlib import closing
+        db = self.panel.provider_poller.opencode.db_path
+        with closing(sqlite3.connect(db)) as connection:
+            connection.execute("DELETE FROM session WHERE id='ses_work'")
+            connection.commit()
+        gone = self._poll_render({'scope': 'conversation',
+                                  'tracking_provider': 'opencode'},
+                                 now=NOW_S)
+        self.assertFalse(gone['result']['available'])
+        self.assertIsNone(gone['result'].get('presentation'))
+        self.assertIsNone(gone['result'].get('working_context'))
+        self.assertIn(text('waiting_available_task',
+                           self.panel.language),
+                      self.panel.connection.text())
+
+    def test_read_failure_stays_honest(self):
+        self._live_work()
+        from opencode_provider import OpenCodeProvider
+        with patch.object(OpenCodeProvider, 'read',
+                          side_effect=RuntimeError('boom')):
+            failed = self._poll_render(
+                {'scope': 'conversation',
+                 'tracking_provider': 'opencode'}, now=NOW_S)
+        self.assertFalse(failed['result']['available'])
+        self.assertIsNone(failed['result'].get('working_context'))
+        self.assertIn(text('no_reliable_record',
+                           self.panel.language),
+                      self.panel.connection.text())
+
+    def test_stale_scope_miss_never_shows_active(self):
+        from opencode_provider import OpenCodeProvider
+        self._live_work()
+        live = self._poll_render({'scope': 'conversation',
+                                  'tracking_provider': 'opencode'},
+                                 now=NOW_S)
+        self.assertEqual(live['result'].get('presentation'),
+                         'active_session')
+        # Same trailing-submit settle as above: the held poll must find
+        # a free slot so worker entry is deterministic, not load-raced.
+        self.assertTrue(
+            self.panel.provider_poller.drain(timeout=10))
+        entered, release = self._hold(OpenCodeProvider)
+        try:
+            thread, _ = self._poll_thread(
+                {'scope': 'conversation',
+                 'tracking_provider': 'opencode'}, now=NOW_S)
+            self.assertTrue(entered.wait(timeout=10))
+            thread.join(timeout=10)
+            self.assertFalse(thread.is_alive())
+            # No drain while the worker is held: poll is non-blocking
+            # and the advanced clock expires Live into honest stale.
+            poller = self.panel.provider_poller
+            out = poller.poll({'scope': 'conversation',
+                               'tracking_provider': 'opencode'},
+                              now=NOW_S + 10)
+            self.panel.render(out['result'])
+            self.app.processEvents()
+            self.assertFalse(out['selection']['live'])
+            self.assertTrue(out['selection']['stale'])
+            self.assertIsNone(out['result'].get('presentation'))
+            self.assertIn(self.panel.connection.text(),
+                          [f"OpenCode · {text('waiting_available_task', self.panel.language)}",
+                           f"OpenCode · {text('no_reliable_record', self.panel.language)}"])
+        finally:
+            release.set()
+            self.assertTrue(
+                self.panel.provider_poller.drain(timeout=10))
+
+    def test_late_active_result_rejected(self):
+        self._live_work()
+        old = self._poll_render({'scope': 'conversation',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        self.assertEqual(old['result'].get('presentation'),
+                         'active_session')
+        self.panel.provider_poller.bump_generation()
+        new = self._poll_render({'scope': 'global',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        self.assertGreater(new['generation'], old['generation'])
+        self.panel.render(old['result'])
+        self.app.processEvents()
+        # The late active payload cannot repaint the newer panel.
+        self.assertNotIn(text('active_session', self.panel.language),
+                         self.panel.connection.text())
+
+    def test_switch_to_codex_clears_active(self):
+        self._attach(
+            [{'id': 't1', 'working': True}],
+            [make_session('ses_work', project='proj-w',
+                          directory='/synthetic/work',
+                          tokens=(100, 20, 5, 400, 7), cost=0.05,
+                          updated=BASE_MS)],
+            [make_message('m1', 'ses_work')],
+            [make_part('p1', 'ses_work', created=BASE_MS - 100000)])
+        codex = self._poll_render({'tracking_provider': 'codex'},
+                                  active_title='t1', detection_valid=True)
+        codex_total = self.panel.total.text()
+        self.assertNotEqual(codex_total, 'N/A')
+        self.panel.prefs['tracking_provider'] = 'opencode'
+        self.panel.provider_poller.mark_used('opencode')
+        self.panel.provider_poller.bump_generation()
+        active = self._poll_render({'scope': 'conversation',
+                                    'tracking_provider': 'opencode'},
+                                   now=NOW_S)
+        self.assertEqual(active['result'].get('presentation'),
+                         'active_session')
+        self.panel.prefs['tracking_provider'] = 'codex'
+        self.panel.provider_poller.mark_used('codex')
+        self.panel.provider_poller.bump_generation()
+        back = self._poll_render({'tracking_provider': 'codex'},
+                                 active_title='t1', detection_valid=True)
+        self.assertIn('Codex', self.panel.connection.text())
+        self.assertEqual(self.panel.total.text(), codex_total)
+        self.assertNotIn('test-model', self.panel.model.text())
+        self.assertNotIn('ses_work', self.panel.title.toolTip())
+
+    def test_analytics_keeps_scope_view_for_active_session(self):
+        self._live_work()
+        self.panel.show()
+        self.panel.open_analytics()
+        self.app.processEvents()
+        out = self._poll_render({'scope': 'conversation',
+                                 'tracking_provider': 'opencode'},
+                                now=NOW_S)
+        result = out['result']
+        self.assertEqual(result.get('presentation'), 'active_session')
+        # Scope-mismatch proof at the data level: the live values are
+        # tagged active_session, never relabeled as scoped aggregates.
+        self.assertEqual(result['scope_identity']['scope_type'],
+                         'active_session')
+        self.assertEqual(result['scope_identity']['requested_scope'],
+                         'conversation')
+        window = self.panel.analytics_window
+        self.assertEqual(window.subtitle.text(),
+                         text('waiting_available_task',
+                              self.panel.language))
+        self.assertEqual(window.metrics.rowCount(), 0)
+        self.assertIn('active_session', window.raw.toPlainText())
+        self.assertEqual(window.history_note.text(),
+                         text('waiting_available_task',
+                              self.panel.language))
 
 
 if __name__=='__main__':unittest.main()

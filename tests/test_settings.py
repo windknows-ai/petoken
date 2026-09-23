@@ -18,7 +18,7 @@ class SettingsTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_app_version_is_shared_with_codex_sidecar(self):
-        self.assertEqual(APP_VERSION, "1.1.0")
+        self.assertEqual(APP_VERSION, "1.2.0")
         self.assertEqual(desktop.APP_VERSION, APP_VERSION)
 
     def test_missing_file_uses_new_field_defaults(self):
@@ -76,6 +76,27 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(loaded["manual_fx"], 1.25)
         self.assertEqual(loaded["prices"], {"gpt-6-astra": [1, 2, 3, 4]})
         self.assertEqual(loaded["currency"], "USD")
+
+
+    def test_tracking_provider_defaults_auto_and_persists(self):
+        self.assertEqual(DEFAULT_PREFERENCES["tracking_provider"], "auto")
+        self.assertEqual(load_preferences(self.path)["tracking_provider"],
+                         "auto")
+        save_preferences(self.path, {"tracking_provider": "opencode"})
+        self.assertEqual(load_preferences(self.path)["tracking_provider"],
+                         "opencode")
+
+    def test_tracking_provider_invalid_and_legacy_fall_back(self):
+        save_preferences(self.path, {"tracking_provider": "All Providers"})
+        self.assertEqual(load_preferences(self.path)["tracking_provider"],
+                         "auto")
+        self.assertEqual(
+            load_preferences_from({"scope": "global"})["tracking_provider"],
+            "auto")
+        self.assertEqual(
+            load_preferences_from(
+                {"tracking_provider": " Codex "})["tracking_provider"],
+            "codex")
 
 
 def load_preferences_from(data):
