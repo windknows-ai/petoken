@@ -1,31 +1,53 @@
-# petoken
+# Petoken
 
-petoken 是一个 Windows 桌宠：跟随当前打开的 Codex 或 OpenCode 任务，按需显示本机准确的 token 用量、5 小时/每周额度（Codex）、重置倒计时和费用（Codex 为 API 等价估算，OpenCode 为已记录金额）；平时只显示已批准的角色形象。
+> Local usage & cost intelligence for AI coding agents on Windows.
+
+*AI 结对编程的本机用量与成本桌宠：跟随你当前打开的任务，诚实显示 token 用量、额度与费用。*
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-## 亮点
+**Petoken Community** — the free, open-source edition of Petoken. This public repository contains the complete application source for the released version below.
 
-- 自动跟随当前 Codex/OpenCode 任务（Windows 辅助功能标题与 verified activity），支持固定任务与任务/项目范围；设置中可在自动、Codex、OpenCode 之间切换跟踪提供方。
-- 本地增量解析数字用量事件，不发送模型请求、不导出对话、不读取凭据；缓存输入与推理 token 不重复计入总量。
-- 完整 Token Analytics：原始字段、派生指标、模型 / 会话 / 日期分组、本地 lifetime，未知值显示 `N/A` 而非假零。Codex 显示官方 total 与派生指标；OpenCode 显示 Input / Output / Reasoning / Cache Read / Cache Write 五个原始分类，以及已验证版本（1.18.31/1.18.32）的记录 Total（五类之和，非账单、非上下文；缺失/部分/未验证版本时为 N/A），费用为已记录金额且币种未知。
-- Codex 工作 / 待机 / 打字 / 麦克风 / 音乐状态带进入与退出防抖；默认始终是批准的角色。
+## What it does
 
-## 使用
+Petoken is a small Windows desktop companion. It follows your active AI coding task and shows, on demand, that task's token usage and cost — per conversation, per project, or globally. An approved character idles on your desktop; hover or click it to reveal the usage panel.
 
-1. 在 [GitHub Releases](https://github.com/windknows-ai/petoken/releases) 下载 Windows x64 压缩包。
-2. 解压整个文件夹并双击其中的 exe（后续版本为 `petoken.exe`；V1.0.0 发布件名为 `CodexWisp.exe`）。`_internal` 文件夹也是程序的一部分，不要只复制 exe。
-3. 按需保持所选数据源运行：跟踪 Codex 时保持 Codex 桌面客户端开启；跟踪 OpenCode 时保持 OpenCode 运行（有活跃任务时才显示实时 Working 状态）。可在设置中切换跟踪提供方；任一来源缺失时对应视图只会诚实显示不可用。
+- **Dual-provider tracking**: Codex and OpenCode, via Auto (working-first), Codex-only, or OpenCode-only tracking, switchable in Settings.
+- **Task-level live usage**: input / output / reasoning / cache splits for the current task.
+- **Quotas and resets** (Codex): official 5-hour / weekly usage with reset countdowns.
+- **Cost**: Codex shows an API-equivalent estimate (USD / CAD / EUR / CNY); OpenCode shows its own recorded amount (currency unknown, never converted).
+- **Token Analytics**: model / session / date grouping with local lifetime history.
+- **Honest unknowns**: anything unverified renders as `N/A` — never zero-filled, never invented, never summed across providers.
+- Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-交互：悬停约 0.35 秒或单击桌宠显示用量面板，离开约 0.7 秒收起；拖动移动；右键打开菜单；`Alt + 方向键` 移动面板。详细行为见 [V1.0.0 发布说明](docs/RELEASE_NOTES_v1.0.0.md)。
+## Latest stable release: v1.2.0
 
-## 数据与隐私
+Download the Windows x64 package from [GitHub Releases](https://github.com/windknows-ai/petoken/releases) (`Petoken-v1.2.0-Windows-x64.zip`). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
-只读取：Codex 只读 SQLite 任务元数据与 JSONL 数字用量事件、只读 `account/rateLimits/read` 结果、OpenCode 只读 SQLite 会话/消息/步骤元数据（列白名单，不含标题、正文、工具参数、凭据、分享链接）、Windows 任务标题与活动布尔状态、媒体会话标题/作者/字幕元数据（仅内存显示）、加拿大央行公开汇率（USD/CAD/EUR/CNY，仅用于 Codex 估算）。不保存按键内容、音频、字幕或媒体名称，也不上传本地用量。
+## Supported providers
 
-本地来源要求：Codex 桌面客户端（`~/.codex`）与/或已安装的 OpenCode（`~/.local/share/opencode/opencode.db`，opencode-ai 1.18.31 已验证）；任一来源缺失时对应视图诚实显示不可用，不影响另一提供方。
+| Source | Status | What you get |
+| --- | --- | --- |
+| Codex desktop client | Available now | Official totals, 5-hour / weekly quotas with resets, API-equivalent cost, working/idle context |
+| OpenCode 1.18.31 / 1.18.32 | Available now | Five raw usage categories plus a recorded Total on verified complete data, recorded cost (currency unknown); no quotas or context — those UI areas stay hidden rather than fabricated |
 
-## 从源码运行
+If a source is missing, its views honestly show unavailable without affecting the other provider.
+
+## Install and use
+
+1. Download `Petoken-v1.2.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases).
+2. Extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
+3. Keep the selected source running: the Codex desktop client for Codex tracking, or OpenCode for OpenCode tracking (live Working state needs an active task).
+
+Interact: hover about 0.35 s or click the character to open the panel, move away about 0.7 s to hide it; drag to move; right-click for the menu; `Alt + Arrow keys` moves the panel.
+
+## Privacy / local-first
+
+- Reads local numeric usage metadata only: Codex task metadata and usage events, OpenCode session metadata through an allowlisted column set (no titles, message bodies, tool parameters, credentials, or share links), window task titles and activity state, and memory-only media metadata for the music display.
+- Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere.
+- Details: [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) and [`SECURITY.md`](SECURITY.md).
+
+## Build and test from source
 
 ```powershell
 py -3.13 -m venv .venv
@@ -33,21 +55,32 @@ py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe widget.py
 ```
 
-测试与本地记录核对：
+Run the test suite:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
-.\.venv\Scripts\python.exe tools\verify_local.py
 ```
 
-构建发行版：`.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt`，然后运行 `.\build.ps1 -Package`，输出 `dist\petoken\` 与 `dist\petoken-Windows-x64.zip`。
+Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
 
-## 版本与文档
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\build.ps1 -Package
+```
 
-- 当前版本：V1.2.0（[CHANGELOG](CHANGELOG.md)；历史版本详见 [V1.1.0 发布说明](docs/RELEASE_NOTES_v1.1.0.md)）
-- Token 公式与字段：[docs/TOKEN_ACCOUNTING.md](docs/TOKEN_ACCOUNTING.md)
-- 设计与交互约定：[DESIGN.md](DESIGN.md)
-- 角色图片与归属：[docs/ARTWORK.md](docs/ARTWORK.md)
-- 第三方组件：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+## Documentation
 
-源代码采用 [MIT License](LICENSE)；角色图片不在 MIT 授权范围内。本工具是独立项目，与 OpenAI 或任何游戏发行商无隶属或背书关系。
+- Usage semantics (what is counted, what `N/A` means): [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md)
+- Provider architecture and verified capabilities: [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
+- Token formulas and fields: [`docs/TOKEN_ACCOUNTING.md`](docs/TOKEN_ACCOUNTING.md)
+- Product roadmap: [`ROADMAP.md`](ROADMAP.md)
+- Interface design contract: [`DESIGN.md`](DESIGN.md)
+- Character artwork and attribution: [`docs/ARTWORK.md`](docs/ARTWORK.md)
+- Security policy: [`SECURITY.md`](SECURITY.md)
+- Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
+- v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)
+
+## Community and licensing
+
+Petoken Community is open source. The application source code is MIT-licensed (see [LICENSE](LICENSE)); character artwork is excluded from the MIT grant (see [docs/ARTWORK.md](docs/ARTWORK.md)). Bug reports and ideas are welcome via [GitHub Issues](https://github.com/windknows-ai/petoken/issues) — see [CONTRIBUTING.md](CONTRIBUTING.md). Petoken is an independent project with no affiliation with or endorsement by OpenAI, OpenCode, or any game publisher.

@@ -16,7 +16,7 @@ Only these states exist in this version:
 
 Usage is an overlay, not a character pose. The runtime pose priority is:
 
-1. `working`: explicit Codex task lifecycle activity (distinct from typing).
+1. `working`: explicit task lifecycle activity from the selected provider — a Codex task-started event or a verified OpenCode open step (distinct from typing).
 2. `microphone`: an active Windows capture session.
 3. `music`: an active Windows system-media playback session, with an optional verified subtitle line from platform media metadata.
 4. `typing`: recent non-modifier keyboard activity, with alternating tap phases.
@@ -33,7 +33,7 @@ The order above is the state priority. Microphone/music require a stable signal 
 
 ## Usage panel contract
 
-- Follow the current accessible Codex task title. Never select from the stale initial-route URL. If inaccessible or ambiguous, show the recent-task fallback label; allow explicit pinning.
+- Follow the current task: the accessible Codex task title, or the verified OpenCode working session. Never select from the stale initial-route URL. If inaccessible or ambiguous, show the recent-task fallback label; allow explicit pinning.
 - Tokens/cost use Global, Project or Conversation scope. Model, reasoning, context and raw latest snapshot describe the selected task. Quotas describe the account.
 - Poll once per second with at most one quota RPC in flight. Numeric usage changes when Codex writes events, not through an invented counter.
 - Preserve all reliable raw token fields. Unknown values display as N/A; cached input and reasoning output are never added twice.

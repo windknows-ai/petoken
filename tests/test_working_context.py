@@ -161,7 +161,7 @@ class WorkingContextTests(unittest.TestCase):
     def test_project_identity_uses_repository_then_directory_without_exposing_path(self):
         name,source,_=project_identity({'id':'a','git_origin_url':'https://github.com/acme/petoken.git'}, {})
         self.assertEqual((name,source),('petoken','git_origin'))
-        name,source,_=project_identity({'id':'b','cwd':r'D:\Documents\3D-Portfolio'}, {})
+        name,source,_=project_identity({'id':'b','cwd':r'D:\Example\3D-Portfolio'}, {})
         self.assertEqual((name,source),('3D-Portfolio','cwd_basename'))
 
 
