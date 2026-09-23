@@ -57,14 +57,16 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
-from providers import PROVIDER_CODEX, PROVIDER_OPENCODE
+from providers import PROVIDER_CODEX, PROVIDER_OPENCODE, PROVIDER_REGISTRY
 
 PREFERENCE_AUTO = 'auto'
 PREFERENCE_CODEX = PROVIDER_CODEX
 PREFERENCE_OPENCODE = PROVIDER_OPENCODE
-TRACKING_CHOICES = (PREFERENCE_AUTO, PREFERENCE_CODEX, PREFERENCE_OPENCODE)
+# Derived from the runtime registry (never duplicated): Auto plus
+# exactly the registered provider IDs, in registry order.
+TRACKING_CHOICES = (PREFERENCE_AUTO,) + tuple(PROVIDER_REGISTRY)
 DEFAULT_TRACKING_PROVIDER = PREFERENCE_AUTO
-KNOWN_PROVIDERS = (PROVIDER_CODEX, PROVIDER_OPENCODE)
+KNOWN_PROVIDERS = tuple(PROVIDER_REGISTRY)
 
 # A newly preferred provider must hold for 1 s before switching (00).
 STABILITY_S = 1.0
@@ -211,9 +213,17 @@ def _activity_valid(status):
 
 
 class ProviderSelection:
-    """One deterministic selection with debounced switching."""
+    """One deterministic selection with debounced switching.
 
-    def __init__(self):
+    The selector operates over an allowed provider-ID set: None means
+    the real runtime registry (production path, unchanged), while
+    tests may inject a synthetic third ID to prove deterministic
+    N-provider behavior without registering anything globally.
+    """
+
+    def __init__(self, provider_ids=None):
+        self._allowed = (tuple(provider_ids) if provider_ids is not None
+                         else KNOWN_PROVIDERS)
         self.current = None
         self.pending = None
         self.pending_since = None
@@ -234,7 +244,7 @@ class ProviderSelection:
         never calls it, because merely (auto-)selecting a provider must
         not refresh its use time."""
         now = time.time() if now is None else now
-        if provider_id in KNOWN_PROVIDERS:
+        if provider_id in self._allowed:
             self.last_use[provider_id] = now
 
     def snapshot(self):
@@ -310,10 +320,13 @@ class ProviderSelection:
         return leaders[0], reason, 'newest_activity', False
 
     def _matched(self, inputs):
-        """Drop entries whose inner provider tag mismatches their key."""
+        """Drop entries whose inner provider tag mismatches their key,
+        that are not dicts, or that fall outside this selector's
+        allowed provider-ID set (the runtime registry by default, so a
+        synthetic test ID never leaks into production selection)."""
         matched = {}
         for pid, status in (inputs or {}).items():
-            if pid not in KNOWN_PROVIDERS or not isinstance(status, dict):
+            if pid not in self._allowed or not isinstance(status, dict):
                 continue
             if status.get('provider_id', pid) != pid:
                 continue

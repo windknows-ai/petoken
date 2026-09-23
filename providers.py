@@ -35,6 +35,25 @@ def _opencode_capabilities():
     return OPENCODE_CAPABILITIES
 
 
+def _codex_capabilities():
+    return CODEX_CAPABILITIES
+
+
+# Minimal runtime provider registry: infrastructure metadata only
+# (identity + capability lookup). Provider-local accounting semantics
+# (versions, models, token/cost/quota rules) stay in each provider's
+# own module and are never normalized here. Exactly Codex + OpenCode:
+# no placeholder entries, no disabled third provider. A synthetic
+# third provider ID exists only inside tests proving deterministic
+# N-provider selection; it is never registered here.
+PROVIDER_REGISTRY = {
+    PROVIDER_CODEX: dict(display_name='Codex',
+                         capabilities=_codex_capabilities),
+    PROVIDER_OPENCODE: dict(display_name='OpenCode',
+                            capabilities=_opencode_capabilities),
+}
+
+
 def base_result(provider_id, *, available=False, status='', reason='',
                 identity=None, tokens=None, working_context=None,
                 scope_result=None, quotas=None, cost=None,
@@ -58,12 +77,19 @@ def base_result(provider_id, *, available=False, status='', reason='',
 
 
 def is_supported(provider_id, capability):
-    """Whether a capability is proven for a provider (unknowns are unsupported)."""
-    if provider_id == PROVIDER_CODEX:
-        return capability in CODEX_CAPABILITIES
-    if provider_id == PROVIDER_OPENCODE:
-        return capability in _opencode_capabilities()
-    return False
+    """Whether a capability is proven for a provider (unknowns are unsupported).
+
+    Dispatches through the registry's per-provider capability getter,
+    so an unregistered provider (or a failing lookup) safely reports
+    False instead of crashing or inventing capabilities.
+    """
+    entry = PROVIDER_REGISTRY.get(provider_id)
+    if entry is None:
+        return False
+    try:
+        return capability in entry['capabilities']()
+    except Exception:
+        return False
 
 
 class CodexProvider:

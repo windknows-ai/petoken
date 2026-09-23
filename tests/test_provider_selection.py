@@ -1052,5 +1052,129 @@ class DualLayerOpenCodeFailureTests(unittest.TestCase):
         self.assertFalse(shaped['working'])
 
 
+class SyntheticThirdProviderTests(unittest.TestCase):
+    """Slice A: deterministic N-provider selection with a TEST-ONLY
+    third ID. 'synthetic' is never registered at runtime; it proves
+    the engine is not inherently two-provider limited."""
+
+    THIRD = 'synthetic'
+    IDS = ('codex', 'opencode', 'synthetic')
+
+    def _sel(self):
+        return ProviderSelection(provider_ids=self.IDS)
+
+    def _third(self, **kw):
+        return status(self.THIRD, **kw)
+
+    def test_sole_third_worker_wins(self):
+        sel = self._sel()
+        snap = sel.update(
+            {'codex': status('codex', activity_at=NOW - 100),
+             'opencode': status('opencode', activity_at=NOW - 90),
+             self.THIRD: self._third(working=True, activity_at=NOW - 5)},
+            now=NOW)
+        self.assertEqual((snap['selected'], snap['live'], snap['reason']),
+                         (self.THIRD, True, 'working'))
+
+    def test_three_working_newest_activity_wins(self):
+        sel = self._sel()
+        snap = sel.update(
+            {'codex': status('codex', working=True, activity_at=NOW - 50),
+             'opencode': status('opencode', working=True,
+                                activity_at=NOW - 30),
+             self.THIRD: self._third(working=True, activity_at=NOW - 5)},
+            now=NOW)
+        self.assertEqual(snap['selected'], self.THIRD)
+        self.assertTrue(snap['live'])
+        sel = self._sel()
+        snap = sel.update(
+            {'codex': status('codex', working=True, activity_at=NOW - 5),
+             'opencode': status('opencode', working=True,
+                                activity_at=NOW - 30),
+             self.THIRD: self._third(working=True, activity_at=NOW - 50)},
+            now=NOW)
+        self.assertEqual(snap['selected'], 'codex')
+
+    def test_equal_timestamps_are_deterministic(self):
+        sel = self._sel()
+        snap = sel.update(
+            {pid: status(pid, working=True, activity_at=NOW - 10)
+             for pid in self.IDS}, now=NOW)
+        first = snap['selected']
+        for _ in range(3):
+            again = self._sel().update(
+                {pid: status(pid, working=True, activity_at=NOW - 10)
+                 for pid in self.IDS}, now=NOW)
+            self.assertEqual(again['selected'], first)
+        self.assertTrue(snap['tie_broken'])
+
+    def test_all_unknown_recency_is_deterministic(self):
+        seen = set()
+        for _ in range(3):
+            snap = self._sel().update(
+                {pid: status(pid) for pid in self.IDS}, now=NOW)
+            seen.add(snap['selected'])
+            self.assertFalse(snap['live'])
+        self.assertEqual(seen, {'codex'})
+
+    def test_current_eligible_provider_retained_on_tie(self):
+        sel = self._sel()
+        sel.update({'codex': status('codex', activity_at=NOW - 100),
+                    'opencode': status('opencode', working=True,
+                                       activity_at=NOW - 50),
+                    self.THIRD: status(self.THIRD, activity_at=NOW - 60)},
+                   now=NOW)
+        self.assertEqual(sel.snapshot()['selected'], 'opencode')
+        snap = sel.update(
+            {pid: status(pid, working=True, activity_at=NOW - 10)
+             for pid in self.IDS}, now=NOW + 2)
+        self.assertEqual(snap['selected'], 'opencode')
+        self.assertTrue(snap['tie_broken'])
+
+    def test_default_selector_drops_synthetic_id(self):
+        sel = ProviderSelection()
+        snap = sel.update(
+            {'codex': status('codex', activity_at=NOW - 100),
+             'opencode': status('opencode', activity_at=NOW - 90),
+             self.THIRD: self._third(working=True, activity_at=NOW - 5)},
+            now=NOW)
+        # The synthetic worker is inadmissible at runtime: it can
+        # neither be selected nor go live, even while "working".
+        self.assertNotEqual(snap['selected'], self.THIRD)
+        self.assertFalse(snap['live'])
+        self.assertNotIn(self.THIRD, sel._last_inputs)
+
+
+class TrackingPreferenceTests(unittest.TestCase):
+    def test_unknown_persisted_preference_falls_back_to_auto(self):
+        self.assertEqual(normalize_tracking_provider('synthetic'), 'auto')
+        self.assertEqual(normalize_tracking_provider(''), 'auto')
+        self.assertEqual(normalize_tracking_provider(None), 'auto')
+
+    def test_manual_codex_back_to_auto_resumes_ranking(self):
+        sel = ProviderSelection()
+        sel.mark_used('codex', now=NOW - 20)
+        manual = sel.update(
+            {'codex': status('codex', activity_at=NOW - 100),
+             'opencode': status('opencode', working=True,
+                                activity_at=NOW - 5)},
+            preference='codex', now=NOW)
+        self.assertEqual((manual['selected'], manual['live'],
+                          manual['reason']), ('codex', False, 'manual'))
+        pending = sel.update(
+            {'codex': status('codex', activity_at=NOW - 100),
+             'opencode': status('opencode', working=True,
+                                activity_at=NOW - 5)},
+            preference='auto', now=NOW + 0.5)
+        self.assertEqual(pending['pending_switch'], 'opencode')
+        auto = sel.update(
+            {'codex': status('codex', activity_at=NOW - 100),
+             'opencode': status('opencode', working=True,
+                                activity_at=NOW - 5)},
+            preference='auto', now=NOW + 2)
+        self.assertEqual((auto['selected'], auto['live']),
+                         ('opencode', True))
+
+
 if __name__ == '__main__':
     unittest.main()

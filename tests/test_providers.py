@@ -86,6 +86,50 @@ class ProviderContractTests(unittest.TestCase):
         self.assertEqual(result['provider_name'], 'Codex')
 
 
+class ProviderRegistryTests(unittest.TestCase):
+    """Slice A: the minimal runtime registry holds exactly Codex +
+    OpenCode with generic capability dispatch. No placeholder, no
+    third provider, no fake capabilities."""
+
+    def test_registry_contains_exactly_codex_and_opencode(self):
+        from providers import PROVIDER_REGISTRY
+        from provider_selection import KNOWN_PROVIDERS, TRACKING_CHOICES
+        self.assertEqual(tuple(PROVIDER_REGISTRY), ('codex', 'opencode'))
+        self.assertEqual(KNOWN_PROVIDERS, ('codex', 'opencode'))
+        self.assertEqual(tuple(PROVIDER_REGISTRY), KNOWN_PROVIDERS)
+        self.assertEqual(TRACKING_CHOICES, ('auto', 'codex', 'opencode'))
+
+    def test_display_names_unchanged(self):
+        from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
+        self.assertEqual(PROVIDER_NAMES, {'codex': 'Codex',
+                                          'opencode': 'OpenCode'})
+        for pid, entry in PROVIDER_REGISTRY.items():
+            self.assertEqual(entry['display_name'], PROVIDER_NAMES[pid])
+
+    def test_codex_capabilities_unchanged(self):
+        for capability in CODEX_CAPABILITIES:
+            self.assertTrue(is_supported('codex', capability),
+                            capability)
+        self.assertFalse(is_supported('codex', 'telepathy'))
+
+    def test_opencode_capabilities_unchanged(self):
+        for capability in OPENCODE_CAPABILITIES:
+            self.assertTrue(is_supported('opencode', capability),
+                            capability)
+        self.assertFalse(is_supported('opencode', 'quotas'))
+        self.assertFalse(is_supported('opencode', 'working_context'))
+        self.assertFalse(is_supported('opencode', 'telepathy'))
+
+    def test_unknown_provider_stays_unsupported_without_crash(self):
+        self.assertFalse(is_supported('synthetic', 'scopes'))
+        self.assertFalse(is_supported('', 'scopes'))
+        self.assertFalse(is_supported(None, 'scopes'))
+        result = base_result('synthetic')
+        self.assertEqual(result['provider_id'], 'synthetic')
+        self.assertEqual(result['provider_name'], 'synthetic')
+        self.assertFalse(result['available'])
+
+
 class CodexParityTests(unittest.TestCase):
     def read_both(self, home, **kwargs):
         store = CodexStore(home)
