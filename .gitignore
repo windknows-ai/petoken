@@ -7,3 +7,15 @@ dist/
 .private/
 *.log
 .env*
+# Secrets / credentials — never commit (note: no broad `token*` rule on
+# purpose; legitimate modules like `token_format.py` must stay committable).
+*.key
+*.pem
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+# Local runtime databases (the app only reads the user's own tool stores).
+*.db-wal
+*.db-shm
+*.db-journal
