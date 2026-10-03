@@ -2,32 +2,44 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import sqlite3
 import time
 import hashlib
+from urllib.parse import urlsplit
 from contextlib import closing
 from datetime import datetime
 from pathlib import Path
-from analytics import TOKEN_KEYS, normalize_usage, derive, aggregate, summarize
+from analytics import TOKEN_KEYS, count, normalize_usage, derive, aggregate, summarize
 from pricing import MODEL_PRICES as PRICES, estimate_usd
 from providers import PROVIDER_CODEX, active_task
 
 
 def quota_window(limits, minutes, now=None):
     now = time.time() if now is None else now
+    if not isinstance(limits, dict):
+        return None
     for key in ('primary', 'secondary'):
-        w = (limits or {}).get(key)
+        w = limits.get(key)
         if not isinstance(w, dict):
             continue
         if w.get('windowDurationMins', w.get('window_minutes')) != minutes:
             continue
         used = w.get('usedPercent', w.get('used_percent'))
-        if not isinstance(used, (int, float)):
-            return None
+        remaining = (100 - used if isinstance(used, (int, float))
+                     and not isinstance(used, bool) and 0 <= used <= 100 else None)
         reset = w.get('resetsAt', w.get('resets_at'))
-        return dict(remaining=max(0, min(100, 100-used)), reset=reset,
-                    expired=bool(reset and reset <= now))
+        try:
+            if (not isinstance(reset, (int, float)) or isinstance(reset, bool)
+                    or not math.isfinite(reset)):
+                reset = None
+            else:
+                datetime.fromtimestamp(reset)
+        except (OverflowError, ValueError, OSError):
+            reset = None
+        return dict(remaining=remaining, reset=reset,
+                    expired=reset is not None and reset <= now)
     return None
 
 
@@ -40,25 +52,52 @@ def select_thread(rows, title, pinned):
     return (rows[0], 'recent') if rows else (None, 'empty')
 
 
+def _display_basename(value):
+    if not isinstance(value, str) or not value.strip():
+        return None
+    value = value.strip().removeprefix('\\\\?\\')
+    normalized = value.replace('\\', '/')
+    try:
+        uri = urlsplit(normalized)
+    except ValueError:
+        return None
+    if (uri.scheme and len(uri.scheme) > 1) or value.startswith('//'):
+        value = uri.path
+        if '@' in value.rstrip('/').rsplit('/', 1)[-1]:
+            return None
+    return value.replace('\\', '/').rstrip('/').rsplit('/', 1)[-1].strip() or None
+
+
+def _context_percent(tokens, window):
+    tokens, window = count(tokens), count(window)
+    if tokens is None or not window:
+        return None
+    return 100 if tokens >= window else 100 * (tokens / window)
+
+
 def project_identity(row, state):
     assignments = state.get('thread-project-assignments', {}) if isinstance(state, dict) else {}
     projects = state.get('local-projects', {}) if isinstance(state, dict) else {}
-    project_id = (assignments.get(row.get('id')) or {}).get('projectId') or row.get('project_id')
+    assignment = assignments.get(row.get('id')) if isinstance(assignments, dict) else None
+    project_id = (assignment.get('projectId') if isinstance(assignment, dict) else None) or row.get('project_id')
+    if not isinstance(project_id, str) or not project_id.strip():
+        project_id = None
     project = projects.get(project_id, {}) if isinstance(projects, dict) else {}
     name = project.get('name') if isinstance(project, dict) else None
     if isinstance(name, str) and name.strip():
-        return name.strip(), 'project_metadata', project_id
+        return _display_basename(name), 'project_metadata', project_id
     origin = row.get('git_origin_url')
     if isinstance(origin, str) and origin.strip():
         normalized_origin = origin.strip().rstrip('/\\')
-        repository = normalized_origin.rsplit('/',1)[-1].rsplit(':',1)[-1]
+        origin_path = normalized_origin.split('?', 1)[0].split('#', 1)[0]
+        repository = (_display_basename(origin_path) or '').rsplit(':', 1)[-1]
         repository = repository.removesuffix('.git').strip()
         if repository:
             return repository, 'git_origin', project_id or 'git:'+normalized_origin.lower()
     cwd = row.get('cwd')
     if isinstance(cwd, str) and cwd.strip():
         normalized_cwd = clean_path(cwd.strip())
-        directory = Path(cwd.strip().removeprefix('\\\\?\\').rstrip('/\\')).name.strip()
+        directory = _display_basename(cwd)
         if directory:
             return directory, 'cwd_basename', project_id or 'cwd:'+normalized_cwd
     return None, 'unavailable', project_id
@@ -116,6 +155,8 @@ class SessionUsage:
         self.last = {}
         self.model = None
         self.effort = None
+        self.model_seen = False
+        self.effort_seen = False
         self.tier = None
         self.window = None
         self.usd = 0.0
@@ -123,6 +164,7 @@ class SessionUsage:
         self.limits = None
         self.sample = None
         self.available = False
+        self.source_available = False
         self.partial = False
         self.parent = None
         self.inherited = False
@@ -138,7 +180,20 @@ class SessionUsage:
         self.known = {k:0 for k in TOKEN_KEYS}
         self.coverage = {k:0 for k in TOKEN_KEYS}
 
+    def display_metadata(self, row):
+        values = {}
+        for field, fallback in (('model', 'model'), ('effort', 'reasoning_effort')):
+            value = getattr(self, field)
+            if not getattr(self, field + '_seen') and value is None:
+                value = row.get(fallback)
+            values[field] = value if isinstance(value, str) and value.strip() else None
+        return values
+
     def consume(self, e):
+        if not isinstance(e, dict) or not isinstance(e.get('payload', {}), dict):
+            self.partial = True
+            self.notes.add('note_usage_record_invalid')
+            return
         p = e.get('payload') or {}
         if e.get('type') == 'session_meta':
             if self.meta_seen:
@@ -153,8 +208,14 @@ class SessionUsage:
             # A fork copies its parent's history; do not count it again in project totals.
             self.inherited = bool(p.get('forked_from_id'))
         if e.get('type') == 'turn_context':
-            self.model = p.get('model', self.model)
-            self.effort = p.get('effort', p.get('reasoning_effort', self.effort))
+            if 'model' in p:
+                self.model_seen = True
+                value = p['model']
+                self.model = value if isinstance(value, str) and value.strip() else None
+            if 'effort' in p or 'reasoning_effort' in p:
+                self.effort_seen = True
+                value = p.get('effort', p.get('reasoning_effort'))
+                self.effort = value if isinstance(value, str) and value.strip() else None
             self.tier = p.get('service_tier')
         if e.get('type') != 'event_msg' or p.get('type') != 'token_count':
             return
@@ -172,7 +233,7 @@ class SessionUsage:
         current = normalize_usage(raw_total)
         last = normalize_usage(raw_last)
         self.last = last
-        self.window = info.get('model_context_window')
+        self.window = count(info.get('model_context_window'))
         self.sample = e.get('timestamp')
         self.available = True
         identity = hashlib.sha256(json.dumps([e.get('timestamp'),raw_total,raw_last],sort_keys=True).encode()).hexdigest()
@@ -232,8 +293,10 @@ class SessionUsage:
             if size < self.offset:
                 self.__init__(self.path)
             if size == self.offset:
+                self.source_available = True
                 return
             with self.path.open('rb') as f:
+                self.source_available = True
                 f.seek(self.offset)
                 while line := f.readline():
                     if not line.endswith(b'\n'):
@@ -246,8 +309,88 @@ class SessionUsage:
                         self.consume(json.loads(line))
                     except (ValueError, TypeError, AttributeError):
                         self.partial = True
+                        self.notes.add('note_usage_record_invalid')
         except OSError:
             self.partial = True
+            self.source_available = False
+            self.notes.add('note_usage_source_unavailable')
+
+
+class CodexTurnLedger:
+    """Read-only per-thread turn ledger for restart-safe recovery.
+
+    The rollout tail parser is bounded (~2 MB) while real turns can
+    stream tens of MB: after a Petoken (re)start mid-long-turn, the
+    opening task_started may be outside the scan window. The Codex
+    turn ledger (thread_history_1.sqlite.thread_turns) records the
+    latest turn status per thread and lets the detector recover that
+    candidate WITHOUT unbounded scanning — provided the same thread
+    shows fresh attributable rollout evidence.
+
+    A ledger inProgress row alone never qualifies: stale zombies
+    (turns that never received a terminal status) exist in the wild.
+    Every query is read-only with a short timeout; any failure
+    (missing file, unreadable DB) yields None so the rollout path
+    stands alone. Never raises.
+    """
+
+    TERMINAL_STATUSES = frozenset({'completed', 'failed', 'interrupted'})
+    IN_PROGRESS = 'inProgress'
+
+    def __init__(self, home=None):
+        self.path = Path(home) / 'thread_history_1.sqlite' \
+            if home is not None else None
+
+    @staticmethod
+    def normalize_ts(value):
+        """Epoch seconds from ledger timestamps (seconds or millis).
+
+        Observed live values are seconds; millis are tolerated so a
+        unit change cannot silently misorder turns. Anything else is
+        unknown (None) and fails closed downstream.
+        """
+        if isinstance(value, bool):
+            return None
+        if not isinstance(value, (int, float)):
+            return None
+        if value >= 1e11:
+            value = value / 1000.0
+        if 1e9 <= value < 1e11:
+            return float(value)
+        return None
+
+    def latest_turn(self, thread_id):
+        """Latest turn for one thread, or None when unknown/unreadable.
+
+        Returns dict(turn_id, status, started_at) with started_at in
+        epoch seconds (or None). Latest = greatest started_at,
+        rowid breaking ties. Scope is strictly one thread_id: never
+        a global busy signal.
+        """
+        if self.path is None or not thread_id:
+            return None
+        try:
+            import sqlite3
+            from contextlib import closing
+            with closing(sqlite3.connect(
+                    self.path.as_uri() + '?mode=ro', uri=True,
+                    timeout=.2)) as connection:
+                connection.row_factory = sqlite3.Row
+                row = connection.execute(
+                    'SELECT turn_id, status, started_at FROM thread_turns '
+                    'WHERE thread_id=? ORDER BY started_at DESC, '
+                    'rowid DESC LIMIT 1',
+                    (thread_id,)).fetchone()
+        except Exception:
+            return None
+        if row is None:
+            return None
+        try:
+            status = row['status']
+        except Exception:
+            return None
+        return dict(turn_id=row['turn_id'], status=status,
+                    started_at=self.normalize_ts(row['started_at']))
 
 
 class CodexActivityDetector:
@@ -256,18 +399,25 @@ class CodexActivityDetector:
     LEGACY_TOKEN_SECONDS = 15
     TAIL_BYTES = 2 * 1024 * 1024
     SWITCH_SECONDS = .4
+    # Seconds-level tolerance between ledger started_at and rollout
+    # mtime: same-machine writes land together; anything larger is a
+    # genuinely different moment, not clock/filesystem skew.
+    LEDGER_SKEW_S = 5
+    # Rollout terminal event kinds (observed live; do not invent more).
+    TERMINAL_KINDS = frozenset({'task_complete', 'turn_aborted'})
 
-    def __init__(self):
+    def __init__(self, home=None):
         self.files = {}
         self.selected_thread = None
         self.pending_thread = None
         self.pending_since = None
+        self.ledger = CodexTurnLedger(home)
 
     @staticmethod
     def _event_time(value):
         try:
             return datetime.fromisoformat(value.replace('Z','+00:00')).timestamp()
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError, OSError, OverflowError):
             return None
 
     def _refresh(self, path):
@@ -277,6 +427,7 @@ class CodexActivityDetector:
         if entry is None or stat.st_size < entry['offset']:
             start = max(0, stat.st_size-self.TAIL_BYTES)
             entry = dict(offset=start, working=None, lifecycle_at=None, token_at=None,
+                         start_turn=None, terminal_turn=None, terminal_kind=None,
                          mtime=stat.st_mtime)
             self.files[path] = entry
             fresh = True
@@ -295,22 +446,38 @@ class CodexActivityDetector:
                     break
                 entry['offset'] = stream.tell()
                 if not any(marker in line for marker in
-                           (b'"task_started"', b'"task_complete"', b'"token_count"')):
+                           (b'"task_started"', b'"task_complete"',
+                            b'"turn_aborted"', b'"token_count"')):
                     continue
                 try:
                     event = json.loads(line)
                 except (ValueError, TypeError):
                     continue
-                payload = event.get('payload') or {}
+                if not isinstance(event, dict):
+                    continue
+                payload = event.get('payload')
+                if not isinstance(payload, dict):
+                    continue
                 if event.get('type') != 'event_msg':
                     continue
                 kind = payload.get('type')
+                if not isinstance(kind, str):
+                    continue
                 if kind == 'task_started':
                     entry['working'] = True
                     entry['lifecycle_at'] = event.get('timestamp')
-                elif kind == 'task_complete':
+                    entry['start_turn'] = payload.get('turn_id')
+                    entry['terminal_turn'] = None
+                    entry['terminal_kind'] = None
+                elif kind in self.TERMINAL_KINDS:
+                    # task_complete and the observed turn_aborted both
+                    # authoritatively close the turn immediately — an
+                    # aborted turn must never read as Working while
+                    # its rollout stays fresh.
                     entry['working'] = False
                     entry['lifecycle_at'] = event.get('timestamp')
+                    entry['terminal_turn'] = payload.get('turn_id')
+                    entry['terminal_kind'] = kind
                 elif kind == 'token_count':
                     entry['token_at'] = self._event_time(event.get('timestamp'))
         entry['mtime'] = stat.st_mtime
@@ -349,58 +516,140 @@ class CodexActivityDetector:
         selected['working_threads'] = sorted(active)
         return selected
 
+    def _evaluate_working(self, thread_id, entry, mtime, now):
+        """ONE authoritative task-level Working predicate.
+
+        Shared by detect() and enumerate_working_tasks(): for the same
+        thread and provider evidence both APIs always agree. Working
+        needs provider-trusted lifecycle evidence and NEVER comes from
+        foreground/title/focus (those only choose display among
+        qualified tasks) nor from bare token recency (TOKEN CHANGE !=
+        WORKING). Returns (working, reason, activity_at); activity_at
+        is the lifecycle instant, a ledger turn start, or None.
+
+        Current-turn reconciliation is turn-scoped first: turn_id
+        decides identity whenever present on both sides, and a newer
+        rollout turn always outranks an older ledger row (and vice
+        versa). The 5-second LEDGER_SKEW_S applies ONLY to filesystem
+        mtime vs same-turn started_at corroboration and to strict
+        newer-than comparisons — never to merge distinct turns.
+        Unorderable conflicts otherwise fail closed, except an
+        immediately-observed open rollout turn, which stands on its
+        own evidence. A genuinely running turn with no attributable
+        rollout write for over STALE_SECONDS is indistinguishable
+        from a stale zombie and reads Not Working.
+        """
+        if now - mtime > self.STALE_SECONDS:
+            return False, 'stale', None
+        ledger_turn = None
+        if self.ledger is not None and thread_id:
+            try:
+                ledger_turn = self.ledger.latest_turn(thread_id)
+            except Exception:
+                ledger_turn = None
+        status = (ledger_turn or {}).get('status')
+        ledger_id = (ledger_turn or {}).get('turn_id')
+        ledger_started = (ledger_turn or {}).get('started_at')
+        ledger_terminal = status in CodexTurnLedger.TERMINAL_STATUSES
+        if entry.get('working') is True:
+            # Trusted rollout open turn R: qualifies on its own. A
+            # ledger terminal closes it only for the SAME turn id, or
+            # when provably newer than R's start (an old terminal can
+            # never close a new turn).
+            open_id = entry.get('start_turn')
+            started_at = self._event_time(entry.get('lifecycle_at'))
+            if ledger_terminal and ledger_id is not None and ledger_id == open_id:
+                return False, 'ledger_terminal', None
+            if (ledger_terminal and ledger_started is not None
+                    and started_at is not None
+                    and ledger_started > started_at + self.LEDGER_SKEW_S):
+                return False, 'ledger_terminal', None
+            return True, 'task_started', started_at
+        if entry.get('working') is False:
+            # Rollout shows a terminal turn (id may be absent on old
+            # sources: unscoped terminals still close). Terminal wins
+            # for the same turn even if the ledger still says
+            # inProgress (race). A ledger inProgress recovers Working
+            # only for a provably NEWER turn: strictly newer than T's
+            # end beyond skew, with fresh same-thread evidence. An
+            # old or skew-ambiguous ledger turn never reopens a
+            # terminated turn.
+            terminal_id = entry.get('terminal_turn')
+            if (status == CodexTurnLedger.IN_PROGRESS
+                    and ledger_id is not None
+                    and ledger_id == terminal_id):
+                return False, entry.get('terminal_kind') or 'task_complete', None
+            closed_at = self._event_time(entry.get('lifecycle_at'))
+            if (status == CodexTurnLedger.IN_PROGRESS
+                    and ledger_id is not None
+                    and ledger_id != terminal_id
+                    and ledger_started is not None
+                    and closed_at is not None
+                    and ledger_started > closed_at + self.LEDGER_SKEW_S
+                    and mtime >= ledger_started - self.LEDGER_SKEW_S):
+                return True, 'ledger_recovery', ledger_started
+            return False, entry.get('terminal_kind') or 'task_complete', None
+        if (status == CodexTurnLedger.IN_PROGRESS
+                and ledger_started is not None
+                and mtime >= ledger_started - self.LEDGER_SKEW_S):
+            # No tail lifecycle info, but the ledger names a live turn
+            # with fresh same-thread rollout evidence behind it.
+            return True, 'ledger_recovery', ledger_started
+        return False, 'no_working_evidence', None
+
     def detect(self, rows, active_title, detection_valid, now=None):
+        """Provider Working state from the shared qualified task set.
+
+        Membership comes ONLY from _evaluate_working (verified
+        lifecycle or ledger-recovered turns). UIA/foreground validity
+        NEVER vetoes it: with at least one qualified task, detect()
+        reports live even when foreground info is missing or stale;
+        UIA merely chooses the display thread among qualified tasks
+        via _select and can never promote or demote Working.
+        """
         now = time.time() if now is None else now
-        if not detection_valid:
-            self.selected_thread = None
-            return dict(active=False, valid=False, reason='uia_unavailable')
-        if not active_title:
-            self.selected_thread = None
-            return dict(active=False, valid=True, reason='no_task_window')
         candidates = []
-        for row in rows:
+        for row in rows or []:
             path = row.get('rollout_path')
             if not path:
                 continue
             try:
-                if now-Path(path).stat().st_mtime > self.STALE_SECONDS:
+                mtime = Path(path).stat().st_mtime
+                if now - mtime > self.STALE_SECONDS:
                     continue
                 entry = self._refresh(path)
             except OSError:
                 continue
-            if entry['working'] is True:
-                candidates.append(dict(active=True, valid=True, reason='task_started',
-                    thread=row.get('id'), sample=entry['lifecycle_at'], activity_at=entry['mtime']))
-            elif (entry['working'] is None and entry['token_at'] is not None
-                    and now-entry['token_at'] <= self.LEGACY_TOKEN_SECONDS):
-                candidates.append(dict(active=True, valid=True, reason='recent_token_legacy',
-                    thread=row.get('id'), activity_at=entry['token_at']))
+            working, reason, activity_at = self._evaluate_working(
+                row.get('id'), entry, mtime, now)
+            if not working:
+                continue
+            candidates.append(dict(
+                active=True, valid=True, reason=reason,
+                thread=row.get('id'), sample=entry.get('lifecycle_at'),
+                activity_at=(activity_at if activity_at is not None
+                             else mtime)))
         if candidates:
-            return self._select(candidates, rows, active_title, now)
+            return self._select(candidates, rows, active_title or '', now)
         self.selected_thread = None
         self.pending_thread = None
         self.pending_since = None
+        if not detection_valid:
+            return dict(active=False, valid=False, reason='uia_unavailable')
         return dict(active=False, valid=True, reason='no_running_session')
 
     def enumerate_working_tasks(self, rows, now=None):
-        """Focus-independent verified-lifecycle working-thread enumeration.
+        """Focus-independent verified working-thread enumeration.
 
-        Inspects every row with a readable, recently-written rollout
-        and returns verified working threads in stable order, WITHOUT
-        any title/foreground/UIA input — foreground selection can
-        never change membership. Only explicit lifecycle evidence
-        counts: a thread joins iff its parsed history ends in
-        task_started with no later authoritative task_complete. The
-        legacy recent-token fallback (UNKNOWN lifecycle) is
-        deliberately excluded here; it stays available to detect()
-        for backward-compatible primary-context behavior.
-
-        Shares _refresh parsing with detect(): both callers converge
-        on the same entry state regardless of call order, so legacy
-        detect() outcomes are unchanged by calling this first, after,
-        or not at all. Returns [{thread, activity_at}] with
-        activity_at as the lifecycle-instant epoch (or None when the
-        stored timestamp is unusable).
+        Consumes the same shared _evaluate_working predicate as
+        detect(): both APIs always agree on membership for the same
+        evidence. A thread joins iff it holds provider-trusted
+        lifecycle evidence — a currently-open rollout turn, or a
+        ledger-recovered turn whose start sits outside the bounded
+        tail with fresh same-thread corroboration and no terminal.
+        Bare token recency never qualifies anywhere (TOKEN CHANGE
+        != WORKING); foreground/title/focus never gate membership.
+        Returns [{thread, activity_at}] in stable order.
         """
         now = time.time() if now is None else now
         found = []
@@ -409,16 +658,20 @@ class CodexActivityDetector:
             if not path:
                 continue
             try:
-                if now - Path(path).stat().st_mtime > self.STALE_SECONDS:
+                mtime = Path(path).stat().st_mtime
+                if now - mtime > self.STALE_SECONDS:
                     continue
                 entry = self._refresh(path)
             except OSError:
                 continue
-            if entry.get('working') is not True:
+            working, _reason, activity_at = self._evaluate_working(
+                row.get('id'), entry, mtime, now)
+            if not working:
                 continue
             found.append(dict(thread=row.get('id'),
-                              activity_at=self._event_time(
-                                  entry.get('lifecycle_at'))))
+                              activity_at=(activity_at
+                                           if activity_at is not None
+                                           else mtime)))
         found.sort(key=lambda item: (item['activity_at'] is None,
                                      item['activity_at'],
                                      item['thread']))
@@ -433,7 +686,10 @@ class CodexStore:
         self.state = {}
         self.analytics_cache = {}
         self.history_cache = {}
-        self.activity = CodexActivityDetector()
+        # Production ledger wiring: the detector resolves
+        # thread_history_1.sqlite from this store's own canonical
+        # home (never a separately injected path).
+        self.activity = CodexActivityDetector(self.home)
 
     def _task_context(self, row, item, state):
         """Per-task presentation for one verified working thread.
@@ -463,12 +719,12 @@ class CodexStore:
             display=dict(project=project),
             presentation=dict(
                 tokens=summary['tokens'],
-                model=session.model or row.get('model'),
-                effort=session.effort or row.get('reasoning_effort'),
-                context=(min(100, max(0, 100 * last_tokens / session.window))
-                         if last_tokens is not None and session.window
-                         else None),
-                available=session.available))
+                **session.display_metadata(row),
+                context=_context_percent(last_tokens, session.window),
+                available=session.available,
+                source_available=session.source_available,
+                partial=session.partial,
+                notes=tuple(sorted(session.notes))))
 
     def read(self, active_title='', pinned='', scope='conversation', include_history=False,
              activity_detection_valid=False):
@@ -520,10 +776,8 @@ class CodexStore:
                 title=conversation_title(working_row),
                 project=working_project, project_source=project_source, project_id=working_project_id,
                 status='working', tokens=working_summary['tokens'], available=working_session.available,
-                model=working_session.model or working_row.get('model'),
-                effort=working_session.effort or working_row.get('reasoning_effort'),
-                context=(min(100,max(0,100*last_tokens/working_session.window))
-                         if last_tokens is not None and working_session.window else None),
+                **working_session.display_metadata(working_row),
+                context=_context_percent(last_tokens, working_session.window),
                 sample=working_session.sample, selection=codex_activity.get('selection'),
                 activity_reason=codex_activity.get('reason'))
         by_id = {row.get('id'): row for row in desktop}
@@ -587,8 +841,7 @@ class CodexStore:
         tokens = analysis['tokens']
         unknown = sorted({r.get('model') or 'unknown_breakdown' for r in records if r.get('usd') is None and r['tokens'].get('total_tokens')})
         last_tokens = current.last.get('total_tokens') if current else None
-        context = (min(100, max(0, 100*last_tokens/current.window))
-                   if current and last_tokens is not None and current.window else None)
+        context = _context_percent(last_tokens, current.window) if current else None
         partial = any(s.partial or not s.available for s in sessions)
         history = dict(analysis, partial=partial) if include_history else None
         names = {self.sessions[r['rollout_path']].session_id:conversation_title(r)
@@ -608,8 +861,8 @@ class CodexStore:
                     thread=chosen.get('id') if chosen else None, title=display_title,
                     project=display_project, scope=scope, scope_identity=scope_identity,
                     scope_result=scope_result, tokens=tokens, available=available,
-                    model=(current.model or chosen.get('model')) if current and chosen else None,
-                    effort=(current.effort or chosen.get('reasoning_effort')) if current and chosen else None,
+                    **(current.display_metadata(chosen) if current and chosen
+                       else dict(model=None, effort=None)),
                     tier=current.tier if current else None, context=context,
                     context_tokens=last_tokens, context_window=current.window if current else None,
                     usd=sum(r.get('usd') or 0 for r in records), unknown=unknown,

@@ -71,7 +71,11 @@ class WorkingContextTests(unittest.TestCase):
                 self.assertEqual(data['scope_activity']['active'], expected, (scope, pinned))
                 self.assertTrue(data['scope_activity']['valid'])
             data = store.read('Task A', scope='global', activity_detection_valid=False)
-            self.assertFalse(data['scope_activity']['valid'])
+            # UIA/foreground validity never vetoes verified provider
+            # truth: working threads a/b are genuinely running, so the
+            # scope assessment stays valid and live.
+            self.assertTrue(data['scope_activity']['valid'])
+            self.assertTrue(data['scope_activity']['active'])
 
     def test_local_verifier_reconciles_global_and_selected_scopes(self):
         from tools.verify_local import verify, reconcile

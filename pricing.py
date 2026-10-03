@@ -11,6 +11,8 @@ stays unknown (``None``) so callers can show honest partial/unavailable states.
 """
 from __future__ import annotations
 
+import math
+
 # USD / million tokens, verified 2026-09-16:
 # https://developers.openai.com/api/docs/pricing
 # Order: uncached input, cached input, cache writes, output.
@@ -41,8 +43,12 @@ def estimate_usd(tokens, model, tier=None, request_input=None):
     write = max(0, tokens.get('cache_write_input_tokens') or 0)
     plain = max(0, tokens.get('input_tokens', 0) - cache - write)
     # Reasoning is already included in output_tokens.
-    cost = (plain * inp + cache * cached + write * writes + tokens.get('output_tokens', 0) * out) / 1_000_000
-    return cost * (2 if tier in ('priority', 'fast') else .5 if tier in ('flex', 'batch') else 1)
+    try:
+        cost = (plain * inp + cache * cached + write * writes + tokens.get('output_tokens', 0) * out) / 1_000_000
+        cost *= 2 if tier in ('priority', 'fast') else .5 if tier in ('flex', 'batch') else 1
+        return cost if math.isfinite(cost) else None
+    except OverflowError:
+        return None
 
 
 def normalize_currency(value):

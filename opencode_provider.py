@@ -58,6 +58,7 @@ import time
 from contextlib import closing
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from providers import (PROVIDER_OPENCODE, active_task, active_task_set,
                        base_result)
@@ -199,7 +200,19 @@ OPENCODE_DISPLAY_STATUS = {
 
 
 def _display_basename(directory):
-    cleaned = (directory or '').replace('\\', '/').rstrip('/')
+    if not isinstance(directory, str):
+        return None
+    cleaned = directory.strip().removeprefix('\\\\?\\')
+    normalized = cleaned.replace('\\', '/')
+    try:
+        uri = urlsplit(normalized)
+    except ValueError:
+        return None
+    if (uri.scheme and len(uri.scheme) > 1) or cleaned.startswith('//'):
+        cleaned = uri.path
+        if '@' in cleaned.rstrip('/').rsplit('/', 1)[-1]:
+            return None
+    cleaned = cleaned.replace('\\', '/').rstrip('/')
     if '/' in cleaned:
         _, _, base = cleaned.rpartition('/')
         return base or None
@@ -517,8 +530,10 @@ def parse_model(raw):
         return None
     if not isinstance(data, dict):
         return None
-    return dict(id=data.get('id'), provider=data.get('providerID'),
-                variant=data.get('variant'))
+    return {key: value if isinstance(value, str) and value.strip() else None
+            for key, value in (('id', data.get('id')),
+                               ('provider', data.get('providerID')),
+                               ('variant', data.get('variant')))}
 
 
 def _valid_delta_cell(value):
@@ -1211,6 +1226,7 @@ class OpenCodeProvider:
                 continue
             five = [row.get(column) for column in TOKEN_COLUMNS]
             instant = entry.get('instant')
+            model_id, detail = _parsed_session_model(row)
             tasks.append(active_task(
                 PROVIDER_ID, scoped_session_id(row['id']),
                 working=True, activity_valid=True,
@@ -1228,8 +1244,12 @@ class OpenCodeProvider:
                                 total=_recorded_total(
                                     row.get('version'), five)),
                     cost_amount=row.get('cost'),
-                    model=(parse_model(row.get('model')) or {}).get('id'),
-                    version=row.get('version'))))
+                    model=model_id, effort=detail.get('variant'),
+                    version=row.get('version'),
+                    available=True, source_available=True,
+                    partial=any(value is None for value in five)
+                            or row.get('cost') is None,
+                    notes=())))
         return active_task_set(PROVIDER_ID, tasks, valid=True,
                                source_available=True)
 

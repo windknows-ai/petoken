@@ -1,5 +1,7 @@
 """Central presentation-only formatting for Token values."""
 
+import math
+
 TOKEN_NUMBER_FORMATS = ('full', 'compact')
 DEFAULT_TOKEN_NUMBER_FORMAT = 'compact'
 _UNITS = ((1_000, 'K'), (1_000_000, 'M'), (1_000_000_000, 'B'),
@@ -22,9 +24,12 @@ def format_token_value(value, style=DEFAULT_TOKEN_NUMBER_FORMAT):
         return f'{value:,}'
     index = max(i for i,(scale,_) in enumerate(_UNITS) if value >= scale)
     scale, suffix = _UNITS[index]
-    if index < len(_UNITS)-1 and value/scale >= 999.995:
-        scale, suffix = _UNITS[index+1]
-    return f'{value/scale:.2f}{suffix}'
+    try:
+        if index < len(_UNITS)-1 and value/scale >= 999.995:
+            scale, suffix = _UNITS[index+1]
+        return f'{value/scale:.2f}{suffix}'
+    except OverflowError:
+        return f'{value:,}'
 
 
 def format_tokens(value, style=DEFAULT_TOKEN_NUMBER_FORMAT):
@@ -35,4 +40,7 @@ def format_tokens(value, style=DEFAULT_TOKEN_NUMBER_FORMAT):
 def format_ratio(value):
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
         return 'N/A'
-    return f'{value:.2f}%'
+    try:
+        return f'{value:.2f}%' if math.isfinite(value) else 'N/A'
+    except OverflowError:
+        return 'N/A'
