@@ -13,6 +13,6 @@ petoken distributes or uses the following packages. Their own licenses govern th
 | Python/WinRT projections and runtime | 3.2.1 | MIT | https://github.com/pywinrt/pywinrt |
 | typing_extensions | 4.16.0 | PSF-2.0 | https://github.com/python/typing_extensions |
 
-The Windows release uses Qt as separate dynamic libraries in the `_internal` directory so recipients can replace/relink those libraries. The corresponding Qt source and license terms are available from https://code.qt.io/cgit/pyside/pyside-setup.git/ and https://www.gnu.org/licenses/lgpl-3.0.html. Installed package license files are copied into `THIRD_PARTY_LICENSES` by `build.ps1` when available.
+The Windows package uses Qt as separate dynamic libraries in the `_internal` directory so recipients can replace/relink those libraries. The corresponding Qt source and license terms are available from https://code.qt.io/cgit/pyside/pyside-setup.git/ and https://www.gnu.org/licenses/lgpl-3.0.html. `THIRD_PARTY_LICENSES` includes installed package notices, full Python and PyInstaller terms, and version-pinned upstream Qt LGPL/GPL and Python/WinRT MIT texts. Provenance is recorded in `docs/third_party_licenses/README.md` in the source and `THIRD_PARTY_LICENSES/README.md` in the package. A bundled commercial-license reference does not grant a commercial Qt license.
 
 PyInstaller is a build-time tool and is not part of the application source license. Its bootloader distribution exception permits bundling the application; see https://pyinstaller.org/en/stable/license.html.
