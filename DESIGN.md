@@ -44,3 +44,16 @@ The order above is the state priority. Microphone/music require a stable signal 
 - Native menus, tooltips, focus and buttons remain keyboard usable.
 - Drag either window; `Alt+Arrow` moves the panel. Always-on-top, collapse, tray restore, motion pause and explicit exit remain available.
 - Tooltip text states raw sources, formulas, comparison-only metrics, stale quota samples and cost limitations.
+
+## V1.3 task surfaces (unreleased)
+
+The existing character, palette and DPI behavior remain the baseline. V1.3 has a Hub overview, one compact Star per verified active task, and one manager-owned Expanded Star. Technical integration and human visual acceptance are separate gates.
+
+- The Hub lists the current visible task set, including multiple tasks from the same project. Its usage values retain their selected provider and scope provenance; they are not totals across all providers or Stars.
+- Stars retain their neutral lifetime number, provider identity, window and slot. Their approved 112 × 112 geometry and full disc/number-label footprint are unchanged.
+- Opening a task reuses its task-local metadata projection in one detail card. The retained Star's current integer position is the anchor; the card clamps independently and scrolls on short screens. Switching detail does not change provider selection or scope or read a provider.
+- While detail is expanded, group translation pauses across ring, arc, blend and parking paths. Metadata and lifecycle updates continue; newcomers requiring recomposition stay staged. Collapse resumes from the displayed pixels with a fresh clock and no elapsed-time catch-up.
+- Removing/filtering the expanded task or hiding the task surfaces closes detail. Restore does not reopen it. Shutdown closes the card, Stars and trails and rejects late callbacks.
+- The Hub task control, Star Return/Space, Escape and visible collapse control provide keyboard access. Passive hover preserves the coding application's focus; deliberate keyboard activation may focus detail.
+- Unknown model is explicit Unknown/未知; unknown numeric fields and quota are N/A, genuine zero remains zero and partial coverage is labeled. Task-local effort/context and provider capabilities are shown only when recorded. OpenCode recorded cost has no guessed currency. No unverified Queued, Reviewing or progress phases are added.
+- Production parking plans use one pure background computation and a latest immutable request. Pending results retain the exact visible frame and commit only after geometry, membership, pixel and lifecycle fences pass. Measured Windows/Python worker scheduling yields keep native callbacks responsive; planning may hold the frame for about two seconds under load without blocking controls.

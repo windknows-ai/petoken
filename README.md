@@ -80,6 +80,7 @@ Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
 - v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)
+- Unreleased V1.3 visual QA checklist (acceptance pending): [`docs/V1_3_VISUAL_QA.md`](docs/V1_3_VISUAL_QA.md)
 
 ## Community and licensing
 

@@ -1,44 +1,33 @@
 # Current Progress
-- 2026-10-03: interrupted takeover recovered from disk/Git; all original changes preserved in external snapshots dated 2026-10-01, 2026-10-02 and 2026-10-03 under `D:\Documents\ChatGPT\petoken-takeover-backups`. Starting HEAD `248aca3`, branch `v1.3/slice-c-multi-task-panels`, index empty. Detailed permanent ledger/waves/evidence: `PETOKEN_CODEX_EXECUTION_STATE.md`.
-- M0 recovery complete. Required eight-agent read-only reconnaissance completed previously; do not repeat it. Latest user removed minimum agent count: spawn/reuse on demand only. GPT-6 Astra prohibited at every effort.
-- Backend independently PASS (#16): atomic publication/generation/selection, terminal close, saved scope, cleanup barriers and current-checkout shutdown subprocess. Changed `provider_poller.py`, `app_config.py` and recovery/related tests.
-- Source independently PASS (#19): unknown/partial evidence, finite quotas, early Windows dates, huge integer context/formatting/cost, safe URI labels and malformed sibling recovery. Changed `usage.py`, `opencode_provider.py`, `token_format.py`, `pricing.py` and source/projection tests.
-- Motion safety/continuity/finite parking/Qt lifecycle independently PASS (#18, 53 native checks). Four legacy tests now assert exact boundaries, valid bounded motion and eventual homes.
-- M2 independently PASS (#18): 13 new native tests and five actual CPU probes request2.4–8.8ms/control≤17ms/heartbeat≤22.7ms; exact boundaries, all route pixels, noncooperative identity and finite homes preserved. Pure worker1.71–2.28s under repeated controls holds exact pixels. Report `2026-10-03-resume\18-responsiveness-acceptance.md`; #20 released all files.
-- IN PROGRESS: reuse Sol#8 as exclusive M3 widget/localization/Expanded tests writer, implementing real single-card task detail, group pause/resume, lifecycle, keyboard Hub access and localized truth. Root owns preview/build/docs; packaged preview entry follows writer release.
-- M3 first native gate failed: existing ElidedLabel resize→fit→setText caused layout-feedback overflow in short-screen long-label card; keyboard-focus and first-boundary assertions also failed. External `8-m3-focused.log` preserved. #8 investigating root causes with supporting systematic-debugging workflow; no acceptance yet.
-- M3 targeted repairs now pass15native tests/3.778s: card-only ignored horizontal size policy prevents layout feedback; real card Escape handler works; changed geometry forces recomposition from current pixels. Existing Hub label policy preserved. #8 affected UI/motion/planning regression and remaining lifecycle tests active; independent acceptance pending.
-- M3 affected UI/motion gate225actual tests PASS/53.174s; command also used one nonexistent module and reported a loader error. Corrected to `tests.test_planning_responsiveness`; actual worker/routes gate now running. No product failure in the225tests. Root preview/entry test sources compile and diff-check pass; packaged dispatch test awaits actual widget main branch after release.
-- Corrected worker/routes gate23nativePASS/43.991s; Expanded gate18PASS/4.557s. A hide-after-deferred-add529px first-tick jump was reproduced and fixed by routing restore composition through accepted planning from retained pixels. #8 adding narrow guarded DesktopPet geometry notification for expanded/motion-OFF invalidation; final release/review pending.
-- Immediate motion-OFF pet geometry callback and topmost snapshot proof now pass20Expanded tests/5.129s. Final268native affected tests running with source stable; #8 release afterward.
-- IN PROGRESS: root commits synced instructions and accepted recovery/source/backend/M2 handoff as a local continuity checkpoint; current M3 remains explicitly under verification.
-- Root preview additions (same-project/long-label/source/topmost) passed two native tests; isolated build output parser passed. Actual Expanded Star, full regression and frozen package unfinished.
-- IN PROGRESS: root preview uses actual manager activation, adds CLI expansion/motion/pose and captures only its owned card; build bundles synthetic QA launcher/checklist. New detail controls await M3 API and native verification; packaged early dispatch follows widget release.
-- Local source-truth checkpoint `15da402` committed after independent #19 acceptance: seven explicit source/test files only; UI and private state untouched, no remote publication.
-- Local backend checkpoint `79ee27f` committed after #16 acceptance: six explicit backend/test files; startup UI integration test remains with UI checkpoint. No remote action; remaining original UI work preserved.
-- Handoff refresh tool initially rejected duplicate delete/add operations; no file changed. Retried as one native PowerShell write, preserving the five-section structure and consolidating stale chronological notes.
+- **WAITING_FOR_HUMAN_VISUAL_QA** — V1.3 technical closeout complete; human visual and release approval remain pending. No source writer or reviewer is active.
+- Exact interrupted work recovered and preserved; no completed reconnaissance or268affected-suite gate repeated. Fresh29file recovery snapshot: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-detail-resume`; earlier immutable snapshots/reports remain intact.
+- Accepted local checkpoints: source/cost `15da402`, publication/recovery `79ee27f`, instructions/recovery `6864647`, runtime/motion/detail plus isolated preview `b15da6b`, Windows packaging/licenses `d20f7d5`. Final documentation/continuity checkpoint follows these in git log. Branch `v1.3/slice-c-multi-task-panels`; no push/tag/release.
+- M2 independently accepted exact valid routes, finite homes and production GUI responsiveness. M3 independently accepted task-local detail, retained Star identity/anchor, refresh/lifecycle/keyboard/topmost/language and120actual metric rows. Both native contrast and rapid Hub-menu Escape blockers closed.
+- Final native Windows **877 tests PASS /153.892s**; Python compile, PowerShell parse and Git diff checks PASS. Source five preview tests/CLI isolation, initial seven frozen scenarios and final independent rebuilt EN Typing3/detail2 plus ZH Unknown8/detail6 all PASS. Initial7cases are attributed to the initial EXE; final2cases prove the final EXE.
+- Windows development package: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-resume\package-dev\petoken-Windows-x64.zip`; interactive synthetic launcher beside EXE: `package-dev\petoken\preview-v1.3.cmd`. No stable installation overwritten.
+- Final independent report: `2026-10-03-resume\18-final-technical-audit.md`, **VERDICT: PASS**. Final ZIP CRC/all219file equivalence,14license/provenance sidecars, runtime/plugin/WinRT/VC dependencies, README-linked docs/artwork and isolation verified. Root manifest: `root-final-package-manifest.json`.
+- Changed source/support files committed: widget.py, pet.py, pet_geometry.py, localization.py, trail_overlay.py, tools/preview_v1_3.py, tools/launch_v1_3_preview.cmd, build.ps1, THIRD_PARTY_NOTICES.md, UI/Expanded/motion/planning/startup/preview tests, docs/V1_3_VISUAL_QA.md, docs/third_party_licenses/*; final docs update DESIGN/README/ROADMAP/implementation-plan/HANDOFF/execution state.
 
 # Decisions
-- V1.3 unfrozen; Codex owns implementation. Reviewed local milestone commits authorized; no push/tag/publish/release/stable overwrite.
-- Preserve D2A geometry, pet asset/palette and full-footprint validation. Reuse task card/providers/Qt patterns; no dependency added.
-- Serialize widget writers. Reviewers read only; root owns shared docs/ledger. Stage explicit allowlists; exclude `.autopilot` and private/generated artifacts.
-- Existing interpreter: `D:\Documents\ChatGPT\codex-widget\.venv\Scripts\python.exe`. Native Windows Qt required; unset `QT_QPA_PLATFORM`. Do not weaken geometry/screenshot checks for offscreen differences.
-- Motion conceptual reference: MIT TaipanRex/pyvisgraph https://github.com/TaipanRex/pyvisgraph, visibility-graph idea only; no code copied/dependency. Existing geometry/stdlib heapq reused.
+- Agents strictly on demand; no target count or concurrency filling. GPT-6 Astra prohibited for every role; historical failed row remains factual, never reactivated. Existing#8/#18 reused; no new agent spawned during this detail resume.
+- Preserve D2A geometry, full disc/number footprint, approved pet asset/palette and exact transition boundaries. One task-local detail card; no fabricated model/usage/quota/currency/phases; no transcript/tool/source/credential telemetry.
+- Minimal card-local body/viewport dark background and expansion-aware Hub Escape; ignored label size policy retained. No arbitrary activation delay. Existing no-detail Escape-to-tray retained.
+- Native Windows Qt required, QT_QPA_PLATFORM unset. Existing interpreter `D:\Documents\ChatGPT\codex-widget\.venv\Scripts\python.exe`; no installs. Preview uses actual app classes with marked synthetic fixtures, temporary settings and no live providers/keyboard workers.
+- Explicit Git allowlists only. Unrelated `.autopilot` remains untracked and preserved; private/generated artifacts are not committed. No remote publishing or version promotion.
+- Motion conceptual reference: MIT TaipanRex/pyvisgraph https://github.com/TaipanRex/pyvisgraph; idea only, no copied implementation/dependency. License texts copied verbatim from pinned official Qt/WinRT sources, provenance in docs/third_party_licenses/README.md; existing local Python/PyInstaller full terms included.
 
 # Next Steps
-- [x] #20 finish/release; #18 independent actual CPU responsiveness/fence acceptance, preserving prior motion PASS.
-- [ ] M3 exclusive UI writer: single task-local detail, retained anchor/group pause, safe resume/lifecycle, Hub keyboard task access, bilingual Unknown/Partial/source indicators and stale quota countdown cleanup.
-- [ ] Independent M3/integrated review, consolidated repair, native full regression.
-- [ ] Isolated development Windows package, frozen preview/smoke/captures/checksums, final QA launch commands and reviewed local checkpoints.
-- [ ] Stop at `WAITING_FOR_HUMAN_VISUAL_QA`; human approval/publication separate.
+- [ ] User opens packaged `preview-v1.3.cmd` and follows `docs/V1_3_VISUAL_QA.md`: EN/ZH, zero/Unknown/Partial, both providers,1/3/8tasks, detail open/refresh/switch/collapse, rapid Escape, editor hover focus, screen edges/DPI/topmost, motion/parking/hide/restore.
+- [ ] Record human visual defects with count/provider/language/motion/monitor/DPI and screenshot. Repair only observed issues, then rerun affected gate. Synthetic pose selector does not prove live keyboard/provider detection; ordinary development live integrations may be checked separately by the user.
+- [ ] After human visual acceptance, obtain separate release/publication authorization before version/tag/stable/remote actions. Do not automatically continue publication.
 
 # Open Issues
-- M2 independently accepted. Zero-duration worker yield failed; named timed GIL handoff is a measured Windows/Python scheduling remedy, preserving exact routes. Human motion appearance approval remains pending.
-- Expanded Star absent. UI must preserve Unknown/N/A/zero/Partial/provider/scope truth; no fabricated Queued/Reviewing/progress/currency.
-- Full latest regression/package not run; human visual QA not started. Sequential 42–71second parking appearance requires human judgment after technical safety gates.
-- Remaining UI/backend/preview development changes await appropriate checkpoints/integrated acceptance; source checkpoint `15da402` accepted. All original work preserved.
+- No concrete technical blocker in accepted source/package scope. Human smoothness, hierarchy, spacing, native occlusion and overall usability remain unapproved.
+- Sequential42–71second parking appearance requires human judgment. Pure worker holds exact pixels while planning; independent controls remained responsive. No hard-real-time claim.
+- Approved asset SHA256 `7ce0d2fbd0eb89d2f6786c9bb1d5bada1aff7d89ea2f5dd079cce8a26483e1a0`; stable `v1.2.0^{}` remains `6f63bc1c951fe1c938495bf70d3fbf3491917591`; APP_VERSION stays1.2.0 pending release gate.
+- Final EXE SHA256 `9d8767a583fa01cba7d387fe83ffa52b37883cb67e2a0b6960302e22f0083149`; ZIP SHA256 `b2d0b0fcb7ac6db62471030738ad649ad0936d07103a94c33dc3af0f2776a259`.
 
 # Project Conventions
-- Python/PySide6 desktop: Hub overview, one task Star, one manager-owned Expanded Star; Codex/OpenCode metadata only.
-- HANDOFF concise recovery entry; execution state owns detailed milestones/ledger/history; external logs/reports in takeover backups.
-- Pet asset SHA256 `7ce0d2fbd0eb89d2f6786c9bb1d5bada1aff7d89ea2f5dd079cce8a26483e1a0`; stable `v1.2.0^{}` remains `6f63bc1c951fe1c938495bf70d3fbf3491917591`.
+- Python/PySide6: Hub overview with provider/scope provenance, one verified-task Star, one manager-owned detail; Codex/OpenCode metadata only. Unknown/N/A/zero/Partial distinct.
+- HANDOFF is the concise continuity entry; PETOKEN_CODEX_EXECUTION_STATE.md holds permanent ledger/waves and detailed evidence history. Reports/logs/captures/package are external under takeover backups.
+- Native own-window captures prove paint/content, not full desktop occlusion or visual approval. Never use ordinary live --smoke for isolated QA; use --preview-v1-3.

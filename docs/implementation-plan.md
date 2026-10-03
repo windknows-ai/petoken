@@ -1,5 +1,10 @@
 # petoken implementation plan
 
+Historical initial delivery plan. Current V1.3 work follows
+`../PETOKEN_CODEX_EXECUTION_STATE.md`; publication instructions below do not
+authorize a push or release. Human visual acceptance and separate publication
+authorization remain required.
+
 Goal: deliver a double-clickable, Skirk-colored Windows usage companion and publish source and a binary to the existing GitHub repository.
 
 Architecture: Python standard library reads Codex SQLite metadata read-only and incrementally consumes numeric JSONL events. Windows UI Automation supplies the active task title. A hidden Codex app-server child performs only initialization and account/rateLimits/read. Qt renders the panel on the UI thread; background workers handle I/O. Spec: ../DESIGN.md.
