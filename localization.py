@@ -159,6 +159,28 @@ ZH_CN = {
     "opencode_cost_tip": "已记录 {amount} · 币种未知，显示为 N/A",
     "opencode_model_tip": "提供方 {provider} · 变体 {variant} · 智能体 {agent}",
     "total_unavailable_note": "OpenCode 记录 Total：已验证版本下五个原始分类之和；不是账单金额，也不是当前上下文大小，不可用时为 N/A",
+    "provider_mode_auto": "提供方：自动",
+    "provider_mode_manual": "提供方：手动 · {provider}",
+    "task_panel_label": "活动任务 {n}",
+    "task_panel_total": "总计",
+    "task_panel_input": "输入",
+    "task_panel_output": "输出",
+    "task_panel_reasoning": "推理",
+    "task_panel_cache_read": "缓存读取",
+    "task_panel_cache_write": "缓存写入",
+    "task_panel_model": "模型",
+    "task_panel_cost": "已记录费用",
+    "task_panel_effort": "推理强度",
+    "task_panel_variant": "模型变体",
+    "task_panel_context": "上下文",
+    "task_collapse": "收起任务详情",
+    "task_accessible": "{label} · {provider} · 按 Enter 查看详情",
+    "task_overview": "活动任务 · {count}",
+    "task_metric_scope": "用量：{provider} · {scope}",
+    "task_source_unavailable": "用量来源不可用；已知记录可能不完整。",
+    "task_usage_unavailable": "暂无已验证用量。",
+    "task_record_note": "记录存在限制；仅显示已知用量。",
+    "reset_task_layout": "重置任务布局",
 }
 
 EN = {
@@ -317,6 +339,28 @@ EN = {
     "opencode_cost_tip": "Recorded {amount} · currency unstated, shown as N/A",
     "opencode_model_tip": "Provider {provider} · variant {variant} · agent {agent}",
     "total_unavailable_note": "OpenCode recorded Total: the five-category sum for verified versions; not a billed amount or current context size, N/A when unavailable",
+    "provider_mode_auto": "Provider: Auto",
+    "provider_mode_manual": "Provider: Manual · {provider}",
+    "task_panel_label": "Active task {n}",
+    "task_panel_total": "Total",
+    "task_panel_input": "Input",
+    "task_panel_output": "Output",
+    "task_panel_reasoning": "Reasoning",
+    "task_panel_cache_read": "Cache Read",
+    "task_panel_cache_write": "Cache Write",
+    "task_panel_model": "Model",
+    "task_panel_cost": "Recorded cost",
+    "task_panel_effort": "Reasoning effort",
+    "task_panel_variant": "Model variant",
+    "task_panel_context": "Context",
+    "task_collapse": "Collapse task details",
+    "task_accessible": "{label} · {provider} · Press Enter for details",
+    "task_overview": "Active tasks · {count}",
+    "task_metric_scope": "Usage: {provider} · {scope}",
+    "task_source_unavailable": "Usage source unavailable; known records may be incomplete.",
+    "task_usage_unavailable": "No verified usage available.",
+    "task_record_note": "Records have limitations; only known usage is shown.",
+    "reset_task_layout": "Reset task layout",
 }
 
 STRINGS = {"zh_CN": ZH_CN, "en": EN}
@@ -333,6 +377,8 @@ def text(key, language=DEFAULT_LANGUAGE, **values):
 
 
 def scope_text(scope, language=DEFAULT_LANGUAGE, recorded=False):
+    if not isinstance(scope, str):
+        scope = "conversation"
     scope = {"task": "conversation"}.get(scope, scope)
     key = "scope_global_recorded" if scope == "global" and recorded else f"scope_{scope}"
     return text(key if key in STRINGS[DEFAULT_LANGUAGE] else "scope_conversation", language)

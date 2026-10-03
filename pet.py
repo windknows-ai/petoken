@@ -321,6 +321,9 @@ class DesktopPet(QWidget):
         super().moveEvent(event)
         if self.panel.isVisible():
             self.panel.anchor_to_pet()
+        manager = getattr(self.panel, 'task_manager', None)
+        if manager is not None and getattr(self.panel, 'pet', None) is self:
+            manager.anchor_changed()
 
     def mousePressEvent(self,event):
         if event.button()==Qt.LeftButton:
@@ -374,6 +377,10 @@ class DesktopPet(QWidget):
         self.motion=enabled
         self.panel.prefs['pet_motion']=enabled
         self.timer.start() if enabled and self.isVisible() else self.timer.stop()
+        try:
+            self.panel.task_manager.sync_motion()
+        except Exception:
+            pass
         self.panel.persist();self.update()
 
     def move_clamped(self,point):

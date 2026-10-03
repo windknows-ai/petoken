@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_right
 import json
+import math
 import os
 import sys
 import threading
@@ -10,21 +12,23 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QRect, QRectF, QSize, QLockFile
-from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QPixmap, QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QPointF, QRect, QRectF, QSize, QLockFile
+from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QRadialGradient, QPixmap, QPolygonF, QKeySequence, QRegion, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
-    QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea)
+    QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy)
 
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
+from trail_overlay import TrailOverlay
 import pet_assets as assets
 import pet_geometry as pet_geometry
 from app_config import APP_VERSION, load_preferences, save_preferences
 from app_mode import AppModeState
 from provider_poller import ProviderPoller
-from provider_selection import normalize_tracking_provider
+from provider_selection import TRACKING_CHOICES, normalize_tracking_provider
+from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 from activity import activity_diagnostics
 from localization import DEFAULT_LANGUAGE, normalize_language, scope_text, text
 from pricing import (DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, convert_usd, format_cost,
@@ -107,7 +111,7 @@ def valid_panel_size(value):
     the saved value is malformed. Never raises on user-edited settings."""
     try:
         width, height = int(value[0]), int(value[1])
-    except (TypeError, ValueError, IndexError, KeyError):
+    except (TypeError, ValueError, OverflowError, IndexError, KeyError):
         return None
     return [max(PANEL_MIN[0], min(width, PANEL_MAX[0])),
             max(PANEL_MIN[1], min(height, PANEL_MAX[1]))]
@@ -247,7 +251,7 @@ class Meter(QWidget):
         self.bar.setAccessibleName(title)
 
     def update_value(self, value, suffix='', tip='', stale=False):
-        self.value.setText('—' if value is None else f'{value:.0f}% {suffix}')
+        self.value.setText('N/A' if value is None else f'{value:.0f}% {suffix}')
         self.bar.setValue(0 if value is None else round(value*10))
         self.bar.setEnabled(not stale)
         self.value.setStyleSheet(f'color:{MUTED if stale else INK};')
@@ -258,6 +262,3151 @@ class Bridge(QObject):
     data = Signal(dict)
     limits = Signal(dict)
     fx = Signal(dict)
+
+
+# --- V1.3 Slice C: multi-task panels (one pet, N windows) ---
+#
+# The manager below consumes the accepted coherent active-task sets built
+# by Slice B (provider_poller.filter_active_tasks output carried on each
+# poll envelope). It never reads provider stores, never parses lifecycle
+# data, and never computes accounting: every visible value comes from the
+# task's own presentation projection, with N/A for unknown fields.
+
+def task_identity(task):
+    """Stable provider-scoped panel key: (provider_id, task_key).
+
+    Raw IDs from different providers never collide, and visible labels
+    are never used as identity.
+    """
+    task = task or {}
+    return (task.get('provider_id'), task.get('task_key'))
+
+
+def order_tasks(tasks):
+    """Deterministic initial order for visible tasks.
+
+    Registry provider order first, then trustworthy adapter activity
+    (newest first, unknown last), then the stable task key. Used only
+    for initial placement; surviving panels never reorder per tick.
+    """
+    order = {pid: index for index, pid in enumerate(PROVIDER_REGISTRY)}
+    def key(task):
+        pid, tkey = task_identity(task)
+        activity = (task or {}).get('activity_at')
+        return (order.get(pid, len(order)),
+                0 if isinstance(activity, (int, float)) else 1,
+                -(activity or 0),
+                str(tkey))
+    return sorted(tasks or [], key=key)
+
+
+def filter_tasks_for_preference(tasks, preference):
+    """Multi-task provider filter, independent of primary selection.
+
+    Auto shows every accepted task; a manual preference shows only that
+    provider's tasks. Pure subset over already-accepted sets: no debounce,
+    no provider reads, and the underlying snapshots are never mutated.
+    """
+    preference = normalize_tracking_provider(preference)
+    if preference == 'auto':
+        return list(tasks or [])
+    return [t for t in (tasks or []) if (t or {}).get('provider_id') == preference]
+
+
+def format_recorded_cost(amount):
+    """Task-local recorded cost without a currency symbol (unknown).
+
+    Unknown stays N/A; real zero shows 0.00; ordinary values keep two
+    decimals; small positives keep enough precision to stay visibly
+    non-zero (0.001 never collapses to 0.00). Shared by task surfaces so
+    orb/card presentations interpret cost identically.
+    """
+    if isinstance(amount, bool) or not isinstance(amount, (int, float)):
+        return 'N/A'
+    if amount == 0:
+        return '0.00'
+    if abs(amount) >= 0.01:
+        return f'{amount:.2f}'
+    trimmed = f'{amount:.6f}'.rstrip('0').rstrip('.')
+    return trimmed if trimmed not in ('0', '-0', '') else repr(amount)
+
+
+def format_task_metrics(provider_id, presentation, language, token_style=None):
+    """Shared task-local display strings for one Slice B task entry.
+
+    Returns {row: (value_text, tip)}. Task surfaces read the same
+    values, so orb and card presentations can never disagree on one
+    task's metrics. Unknown stays N/A and is never zero-filled; real
+    zeroes render as zeroes.
+    """
+    presentation = presentation or {}
+    tokens = presentation.get('tokens') or {}
+    if (provider_id or 'codex') == 'opencode':
+        return dict(
+            total=(format_token_value(tokens.get('total'), token_style),
+                   text('total_unavailable_note', language)),
+            input=(format_tokens(tokens.get('input'), token_style), ''),
+            output=(format_tokens(tokens.get('output'), token_style), ''),
+            reasoning=(format_tokens(tokens.get('reasoning'), token_style), ''),
+            cache_read=(format_tokens(tokens.get('cache_read'), token_style), ''),
+            cache_write=(format_tokens(tokens.get('cache_write'), token_style), ''),
+            model=(presentation.get('model') or text('unknown', language), ''),
+            cost=(format_recorded_cost(presentation.get('cost_amount')),
+                  text('help_recorded_cost', language) + '\n'
+                  + text('help_unknown_currency', language)))
+    return dict(
+        total=(format_tokens(tokens.get('total_tokens'), token_style),
+               text('help_total_tokens', language)),
+        input=(format_tokens(tokens.get('input_tokens'), token_style), ''),
+        output=(format_tokens(tokens.get('output_tokens'), token_style), ''),
+        model=(presentation.get('model') or text('unknown', language), ''))
+
+
+class TaskPanelWindow(QWidget):
+    """One manager-owned task detail, rendered only from its own projection."""
+
+    def __init__(self, provider_id='codex', manager=None):
+        super().__init__(None, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.provider_id = provider_id or 'codex'
+        self.manager = manager
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.window_size = (252, 440 if self.provider_id == 'opencode' else 340)
+        self.setFixedSize(*self.window_size)
+        self.setStyleSheet(STYLE)
+        self.entry = None
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(6, 6, 6, 6)
+        surface = QWidget()
+        surface.setObjectName('surface')
+        outer.addWidget(surface)
+        layout = QVBoxLayout(surface)
+        layout.setContentsMargins(14, 10, 14, 10)
+        layout.setSpacing(4)
+        head = QHBoxLayout()
+        self.title_label = ElidedLabel()
+        self.title_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+        self.title_label.setStyleSheet('font-size:13px;font-weight:600;')
+        head.addWidget(self.title_label, 1)
+        self.collapse_button = button('', '', self.collapse)
+        head.addWidget(self.collapse_button)
+        layout.addLayout(head)
+        status = QHBoxLayout()
+        self.provider_label = QLabel('')
+        self.provider_label.setObjectName('muted')
+        status.addWidget(self.provider_label)
+        status.addStretch()
+        self.status_dot = QLabel('●')
+        status.addWidget(self.status_dot)
+        self.status_text = QLabel('')
+        self.status_text.setObjectName('muted')
+        status.addWidget(self.status_text)
+        layout.addLayout(status)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.viewport().setStyleSheet(f'background:{BG};')
+        layout.addWidget(self.scroll, 1)
+        body = QWidget()
+        body.setStyleSheet(f'background:{BG};')
+        rows = QVBoxLayout(body)
+        rows.setContentsMargins(0, 0, 0, 0)
+        rows.setSpacing(4)
+        self.project_label = ElidedLabel()
+        self.project_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+        self.project_label.setObjectName('muted')
+        rows.addWidget(self.project_label)
+        rows.addWidget(divider())
+        self._rows = {}
+        for key in self._row_keys():
+            row = QHBoxLayout()
+            name = QLabel('')
+            name.setObjectName('muted')
+            row.addWidget(name)
+            value = ElidedLabel()
+            value.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+            value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            row.addWidget(value, 1)
+            rows.addLayout(row)
+            self._rows[key] = (name, value)
+        self.warning = QLabel('')
+        self.warning.setTextFormat(Qt.PlainText)
+        self.warning.setWordWrap(True)
+        self.warning.setObjectName('muted')
+        rows.addWidget(self.warning)
+        rows.addStretch()
+        self.scroll.setWidget(body)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.collapse()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def _row_keys(self):
+        if self.provider_id == 'opencode':
+            return ('total', 'input', 'output', 'reasoning', 'cache_read',
+                    'cache_write', 'model', 'effort', 'cost')
+        return ('total', 'input', 'output', 'model', 'effort', 'context')
+
+    def collapse(self):
+        if self.manager is not None:
+            self.manager.collapse_detail()
+        else:
+            self.hide()
+
+    def closeEvent(self, event):
+        self.collapse()
+        event.accept()
+
+    def _set_row(self, key, name_text, value_text, tip=''):
+        name, value = self._rows[key]
+        name.setText(name_text)
+        value.setFullText(str(value_text))
+        value.setToolTip(str(value_text) + ('\n' + tip if tip else ''))
+
+    def set_task(self, entry, label_text, language, token_style=None):
+        self.entry = dict(entry or {})
+        presentation = self.entry.get('presentation') or {}
+        display = self.entry.get('display') or {}
+        provider_name = PROVIDER_NAMES.get(self.provider_id, self.provider_id)
+        self.title_label.setFullText(label_text)
+        self.provider_label.setText(provider_name)
+        self.provider_label.setToolTip(str(presentation.get('version') or ''))
+        self.project_label.setFullText(display.get('project') or '—')
+        self.status_dot.setStyleSheet(f'color:{ICE};')
+        self.status_text.setText(text('working', language))
+        self.setWindowTitle(f'{provider_name} · {label_text}')
+        self.setAccessibleName(self.windowTitle())
+        collapse = text('task_collapse', language)
+        self.collapse_button.setText('×')
+        self.collapse_button.setToolTip(collapse)
+        self.collapse_button.setAccessibleName(collapse)
+        metrics = format_task_metrics(self.provider_id, presentation, language, token_style)
+        metrics['effort'] = (presentation.get('effort') or text('unknown', language), '')
+        context = presentation.get('context')
+        metrics['context'] = ('N/A' if context is None else f'{context:.0f}%', '')
+        for key in self._rows:
+            caption = ('task_panel_variant' if self.provider_id == 'opencode' and key == 'effort'
+                       else 'task_panel_' + key)
+            self._set_row(key, text(caption, language), *metrics[key])
+        warnings = []
+        if presentation.get('partial'):
+            warnings.append(text('coverage_partial', language) + ' · ' + text('partial_records', language))
+        if presentation.get('source_available') is False:
+            warnings.append(text('task_source_unavailable', language))
+        if presentation.get('available') is False:
+            warnings.append(text('task_usage_unavailable', language))
+        for note in presentation.get('notes') or ():
+            translated = text(note, language) if isinstance(note, str) and note.startswith('note_') else note
+            warning = translated if translated != note else text('task_record_note', language)
+            if warning not in warnings:
+                warnings.append(warning)
+        self.warning.setText('\n'.join(warnings))
+        self.warning.setVisible(bool(warnings))
+
+    def panel_text(self):
+        parts = [self.title_label.full_text, self.provider_label.text(),
+                 self.provider_label.toolTip(), self.project_label.full_text,
+                 self.status_text.text(), self.windowTitle(), self.warning.text(),
+                 self.collapse_button.toolTip()]
+        for name, value in self._rows.values():
+            parts.extend((name.text(), value.full_text, value.toolTip()))
+        return '\n'.join(parts)
+
+
+class TaskOrbWindow(QWidget):
+    """One crystalline task star for a single verified working task.
+
+    D2A collapsed visual: a custom-painted four-point crystal star
+    (white core, cyan/lavender facets, violet edges, static halo, two
+    deterministic micro-sparkles) with a tiny neutral number beneath.
+    No provider text, no metrics, no button chrome — the star is the
+    focus; provider identity lives in the tooltip only.
+
+    No timers, no motion, no trail in D2A. Paint parameters are
+    instance attributes (halo_alpha, halo_radius, core_intensity,
+    facet_intensity, star_scale) with static defaults so D2B breathing
+    can vary them per-frame without a repaint rewrite. D2B hover/press
+    pause must use accumulated active orbit time (never absolute wall
+    clock) so resume cannot teleport; the shared D2B timer may call
+    update() on phase change even when stationary (this replaces the
+    old "update only when moving" idea). A D2B trail, if added, must
+    be a manager-owned screen-coordinate overlay — never painted
+    inside this ~112px widget, where old positions would clip.
+
+    Hit behavior: an OS-level mask limits the clickable region to the
+    star/halo disc plus the number label, and press handling rejects
+    anything outside it, so overlapping transparent bounds can never
+    misroute a click to a neighboring star.
+
+    Press + release below the drag threshold counts as a click
+    (reported to the manager; D2C attaches expand here). Pressing and
+    moving beyond the threshold does nothing: collapsed stars are not
+    draggable (Product Owner direction) — no reposition, no override,
+    no click. Hover pauses this star's orbit (via the manager);
+    breathing continues. One task owns one effective anchor: the
+    automatic ring home for its lifetime slot. D2C expands the panel
+    from the current star center and collapses back to the same
+    anchor.
+    """
+
+    def __init__(self, identity, provider_id='codex', manager=None):
+        super().__init__(None, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.identity = identity
+        self.provider_id = provider_id or 'codex'
+        self.manager = manager
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.orb_size = pet_geometry.TASK_STAR_SIZE
+        self.setFixedSize(*self.orb_size)
+        # No surface stylesheet: the star floats directly on the
+        # desktop with no box behind it.
+        self._press_global = None
+        self._press_offset = None
+        self._dragging = False
+        self._number = ''
+        # D2A static paint parameters; D2B breathing varies these.
+        self.halo_alpha = 1.0
+        self.halo_radius = 1.0
+        self.core_intensity = 1.0
+        self.facet_intensity = 1.0
+        self.star_scale = 1.0
+        self.number_label = QLabel('', self)
+        self.number_label.setTextFormat(Qt.PlainText)
+        self.number_label.setAlignment(Qt.AlignCenter)
+        self.number_label.setStyleSheet('color:#E4E9FF;font-size:11px;')
+        # Canonical clickable strip: same rect the geometry solver
+        # validates, so hit-test and mask can never disagree.
+        self.number_label.setGeometry(*pet_geometry.STAR_LABEL_RECT)
+        self._apply_hit_mask()
+
+    def _star_center(self):
+        return QPointF(*pet_geometry.TASK_STAR_CENTER)
+
+    def _scaled_points(self):
+        center = self._star_center()
+        return [QPointF(center.x() + dx * self.star_scale,
+                        center.y() + dy * self.star_scale)
+                for dx, dy in pet_geometry.star_ray_points()]
+
+    def _alpha(self, base, factor=1.0):
+        return max(0, min(255, int(base * factor)))
+
+    def _sparkle_offsets(self):
+        """Two deterministic micro-sparkle centers (slot-stable)."""
+        import zlib
+        seed = zlib.crc32(repr(self.identity).encode('utf-8'))
+        center = self._star_center()
+        points = []
+        for shift in (0, 11):
+            frac = ((seed >> shift) % 1000) / 1000.0
+            frac2 = ((seed >> (shift + 5)) % 1000) / 1000.0
+            angle = frac * 6.283185307
+            dist = 30 + frac2 * 12
+            points.append((center.x() + dist * math.cos(angle),
+                           center.y() + dist * math.sin(angle) * 0.8))
+        return points
+
+    def _apply_hit_mask(self):
+        """OS-level clickable region: star/halo disc plus label only."""
+        cx, cy = pet_geometry.TASK_STAR_CENTER
+        radius = pet_geometry.TASK_STAR_HIT_R
+        region = QRegion(QRect(cx - radius, cy - radius, radius * 2,
+                               radius * 2), QRegion.Ellipse)
+        region = region.united(
+            QRegion(*pet_geometry.STAR_LABEL_RECT))
+        self.setMask(region)
+
+    def is_star_hit(self, local):
+        """Whether a widget-local point is an intentional star click."""
+        cx, cy = pet_geometry.TASK_STAR_CENTER
+        radius = pet_geometry.TASK_STAR_HIT_R
+        dx, dy = local.x() - cx, local.y() - cy
+        if dx * dx + dy * dy <= radius * radius:
+            return True
+        return self.number_label.geometry().contains(local)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        center = self._star_center()
+        cx, cy = center.x(), center.y()
+        halo_r = 34.0 * self.halo_radius
+        # Static halo: soft blue/violet glow, no box behind the star.
+        halo = QRadialGradient(cx, cy, halo_r)
+        halo.setColorAt(0.0, QColor(255, 255, 255,
+                                    self._alpha(30, self.halo_alpha)))
+        halo.setColorAt(0.5, QColor(140, 200, 255,
+                                     self._alpha(20, self.halo_alpha)))
+        halo.setColorAt(0.85, QColor(140, 130, 255,
+                                    self._alpha(9, self.halo_alpha)))
+        halo.setColorAt(1.0, QColor(140, 130, 255, 0))
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(halo)
+        painter.drawEllipse(center, halo_r, halo_r)
+        # Outer rays: blue-violet edges into icy cyan.
+        outer = QPolygonF(self._scaled_points())
+        body = QLinearGradient(cx, cy - 30 * self.star_scale,
+                               cx, cy + 30 * self.star_scale)
+        body.setColorAt(0.0, QColor(139, 123, 255,
+                                    self._alpha(235, self.facet_intensity)))
+        body.setColorAt(0.5, QColor(120, 200, 255,
+                                    self._alpha(235, self.facet_intensity)))
+        body.setColorAt(1.0, QColor(110, 150, 255,
+                                    self._alpha(235, self.facet_intensity)))
+        painter.setBrush(body)
+        painter.drawPolygon(outer)
+        # Inner facets: pale cyan/lavender, slightly inset.
+        inner_pts = [QPointF(cx + (pt.x() - cx) * 0.58,
+                             cy + (pt.y() - cy) * 0.58)
+                     for pt in self._scaled_points()]
+        inner = QLinearGradient(cx, cy - 18 * self.star_scale,
+                                cx, cy + 18 * self.star_scale)
+        inner.setColorAt(0.0, QColor(216, 246, 255,
+                                     self._alpha(230, self.facet_intensity)))
+        inner.setColorAt(1.0, QColor(165, 230, 255,
+                                     self._alpha(230, self.facet_intensity)))
+        painter.setBrush(inner)
+        painter.drawPolygon(QPolygonF(inner_pts))
+        # Facet glints: vertical highlight + pink-violet edge accent.
+        painter.setPen(QPen(QColor(255, 255, 255,
+                                          self._alpha(120, self.facet_intensity)), 1.2))
+        painter.drawLine(QPointF(cx, cy - 24 * self.star_scale),
+                         QPointF(cx, cy + 8 * self.star_scale))
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(255, 182, 240,
+                                self._alpha(80, self.facet_intensity)))
+        accent = QPolygonF([QPointF(cx + 4 * self.star_scale, cy - 14 * self.star_scale),
+                            QPointF(cx + 9 * self.star_scale, cy - 4 * self.star_scale),
+                            QPointF(cx + 4 * self.star_scale, cy + 2 * self.star_scale)])
+        painter.drawPolygon(accent)
+        # Brilliant core: white diamond over pale icy fill.
+        core_r = pet_geometry.TASK_STAR_CORE_R * self.star_scale
+        core = QPolygonF([QPointF(cx, cy - core_r), QPointF(cx + core_r, cy),
+                          QPointF(cx, cy + core_r), QPointF(cx - core_r, cy)])
+        painter.setBrush(QColor(242, 251, 255,
+                                self._alpha(255, self.core_intensity)))
+        painter.drawPolygon(core)
+        tiny = core_r * 0.45
+        spark = QPolygonF([QPointF(cx, cy - tiny), QPointF(cx + tiny, cy),
+                           QPointF(cx, cy + tiny), QPointF(cx - tiny, cy)])
+        painter.setBrush(QColor(255, 255, 255,
+                                self._alpha(255, self.core_intensity)))
+        painter.drawPolygon(spark)
+        # Micro-sparkles: two tiny diamonds, slot-deterministic.
+        for index, (sx, sy) in enumerate(self._sparkle_offsets()):
+            r = 2.6 if index == 0 else 2.0
+            diamond = QPolygonF([QPointF(sx, sy - r), QPointF(sx + r, sy),
+                                 QPointF(sx, sy + r), QPointF(sx - r, sy)])
+            painter.setBrush(QColor(220, 240, 255,
+                                     self._alpha(200 if index == 0 else 150,
+                                                 self.facet_intensity)))
+            painter.drawPolygon(diamond)
+
+    def refresh(self, number_text, provider_name, language):
+        """Update visible identity text. Values only, never raw sources."""
+        self._number = number_text
+        self.number_label.setText(number_text)
+        tip = (f'{text("task_panel_label", language, n=number_text)} · '
+               f'{provider_name} · {text("working", language)}')
+        self.setToolTip(tip)
+        self.setWindowTitle(text('task_panel_label', language, n=number_text))
+        self.setAccessibleName(text('task_accessible', language,
+                                   label=self.windowTitle(), provider=provider_name))
+        self.update()
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space) and self.manager:
+            self.manager.orb_activated(self.identity, keyboard=True)
+            event.accept()
+        elif event.key() == Qt.Key_Escape and self.manager:
+            self.manager.collapse_detail()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            if not self.is_star_hit(event.position().toPoint()):
+                event.ignore()
+                return
+            self._press_global = event.globalPosition().toPoint()
+            self._press_offset = self._press_global - self.pos()
+            self._dragging = False
+            manager = self.manager
+            if manager is not None:
+                try:
+                    manager.add_press_hold(self.identity)
+                except Exception:
+                    pass
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if (event.buttons() & Qt.LeftButton and self._press_global is not None
+                and self._press_offset is not None):
+            delta = event.globalPosition().toPoint() - self._press_global
+            if delta.manhattanLength() > pet_geometry.TASK_ORB_DRAG_THRESHOLD_PX:
+                # Collapsed stars are not draggable: a genuine move
+                # suppresses the click and repositions nothing.
+                self._dragging = True
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton and self._press_global is not None:
+            if not self._dragging:
+                manager = self.manager
+                if manager is not None:
+                    try:
+                        manager.orb_activated(self.identity)
+                    except Exception:
+                        pass
+            manager = self.manager
+            if manager is not None:
+                try:
+                    manager.release_press_hold(self.identity)
+                except Exception:
+                    pass
+            self._press_global = None
+            self._press_offset = None
+            self._dragging = False
+        super().mouseReleaseEvent(event)
+
+    def enterEvent(self, event):
+        manager = self.manager
+        if manager is not None:
+            try:
+                manager.add_hover_hold(self.identity)
+            except Exception:
+                pass
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        manager = self.manager
+        if manager is not None:
+            try:
+                manager.release_hover_hold(self.identity)
+            except Exception:
+                pass
+        super().leaveEvent(event)
+
+    def panel_text(self):
+        """All user-visible star text, for privacy assertions."""
+        return '\n'.join((self.number_label.text(), self.toolTip(),
+                          self.windowTitle()))
+
+
+def _plan_parking_routes(inputs):
+    """Pure scheduler over immutable pixels; never reads a manager or Qt object."""
+    (start_items, home_items, static_items, signature, pet_rect, screen_rect,
+     cooperative) = inputs
+    starts, homes = dict(start_items), dict(home_items)
+    # Windows native Qt calls repeatedly release/reacquire the GIL. Yield at
+    # bounded pixel batches so a CPU planner cannot delay those GUI callbacks.
+    # sleep(0) did not let native callbacks reacquire the GIL on Windows. One
+    # millisecond per bounded batch gives those callbacks a scheduling window.
+    yield_work = (lambda: time.sleep(pet_geometry.PARKING_WORK_YIELD_S)) if cooperative else None
+    # Partition first: survivors already home hold still visibly
+    # (no glide, never staged); only genuine movers enter path
+    # validation. Otherwise the greedy drop would stage the very
+    # stars that must glide while "parking" stars going nowhere.
+    still = set()
+    moving = []
+    for key in starts:
+        if (math.hypot(homes[key][0] - starts[key][0],
+                        homes[key][1] - starts[key][1]) < 1.0):
+            still.add(key)
+        else:
+            moving.append(key)
+    static = dict(static_items)
+    for key in still:
+        static[key] = pet_geometry.star_center_to_window_position(*homes[key])
+
+    ordered = sorted(moving)
+    paths = {}
+    failed = set()
+
+    def schedule(parked):
+        if len(parked) == len(ordered):
+            return []
+        if parked in failed or len(failed) >= 256:
+            return None
+        for key in ordered:
+            if key in parked:
+                continue
+            cache_key = (parked, key)
+            if cache_key not in paths:
+                context = dict(static)
+                context.update({
+                    other: pet_geometry.star_center_to_window_position(
+                        *(homes[other] if other in parked else starts[other]))
+                    for other in ordered if other != key})
+                paths[cache_key] = pet_geometry.parking_route(
+                    pet_geometry.star_center_to_window_position(*starts[key]),
+                    pet_geometry.star_center_to_window_position(*homes[key]),
+                    context, pet_rect, screen_rect, yield_work=yield_work)
+            path = paths[cache_key]
+            if path is None:
+                continue
+            tail = schedule(parked | {key})
+            if tail is not None:
+                return [(key, path)] + tail
+        failed.add(parked)
+        return None
+
+    complete = schedule(frozenset())
+    if not complete:
+        if not ordered:
+            return None
+        # Invalid endpoints or a bounded route-search failure preserve the
+        # exact visible frame; changed geometry/membership can retry.
+        return {
+            'signature': signature, 'blocked': 'no_safe_parking_schedule',
+            't': 0.0, 'dur': 0.0, 'starts': dict(starts), 'windows': {},
+            'homes': dict(homes), 'pet_rect': pet_rect,
+            'screen_rect': screen_rect, 'deferred': set(ordered)}
+    else:
+        windows, routes = {}, {}
+        cursor = 0.0
+        for key, path in complete:
+            distances = [0]
+            for first, last in zip(path, path[1:]):
+                distances.append(distances[-1] + abs(last[0] - first[0])
+                                 + abs(last[1] - first[1]))
+            # Manhattan length budgets diagonal pixels and quantization.
+            duration = max(
+                pet_geometry.RING_BLEND_MIN_S,
+                distances[-1] * pet_geometry.RING_BLEND_EASE_PEAK
+                * pet_geometry.RING_BLEND_FRAME_S
+                / pet_geometry.RING_BLEND_TARGET_PX_PER_FRAME)
+            windows[key] = (cursor, duration)
+            routes[key] = (tuple(path), tuple(distances))
+            cursor += duration
+        return {
+            'signature': signature, 't': 0.0, 'dur': cursor,
+            'starts': {key: starts[key] for key, _ in complete},
+            'windows': windows, 'routes': routes,
+            'homes': {key: homes[key] for key, _ in complete},
+            'pet_rect': pet_rect, 'screen_rect': screen_rect,
+            'deferred': set()}
+
+
+class TaskPanelManager:
+    """Owns the (provider_id, task_key) -> orb mapping.
+
+    Responsibilities: lifetime label/slot assignment for the
+    authoritative active-task universe, orb creation, per-key update,
+    single-task retirement, deterministic auto layout, user drag
+    overrides, Auto/manual filtering over accepted sets, and
+    generation-safe snapshots. Never reads providers, never detects
+    lifecycle, never computes accounting.
+
+    The authoritative universe (every accepted active task) is kept
+    separate from the visible filtered set: assignments belong to task
+    keys for their whole active lifetime, whether a task is currently
+    visible or temporarily hidden by a manual provider filter. Only
+    disappearance from the authoritative universe releases an
+    assignment — and under a manual filter, only the filtered lane's
+    absence counts (the other lane's sets are intact but simply not
+    delivered, so their assignments survive).
+
+    The main panel is NEVER a task surface: every visible task gets
+    exactly one star, and the companion hub is not counted.
+
+    Each task owns ONE effective anchor: the automatic ring home for
+    its lifetime slot (recomputed from the visible set, tracked
+    across pet moves). Collapsed stars are not user-draggable, so
+    there are no manual position overrides; D2C expands the panel
+    from the current star center and collapses back to the same
+    anchor.
+
+    Motion (D2B): one shared manager-owned visual timer drives the
+    star ring, breathing, and the decorative trail overlay. Ring
+    stars share one active-time phase plus fixed slot offsets;
+    hovering or pressing any star pauses the whole group without
+    teleporting on resume; breathing follows a shared broadcast
+    clock with per-slot phase offsets. Arc fallback keeps per-star
+    clocks with the hovered star frozen. All motion honors the
+    pet_motion preference and stops with zero stars.
+
+    Presentation-transition continuity: every already-visible star's
+    exact current on-screen position is frame zero for any
+    transition. OFF->ON glides survivors along a chase path toward
+    the live ring (never a radial snap, never a hub-cutting chord);
+    ON->OFF runs a finite steered parking glide from current
+    positions to static homes (never an instant park) that advances
+    on ticks even while motion reads off, then idles the timer.
+    Crowded order-mismatched sets that cannot glide together move
+    sequentially (parking, in successive rounds when no single order
+    validates) or via the validated staged reveal (ring
+    entry) rather than teleporting. Movers that cannot join the
+    current parking round hold visibly at their exact current pixels
+    (deferred) instead of hiding or snapping home; the next round
+    replans from those pixels once the first movers land. At most
+    one of _ring_blend / _park_blend is active at any time.
+    """
+
+    def __init__(self, panel):
+        self.panel = panel
+        self._shutdown = False
+        self._universe = {}
+        self._labels = {}
+        self._slots = {}
+        self._windows = {}
+        self._placed = {}
+        self._ring_slots = []
+        self._orbit = {}
+        self._orbit_t = {}
+        self._arc_dirs = {}
+        self._ring_offsets = {}
+        self._ring_t = 0.0
+        self._ring_blend = None
+        self._park_blend = None
+        self._park_plan_revision = 0
+        self._park_plan_request = None
+        self._park_plan_job = None
+        self._ring_staged = set()
+        self._hover_holds = set()
+        self._press_holds = set()
+        self._motion_t = 0.0
+        self._last_tick = None
+        self._hovered = None
+        self._orbit_mode = ('static',)
+        self._last_motion_enabled = None
+        self._last_pet_rect = None
+        self._last_screen_rect = None
+        self._last_tick_center = None
+        self._last_generation = None
+        self._visible = True
+        self.last_activated = None
+        self.detail_window = None
+        self.expanded_identity = None
+        self.expanded_anchor = None
+        self._expansion_geometry = None
+        self._expansion_dirty = False
+        self._task_preference = 'auto'
+        self._task_language = DEFAULT_LANGUAGE
+        self.motion_timer = QTimer()
+        self.motion_timer.setInterval(pet_geometry.MOTION_TICK_MS)
+        self.motion_timer.timeout.connect(self._on_motion_timeout)
+        self.trail_overlay = TrailOverlay()
+
+    def window_identities(self):
+        return sorted(self._windows)
+
+    def window_for(self, identity):
+        return self._windows.get(identity)
+
+    def slot_for(self, identity):
+        return self._slots.get(identity)
+
+    def label_number_for(self, identity):
+        return self._labels.get(identity)
+
+    def window_count(self):
+        return len(self._windows)
+
+    def label_text(self, identity, language):
+        return text('task_panel_label', language, n=self._labels.get(identity, 0))
+
+    def _claim_number(self, taken):
+        number = 1
+        while number in taken:
+            number += 1
+        return number
+
+    def _anchor(self):
+        """Live (pet_rect, screen_rect) for placement; pure otherwise."""
+        panel = self.panel
+        pet = getattr(panel, 'pet', None)
+        source = pet if pet is not None else panel
+        geometry = source.geometry()
+        pet_rect = (geometry.x(), geometry.y(), geometry.width(), geometry.height())
+        screen = (QApplication.screenAt(geometry.center())
+                  or QApplication.primaryScreen())
+        r = screen.availableGeometry()
+        return pet_rect, (r.left(), r.top(), r.right(), r.bottom())
+
+    def apply_snapshot(self, tasks, preference='auto', generation=None,
+                       language=None, pet_rect=None, screen_rect=None):
+        """Apply one authoritative accepted task list.
+
+        Late generations (older than the last applied) never resurrect
+        retired orbs and never overwrite newer UI-owned position state.
+        Every visible task gets exactly one orb; surviving orbs are
+        reused in place and only retired keys close. User drag
+        overrides are never moved by normal refreshes. Returns the
+        ordered visible orb identities.
+        """
+        if self._shutdown:
+            return []
+        if (generation is not None and self._last_generation is not None
+                and generation < self._last_generation):
+            return self.window_identities()
+        if generation is not None:
+            self._last_generation = generation
+        language = normalize_language(language or DEFAULT_LANGUAGE)
+        preference = normalize_tracking_provider(preference)
+        self._task_preference = preference
+        self._task_language = language
+        previous_keys = set(self._windows)
+        seen = {}
+        for task in tasks or []:
+            seen[task_identity(task)] = task
+        for key, task in seen.items():
+            self._universe[key] = task
+        if preference == 'auto':
+            retired = [k for k in self._universe if k not in seen]
+        else:
+            retired = [k for k in self._universe
+                       if k[0] == preference and k not in seen]
+        for key in retired:
+            self._universe.pop(key, None)
+        for key in [k for k in self._labels if k not in self._universe]:
+            self._labels.pop(key, None)
+            self._slots.pop(key, None)
+            self._placed.pop(key, None)
+            self._orbit.pop(key, None)
+            self._orbit_t.pop(key, None)
+            self._ring_offsets.pop(key, None)
+        for task in order_tasks(list(self._universe.values())):
+            key = task_identity(task)
+            if key not in self._labels:
+                self._labels[key] = self._claim_number(set(self._labels.values()))
+            if key not in self._slots:
+                self._slots[key] = self._claim_number(set(self._slots.values()))
+        ordered_universe = order_tasks(list(self._universe.values()))
+        wanted = [t for t in filter_tasks_for_preference(ordered_universe, preference)]
+        wanted_keys = [task_identity(t) for t in wanted]
+        if self.expanded_identity is not None and self.expanded_identity not in wanted_keys:
+            self.collapse_detail(replan=False)
+        self._ring_slots = sorted(self._slots[k] for k in wanted_keys
+                                  if k in self._slots)
+        for key in [k for k in self._windows if k not in wanted_keys]:
+            orb = self._windows.pop(key)
+            self._placed.pop(key, None)
+            self._orbit.pop(key, None)
+            self._orbit_t.pop(key, None)
+            self._arc_dirs.pop(key, None)
+            self._ring_offsets.pop(key, None)
+            # Filter-hide and retire share this loop: interaction
+            # holds are visibility-local, so a hidden surface can
+            # never keep the ring paused (no mouse-leave will come).
+            self.release_hover_hold(key)
+            self.release_press_hold(key)
+            # Staged recovery bookkeeping is visibility-local too: a
+            # filtered/retired key leaves the pending set with it.
+            self._ring_staged.discard(key)
+            if self.trail_overlay.drop(key):
+                # The retired ribbon must vanish at once: the overlay
+                # stays up for surviving trails, so erase explicitly.
+                self.trail_overlay.update()
+            try:
+                orb.close()
+                orb.deleteLater()
+            except Exception:
+                pass
+        self._reconcile_holds()
+        if pet_rect is None or screen_rect is None:
+            live_pet, live_screen = self._anchor()
+            pet_rect = live_pet if pet_rect is None else pet_rect
+            screen_rect = live_screen if screen_rect is None else screen_rect
+        prev_pet_rect = getattr(self, '_last_pet_rect', None)
+        prev_screen_rect = getattr(self, '_last_screen_rect', None)
+        if (self.expanded_identity is not None
+                and (tuple(pet_rect), tuple(screen_rect)) != self._expansion_geometry):
+            self._expansion_dirty = True
+            self.collapse_detail(replan=False)
+        self._last_pet_rect = pet_rect
+        self._last_screen_rect = screen_rect
+        on_top = bool((getattr(self.panel, 'prefs', None) or {}).get('always_on_top', True))
+        for task in wanted:
+            key = task_identity(task)
+            orb = self._windows.get(key)
+            if orb is None:
+                orb = TaskOrbWindow(key, provider_id=task.get('provider_id'),
+                                    manager=self)
+                self._windows[key] = orb
+            if bool(orb.windowFlags() & Qt.WindowStaysOnTopHint) != on_top:
+                visible, position = orb.isVisible(), orb.pos()
+                orb.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
+                orb.move(position)
+                if visible and self._visible:
+                    orb.show()
+            orb.refresh(str(self._labels[key]),
+                        PROVIDER_NAMES.get(task.get('provider_id'),
+                                           task.get('provider_id')),
+                        language)
+        if self.expanded_identity is not None:
+            newcomers = set(wanted_keys) - previous_keys
+            self._stage_keys(newcomers)
+            self._expansion_dirty |= (set(wanted_keys) != previous_keys
+                                      or self._motion_enabled() != self._last_motion_enabled)
+            self._refresh_detail()
+            return self.window_identities()
+        self._compute_orbit_params(pet_rect, screen_rect)
+        previous_motion = (self._orbit_mode, self._ring_offsets)
+        self._orbit_mode = self._select_orbit_mode(pet_rect, screen_rect)
+        # Selection before show: newly created stars are exposed only
+        # at their selected orbit position, never at a static home.
+        self._maybe_start_blend(previous_motion[0], previous_motion[1],
+                                pet_rect, screen_rect,
+                                prev_pet_rect, prev_screen_rect)
+        motion_changed = (self._motion_enabled()
+                          != self._last_motion_enabled)
+        self._last_motion_enabled = self._motion_enabled()
+        if not self._motion_enabled() and self._windows:
+            # ON->OFF through an apply: survivors glide home from
+            # exact current pixels (frame zero); newcomers appear at
+            # homes via the place path below. Never snap.
+            self._begin_park_glide(pet_rect, screen_rect)
+        self._place_all(wanted_keys, pet_rect, screen_rect)
+        for task in wanted:
+            orb = self._windows.get(task_identity(task))
+            if orb is None:
+                continue
+            if task_identity(task) in self._ring_staged:
+                # Staged newcomers stay hidden until revealed at
+                # their final slots; never flash them beforehand.
+                continue
+            if self._visible:
+                orb.show()
+            else:
+                orb.hide()
+        if (self._orbit_mode, self._ring_offsets) != previous_motion:
+            # Recomposition (ring in/out, new radius, new spacing):
+            # never paint a streak between the old path and the new.
+            self.trail_overlay.clear_all()
+        if motion_changed:
+            # Motion OFF->ON/OFF toggles swap geometry spaces
+            # (static homes vs animated ring): stale ribbons must not
+            # bridge the two.
+            self.trail_overlay.clear_all()
+        if not self._windows:
+            self.stop_motion()
+            self.trail_overlay.clear_all()
+            try:
+                if self.trail_overlay.isVisible():
+                    self.trail_overlay.hide()
+            except Exception:
+                pass
+        return self.window_identities()
+
+    def _auto_home(self, key, pet_rect, screen_rect):
+        """Deterministic static ring home for a lifetime slot."""
+        return pet_geometry.star_ring_anchor(
+            self._ring_slots or [self._slots[key]], self._slots[key],
+            pet_rect, screen_rect)
+
+    def _place_all(self, wanted_keys, pet_rect, screen_rect):
+        """Move every visible orb to its authoritative nominal position.
+
+        First placement lands directly on the selected path (no home
+        flash); refreshes with unchanged clocks are exact no-ops (no
+        yank); pet moves ride the new hub rigidly. Same math as the
+        animation tick, so placement and motion can never disagree by
+        one frame.
+
+        Keys covered by an active parking glide are skipped: their
+        exact current positions are frame zero and ticks own them.
+        Staged (hidden) newcomers are skipped too: they stay inert
+        until a validated reveal exposes them, never pre-moved into
+        an unvalidated home. Ring-blend survivors need no skip: the
+        cartesian commit makes placement at blend start a proven
+        no-op.
+        """
+        if self.expanded_identity is not None:
+            return
+        nominal, _ = self._nominal_positions(pet_rect, screen_rect)
+        parked = (self._park_blend['starts']
+                  if self._park_blend is not None else {})
+        for key in wanted_keys:
+            if key in parked or key in self._ring_staged:
+                continue
+            pos = nominal.get(key)
+            orb = self._windows.get(key)
+            if pos is None or orb is None:
+                continue
+            if self._placed.get(key) != pos:
+                self._placed[key] = pos
+                orb.move(*pos)
+
+    def _static_center(self, key, pet_rect, screen_rect):
+        """Home center for one star (parking + static-mode anchor)."""
+        params = self._orbit.get(key)
+        if params is not None:
+            pcx = pet_rect[0] + pet_rect[2] / 2.0
+            pcy = pet_rect[1] + pet_rect[3] / 2.0
+            return pet_geometry.orbit_center_at(
+                pcx, pcy, params['radius'], params['radius'],
+                params['base_deg'])
+        return self._home_center(key, pet_rect, screen_rect)
+
+    def _nominal_positions(self, pet_rect, screen_rect, ring_t=None,
+                           orbit_times=None, blend_t=None):
+        """Authoritative window+center positions for the current mode.
+
+        Single math source for first placement, animation ticks, and
+        refresh. Ring uses the shared active-time phase plus slot
+        offsets (blend-interpolated while recomposing); arc uses
+        per-key clocks with the hovered star frozen; static or
+        motion-disabled uses homes. Returns ({key: window},
+        {key: float center}).
+        """
+        mode = self._orbit_mode
+        kind = mode[0] if isinstance(mode, tuple) else 'static'
+        pcx = pet_rect[0] + pet_rect[2] / 2.0
+        pcy = pet_rect[1] + pet_rect[3] / 2.0
+        windows = {}
+        centers = {}
+        if not self._motion_enabled():
+            kind = 'static'
+        if kind == 'ring':
+            rt = self._ring_t if ring_t is None else ring_t
+            omega = 2.0 * math.pi / mode[3]
+            phase = mode[5] + mode[4] * math.degrees(omega * rt)
+            blend = self._ring_blend
+            bt = blend['t'] if blend is not None else 0.0
+            if blend_t is not None:
+                bt = blend_t
+            for key in self._windows:
+                if key in self._ring_staged:
+                    # Staged newcomers are hidden pending reveal:
+                    # excluded from motion, validity, and trails
+                    # until they join the visible ring.
+                    continue
+                target = phase + self._ring_offsets.get(key, 0.0)
+                if blend is not None:
+                    start_center = blend.get('start_centers', {}).get(key)
+                    start = blend.get('start', {}).get(key)
+                    if start_center is not None and start is not None:
+                        # Chase-path continuity glide: the angle eases
+                        # toward the live ring target while the center
+                        # chases the advancing ring point. Frame zero is
+                        # the exact visible position (ease(0) == 0, so
+                        # placement at blend start is a proven no-op),
+                        # arrival is the exact ring target, and the
+                        # spiral-like path routes around the hub instead
+                        # of cutting straight chords through it.
+                        ease = pet_geometry.ring_blend_ease(
+                            bt / blend['dur'])
+                        delta = pet_geometry.ring_shortest_delta_deg(
+                            start, target)
+                        center = self._chase_point(
+                            start_center, start, delta, ease,
+                            (pcx, pcy), mode[1], mode[2])
+                    elif start is not None:
+                        ease = pet_geometry.ring_blend_ease(
+                            bt / blend['dur'])
+                        delta = pet_geometry.ring_shortest_delta_deg(
+                            start, target)
+                        theta = start + ease * delta
+                        center = pet_geometry.orbit_center_at(
+                            pcx, pcy, mode[1], mode[2], theta)
+                    else:
+                        theta = target
+                        center = pet_geometry.orbit_center_at(
+                            pcx, pcy, mode[1], mode[2], theta)
+                else:
+                    theta = target
+                    center = pet_geometry.orbit_center_at(
+                        pcx, pcy, mode[1], mode[2], theta)
+                centers[key] = center
+                windows[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        center[0], center[1]))
+        elif kind == 'arc':
+            times = self._orbit_t if orbit_times is None else orbit_times
+            omega = 2.0 * math.pi / mode[2]
+            for key, orb in self._windows.items():
+                if key in self._ring_staged:
+                    # Staged newcomers are hidden pending reveal:
+                    # excluded from motion, validity, and trails
+                    # until they join the visible arc (same rule as
+                    # the ring branch above).
+                    continue
+                params = self._orbit.get(key)
+                if key == self._hovered or params is None:
+                    windows[key] = (orb.x(), orb.y())
+                    centers[key] = (orb.x() + 56.0, orb.y() + 48.0)
+                    continue
+                cycle = ((omega * times.get(key, 0.0))
+                         % (2.0 * math.pi)) / (2.0 * math.pi)
+                theta = pet_geometry.arc_angle_at(
+                    params['base_deg'], mode[1],
+                    self._arc_dirs.get(key, +1), cycle)
+                center = pet_geometry.orbit_center_at(
+                    pcx, pcy, params['radius'], params['radius'], theta)
+                centers[key] = center
+                windows[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        center[0], center[1]))
+        else:
+            for key in self._windows:
+                if key in self._ring_staged:
+                    # Staged newcomers are hidden pending reveal:
+                    # excluded from motion, validity, and trails
+                    # until they join the visible set (same rule as
+                    # the ring/arc branches above).
+                    continue
+                center = self._static_center(key, pet_rect, screen_rect)
+                centers[key] = center
+                windows[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        center[0], center[1]))
+        return windows, centers
+
+    @staticmethod
+    def _chase_point(start_center, start_angle, delta, ease, hub,
+                     radius_x, radius_y):
+        """One chase-path center: angle eases toward the ring target
+        while the center chases the advancing ring point.
+
+        Frame zero is the exact start (ease == 0) and arrival is the
+        exact ring target (ease == 1); the spiral-like path routes
+        around the hub instead of cutting chords through it. Shared
+        by the runtime, the commit-time budget sampler, and the
+        plan-time path validator so all three agree exactly.
+        """
+        chase = pet_geometry.orbit_center_at(
+            hub[0], hub[1], radius_x, radius_y,
+            start_angle + ease * delta)
+        return (start_center[0] + ease * (chase[0] - start_center[0]),
+                start_center[1] + ease * (chase[1] - start_center[1]))
+
+    @staticmethod
+    def _clamped_dt(dt):
+        """Bound one tick's active-time advance to a single frame.
+
+        A delayed timer callback (process hibernate, debugger pause,
+        CI stall) must never apply hidden elapsed time as one large
+        visible step: ring phase, blend progress, parking progress,
+        arc clocks, and breathing all share this bound, so a 5 s gap
+        advances at most one nominal 40 ms frame and the next tick
+        resumes from there. The excess is discarded (clocks reset to
+        the callback time), never caught up, so no giant first trail
+        segment is possible either.
+        """
+        if dt <= 0.0:
+            return 0.0
+        return min(dt, pet_geometry.RING_BLEND_FRAME_S)
+
+    def _validate_path_frames(self, points_at, movers, static_windows,
+                              pet_rect, screen_rect, fractions=25):
+        """Sample a planned transition path against footprint rules.
+
+        points_at(progress) returns {key: float center} for the
+        movers at linear progress 0..1 (each policy applies its own
+        easing); static_windows are integer windows that hold still
+        (newcomers already at targets, parked newcomers at homes).
+        Every sampled frame — including both endpoints — must
+        validate as one complete set. Pure: commits nothing.
+        """
+        for step in range(fractions + 1):
+            progress = step / fractions
+            centers = points_at(progress)
+            frame = dict(static_windows)
+            for key, center in centers.items():
+                frame[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        center[0], center[1]))
+            if not self._nominal_valid(frame, pet_rect, screen_rect):
+                return False
+        return True
+
+    def _greedy_path_subset(self, movers, delta_of, validate):
+        """Largest lead-mover subset whose path validates end to end.
+
+        Drops the longest-travel mover first (deterministic tie-break
+        by identity): crossing paths in crowded order-mismatched sets
+        come from long angular hauls. Returns the surviving ordered
+        list, possibly empty (caller stages the dropped remainder and
+        reveals it through the validated atomic reveal path).
+        """
+        candidates = list(movers)
+        while candidates and not validate(candidates):
+            candidates.sort()
+            dropped = max(
+                candidates,
+                key=lambda key: (abs(delta_of(key)), key))
+            candidates = [k for k in candidates if k != dropped]
+        return candidates
+
+    def _plan_direct_blend(self, starts, newcomers, pet_rect,
+                             screen_rect):
+        """One safe base rotation, or None (hard frame-0 rejection).
+
+        Scores whole-pattern base rotations (per-survivor anchors
+        plus circular midpoints) by survivor travel, but a candidate
+        whose arrival frame violates the final footprint rules is
+        DISCARDED — not ranked last, never returned — even when every
+        candidate fails. Returns (phi, travels) or None when no
+        direct blend is safe. Pure planning: commits nothing
+        (offsets, clocks, and windows untouched).
+        """
+        mode = self._orbit_mode
+        hub = (pet_rect[0] + pet_rect[2] / 2.0,
+               pet_rect[1] + pet_rect[3] / 2.0)
+        omega = 2.0 * math.pi / mode[3]
+        phase = mode[5] + mode[4] * math.degrees(omega * self._ring_t)
+        ordered = sorted(starts)
+        if not ordered:
+            return None
+        anchors = []
+        for anchor in ordered:
+            anchors.append(pet_geometry.ring_shortest_delta_deg(
+                phase + self._ring_offsets[anchor], starts[anchor]))
+        # Anchor alignments plus circular midpoints between them:
+        # the minimax rotation often sits between anchors (e.g. half
+        # the gap), which anchors alone would miss. Anchors evaluate
+        # first so exact alignments win ties deterministically.
+        candidates = list(anchors)
+        uniq = sorted(set(anchors))
+        for first, second in zip(uniq, uniq[1:] + uniq[:1]):
+            half = pet_geometry.ring_shortest_delta_deg(first, second)
+            if abs(half) > 1e-9:
+                candidates.append(first + half / 2.0)
+        best = None
+        for phi in candidates:
+            travels = {}
+            for key in ordered:
+                travels[key] = abs(
+                    pet_geometry.ring_shortest_delta_deg(
+                        starts[key], phase + phi
+                        + self._ring_offsets[key]))
+            # Frame-0 check: survivors sit where they are while
+            # newcomers appear at this candidate's targets. A
+            # candidate that overlaps on arrival (e.g. bulk appear on
+            # a survivor's current slot) is discarded, never ranked.
+            frame = {key: (self._windows[key].x(), self._windows[key].y())
+                     for key in ordered}
+            for key in newcomers:
+                theta = phase + phi + self._ring_offsets[key]
+                center = pet_geometry.orbit_center_at(
+                    hub[0], hub[1], mode[1], mode[2], theta)
+                frame[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        center[0], center[1]))
+            if not self._nominal_valid(frame, pet_rect, screen_rect):
+                continue
+            cost = (max(travels.values()), sum(travels.values()))
+            if best is None or cost < best[0]:
+                best = (cost, phi, travels)
+            # Strict improvement only: earlier candidates (anchors,
+            # lowest slot first) win ties deterministically.
+        if best is None:
+            return None
+        return best[1], best[2]
+
+    def _commit_blend_plan(self, starts, phi, travels, hub):
+        """Install a planned survivor glide: sub-pixel changes
+        place directly, else rebase the shared phase so targets absorb
+        the rotation and run an easing-aware adaptive duration.
+
+        The glide eases angle and center together along a chase
+        path (not angle-only): a static home far off the ring
+        radius travels continuously instead of snapping radially,
+        routing around the hub rather than cutting chords through
+        it. Duration derives from the longest budgeted chase
+        polyline, so the eased peak frame step keeps the D2B frame
+        budget by construction. Takes over any parking glide (at most
+        one transition blend is ever active)."""
+        self._park_blend = None
+        if not travels:
+            self._ring_blend = None
+            return
+        mode = self._orbit_mode
+        rate = mode[4] * 360.0 / mode[3]
+        if rate:
+            self._ring_t = self._ring_t + phi / rate
+        omega = 2.0 * math.pi / mode[3]
+        phase = (mode[5] + mode[4]
+                 * math.degrees(omega * self._ring_t))
+        start_centers = {}
+        max_dist = 0.0
+        for key in travels:
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            current = (orb.x() + 56.0, orb.y() + 48.0)
+            start_centers[key] = current
+            goal = pet_geometry.orbit_center_at(
+                hub[0], hub[1], mode[1], mode[2],
+                phase + self._ring_offsets.get(key, 0.0))
+            chord = math.hypot(goal[0] - current[0],
+                               goal[1] - current[1])
+            # Budget against the actual chase polyline (angle and
+            # center ease together, so the path can exceed the
+            # straight chord): sampled deterministically at commit
+            # time, so the eased peak frame step keeps the D2B frame
+            # budget without sluggish overestimates.
+            start = starts.get(key)
+            if start is not None:
+                delta = pet_geometry.ring_shortest_delta_deg(
+                    start, phase + self._ring_offsets.get(key, 0.0))
+                path = 0.0
+                prev_point = current
+                for step in range(1, 26):
+                    ease = pet_geometry.ring_blend_ease(step / 25.0)
+                    point = self._chase_point(
+                        current, start, delta, ease, hub,
+                        mode[1], mode[2])
+                    path += math.hypot(point[0] - prev_point[0],
+                                       point[1] - prev_point[1])
+                    prev_point = point
+                # Keep the larger of the sampled walk and the straight
+                # chord so sampling can never shrink the budget below
+                # the true end-to-end displacement.
+                max_dist = max(max_dist, path, chord)
+            else:
+                max_dist = max(max_dist, chord)
+        if max(travels.values()) < 0.5 and max_dist < 1.0:
+            self._ring_blend = None
+            return
+        self._ring_blend = {
+            't': 0.0,
+            'dur': pet_geometry.ring_blend_duration_s(max_dist),
+            'hub': hub,
+            'start': starts,
+            'start_centers': start_centers}
+
+    def _park_survivors(self, pet_rect, screen_rect):
+        """Visible survivors that must glide home (never newcomers).
+
+        Staged (hidden) orbs and never-placed newcomers are excluded:
+        they appear at homes through the normal place path, which is
+        an appearance, not motion. Only previously positioned,
+        currently visible-geometry survivors glide.
+        """
+        survivors = []
+        for key, orb in self._windows.items():
+            if key in self._ring_staged:
+                continue
+            if key not in self._placed:
+                continue
+            survivors.append(key)
+        return survivors
+
+    def _max_home_distance(self, keys, pet_rect, screen_rect):
+        """Longest current-center to static-home distance (float px)."""
+        peak = 0.0
+        for key in keys:
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            home = self._home_center(key, pet_rect, screen_rect)
+            peak = max(peak, math.hypot(
+                orb.x() + 56.0 - home[0], orb.y() + 48.0 - home[1]))
+        return peak
+
+    def _begin_park_glide(self, pet_rect, screen_rect):
+        """Start a finite parking glide from exact visible positions.
+
+        Frame zero is a proven no-op: nothing moves here; ticks ease
+        each survivor along a validated pixel route from its current
+        center to its static home over an adaptive duration (same frame
+        budget as ring blends). Production plans immutable pixels on one
+        daemon worker; the visual clock commits a complete memoized
+        sequential schedule before moving any survivor. Newcomers remain
+        staged until landing. Invalid endpoints or a bounded search failure
+        record a blocked constraint and hold the exact
+        frame without an endless timer or retry. Changed membership
+        or geometry can replan. Stale ring glides are abandoned; trails are
+        cleared so the transition paints no streak. Returns True
+        while a glide (or a visible hold) is in flight, False when
+        every survivor already sits home (staged remainder, if any,
+        is revealed at homes at once).
+        """
+        if self.expanded_identity is not None:
+            self._expansion_dirty = True
+            return True
+        self._ring_blend = None
+        if not self._motion_enabled():
+            # Motion-off parking: stale hover/press holds die here
+            # (backstop for direct callers) so neither the glide
+            # finish nor a later re-enable can freeze on them.
+            self._clear_interaction_holds()
+        survivors = self._park_survivors(pet_rect, screen_rect)
+        starts = {}
+        for key in survivors:
+            orb = self._windows.get(key)
+            if orb is not None:
+                starts[key] = (orb.x() + 56.0, orb.y() + 48.0)
+        # Poll refreshes retain elapsed easing, but membership and every
+        # obstacle target belong to the plan, including hidden newcomers.
+        signature = (tuple(pet_rect), tuple(screen_rect), tuple(
+            (key, self._auto_home(key, pet_rect, screen_rect))
+            for key in sorted(self._windows)))
+        existing = self._park_blend
+        if existing is not None and existing.get('signature') == signature:
+            if not existing.get('pending'):
+                return True
+            request = self._park_plan_request
+            if request is not None and request[1] == self._parking_fence(signature):
+                return True
+        # New surfaces cannot obstruct an already planned survivor path.
+        # They join atomically at landing; visible survivors never hide.
+        self._stage_keys([key for key in self._windows
+                          if key not in self._placed])
+        self._last_tick = None
+        if not starts:
+            self._cancel_park_planning()
+            self._park_blend = None
+            # No visible survivors to glide: staged newcomers (if any)
+            # are exposed only as a validated complete set.
+            self._try_reveal_staged_at_homes(pet_rect, screen_rect)
+            return False
+        homes = {}
+        for key in starts:
+            homes[key] = self._home_center(key, pet_rect, screen_rect)
+        if all(math.hypot(homes[key][0] - center[0],
+                          homes[key][1] - center[1]) < 1.0
+               for key, center in starts.items()):
+            self._cancel_park_planning()
+            self._park_blend = None
+            self._reveal_parked_at_homes(pet_rect, screen_rect)
+            return False
+        static = tuple((key, self._auto_home(key, pet_rect, screen_rect))
+                       for key in self._windows
+                       if key not in starts and key not in self._ring_staged)
+        inputs = (tuple(starts.items()), tuple(homes.items()), static,
+                  signature, tuple(pet_rect), tuple(screen_rect), self._live_armed())
+        if self._live_armed():
+            fence = self._parking_fence(signature)
+            self._park_plan_revision += 1
+            self._park_plan_request = (self._park_plan_revision, fence, inputs)
+            self._park_blend = {
+                'signature': signature, 'pending': True, 't': 0.0, 'dur': 0.0,
+                'starts': dict(starts), 'homes': dict(homes), 'windows': {},
+                'pet_rect': tuple(pet_rect), 'screen_rect': tuple(screen_rect)}
+            self._dispatch_park_plan()
+            if self._visible:
+                self.start_motion()
+        else:
+            self._park_blend = _plan_parking_routes(inputs)
+            if self._park_blend is None:
+                self._reveal_parked_at_homes(pet_rect, screen_rect)
+                return False
+        self.trail_overlay.clear_all()
+        try:
+            if self.trail_overlay.isVisible():
+                self.trail_overlay.hide()
+        except Exception:
+            pass
+        return True
+
+
+    def _parking_fence(self, signature):
+        return (signature, self._visible, self._motion_enabled(), self.expanded_identity, tuple(
+            (key, id(orb), orb.x(), orb.y(), key in self._ring_staged)
+            for key, orb in sorted(self._windows.items())))
+
+    def _cancel_park_planning(self):
+        self._park_plan_revision += 1
+        self._park_plan_request = None
+        if (self._park_blend or {}).get('pending'):
+            self._park_blend = None
+
+    def _dispatch_park_plan(self):
+        # One running job plus one latest immutable request; no growing queue.
+        if (self._shutdown or self.expanded_identity is not None or not self._visible or self._park_plan_job is not None
+                or self._park_plan_request is None):
+            return
+        revision, fence, inputs = self._park_plan_request
+        done, result = threading.Event(), []
+        self._park_plan_job = (revision, fence, done, result)
+
+        def work():
+            try:
+                result.append((_plan_parking_routes(inputs), None))
+            except Exception as error:
+                result.append((None, str(error)))
+            finally:
+                done.set()
+
+        threading.Thread(target=work, daemon=True, name='star-parking-plan').start()
+
+    def _poll_park_plan(self, pet_rect, screen_rect):
+        """Commit only on the visual clock, with an exact held frame zero."""
+        if self.expanded_identity is not None or self._shutdown:
+            return False
+        blend = self._park_blend
+        if not (blend or {}).get('pending'):
+            return False
+        # A drag, accepted membership change or external orb move supersedes
+        # the desired request. The running pure job is allowed to finish.
+        signature = (tuple(pet_rect), tuple(screen_rect), tuple(
+            (key, self._auto_home(key, pet_rect, screen_rect))
+            for key in sorted(self._windows)))
+        request = self._park_plan_request
+        if request is None or request[1] != self._parking_fence(signature):
+            self._begin_park_glide(pet_rect, screen_rect)
+            request = self._park_plan_request
+            if request is None:
+                self.sync_motion()
+        job = self._park_plan_job
+        if job is not None and job[2].is_set():
+            self._park_plan_job = None
+            if (request is not None and job[:2] == request[:2]
+                    and self._visible and not self._shutdown):
+                plan, error = job[3][0]
+                self._park_plan_request = None
+                if error is not None:
+                    self._park_blend.pop('pending', None)
+                    self._park_blend['blocked'] = 'parking_planner_error'
+                else:
+                    self._park_blend = plan
+                    if plan is None:
+                        self._reveal_parked_at_homes(pet_rect, screen_rect)
+                self._last_tick = None
+                if plan is None or (self._park_blend or {}).get('blocked'):
+                    self.sync_motion()
+            self._dispatch_park_plan()
+        else:
+            self._dispatch_park_plan()
+        return True
+
+    def _advance_park_glide(self, pet_rect, screen_rect, dt):
+        """Advance the parking glide by dt seconds of active time.
+
+        Holds (no move, no clock advance) on any frame that would
+        violate the final footprint rules, so an awkward path can
+        never teleport through forbidden geometry. Deferred movers
+        hold visibly at their exact starts for the whole round. Live
+        geometry replans from exact current pixels, so pet moves cannot
+        invalidate a previously accepted route. Returns True in flight.
+        """
+        blend = self._park_blend
+        if blend is None:
+            return False
+        if (tuple(blend['pet_rect']) != tuple(pet_rect)
+                or tuple(blend['screen_rect']) != tuple(screen_rect)):
+            self._begin_park_glide(pet_rect, screen_rect)
+            return True
+        if blend.get('blocked') or blend.get('pending'):
+            return True
+        # Never fast-forward through hidden time (process hibernate
+        # with an armed timer): one tick advances at most a single
+        # nominal frame (RING_BLEND_FRAME_S) and the glide resumes
+        # next tick — no catch-up teleport, ever. The single-frame
+        # bound keeps the eased peak step inside the D2B 16 px per
+        # 40 ms budget (diagonal Manhattan + quantization included).
+        dt = min(dt, pet_geometry.RING_BLEND_FRAME_S)
+        if dt <= 0.0:
+            return True
+        proposal = blend['t'] + dt
+        windows = blend.get('windows') or {}
+        deferred = set(blend.get('deferred') or set())
+        frame = {}
+        for key, orb in self._windows.items():
+            if key in self._ring_staged:
+                continue
+            start = blend['starts'].get(key)
+            if start is None or orb is None:
+                continue
+            home = self._home_center(key, pet_rect, screen_rect)
+            if key in deferred:
+                center = start
+            else:
+                window = windows.get(key, (0.0, blend['dur']))
+                local = ((proposal - window[0]) / window[1]
+                         if window[1] > 0 else 1.0)
+                if local <= 0.0:
+                    center = start
+                elif local >= 1.0:
+                    center = home
+                else:
+                    fractions = max(25, math.ceil(window[1] / 0.005))
+                    sampled = math.floor(local * fractions) / fractions
+                    path, distances = blend['routes'][key]
+                    travel = pet_geometry.ring_blend_ease(sampled) * distances[-1]
+                    index = max(0, bisect_right(distances, travel) - 1)
+                    pos = path[index]
+                    center = (pos[0] + pet_geometry.TASK_STAR_CENTER[0],
+                              pos[1] + pet_geometry.TASK_STAR_CENTER[1])
+            frame[key] = pet_geometry.star_center_to_window_position(
+                center[0], center[1])
+        for key, orb in self._windows.items():
+            if key in frame or key in self._ring_staged:
+                continue
+            frame[key] = (orb.x(), orb.y())
+        if not self._nominal_valid(frame, pet_rect, screen_rect):
+            return True
+        blend['t'] = proposal
+        for key, pos in frame.items():
+            if key not in blend['starts']:
+                continue
+            if key in deferred:
+                continue
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            if self._placed.get(key) != pos:
+                self._placed[key] = pos
+                orb.move(*pos)
+        if proposal < blend['dur'] - 1e-9:
+            return True
+        return self._finish_park_glide(pet_rect, screen_rect)
+
+    def _finish_park_glide(self, pet_rect, screen_rect):
+        """Land the scheduled movers exactly on static homes.
+
+        Deferred movers are untouched at their exact held pixels; if
+        any still sits away from home, a new round replans from those
+        pixels at once (successive rounds converge as more stars sit
+        home). Park-staged orbs are revealed only on the final round,
+        when the full home set is valid again. With motion enabled
+        the selected mode resumes without a jump: arc clocks restart
+        at their home origins, and a ring selection plans a fresh
+        cartesian blend outward on the next tick. Returns True while
+        another round is in flight.
+        """
+        blend = self._park_blend
+        deferred = set((blend or {}).get('deferred') or set())
+        self._park_blend = None
+        for key, orb in self._windows.items():
+            if key in self._ring_staged or key in deferred:
+                continue
+            try:
+                home = self._auto_home(key, pet_rect, screen_rect)
+                self._placed[key] = home
+                orb.move(*home)
+                orb.halo_alpha = 1.0
+                orb.halo_radius = 1.0
+                orb.core_intensity = 1.0
+                orb.facet_intensity = 1.0
+                orb.update()
+            except Exception:
+                pass
+        if self._motion_enabled():
+            if self._orbit_mode[0] == 'arc':
+                for key in self._windows:
+                    self._orbit_t[key] = 0.0
+            elif self._orbit_mode[0] == 'ring':
+                # Next tick transfers to a ring blend from these exact
+                # homes via the motion-changed path: mark the
+                # transition so the shortcut cannot skip planning.
+                self._last_motion_enabled = False
+        live_deferred = [key for key in deferred
+                         if key in self._windows
+                         and key not in self._ring_staged]
+        if live_deferred and self._max_home_distance(
+                live_deferred, pet_rect, screen_rect) >= 1.0:
+            # Successive round from the exact held pixels (movers now
+            # home unblock the deferred paths). Staged orbs stay
+            # hidden until the final landing, when homes validate.
+            self._begin_park_glide(pet_rect, screen_rect)
+            return True
+        self._reveal_parked_at_homes(pet_rect, screen_rect)
+        return False
+
+    def _reveal_parked_at_homes(self, pet_rect, screen_rect):
+        """Expose park-staged orbs at their static homes, atomically.
+
+        Crowded parking glides a validated subset while the longest
+        hauls wait hidden; once the movers land, the remainder
+        appears at homes (hidden-to-shown is an appearance, not
+        motion) — but only when the complete frame (landed survivors
+        at homes plus staged candidates at homes) validates. A
+        blocked remainder stays staged for a later apply instead of
+        overlapping a survivor. Homes are D2A-valid by construction,
+        so the full set is valid on return whenever anything was
+        revealed.
+        """
+        if not self._ring_staged:
+            return
+        self._try_reveal_staged_at_homes(pet_rect, screen_rect)
+
+    def _stage_keys(self, newcomers):
+        """Hide blocking newcomers pending safe reveal (staging).
+
+        Membership, slots, labels, and offsets are untouched —
+        presentation only. Trails cleared, holds released: hidden
+        orbs are inert until revealed at validated final slots.
+        """
+        for key in newcomers:
+            orb = self._windows.get(key)
+            if orb is not None:
+                orb.hide()
+            self.trail_overlay.drop(key)
+            self.release_hover_hold(key)
+            self.release_press_hold(key)
+        self._ring_staged |= set(newcomers)
+
+    def _try_reveal_staged_at_homes(self, pet_rect, screen_rect):
+        """Reveal staged orbs at static homes only as a valid set.
+
+        Builds the complete frame — staged candidates at their live
+        static homes plus every survivor at its exact current pixels
+        — and reveals nothing unless the whole frame validates
+        (work-area containment, pet/star and star/star clearance).
+        Blocked newcomers stay staged (hidden, inert) until the
+        survivors glide to a safe frame or a later apply replans;
+        a parking glide in flight reveals them at landing through
+        _reveal_parked_at_homes. Returns True when nothing remains
+        staged.
+        """
+        if self._park_blend is not None and self._ring_staged:
+            return False
+        if not self._ring_staged:
+            return True
+        frame = {}
+        for key, orb in self._windows.items():
+            if key in self._ring_staged:
+                try:
+                    home = self._auto_home(key, pet_rect, screen_rect)
+                except Exception:
+                    return False
+                frame[key] = home
+            elif orb is None:
+                continue
+            else:
+                frame[key] = (orb.x(), orb.y())
+        if not self._nominal_valid(frame, pet_rect, screen_rect):
+            return False
+        for key in sorted(self._ring_staged):
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            try:
+                home = self._auto_home(key, pet_rect, screen_rect)
+                self.trail_overlay.drop(key)
+                self.release_hover_hold(key)
+                self.release_press_hold(key)
+                if self._placed.get(key) != home:
+                    self._placed[key] = home
+                    orb.move(*home)
+                if self._visible:
+                    orb.show()
+            except Exception:
+                pass
+        self._ring_staged = set()
+        return True
+
+    def _reveal_all_staged(self, pet_rect, screen_rect):
+        """Legacy reveal entry: now routes through validation.
+
+        Historically showed every staged orb without checking the
+        combined frame; that could overlap a survivor mid-ring. All
+        internal callers now use _try_reveal_staged_at_homes
+        directly — this alias delegates there so no path can bypass
+        complete-frame validation again.
+        """
+        self._try_reveal_staged_at_homes(pet_rect, screen_rect)
+
+    def _maybe_reveal_staged(self, pet_rect, screen_rect):
+        """Reveal staged orbs whose final slots validate, atomically.
+
+        Tick-path check once survivors circulate with no active
+        blend: staged targets at the CURRENT shared phase plus live
+        survivor positions must validate as one complete set; then
+        the whole staged group is placed, shown, and untracked in the
+        same turn — never one-by-one through an invalid transient.
+        """
+        if not self._ring_staged:
+            return
+        mode = self._orbit_mode
+        if mode[0] != 'ring':
+            return
+        pcx = pet_rect[0] + pet_rect[2] / 2.0
+        pcy = pet_rect[1] + pet_rect[3] / 2.0
+        omega = 2.0 * math.pi / mode[3]
+        phase = mode[5] + mode[4] * math.degrees(omega * self._ring_t)
+        frame = {}
+        for key, orb in self._windows.items():
+            if key in self._ring_staged:
+                theta = phase + self._ring_offsets.get(key, 0.0)
+                center = pet_geometry.orbit_center_at(
+                    pcx, pcy, mode[1], mode[2], theta)
+                frame[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        center[0], center[1]))
+            else:
+                frame[key] = (orb.x(), orb.y())
+        if not self._nominal_valid(frame, pet_rect, screen_rect):
+            return
+        for key in sorted(self._ring_staged):
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            pos = frame[key]
+            self.trail_overlay.drop(key)
+            self.release_hover_hold(key)
+            self.release_press_hold(key)
+            if self._placed.get(key) != pos:
+                self._placed[key] = pos
+                orb.move(*pos)
+            if self._visible:
+                orb.show()
+        self._ring_staged = set()
+
+    def _maybe_reveal_staged_arc(self, pet_rect, screen_rect):
+        """Reveal staged orbs into the live arc, atomically.
+
+        Arc-mode counterpart of _maybe_reveal_staged: staged targets
+        at the CURRENT per-key arc clocks plus live survivor pixels
+        must validate as one complete set; then the whole staged
+        group is placed, shown, and untracked in the same turn.
+        Staged orbs stay hidden and inert until then, so arc ticks
+        can retry every frame until a safe envelope arrives.
+        """
+        if not self._ring_staged:
+            return
+        mode = self._orbit_mode
+        if mode[0] != 'arc' or not self._motion_enabled():
+            return
+        omega = 2.0 * math.pi / mode[2]
+        frame = {}
+        for key, orb in self._windows.items():
+            if key in self._ring_staged:
+                params = self._orbit.get(key)
+                if params is None:
+                    return
+                cycle = ((omega * self._orbit_t.get(key, 0.0))
+                         % (2.0 * math.pi)) / (2.0 * math.pi)
+                theta = pet_geometry.arc_angle_at(
+                    params['base_deg'], mode[1],
+                    self._arc_dirs.get(key, +1), cycle)
+                center = pet_geometry.orbit_center_at(
+                    pet_rect[0] + pet_rect[2] / 2.0,
+                    pet_rect[1] + pet_rect[3] / 2.0,
+                    params['radius'], params['radius'], theta)
+                frame[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        center[0], center[1]))
+            else:
+                frame[key] = (orb.x(), orb.y())
+        if not self._nominal_valid(frame, pet_rect, screen_rect):
+            return
+        for key in sorted(self._ring_staged):
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            pos = frame[key]
+            self.trail_overlay.drop(key)
+            self.release_hover_hold(key)
+            self.release_press_hold(key)
+            if self._placed.get(key) != pos:
+                self._placed[key] = pos
+                orb.move(*pos)
+            if self._visible:
+                orb.show()
+        self._ring_staged = set()
+
+    def _maybe_start_blend(self, prev_mode, prev_offsets, pet_rect,
+                             screen_rect, prev_pet_rect=None,
+                             prev_screen_rect=None):
+        """Recomposition glide for ring survivors (manager-owned).
+
+        Tries a direct all-visible blend first; when every candidate
+        rotation overlaps on arrival, the blocking newcomers are
+        staged hidden and survivors glide alone to final slots, with
+        staged stars revealed once the complete set validates. Rank
+        order and identities untouched; unchanged refreshes leave any
+        blend or staged set alone; leaving ring (or no survivors)
+        clears blend state and reveals staged orbs only when the
+        complete frame validates (blocked newcomers stay staged).
+
+        Frame zero is always the exact visible geometry: planning
+        never moves an orb (the chase-path commit makes placement at
+        blend start a proven no-op), and any entry that cannot start
+        from current pixels detours through the parking glide
+        instead of teleporting.
+        """
+        mode = self._orbit_mode
+        if mode[0] != 'ring' or not self._windows:
+            self._ring_blend = None
+            if self._park_blend is not None and self._windows:
+                # Membership changes during an arc bridge must invalidate
+                # its obstacle set just as motion-off changes do.
+                self._begin_park_glide(pet_rect, screen_rect)
+            # Ring exit: never show staged stars into an unvalidated
+            # frame. Survivors at exact current pixels plus staged
+            # candidates at homes must validate as one complete set;
+            # blocked newcomers stay staged (hidden, inert) until a
+            # later apply finds a safe frame.
+            self._try_reveal_staged_at_homes(pet_rect, screen_rect)
+            enabled = self._motion_enabled()
+            motion_changed = (enabled != self._last_motion_enabled)
+            if motion_changed:
+                # Motion-state transitions drop stale interaction
+                # holds: an old hover/press must never freeze the
+                # resumed mode (no release event will come for a
+                # pre-toggle hold).
+                self._clear_interaction_holds()
+            if enabled and motion_changed:
+                # Motion re-enabled under arc/static: orbs already at
+                # homes restart cleanly; stranded orbs glide home
+                # first instead of snapping to clock origins.
+                if self._park_blend is None and self._max_home_distance(
+                        self._park_survivors(pet_rect, screen_rect),
+                        pet_rect, screen_rect) >= 1.0:
+                    self._begin_park_glide(pet_rect, screen_rect)
+                elif self._park_blend is None:
+                    for key in self._windows:
+                        self._orbit_t[key] = 0.0
+            elif (enabled and self._park_blend is None
+                    and self._ring_staged):
+                # Steady-motion ring exit (pet moved to an arc/edge
+                # layout) with newcomers still staged: survivors sit
+                # at ring pixels while arc clocks sit at homes, so a
+                # synchronous _place_all would teleport them. Glide
+                # home first from exact pixels instead; the arc (at
+                # t == 0 its positions ARE homes) then resumes
+                # without a jump, and the park finish reveals the
+                # staged set through the validated path. The bridge
+                # runs only when the survivors' current pixels are
+                # themselves valid under the new geometry (so the
+                # glide starts from a legal frame); when the hub jump
+                # itself stranded them inside the pet, validity wins
+                # and the synchronous placement below lands them on
+                # valid homes instead of deadlocking inside the pet.
+                survivors_now = {}
+                for key, orb in self._windows.items():
+                    if key in self._ring_staged or orb is None:
+                        continue
+                    if key not in self._placed:
+                        continue
+                    survivors_now[key] = (orb.x(), orb.y())
+                if (survivors_now
+                        and self._max_home_distance(
+                            self._park_survivors(pet_rect, screen_rect),
+                            pet_rect, screen_rect) >= 1.0
+                        and self._nominal_valid(
+                            survivors_now, pet_rect, screen_rect)):
+                    self._begin_park_glide(pet_rect, screen_rect)
+            elif enabled and self._park_blend is None:
+                # Steady-motion ring-to-arc/static mode change or
+                # pet/screen-geometry move under a non-ring mode: the
+                # selected clocks were recomputed above
+                # (_compute_orbit_params resets changed lanes to
+                # t == 0, i.e. homes), so a synchronous _place_all
+                # would teleport survivors from exact current pixels
+                # to the new nominal frame. Glide home first from
+                # those pixels instead; the arc (at t == 0 its
+                # positions ARE homes) then resumes without a jump.
+                # Membership changes can alter lanes even when the
+                # mode tuple and work area are unchanged. Compare pixels.
+                try:
+                    nominal, _ = self._nominal_positions(
+                        pet_rect, screen_rect)
+                except Exception:
+                    nominal = {}
+                survivors_now = {}
+                peak_jump = 0.0
+                import math as _rej_math
+                for key, orb in self._windows.items():
+                    if key in self._ring_staged or orb is None:
+                        continue
+                    if key not in self._placed:
+                        continue
+                    target = nominal.get(key)
+                    if target is None:
+                        continue
+                    survivors_now[key] = (orb.x(), orb.y())
+                    peak_jump = max(
+                        peak_jump,
+                        _rej_math.hypot(
+                            target[0] - orb.x(),
+                            target[1] - orb.y()))
+                if (survivors_now and peak_jump >= 1.0
+                        and self._nominal_valid(
+                            survivors_now, pet_rect, screen_rect)):
+                    self._begin_park_glide(pet_rect, screen_rect)
+            # Motion-steady arc/static frames that need no glide keep
+            # the accepted synchronous placement below via _place_all
+            # (exact no-op when nominal matches current pixels).
+            return
+        if not self._motion_enabled():
+            self._ring_blend = None
+            # Motion off: keep staged newcomers hidden until the
+            # parking glide lands them safely. Revealing them now at
+            # static homes while survivors still sit mid-ring would
+            # bypass complete-frame validation (staged home vs live
+            # survivor overlap); the park finish reveals through the
+            # validated path instead.
+            if self._motion_enabled() != self._last_motion_enabled:
+                # ON->OFF through an apply: stale holds die here so
+                # the parked state — and any later re-enable — is
+                # never frozen by a pre-toggle hover/press.
+                self._clear_interaction_holds()
+            return
+        had_park = self._park_blend is not None
+        self._cancel_park_planning()
+        # A parking glide transfers into the ring blend: current
+        # pixels (possibly mid-parking) become the chase starts.
+        self._park_blend = None
+        survivors = [k for k in self._windows
+                     if k in self._placed and k not in self._ring_staged]
+        if not survivors:
+            self._ring_blend = None
+            return
+        # A motion OFF->ON (or ON->OFF handled above) transition is a
+        # real presentation recomposition even when membership, mode,
+        # and offsets look unchanged: static homes and animated ring
+        # positions live in different geometry spaces, so the
+        # unchanged-snapshot shortcut must not skip planning.
+        motion_changed = (self._motion_enabled()
+                           != self._last_motion_enabled)
+        if motion_changed:
+            # OFF->ON through an apply (or a stale-flag resync):
+            # stale holds die here so the fresh ring can never
+            # start frozen by a pre-toggle hover/press.
+            self._clear_interaction_holds()
+        if ((mode, self._ring_offsets) == (prev_mode, prev_offsets)
+                and not motion_changed and not had_park):
+            return
+        hub = (pet_rect[0] + pet_rect[2] / 2.0,
+               pet_rect[1] + pet_rect[3] / 2.0)
+        starts = {}
+        for key in survivors:
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            starts[key] = pet_geometry.ring_abs_angle_deg(
+                orb.x() + 56.0, orb.y() + 48.0, hub[0], hub[1])
+        if not starts:
+            self._ring_blend = None
+            return
+        newcomers = [k for k in self._windows
+                     if k not in starts and k not in self._ring_staged]
+        plan = self._plan_direct_blend(starts, newcomers, pet_rect,
+                                       screen_rect)
+        if plan is None:
+            if not newcomers:
+                # Survivors-only frame rejected (e.g. a toggle landing
+                # on a pet-moved hub where old-hub homes overlap the
+                # pet): no direct chase is safe, so detour through
+                # the parking glide from these exact pixels — homes
+                # always validate as a set, and the ring resumes from
+                # homes on landing without a jump.
+                self._begin_park_glide(pet_rect, screen_rect)
+                return
+            self._stage_keys(newcomers)
+            newcomers = []
+            plan = self._plan_direct_blend(starts, [], pet_rect,
+                                           screen_rect)
+            if plan is None:
+                # Even survivors alone cannot chase safely: park
+                # first from exact pixels, then blend outward.
+                self._begin_park_glide(pet_rect, screen_rect)
+                return
+        if motion_changed:
+            # Toggle-time path check: a chase that would cut through
+            # forbidden geometry (crowded order-mismatched sets) must
+            # not run — stage the longest hauls until the remaining
+            # simultaneous paths validate end to end. Ordinary
+            # recomposition keeps the runtime hold-guard behavior.
+            shrunk = self._shrink_to_valid_chase(
+                starts, newcomers, plan, pet_rect, screen_rect)
+            if shrunk is None:
+                return
+            plan, kept = shrunk
+            starts = kept
+        phi, travels = plan
+        self._commit_blend_plan(starts, phi, travels, hub)
+
+    def _shrink_to_valid_chase(self, starts, newcomers, plan, pet_rect,
+                               screen_rect):
+        """Stage blocking survivors until the chase validates.
+
+        Plan-time counterpart of the runtime hold guard, used only
+        for motion-toggle transitions (frame zero is exact current
+        pixels for every survivor). Samples the full chase —
+        survivors gliding plus newcomers holding at arrival targets
+        — and greedily stages the longest haul until the remainder
+        validates end to end, replanning the base rotation for each
+        smaller set. Returns (plan, kept_starts) with the plan's
+        starts restricted to the kept movers, or None when every
+        survivor staged (the tick reveal path then exposes the whole
+        set atomically once it validates). Commits nothing itself;
+        the caller commits the returned plan.
+        """
+        mode = self._orbit_mode
+        hub = (pet_rect[0] + pet_rect[2] / 2.0,
+               pet_rect[1] + pet_rect[3] / 2.0)
+        kept = dict(starts)
+        while True:
+            phi, travels = plan
+            # Re-derive the commit-time rebased phase (the commit adds
+            # phi/rate to the shared clock, which advances the phase
+            # by exactly phi) without touching any clock: validation
+            # must see the exact arrival frame the commit will
+            # produce.
+            omega = 2.0 * math.pi / mode[3]
+            phase = (mode[5] + mode[4]
+                     * math.degrees(omega * self._ring_t) + phi)
+            deltas = {}
+            centers = {}
+            for key in kept:
+                orb = self._windows.get(key)
+                if orb is None:
+                    continue
+                centers[key] = (orb.x() + 56.0, orb.y() + 48.0)
+                deltas[key] = pet_geometry.ring_shortest_delta_deg(
+                    kept[key], phase + self._ring_offsets.get(key, 0.0))
+            static = {}
+            for key in newcomers:
+                theta = phase + self._ring_offsets.get(key, 0.0)
+                goal = pet_geometry.orbit_center_at(
+                    hub[0], hub[1], mode[1], mode[2], theta)
+                static[key] = (
+                    pet_geometry.star_center_to_window_position(
+                        goal[0], goal[1]))
+
+            movers = sorted(kept)
+
+            def validate(candidates):
+                def points_at(progress):
+                    ease = pet_geometry.ring_blend_ease(progress)
+                    return {
+                        key: self._chase_point(
+                            centers[key], kept[key], deltas[key],
+                            ease, hub, mode[1], mode[2])
+                        for key in candidates if key in centers}
+                return self._validate_path_frames(
+                    points_at, candidates, static, pet_rect,
+                    screen_rect)
+
+            subset = self._greedy_path_subset(
+                movers, lambda key: deltas.get(key, 0.0), validate)
+            if len(subset) == len(movers):
+                return (plan, kept)
+            for key in movers:
+                if key not in subset:
+                    self._stage_keys([key])
+            if not subset:
+                self._ring_blend = None
+                return None
+            kept = {key: kept[key] for key in subset}
+            plan = self._plan_direct_blend(kept, newcomers, pet_rect,
+                                           screen_rect)
+            if plan is None:
+                self._ring_blend = None
+                return None
+
+    def _motion_enabled(self):
+        """Single V1.3 visual-motion preference (shared with the pet)."""
+        prefs = getattr(self.panel, 'prefs', None) or {}
+        return bool(prefs.get('pet_motion', True))
+
+    def _live_armed(self):
+        """Real timer arming is production-only (Panel live=True).
+
+        Unit tests construct live=False panels, so no render, filter,
+        or toggle path can ever arm a real 40ms loop under test:
+        motion tests drive tick_visual() manually with fake clocks.
+        """
+        return bool(getattr(self.panel, 'live', False))
+
+    def start_motion(self):
+        """Arm the shared visual clock (explicit production/test act)."""
+        if self._shutdown:
+            return
+        if not self.motion_timer.isActive():
+            self._last_tick = None
+            self.motion_timer.start(pet_geometry.MOTION_TICK_MS)
+
+    def stop_motion(self):
+        """Disarm the shared visual clock."""
+        if self.motion_timer.isActive():
+            self.motion_timer.stop()
+        self._last_tick = None
+
+    def sync_motion(self):
+        """Arm the shared clock while visible stars need ticks.
+
+        Ticks are needed for live motion and, separately, while a
+        parking glide is in flight (which advances even though motion
+        reads off). Called from UI paths; the live gate keeps unit
+        tests deterministic. Returns the motion-based want so
+        historical callers keep their semantics; timer arming
+        additionally covers an in-flight park. Never teleports: with
+        motion off, stray orbs begin a parking glide from their exact
+        current positions instead of snapping home."""
+        if self._shutdown:
+            return False
+        if self.expanded_identity is not None:
+            self._expansion_dirty |= self._motion_enabled() != self._last_motion_enabled
+            return False
+        want = (bool(self._windows) and self._visible
+                and self._motion_enabled() and self._live_armed())
+        if not self._live_armed():
+            # Test panels (live=False) only query: a wall-clock
+            # status tick must never clear trails, hide the overlay,
+            # park orbs, or arm a real loop mid-test.
+            return want
+        if self._visible and self._windows and not self._motion_enabled():
+            pet_rect = self._last_pet_rect
+            screen_rect = self._last_screen_rect
+            if pet_rect is None or screen_rect is None:
+                pet_rect, screen_rect = self._anchor()
+            # Timer-driven ON->OFF (no apply in between): stale
+            # hover/press holds die here so the parked state — and
+            # any later re-enable — never freezes on them.
+            self._clear_interaction_holds()
+            # Validated reveal only: blocked staged newcomers stay
+            # hidden while survivors park; the park finish exposes
+            # them once the complete home set validates.
+            self._try_reveal_staged_at_homes(pet_rect, screen_rect)
+            self._begin_park_glide(pet_rect, screen_rect)
+            self._last_motion_enabled = False
+        elif (self._windows and self._motion_enabled()
+                and self._last_motion_enabled is False):
+            # Timer-driven OFF->ON (prefs flipped with no apply):
+            # stale holds die here too. The flag itself stays False
+            # so the tick path still sees the transition and plans
+            # the continuous resume from exact pixels.
+            self._clear_interaction_holds()
+        timer_want = (bool(self._windows) and self._visible
+                      and self._live_armed()
+                      and not (self._park_blend or {}).get('blocked')
+                      and (self._motion_enabled()
+                           or self._park_blend is not None))
+        if timer_want and not self.motion_timer.isActive():
+            self._last_tick = None
+            self.motion_timer.start(pet_geometry.MOTION_TICK_MS)
+        elif not timer_want and self.motion_timer.isActive():
+            self.motion_timer.stop()
+            self._last_tick = None
+        if not timer_want:
+            self.trail_overlay.clear_all()
+            try:
+                if self.trail_overlay.isVisible():
+                    self.trail_overlay.hide()
+            except Exception:
+                pass
+        return want
+
+    def _park_all(self):
+        """Begin the motion-off parking glide (no teleport).
+
+        Starts a finite glide from exact current positions to static
+        homes; ticks own the movement. Parking invalidates any
+        in-flight ring glide and keeps staged newcomers hidden until
+        the complete home set validates, so a later re-enable — with
+        or without an apply in between — always rebuilds from honest
+        geometry. Records the transition so re-enable plans
+        continuity. Idles (no glide) when every survivor already sits
+        home.
+        """
+        self._ring_blend = None
+        self._last_motion_enabled = False
+        # Motion-off entry: stale interaction holds die here so the
+        # parked state — and any later re-enable — never freezes.
+        self._clear_interaction_holds()
+        pet_rect = self._last_pet_rect
+        screen_rect = self._last_screen_rect
+        if pet_rect is None or screen_rect is None:
+            pet_rect, screen_rect = self._anchor()
+        self._try_reveal_staged_at_homes(pet_rect, screen_rect)
+        self._begin_park_glide(pet_rect, screen_rect)
+
+    def _on_motion_timeout(self):
+        """Production driver: advance to the current monotonic clock."""
+        try:
+            self.tick_visual(time.monotonic())
+        except Exception:
+            pass
+
+    def set_hovered(self, identity):
+        """Legacy hover entry: entering adds a hold, leaving (None)
+        releases all. Production enter/leave events use the hold
+        methods below so nested ordering cannot strand a pause."""
+        if identity is None:
+            self._hover_holds = set()
+            self._hovered = None
+        else:
+            self.add_hover_hold(identity)
+
+    def add_hover_hold(self, identity):
+        """Pointer entered a star: hold the whole ring group."""
+        self._hover_holds.add(identity)
+        self._hovered = identity
+
+    def release_hover_hold(self, identity):
+        """Pointer left a star: release its hold, keep others'."""
+        self._hover_holds.discard(identity)
+        if self._hovered == identity:
+            remaining = sorted(self._hover_holds)
+            self._hovered = remaining[0] if remaining else None
+
+    def add_press_hold(self, identity):
+        """Pointer pressed a star: hold the group, ease the click."""
+        self._press_holds.add(identity)
+        if self._hovered is None:
+            self._hovered = identity
+
+    def release_press_hold(self, identity):
+        """Pointer released: release the press hold only."""
+        self._press_holds.discard(identity)
+        if (self._hovered == identity
+                and identity not in self._hover_holds):
+            self._hovered = None
+
+    def _ring_paused(self):
+        """Whole-group pause: any hover or press hold is active."""
+        return bool(self._hover_holds or self._press_holds)
+
+    def _clear_interaction_holds(self):
+        """Drop all hover/press holds (motion-transition backstop).
+
+        Motion OFF->ON/ON->OFF transitions invalidate any in-flight
+        interaction: the pointer may be long gone (or the orb may
+        have parked elsewhere), and no leave/release event will
+        arrive to unpause the ring. Called on every motion-state
+        change (apply-driven and timer-driven) so resumed motion
+        can never stay frozen by a stale hold.
+        """
+        self._hover_holds = set()
+        self._press_holds = set()
+        self._hovered = None
+
+    def _reconcile_holds(self):
+        """Drop holds for keys with no surface; repair _hovered.
+
+        Uniform backstop after any visibility update (retire,
+        filter, provider failure): no dead key pauses the ring,
+        and _hovered always names a live hold or None.
+        """
+        live = set(self._windows)
+        self._hover_holds &= live
+        self._press_holds &= live
+        if self._hovered not in self._hover_holds:
+            remaining = sorted(self._hover_holds)
+            self._hovered = remaining[0] if remaining else None
+
+    def trail_for(self, identity):
+        """Current trail sample count for one task (bounded)."""
+        return self.trail_overlay.trail_length(identity)
+
+    def orb_activated(self, identity, keyboard=False):
+        if (self._shutdown or not self._visible or identity not in self._universe
+                or identity not in self._windows or identity in self._ring_staged):
+            return
+        self.last_activated = identity
+        if self.expanded_identity == identity:
+            self.collapse_detail()
+            return
+        if self.expanded_identity is None:
+            pending = bool((self._park_blend or {}).get('pending'))
+            self._cancel_park_planning()
+            self._expansion_dirty = pending
+            self._expansion_geometry = (tuple(self._last_pet_rect), tuple(self._last_screen_rect))
+        self.expanded_identity = identity
+        orb = self._windows[identity]
+        self.expanded_anchor = (orb.x(), orb.y())
+        self._last_tick = None
+        self.trail_overlay.clear_all()
+        self._refresh_detail()
+        self.detail_window.show()
+        self.detail_window.raise_()
+        if keyboard:
+            self.detail_window.activateWindow()
+            self.detail_window.collapse_button.setFocus(Qt.ShortcutFocusReason)
+
+    def _refresh_detail(self):
+        identity = self.expanded_identity
+        if identity is None or identity not in self._universe:
+            return
+        provider = identity[0]
+        card = self.detail_window
+        if card is not None and card.provider_id != provider:
+            card.manager = None
+            card.close()
+            card.deleteLater()
+            card = self.detail_window = None
+        if card is None:
+            card = self.detail_window = TaskPanelWindow(provider, self)
+        prefs = getattr(self.panel, 'prefs', None) or {}
+        position, visible = card.pos(), card.isVisible()
+        on_top = bool(prefs.get('always_on_top', True))
+        if bool(card.windowFlags() & Qt.WindowStaysOnTopHint) != on_top:
+            card.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
+            card.move(position)
+            if visible:
+                card.show()
+        card.set_task(self._universe[identity], self.label_text(identity, self._task_language),
+                      self._task_language, prefs.get('token_number_format'))
+        left, top, right, bottom = self._last_screen_rect
+        card.setFixedSize(min(card.window_size[0], right - left + 1),
+                          min(card.window_size[1], bottom - top + 1))
+        x, y = self.expanded_anchor
+        cx, cy = x + pet_geometry.TASK_STAR_CENTER[0], y + pet_geometry.TASK_STAR_CENTER[1]
+        target_x = (cx + pet_geometry.TASK_STAR_SIZE[0] - pet_geometry.TASK_STAR_CENTER[0]
+                    + pet_geometry.TASK_WINDOW_GAP)
+        if target_x + card.width() > right + 1:
+            target_x = x - card.width() - pet_geometry.TASK_WINDOW_GAP
+        card.move(*pet_geometry.clamp_position(target_x, round(cy - card.height() / 2),
+                                               card.width(), card.height(), self._last_screen_rect))
+
+    def collapse_detail(self, replan=True):
+        if self.expanded_identity is None:
+            return
+        dirty = self._expansion_dirty or self._motion_enabled() != self._last_motion_enabled
+        self.expanded_identity = None
+        self.expanded_anchor = None
+        self._expansion_geometry = None
+        self._expansion_dirty = False
+        if self.detail_window is not None:
+            self.detail_window.hide()
+        self._clear_interaction_holds()
+        self._last_tick = None
+        if dirty:
+            self._cancel_park_planning()
+            self._park_blend = None
+            self._ring_blend = None
+            # Force the accepted planner to rebuild from current pixels,
+            # even when deferred geometry leaves mode/offsets unchanged.
+            self._orbit_mode = ('expanded_resume',)
+        if replan and not self._shutdown and self._visible:
+            if dirty:
+                self.apply_snapshot(list(self._universe.values()), self._task_preference,
+                                    self._last_generation, self._task_language,
+                                    self._last_pet_rect, self._last_screen_rect)
+            self.sync_motion()
+
+    def anchor_changed(self):
+        if (self._shutdown or getattr(self.panel, 'closing', False)
+                or self.expanded_identity is None):
+            return
+        pet_rect, screen_rect = self._anchor()
+        if (tuple(pet_rect), tuple(screen_rect)) == self._expansion_geometry:
+            return
+        self._expansion_dirty = True
+        self.collapse_detail(replan=False)
+        self.apply_snapshot(list(self._universe.values()), self._task_preference,
+                            self._last_generation, self._task_language,
+                            pet_rect, screen_rect)
+
+    def _compute_orbit_params(self, pet_rect, screen_rect):
+        """Per-star hub-centered lane from static homes.
+
+        Stores (radius, base_deg) per visible star, where the radius
+        is the true home distance from the pet center: replaying the
+        base angle reproduces the static home exactly, and advancing
+        the angle moves along a pet-centered arc lane around the hub. Resets that star's accumulated orbit time
+        only when its frame actually changed, so unrelated refreshes
+        never restart its motion. Pet moves ride along via the
+        current pet center.
+        """
+        pcx = pet_rect[0] + pet_rect[2] / 2.0
+        pcy = pet_rect[1] + pet_rect[3] / 2.0
+        for key in self._windows:
+            center = self._home_center(key, pet_rect, screen_rect)
+            dx, dy = center[0] - pcx, center[1] - pcy
+            params = dict(radius=math.hypot(dx, dy),
+                          base_deg=math.degrees(math.atan2(dx, -dy)) % 360.0)
+            if self._orbit.get(key) != params:
+                self._orbit[key] = params
+                self._orbit_t[key] = 0.0
+
+    def _home_center(self, key, pet_rect, screen_rect):
+        """Static home center for one star (orbit anchor origin)."""
+        x, y = self._auto_home(key, pet_rect, screen_rect)
+        return (x + pet_geometry.TASK_STAR_CENTER[0],
+                y + pet_geometry.TASK_STAR_CENTER[1])
+
+    def _select_orbit_mode(self, pet_rect, screen_rect):
+        """Best safe orbit motion for the current composition.
+
+        Hierarchy: full ring (largest valid circle, else largest valid
+        ellipse) first — a ring is only accepted if its ENTIRE cycle
+        passes the final footprint rules phase by phase. Only when no
+        circle or ellipse fits (pet near an edge, tiny work area) does
+        selection fall to one-sided tangent arcs, else static. Ring
+        offsets come from sorted lifetime slots (equal 360/N spacing),
+        so identities never reorder on recency or poll timing; a
+        membership change simply recomposes the spacing. Deterministic
+        for the same composition and clocks.
+        """
+        ring = self._select_full_ring(pet_rect, screen_rect)
+        if ring is not None:
+            self._arc_dirs = {}
+            return ring
+        pcx = pet_rect[0] + pet_rect[2] / 2.0
+        pcy = pet_rect[1] + pet_rect[3] / 2.0
+        steps = pet_geometry.ORBIT_SWEEP_SAMPLES
+        radii = {}
+        bases = {}
+        for key in self._windows:
+            params = self._orbit.get(key)
+            if params is None:
+                self._ring_offsets = {}
+                return ('static',)
+            radii[key] = params['radius']
+            bases[key] = params['base_deg']
+
+        def envelope_ok(angles_for):
+            for step in range(steps):
+                centers = {}
+                for key in self._windows:
+                    theta = angles_for(key, step / steps)
+                    centers[key] = pet_geometry.orbit_center_at(
+                        pcx, pcy, radii[key], radii[key], theta)
+                windows = pet_geometry._finalize_candidate(
+                    centers, screen_rect)
+                if (windows is None or not pet_geometry._windows_valid(
+                        windows, pet_rect, screen_rect)):
+                    return False
+            return True
+
+        homes = {
+            key: pet_geometry.orbit_center_at(
+                pcx, pcy, radii[key], radii[key], bases[key])
+            for key in self._windows}
+        direction_sets = [self._greedy_arc_dirs(homes, pet_rect,
+                                                screen_rect)]
+        for uniform in (+1, -1):
+            direction_sets.append({key: uniform for key in self._windows})
+        seen = []
+        for dirs in direction_sets:
+            marker = tuple(sorted(dirs.items()))
+            if marker in seen:
+                continue
+            seen.append(marker)
+            for amplitude in pet_geometry.ORBIT_ARC_CANDIDATES_DEG:
+                def arc_angle(key, s, amplitude=amplitude, dirs=dirs):
+                    return pet_geometry.arc_angle_at(
+                        bases[key], amplitude, dirs[key], s)
+
+                if envelope_ok(arc_angle):
+                    self._arc_dirs = dict(dirs)
+                    self._ring_offsets = {}
+                    return ('arc', amplitude,
+                            pet_geometry.arc_period_s(amplitude))
+        self._arc_dirs = {}
+        self._ring_offsets = {}
+        return ('static',)
+
+    def _ring_offsets_for(self):
+        """Equal 360/N spacing by sorted lifetime-slot rank (pure).
+
+        Rank order is deterministic and independent of recency,
+        foreground, or poll timing; surviving identities keep their
+        windows while a membership change recomposes the spacing.
+        """
+        ranked = sorted(
+            (self._slots.get(key, 0), key) for key in self._windows)
+        count = len(ranked)
+        if count == 0:
+            return {}
+        return {key: 360.0 * rank / count
+                for rank, (_, key) in enumerate(ranked)}
+
+    def _select_full_ring(self, pet_rect, screen_rect):
+        """Largest safe full ring, or None (pure geometry + validation).
+
+        Searches circles largest-first over the geometry-derived
+        range, then ellipses largest-area-first (capped), validating
+        RING_SWEEP_SAMPLES phases of the rigid ring — common
+        direction, slot-rank offsets — against the final footprint
+        rules. Returns ('ring', rx, ry, period, direction, base_deg)
+        and stores per-key offsets, else None. Pet moves ride along
+        via the per-tick hub; nothing here touches the clocks, so
+        hover-frozen phases survive recomposition.
+        """
+        keys = list(self._windows)
+        if not keys:
+            return None
+        (hub, circle_lo, circle_hi,
+         rx_lo, rx_hi, ry_lo, ry_hi) = (
+            pet_geometry.ring_search_bounds(pet_rect, screen_rect))
+        pcx, pcy = hub
+        base = pet_geometry.RING_BASE_DEG
+        direction = pet_geometry.RING_DIRECTION
+        samples = pet_geometry.RING_SWEEP_SAMPLES
+        offsets = self._ring_offsets_for()
+
+        def ring_ok(rx, ry):
+            for step in range(samples):
+                phase = base + direction * 360.0 * step / samples
+                centers = {}
+                for key in keys:
+                    centers[key] = pet_geometry.orbit_center_at(
+                        pcx, pcy, rx, ry, phase + offsets[key])
+                windows = pet_geometry._finalize_candidate(
+                    centers, screen_rect)
+                if (windows is None or not pet_geometry._windows_valid(
+                        windows, pet_rect, screen_rect)):
+                    return False
+            return True
+
+        step = pet_geometry.RING_RADIUS_STEP_PX
+        radius = circle_hi
+        while radius >= circle_lo - 1e-9:
+            if ring_ok(radius, radius):
+                self._ring_offsets = dict(offsets)
+                return ('ring', radius, radius,
+                        pet_geometry.ring_period_s(radius),
+                        direction, base)
+            radius -= step
+        estep = pet_geometry.RING_ELLIPSE_STEP_PX
+        combos = []
+        rx = rx_hi
+        while rx >= rx_lo - 1e-9:
+            ry = ry_hi
+            while ry >= ry_lo - 1e-9:
+                combos.append((rx, ry))
+                ry -= estep
+            rx -= estep
+        combos.sort(key=lambda pair: (-pair[0] * pair[1],
+                                      -pair[0], -pair[1]))
+        for rx, ry in combos[:pet_geometry.RING_ELLIPSE_COMBO_CAP]:
+            if ring_ok(rx, ry):
+                self._ring_offsets = dict(offsets)
+                return ('ring', rx, ry,
+                        pet_geometry.ring_period_s((rx + ry) / 2.0),
+                        direction, base)
+        return None
+
+    def _greedy_arc_dirs(self, homes, pet_rect, screen_rect):
+        """Per-star one-sided arc direction with the most room.
+
+        For each star independently, extends 5-degree steps up to 100
+        degrees both ways (footprint-validated vs pet exclusion and
+        bounds, others held at home) and keeps the farther side.
+        Deterministic; the joint envelope stays authoritative, so a
+        greedy pick that collides later simply loses to the next
+        candidate.
+        """
+        import math
+        pcx = pet_rect[0] + pet_rect[2] / 2.0
+        pcy = pet_rect[1] + pet_rect[3] / 2.0
+        dirs = {}
+        for key in self._windows:
+            home = homes.get(key)
+            if home is None:
+                dirs[key] = +1
+                continue
+            radius = math.hypot(home[0] - pcx, home[1] - pcy)
+            base = math.degrees(math.atan2(home[0] - pcx,
+                                           -(home[1] - pcy))) % 360.0
+            best = (+1, -1)
+            for direction in (+1, -1):
+                extent = 0
+                for step in range(1, 21):
+                    theta = base + direction * 5.0 * step
+                    point = pet_geometry.orbit_center_at(
+                        pcx, pcy, radius, radius, theta)
+                    window = pet_geometry.star_center_to_window_position(
+                        point[0], point[1])
+                    width, height = pet_geometry.TASK_STAR_SIZE
+                    left, top, right, bottom = screen_rect
+                    if not (left <= window[0]
+                            and window[0] + width <= right + 1
+                            and top <= window[1]
+                            and window[1] + height <= bottom + 1):
+                        break
+                    if pet_geometry.footprint_hits_pet(
+                            pet_geometry.star_window_footprint(*window),
+                            pet_rect):
+                        break
+                    extent = step
+                if best == (+1, -1):
+                    best = (direction, extent)
+                elif extent > best[1]:
+                    best = (direction, extent)
+            dirs[key] = best[0]
+        return dirs
+
+    def _nominal_valid(self, windows, pet_rect, screen_rect):
+        """Per-tick full-set check on integer windows (hold on fail)."""
+        left, top, right, bottom = screen_rect
+        width, height = pet_geometry.TASK_STAR_SIZE
+        for wx, wy in windows.values():
+            if not (left <= wx and wx + width <= right + 1
+                    and top <= wy and wy + height <= bottom + 1):
+                return False
+        return pet_geometry._windows_valid(windows, pet_rect, screen_rect)
+
+    def _apply_breathing(self, orb, identity):
+        """Subtle luminous breathing from the broadcast clock.
+
+        Light only, never position: halo opacity, halo radius, and
+        core/facet luminance breathe gently with per-slot phase
+        offsets. No scale modulation, so the star center cannot move
+        under breathing by construction.
+        """
+        seed = pet_geometry.star_phase_seed(self._slots.get(identity, 0))
+        period = 2.2 + seed * 1.0
+        wave = math.sin(2.0 * math.pi * (self._motion_t / period)
+                        + seed * 2.0 * math.pi)
+        lift = 0.5 + 0.5 * wave
+        orb.halo_alpha = 1.0 - 0.35 * lift
+        orb.halo_radius = 1.0 + 0.08 * wave
+        orb.core_intensity = 1.0 - 0.15 * lift
+        orb.facet_intensity = 1.0 - 0.15 * lift
+        orb.update()
+
+    def _update_trails(self, now, centers=None):
+        """Prune, record, and paint trail state for visible stars.
+
+        Records the float nominal centers (not quantized widget
+        positions) so slow sub-pixel drift accumulates; visibility
+        requires a real span, so stillness paints nothing.
+        Hover-paused stars record nothing: their trail fades to none
+        while frozen, and resumes cleanly on unhover.
+
+        Repaint rule: compare the overlay's visual signature before
+        and after the mutation block and request update() only on
+        change — new samples, expired samples, and removed trails
+        repaint; identical state never does. While a visible trail
+        ages toward expiry, prune changes the signature each time a
+        sample drops, so fading keeps repainting until nothing is
+        left; afterwards the signature is stable and repaints stop.
+        """
+        overlay = self.trail_overlay
+        before = overlay.visual_signature()
+        overlay.prune(now)
+        centers = centers or {}
+        for key, orb in self._windows.items():
+            if not orb.isVisible():
+                overlay.drop(key)
+                continue
+            if key == self._hovered:
+                continue
+            center = centers.get(key)
+            if center is None:
+                center = (orb.x() + 56, orb.y() + 48)
+            overlay.record_sample(key, center[0], center[1], now)
+        if overlay.visual_signature() != before:
+            overlay.update()
+        if overlay.has_trails():
+            overlay.ensure_geometry()
+            overlay.show_behind_stars()
+        elif overlay.isVisible():
+            overlay.hide()
+
+    def _prune_trails_only(self, now):
+        """Fade expired trail samples without recording new ones.
+
+        Used while motion is off or a parking glide is in flight, so
+        transitions leave no streak: old ribbons age out and the
+        layer hides itself once nothing remains.
+        """
+        overlay = self.trail_overlay
+        before = overlay.visual_signature()
+        overlay.prune(now)
+        if overlay.visual_signature() != before:
+            overlay.update()
+        if not overlay.has_trails() and overlay.isVisible():
+            try:
+                overlay.hide()
+            except Exception:
+                pass
+
+    def tick_visual(self, now, pet_rect=None, screen_rect=None):
+        """Advance celestial motion to monotonic time `now`.
+
+        The production QTimer drives this ~25fps; tests drive it
+        manually with synthetic clocks (fully deterministic, no real
+        waiting). All motion clocks are active-time: hover/press holds
+        freeze the whole ring group (breathing continues), and a
+        safety-hold freezes phase too — the guard can never reject a
+        position while the phase runs ahead, so no catch-up teleport
+        is possible. Invalid nominal sets hold all stars in place.
+
+        A parking glide in flight advances first under either motion
+        flag (it is a finite transition to homes, not orbit): each
+        step eases from exact visible pixels, holds on invalid
+        frames, and idles the production timer on completion when
+        motion reads off.
+        """
+        if not self._windows:
+            return
+        if pet_rect is None or screen_rect is None:
+            live_pet, live_screen = self._anchor()
+            pet_rect = live_pet if pet_rect is None else pet_rect
+            screen_rect = live_screen if screen_rect is None else screen_rect
+        if self.expanded_identity is not None:
+            self._last_tick = now
+            self._expansion_dirty |= self._motion_enabled() != self._last_motion_enabled
+            if (tuple(pet_rect), tuple(screen_rect)) != self._expansion_geometry:
+                self._expansion_dirty = True
+                self.collapse_detail(replan=False)
+                self.apply_snapshot(list(self._universe.values()), self._task_preference,
+                                    self._last_generation, self._task_language,
+                                    pet_rect, screen_rect)
+            return
+        self._last_pet_rect = pet_rect
+        self._last_screen_rect = screen_rect
+        if self._poll_park_plan(pet_rect, screen_rect):
+            self._last_tick = now
+            return
+        if not self._motion_enabled():
+            # Motion off: a parking glide owns all movement. Without
+            # one, stray orbs begin gliding from their exact current
+            # pixels (timer-only OFF needs no apply); parked orbs
+            # stay frozen with a fresh clock (no hidden catch-up).
+            self._last_motion_enabled = False
+            last = self._last_tick
+            dt = self._clamped_dt(
+                0.0 if last is None else max(0.0, now - last))
+            self._last_tick = now
+            if self._park_blend is None:
+                stray = self._park_survivors(pet_rect, screen_rect)
+                if (stray and self._max_home_distance(
+                        stray, pet_rect, screen_rect) >= 1.0):
+                    self._begin_park_glide(pet_rect, screen_rect)
+                    self.trail_overlay.clear_all()
+                    last = self._last_tick
+                    dt = self._clamped_dt(
+                        0.0 if last is None else max(0.0, now - last))
+                    self._last_tick = now
+            if self._park_blend is not None:
+                self._advance_park_glide(pet_rect, screen_rect, dt)
+                self._prune_trails_only(now)
+                if (self._park_blend is None
+                        and self._live_armed()
+                        and self.motion_timer.isActive()):
+                    self.motion_timer.stop()
+                return
+            self._last_tick = now
+            self._prune_trails_only(now)
+            return
+        if self._motion_enabled() != self._last_motion_enabled:
+            # Motion re-enabled without an intervening apply (parked
+            # static homes, possibly stale blend/clocks): stale holds
+            # die here, then continuity is planned from the currently
+            # visible geometry before the first animated frame,
+            # exactly as an apply would. Ordinary ticks see matching
+            # flags and skip this.
+            self._clear_interaction_holds()
+            self._maybe_start_blend(self._orbit_mode,
+                                    dict(self._ring_offsets),
+                                    pet_rect, screen_rect)
+            self._last_motion_enabled = self._motion_enabled()
+        if self._park_blend is not None:
+            # Motion re-enabled into arc/static (or a recomposition
+            # stranded orbs): finish gliding home first; the selected
+            # mode resumes from homes on arrival without a jump.
+            last = self._last_tick
+            dt = self._clamped_dt(
+                0.0 if last is None else max(0.0, now - last))
+            self._last_tick = now
+            if dt <= 0.0:
+                return
+            self._motion_t += dt
+            still = self._advance_park_glide(pet_rect, screen_rect, dt)
+            self._prune_trails_only(now)
+            if not still and self._ring_blend is not None:
+                # Parking landed under a ring selection: the next
+                # ordinary tick glides outward from these homes.
+                pass
+            for key, orb in self._windows.items():
+                try:
+                    self._apply_breathing(orb, key)
+                except Exception:
+                    pass
+            return
+        pet_center = (pet_rect[0] + pet_rect[2] / 2.0,
+                      pet_rect[1] + pet_rect[3] / 2.0)
+        previous_center = getattr(self, '_last_tick_center', None)
+        self._last_tick_center = pet_center
+        if previous_center is not None:
+            jump = math.hypot(pet_center[0] - previous_center[0],
+                              pet_center[1] - previous_center[1])
+            if jump > 120.0:
+                # Pet teleported (not smooth-tracked): never paint a
+                # full-screen streak for the jump itself.
+                self.trail_overlay.clear_all()
+        last = self._last_tick
+        dt = self._clamped_dt(
+            0.0 if last is None else max(0.0, now - last))
+        self._last_tick = now
+        if dt <= 0.0:
+            return
+        self._motion_t += dt
+        mode = self._orbit_mode
+        kind = mode[0] if isinstance(mode, tuple) else 'static'
+        if kind == 'ring':
+            if self._ring_paused():
+                prop_ring_t = self._ring_t
+                prop_blend_t = (self._ring_blend['t']
+                                if self._ring_blend is not None else None)
+            elif self._ring_blend is not None:
+                # Recomposition glide: shared phase frozen, blend
+                # progress is the only thing that advances. A blend
+                # that cannot advance past a blocked path must not
+                # stall the ring forever: after STALL_LIMIT_S of hold,
+                # blockers are staged hidden and survivors glide alone
+                # (or positions are preserved via rebase hold).
+                prop_ring_t = self._ring_t
+                prop_blend_t = self._ring_blend['t'] + dt
+            else:
+                prop_ring_t = self._ring_t + dt
+                prop_blend_t = None
+            nominal, float_centers = self._nominal_positions(
+                pet_rect, screen_rect, ring_t=prop_ring_t,
+                blend_t=prop_blend_t)
+            if self._nominal_valid(nominal, pet_rect, screen_rect):
+                self._ring_t = prop_ring_t
+                if self._ring_blend is not None:
+                    if prop_blend_t >= self._ring_blend['dur'] - 1e-9:
+                        self._ring_blend = None
+                    else:
+                        self._ring_blend['t'] = prop_blend_t
+                        self._ring_blend['stalled'] = 0.0
+                self._move_orbs(nominal)
+            else:
+                if self._ring_blend is not None:
+                    blend_hub = self._ring_blend.get('hub')
+                    hub_now = (pet_rect[0] + pet_rect[2] / 2.0,
+                               pet_rect[1] + pet_rect[3] / 2.0)
+                    if blend_hub is None or blend_hub == hub_now:
+                        stalled = (self._ring_blend.get('stalled', 0.0)
+                                   + dt)
+                        self._ring_blend['stalled'] = stalled
+                    else:
+                        # Hub moved mid-glide: the held frame belongs
+                        # to the old hub, so this hold must not count
+                        # toward the stall abort (which rebases around
+                        # the current hub). The blend waits for hub
+                        # return or apply-driven reselection.
+                        stalled = self._ring_blend.get('stalled', 0.0)
+                    if stalled >= pet_geometry.RING_BLEND_STALL_LIMIT_S:
+                        # Blocked glide: newcomers parked across the
+                        # path stall it indefinitely. Hide the
+                        # blockers and glide survivors alone to final
+                        # slots (staged recovery) rather than
+                        # dead-holding a valid final ring. With no
+                        # visible newcomers, preserve positions via
+                        # the rebase hold instead.
+                        blend = self._ring_blend
+                        newcomers = [
+                            k for k in self._windows
+                            if k not in blend.get('start', {})
+                            and k not in self._ring_staged]
+                        if newcomers:
+                            self._stage_keys(newcomers)
+                            hub_now = (
+                                pet_rect[0] + pet_rect[2] / 2.0,
+                                pet_rect[1] + pet_rect[3] / 2.0)
+                            starts_now = {}
+                            for key, orb in self._windows.items():
+                                if key in self._ring_staged:
+                                    continue
+                                starts_now[key] = (
+                                    pet_geometry.ring_abs_angle_deg(
+                                        orb.x() + 56.0, orb.y() + 48.0,
+                                        hub_now[0], hub_now[1]))
+                            plan = self._plan_direct_blend(
+                                starts_now, [], pet_rect, screen_rect)
+                            if plan is not None:
+                                self._commit_blend_plan(
+                                    starts_now, plan[0], plan[1],
+                                    hub_now)
+                            else:
+                                # No safe rotation from the held frame:
+                                # keep holding the last valid frame and
+                                # retry later; never teleport to force
+                                # the transition.
+                                self._ring_blend['stalled'] = 0.0
+                        else:
+                            # Survivors-only glide blocked mid-path: keep
+                            # holding the last valid frame and retry on
+                            # later ticks; pet moves, retires, or fresh
+                            # applies replan from these exact pixels.
+                            # Positions never move here by construction.
+                            self._ring_blend['stalled'] = 0.0
+                self._hold_centers(float_centers)
+            if (self._ring_staged and not self._ring_paused()
+                    and self._ring_blend is None):
+                # Survivors circulate blend-free: reveal staged stars
+                # the moment their final slots validate with the live
+                # set (possibly the same tick a blend just completed).
+                self._maybe_reveal_staged(pet_rect, screen_rect)
+        elif kind == 'arc':
+            prop_times = {}
+            for key in self._windows:
+                if key in self._ring_staged:
+                    # Staged newcomers are inert: their clocks must
+                    # not advance while hidden, so a later reveal
+                    # starts them exactly at the validated frame.
+                    continue
+                if key == self._hovered:
+                    prop_times[key] = self._orbit_t.get(key, 0.0)
+                else:
+                    prop_times[key] = self._orbit_t.get(key, 0.0) + dt
+            nominal, float_centers = self._nominal_positions(
+                pet_rect, screen_rect, orbit_times=prop_times)
+            if self._nominal_valid(nominal, pet_rect, screen_rect):
+                self._orbit_t.update(prop_times)
+                self._move_orbs(nominal)
+            else:
+                self._hold_centers(float_centers)
+            if self._ring_staged and not self._ring_paused():
+                # Survivors circulate: reveal staged stars the moment
+                # their live arc slots validate with the visible set
+                # (retries every tick until a safe envelope arrives).
+                self._maybe_reveal_staged_arc(pet_rect, screen_rect)
+        else:
+            nominal, float_centers = self._nominal_positions(
+                pet_rect, screen_rect)
+            if self._nominal_valid(nominal, pet_rect, screen_rect):
+                self._move_orbs(nominal)
+            else:
+                self._hold_centers(float_centers)
+            if self._ring_staged and not self._ring_paused():
+                # Static-mode survivors sit at homes: reveal staged
+                # stars the moment the complete home set validates
+                # (retries every tick until a safe frame arrives;
+                # blocked newcomers stay hidden and inert).
+                self._try_reveal_staged_at_homes(pet_rect, screen_rect)
+        for key, orb in self._windows.items():
+            try:
+                self._apply_breathing(orb, key)
+            except Exception:
+                pass
+        try:
+            self._update_trails(now, float_centers)
+        except Exception:
+            pass
+
+    def _move_orbs(self, nominal):
+        """Commit validated window positions (shared tick/arc path)."""
+        if self.expanded_identity is not None:
+            return
+        for key, pos in nominal.items():
+            orb = self._windows.get(key)
+            if orb is None:
+                continue
+            if self._placed.get(key) != pos:
+                self._placed[key] = pos
+                orb.move(*pos)
+
+    def _hold_centers(self, float_centers):
+        """Safety hold: report current positions as trail centers so a
+        rejected frame paints no streak toward forbidden geometry.
+        Clocks stay untouched by the caller (active-time rule)."""
+        for key, orb in self._windows.items():
+            float_centers[key] = (orb.x() + 56.0, orb.y() + 48.0)
+
+    def retranslate(self, language):
+        """Refresh orb wording after a language change."""
+        language = normalize_language(language)
+        self._task_language = language
+        for key, orb in self._windows.items():
+            try:
+                task = self._universe.get(key) or {}
+                orb.refresh(str(self._labels.get(key, 0)),
+                            PROVIDER_NAMES.get(task.get('provider_id'),
+                                               task.get('provider_id')),
+                            language)
+            except Exception:
+                pass
+        self._refresh_detail()
+
+    def set_visible(self, visible):
+        """Hide/show all task stars together with the main panel.
+
+        Staged newcomers stay hidden on restore: only the staged
+        reveal path (validated final slots) may expose them.
+        """
+        if self._shutdown:
+            return
+        self._visible = bool(visible)
+        if not self._visible:
+            self.collapse_detail(replan=False)
+            self._cancel_park_planning()
+        elif self._orbit_mode == ('expanded_resume',):
+            self.apply_snapshot(list(self._universe.values()), self._task_preference,
+                                self._last_generation, self._task_language,
+                                self._last_pet_rect, self._last_screen_rect)
+        for key, orb in self._windows.items():
+            try:
+                if self._visible and key in self._ring_staged:
+                    continue
+                orb.show() if self._visible else orb.hide()
+            except Exception:
+                pass
+        if not self._visible:
+            # Nothing is hoverable while hidden: interaction holds
+            # are visibility-local and must not outlive the hide.
+            self._hover_holds = set()
+            self._press_holds = set()
+            self._hovered = None
+        self.sync_motion()
+        if not self._visible:
+            try:
+                if self.trail_overlay.isVisible():
+                    self.trail_overlay.hide()
+            except Exception:
+                pass
+
+    def apply_topmost(self, on_top):
+        """Mirror the always-on-top preference onto task stars."""
+        for orb in list(self._windows.values()) + ([self.detail_window] if self.detail_window else []):
+            try:
+                if bool(orb.windowFlags() & Qt.WindowStaysOnTopHint) != bool(on_top):
+                    visible, position = orb.isVisible(), orb.pos()
+                    orb.setWindowFlag(Qt.WindowStaysOnTopHint, bool(on_top))
+                    if visible:
+                        orb.show()
+                    orb.move(position)
+            except Exception:
+                pass
+        try:
+            overlay = self.trail_overlay
+            if bool(overlay.windowFlags() & Qt.WindowStaysOnTopHint) != bool(on_top):
+                was_visible = overlay.isVisible()
+                overlay.setWindowFlag(Qt.WindowStaysOnTopHint, bool(on_top))
+                if was_visible:
+                    overlay.show()
+        except Exception:
+            pass
+
+    def shutdown(self):
+        """Stop motion, close every task star and the trail layer."""
+        if self._shutdown:
+            return
+        self._shutdown = True
+        self.collapse_detail(replan=False)
+        if self.detail_window is not None:
+            self.detail_window.manager = None
+            self.detail_window.close()
+            self.detail_window.deleteLater()
+            self.detail_window = None
+        self._cancel_park_planning()
+        try:
+            self.stop_motion()
+        except Exception:
+            pass
+        try:
+            self.trail_overlay.clear_all()
+            self.trail_overlay.close()
+        except Exception:
+            pass
+        for key in list(self._windows):
+            orb = self._windows.pop(key)
+            try:
+                orb.close()
+            except Exception:
+                pass
+        self._universe.clear()
+        self._labels.clear()
+        self._slots.clear()
+        self._placed.clear()
+        self._ring_slots = []
+        self._orbit.clear()
+        self._orbit_t.clear()
+        self._arc_dirs.clear()
+        self._ring_offsets = {}
+        self._ring_t = 0.0
+        self._ring_blend = None
+        self._park_blend = None
+        self._ring_staged = set()
+        self._hover_holds = set()
+        self._press_holds = set()
+        self._hovered = None
+        self._last_motion_enabled = None
+        self._last_tick_center = None
+        self.last_activated = None
 
 
 class Settings(QDialog):
@@ -284,7 +3433,7 @@ class Settings(QDialog):
         self.scope_label = label()
         self.form.addRow(self.scope_label, self.scope)
         self.tracking = QComboBox()
-        for key in ('auto','codex','opencode'):
+        for key in TRACKING_CHOICES:
             self.tracking.addItem('', key)
         self.tracking.setCurrentIndex(max(0, self.tracking.findData(
             normalize_tracking_provider(panel.prefs.get('tracking_provider')))))
@@ -390,7 +3539,7 @@ class Settings(QDialog):
         self.task.setItemText(0, t('task_auto'))
         for index, scope in enumerate(('global','project','conversation')):
             self.scope.setItemText(index, scope_text(scope, self.language.currentData(), recorded=scope == 'global'))
-        for index, key in enumerate(('auto','codex','opencode')):
+        for index, key in enumerate(TRACKING_CHOICES):
             self.tracking.setItemText(index, t(f'tracking_{key}'))
         self.tracking_label.setText(t('tracking_provider'))
         self.language.setItemText(0, t('language_zh_CN'))
@@ -471,7 +3620,7 @@ class Settings(QDialog):
                 prefs,
                 mark_provider=(tracking if tracking != old_tracking
                                and tracking != 'auto' else None))
-            panel.bridge.data.emit(snapshot['result'])
+            panel.publish_snapshot(snapshot)
         pet = getattr(panel, 'pet', None)
         if pet is not None:
             pet.apply_pet_scale(prefs['pet_scale_percent'])
@@ -484,6 +3633,10 @@ class Settings(QDialog):
 class Panel(QWidget):
     def __init__(self, live=True):
         super().__init__()
+        # Live panels run background loops and the shared star-motion
+        # clock; unit tests construct live=False and must never arm
+        # real timers (deterministic assertions).
+        self.live = bool(live)
         self.prefs = read_preferences()
         self.app_mode = AppModeState()
         self.codex_activity = dict(active=False, valid=False, reason='starting')
@@ -503,6 +3656,10 @@ class Panel(QWidget):
         self.bridge.data.connect(self.render)
         self.bridge.limits.connect(self.receive_limits)
         self.bridge.fx.connect(self.receive_fx)
+        # V1.3 Slice C: one pet owns N task windows. The manager only
+        # consumes accepted active-task sets; the main panel keeps its
+        # legacy single-winner rendering (default/idle or primary task).
+        self.task_manager = TaskPanelManager(self)
         self.setWindowTitle('petoken')
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -546,6 +3703,14 @@ class Panel(QWidget):
         self.title = ElidedLabel('')
         self.title.setStyleSheet('font-size:17px; font-weight:600;')
         layout.addWidget(self.title)
+        self.tasks_button = button('', '', lambda: None)
+        self.task_menu = QMenu(self.tasks_button)
+        self.tasks_button.setMenu(self.task_menu)
+        self.task_menu.aboutToShow.connect(self.refresh_task_menu)
+        layout.addWidget(self.tasks_button)
+        self.task_provenance = ElidedLabel()
+        self.task_provenance.setObjectName('muted')
+        layout.addWidget(self.task_provenance)
         model_row = QHBoxLayout()
         model_row.setSpacing(8)
         self.model = label('—')
@@ -667,6 +3832,10 @@ class Panel(QWidget):
         self.bottom_layout = bottom
         self.status = label('', 'muted')
         bottom.addWidget(self.status)
+        # Provider mode (Auto / Manual) lives here, visually separate from
+        # the task/session context shown in the header connection line.
+        self.provider_mode = label('', 'muted')
+        bottom.addWidget(self.provider_mode)
         bottom.addStretch()
         self.settings_button = button('⚙', '', self.open_settings)
         bottom.addWidget(self.settings_button)
@@ -684,7 +3853,7 @@ class Panel(QWidget):
         self.spirit.setVisible(False)
         for text, delta in [('Left',(-10,0)),('Right',(10,0)),('Up',(0,-10)),('Down',(0,10))]:
             QShortcut(QKeySequence('Alt+'+text), self, activated=lambda d=delta:self.move_clamped(self.pos()+QPoint(*d)))
-        QShortcut(QKeySequence('Escape'), self, activated=self.hide_to_tray)
+        QShortcut(QKeySequence('Escape'), self, activated=self.handle_escape)
         self.tray = QSystemTrayIcon(self)
         pix = QPixmap(64,64)
         pix.fill(Qt.transparent)
@@ -803,6 +3972,9 @@ class Panel(QWidget):
         self.compact_cost_label.setText(self.cost_label.text())
         self.update_pin_button()
         self.status.setText(t('checking_wait'))
+        self.refresh_provider_mode(self.snapshot or {})
+        self.refresh_task_controls()
+        self.task_manager.retranslate(self.language)
         self.settings_button.setToolTip(t('settings_help'))
         self.settings_button.setAccessibleName(t('settings_help'))
         self.tray.setToolTip(t('tray_tip'))
@@ -845,7 +4017,7 @@ class Panel(QWidget):
             start = time.monotonic()
             try:
                 snapshot = self.read_loop_once()
-                self.bridge.data.emit(snapshot['result'])
+                self.publish_snapshot(snapshot)
             except Exception:
                 # All expected failures already return tagged snapshots
                 # from loop_tick. An unexpected error here (torn-down
@@ -885,6 +4057,8 @@ class Panel(QWidget):
         self.refresh_status()
 
     def render(self, data):
+        if self.closing:
+            return
         data = data or {}
         generation = data.get('generation')
         # Legacy generation-less payloads (synthetic fixtures, old local
@@ -920,6 +4094,10 @@ class Panel(QWidget):
                                        reason=selection.get('reason', ''))
         if hasattr(self,'pet'):
             self.pet.update_data(data)
+        # Multi-task snapshot first: the manager designates the main task
+        # (if any) from the authoritative universe before legacy widgets
+        # render, so the task-mode override below always sees fresh state.
+        self.refresh_task_panels(data)
         if provider == 'opencode':
             self.render_opencode(data, selection or {}, provider_label)
             return
@@ -1014,6 +4192,108 @@ class Panel(QWidget):
         if self.analytics_window and self.analytics_window.isVisible():
             self.analytics_window.update_data(
                 self.analytics_payload(data, provider))
+        self.apply_hub_neutralization(provider_label, data)
+
+    def publish_snapshot(self, snapshot):
+        """Emit one poll envelope to the GUI thread with task sets attached.
+
+        The bridge carries the legacy result plus the accepted coherent
+        active-task list and the tick preference, so the manager filters
+        and renders without any provider re-read.
+        """
+        if self.closing:
+            return
+        snapshot = snapshot or {}
+        out = dict(snapshot.get('result') or {})
+        out['active_tasks'] = list(snapshot.get('active_tasks') or [])
+        out['preference'] = snapshot.get('preference') or 'auto'
+        self.bridge.data.emit(out)
+
+    def refresh_provider_mode(self, data):
+        """Show the tracking preference separately from task context."""
+        data = data or {}
+        selection = data.get('selection') or {}
+        preference = (selection.get('preference')
+                      or normalize_tracking_provider(self.prefs.get('tracking_provider')))
+        if preference == 'auto':
+            self.provider_mode.setText(self.tr_text('provider_mode_auto'))
+            self.provider_mode.setToolTip(self.tr_text('provider_mode_auto'))
+        else:
+            name = PROVIDER_NAMES.get(preference, preference)
+            self.provider_mode.setText(self.tr_text('provider_mode_manual', provider=name))
+            self.provider_mode.setToolTip(self.tr_text('provider_mode_manual', provider=name))
+
+    def refresh_task_panels(self, data):
+        """Apply accepted active tasks to the orb manager.
+
+        The main panel is a companion hub, never a task surface: every
+        visible task gets exactly one orb. Only the Slice C envelope
+        carries an authoritative task set: the Codex lane payload embeds
+        its own raw per-lane set inside ``result`` for poller-internal
+        use, which is deliberately ignored here (unfiltered,
+        coherence-untagged). Legacy result-only renders therefore behave
+        exactly as before Slice C.
+        """
+        data = data or {}
+        self.refresh_provider_mode(data)
+        preference = (data.get('preference')
+                      or normalize_tracking_provider(self.prefs.get('tracking_provider')))
+        tasks = data.get('active_tasks') if 'preference' in data else []
+        try:
+            self.task_manager.apply_snapshot(
+                tasks or [], preference=preference,
+                generation=data.get('generation'),
+                language=self.language)
+        except Exception:
+            # Task orbs are additive presentation: they must never break
+            # the legacy companion panel render.
+            pass
+        self.refresh_task_controls(data)
+        self.task_manager.sync_motion()
+
+    def refresh_task_controls(self, data=None):
+        data = self.snapshot if data is None else data
+        count = self.task_manager.window_count()
+        overview = self.tr_text('task_overview', count=count)
+        self.tasks_button.setText(overview + ' ▾')
+        self.tasks_button.setAccessibleName(overview)
+        self.tasks_button.setEnabled(bool(count))
+        provider = PROVIDER_NAMES.get(data.get('provider_id') or 'codex', 'Codex')
+        provenance = self.tr_text('task_metric_scope', provider=provider,
+                                  scope=scope_text(data.get('scope', self.prefs.get('scope')), self.language))
+        self.task_provenance.setFullText(provenance)
+        self.tasks_button.setToolTip(provenance)
+
+    def refresh_task_menu(self):
+        self.task_menu.clear()
+        manager = self.task_manager
+        for identity in manager.window_identities():
+            name = manager.label_text(identity, self.language)
+            provider = PROVIDER_NAMES.get(identity[0], identity[0])
+            action = self.task_menu.addAction(f'{name} · {provider}')
+            action.setEnabled(identity not in manager._ring_staged)
+            action.triggered.connect(lambda checked=False, key=identity: manager.orb_activated(key, keyboard=True))
+
+    def apply_hub_neutralization(self, provider_label, data):
+        """Neutralize task identity on the companion hub when orbs exist.
+
+        D1 blocker rule: with >=1 visible task orb, the main panel is a
+        companion/provider/scope hub — never a second surface for a
+        task. The legacy available-path rendering above binds the raw
+        task title/project, so replace both with neutral
+        provider-plus-scope framing (existing safe concepts only, no
+        new keys). With zero orbs this is a no-op and legacy titles
+        are fully preserved.
+        """
+        manager = getattr(self, 'task_manager', None)
+        if manager is None or manager.window_count() < 1:
+            return
+        scope = (data or {}).get('scope', self.prefs.get('scope'))
+        neutral = f'{provider_label} · {scope_text(scope, self.language)}'
+        self.title.setFullText(neutral)
+        hub_project = (provider_label or '').upper()
+        self.project.setText(hub_project)
+        self.project.setToolTip(hub_project)
 
     def analytics_payload(self, data, provider):
         # Each analytics snapshot is provider-tagged: Codex payloads keep
@@ -1134,6 +4414,7 @@ class Panel(QWidget):
         if self.analytics_window and self.analytics_window.isVisible():
             self.analytics_window.update_data(
                 self.analytics_payload(data, 'opencode'))
+        self.apply_hub_neutralization(provider_label, data)
 
     def refresh_cost(self):
         d = self.snapshot
@@ -1190,6 +4471,13 @@ class Panel(QWidget):
         self.compact_cost_label.setToolTip(tip)
 
     def refresh_status(self):
+        if self.closing:
+            return
+        # Both providers share the same visual-clock arming path.
+        try:
+            self.task_manager.sync_motion()
+        except Exception:
+            pass
         quota = self.quota
         # Codex quota widgets blank unless the Codex provider is both
         # selected and the quota source: no Codex limits, countdowns or
@@ -1201,17 +4489,19 @@ class Panel(QWidget):
         age = time.time()-sampled
         stale = age > 10 or bool(quota.get('error')) if quota_usable else True
         for widget,minutes in ((self.five,300),(self.week,10080)):
+            widget.reset.hide()
+            widget.reset.setText('')
             w = quota_window(limits, minutes)
             if not w:
                 widget.update_value(None, tip=self.tr_text('quota_unavailable'))
                 widget.reset.setVisible(False)
                 continue
-            reset = datetime.fromtimestamp(w['reset']).strftime('%m/%d %H:%M') if w.get('reset') else self.tr_text('unknown')
+            reset = datetime.fromtimestamp(w['reset']).strftime('%m/%d %H:%M') if w.get('reset') is not None else self.tr_text('unknown')
             tip = (self.tr_text('account_quota')+'\n'+self.tr_text('reset_time', reset=reset)+'\n'+
                    self.tr_text('quota_stale' if stale or w['expired'] else 'quota_live'))
             suffix = self.tr_text('left')+(' · '+self.tr_text('stale') if stale or w['expired'] else '')
             widget.update_value(w['remaining'], suffix, tip, stale or w['expired'])
-            if w.get('reset'):
+            if w.get('reset') is not None:
                 seconds=max(0,int(w['reset']-time.time()))
                 days,seconds=divmod(seconds,86400);hours,seconds=divmod(seconds,3600);minutes,seconds=divmod(seconds,60)
                 duration=f"{'%dd ' % days if days else ''}{hours:02}:{minutes:02}:{seconds:02}"
@@ -1258,8 +4548,11 @@ class Panel(QWidget):
         if poller is not None:
             # Retire outstanding requests for the old scope and repaint
             # from cached state at once instead of waiting a poll tick.
+            # The full envelope (active tasks + preference) travels with
+            # the result so task surfaces survive scope presentation
+            # changes; generation coherence comes from apply_settings.
             snapshot = poller.apply_settings(dict(self.prefs))
-            self.bridge.data.emit(snapshot['result'])
+            self.publish_snapshot(snapshot)
 
     def open_settings(self):
         self.show()
@@ -1310,6 +4603,7 @@ class Panel(QWidget):
             if visible:
                 window.show()
             window.move(position)
+        self.task_manager.apply_topmost(on_top)
 
 
     def set_always_on_top(self, enabled):
@@ -1480,11 +4774,18 @@ class Panel(QWidget):
         except OSError:
             self.status.setText(self.tr_text('settings_save_failed'))
 
+    def handle_escape(self):
+        if self.task_manager.expanded_identity is not None:
+            self.task_manager.collapse_detail()
+        else:
+            self.hide_to_tray()
+
     def hide_to_tray(self):
         if QSystemTrayIcon.isSystemTrayAvailable():
             self.hide()
         else:
             self.showMinimized()
+        self.task_manager.set_visible(False)
 
     def toggle_visible(self):
         if self.isVisible():
@@ -1492,6 +4793,7 @@ class Panel(QWidget):
         else:
             self.showNormal()
             self.raise_()
+            self.task_manager.set_visible(True)
 
     def closeEvent(self, event):
         if self.closing:
@@ -1505,6 +4807,7 @@ class Panel(QWidget):
         self.stop.set()
         self.active.stop.set()
         self.activity.close()
+        self.task_manager.shutdown()
         if getattr(self, 'provider_poller', None) is not None:
             self.provider_poller.close()
         if hasattr(self,'pet'):
@@ -1519,6 +4822,14 @@ class Panel(QWidget):
 
 
 def main():
+    if '--preview-v1-3' in sys.argv[1:]:
+        # Frozen/script entry is __main__; keep the preview on this module's
+        # globals so its temporary preference directory isolates the real UI.
+        if __name__ == '__main__':
+            sys.modules['widget'] = sys.modules[__name__]
+        from tools.preview_v1_3 import main as preview_main
+        return preview_main([argument for argument in sys.argv[1:]
+                             if argument != '--preview-v1-3'])
     parser = argparse.ArgumentParser()
     parser.add_argument('--smoke', type=Path, help='Save a local screenshot after five seconds and exit')
     args = parser.parse_args()
