@@ -656,9 +656,12 @@ class AttributableRecencyTests(unittest.TestCase):
         self.assertTrue(shaped['working'])
         idle = CodexProvider(CodexStore(home)).read(scope='conversation')
         shaped_idle = codex_provider_status(idle, last_success_at=NOW)
-        self.assertFalse(shaped_idle['working'])
-        # Idle Codex exposes no attributable lifecycle instant.
-        self.assertIsNone(shaped_idle['activity_at'])
+        # No foreground/UIA info, but the verified thread is genuinely
+        # working in the background: UIA absence must not veto provider
+        # live state, so the shaper still reports Working with the
+        # attributable token instant.
+        self.assertTrue(shaped_idle['working'])
+        self.assertEqual(shaped_idle['activity_at'], self.TOKEN_EPOCH)
 
     def test_codex_missing_scope_keeps_source_and_working(self):
         import tests.test_providers as codex_fixture

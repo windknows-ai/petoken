@@ -54,7 +54,7 @@ _VALID_SCOPES = ('global', 'project', 'conversation')
 
 
 def _normalize_scope(value):
-    scope = (value or 'conversation')
+    scope = value if isinstance(value, str) else 'conversation'
     scope = {'task': 'conversation'}.get(scope, scope)
     return scope if scope in _VALID_SCOPES else 'conversation'
 
@@ -280,6 +280,10 @@ class ProviderPoller:
             if self._closed:
                 return
             self._closed = True
+            # Retire envelopes committed just before shutdown, including
+            # snapshots already waiting in the GUI event queue.
+            self._epoch += 1
+            self.generation += 1
             for future in list(self._inflight.values()):
                 try:
                     future.cancel()
@@ -612,8 +616,8 @@ class ProviderPoller:
 
     def _merged_active_tasks(self, preference, now, statuses=None):
         """Snapshot lane sets/success coherently, then filter to the
-        visible verified working tasks. No lock is held during the
-        pure filter; no I/O happens here.
+        visible verified working tasks. Publication callers retain their
+        outer lock during the pure filter; no I/O happens here.
 
         Statuses default to the last accepted lane statuses, but a
         failure path passes its temporary failure statuses instead:
@@ -662,14 +666,27 @@ class ProviderPoller:
     # -- publication --------------------------------------------------
 
     def _decide(self, tick):
-        """Rank the latest accepted statuses for this tick and publish."""
+        """Commit selection and its complete envelope for a current tick."""
         with self._lock:
+            if self._closed:
+                return self._closed_result(tick)
+            if (tick.epoch != self._epoch
+                    or tick.generation != self.generation):
+                return self._obsolete_result(tick)
             snapshot = self.selection.update(
                 self._snapshot_statuses(), preference=tick.preference,
                 now=tick.now, generation=tick.generation)
-            return snapshot, self._publish_locked(
+            result = self._publish_locked(
                 snapshot, tick.preference, tick.scope, tick.pinned,
                 tick.generation)
+            return dict(generation=tick.generation,
+                        preference=tick.preference, selection=snapshot,
+                        provider_id=result['provider_id'], result=result,
+                        codex=self._reads.get(PROVIDER_CODEX),
+                        opencode=self._reads.get(PROVIDER_OPENCODE),
+                        opencode_activity=self._activity,
+                        active_tasks=self._merged_active_tasks(
+                            tick.preference, tick.now))
 
     def _working_row(self):
         """The activity-selected OpenCode session row, if still cached."""
@@ -787,6 +804,8 @@ class ProviderPoller:
         """Tick retired by a newer epoch/generation: no selection mutation,
         tick-tagged generation so the GUI guard must reject it."""
         with self._lock:
+            if self._closed:
+                return self._closed_result(tick)
             snapshot = self.selection.snapshot()
             codex_read = self._reads.get(PROVIDER_CODEX)
             opencode_read = self._reads.get(PROVIDER_OPENCODE)
@@ -800,12 +819,11 @@ class ProviderPoller:
                     selection=snapshot, provider_id=result['provider_id'],
                     result=result, codex=codex_read,
                     opencode=opencode_read, opencode_activity=activity,
-                    active_tasks=self._merged_active_tasks(
-                        tick.preference, tick.now))
+                    active_tasks=[])
 
     def _closed_result(self, tick=None, prefs=None):
         with self._lock:
-            snapshot = self.selection.snapshot()
+            snapshot = dict(self.selection.snapshot(), live=False)
             generation = tick.generation if tick is not None else self.generation
             preference = (tick.preference if tick is not None
                           else normalize_tracking_provider(
@@ -928,20 +946,7 @@ class ProviderPoller:
                 cur_epoch, cur_gen = self._epoch, self.generation
             if tick.epoch != cur_epoch or tick.generation != cur_gen:
                 return self._obsolete_result(tick)
-            snapshot, result = self._decide(tick)
-            with self._lock:
-                if self._closed:
-                    return self._closed_result(tick)
-                codex_read = self._reads.get(PROVIDER_CODEX)
-                opencode_read = self._reads.get(PROVIDER_OPENCODE)
-                activity = self._activity
-            return dict(generation=tick.generation,
-                        preference=tick.preference, selection=snapshot,
-                        provider_id=result['provider_id'], result=result,
-                        codex=codex_read, opencode=opencode_read,
-                        opencode_activity=activity,
-                        active_tasks=self._merged_active_tasks(
-                            tick.preference, tick.now))
+            return self._decide(tick)
         except Exception:
             return self._coherent_failure(tick)
 

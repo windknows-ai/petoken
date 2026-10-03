@@ -23,7 +23,21 @@ DEFAULT_PREFERENCES = {
     "always_on_top": True,
     "panel_pinned": False,
     "pet_scale_percent": PET_SCALE_DEFAULT,
+    "pet_motion": True,
 }
+
+
+def valid_position(value):
+    """Accept finite saved coordinates; malformed files must not block startup."""
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        return None
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in value):
+        return None
+    try:
+        coordinates = [int(v) for v in value]
+    except (ValueError, OverflowError):
+        return None
+    return coordinates if all(-(2**31) <= v < 2**31 for v in coordinates) else None
 
 
 def normalize_preferences(data):
@@ -32,6 +46,10 @@ def normalize_preferences(data):
     preferences = dict(raw)
     for key, value in DEFAULT_PREFERENCES.items():
         preferences.setdefault(key, value)
+    scope = preferences.get("scope")
+    preferences["scope"] = (scope if isinstance(scope, str)
+                            and scope in ("global", "project", "conversation")
+                            else "conversation")
     # One-time migration: the V1.1 `topmost` pin-double-duty becomes the
     # explicit always-on-top preference. An explicit new value always wins;
     # the legacy key itself stays untouched in the file.
@@ -41,6 +59,11 @@ def normalize_preferences(data):
         preferences["always_on_top"] = True
     if not isinstance(preferences.get("panel_pinned"), bool):
         preferences["panel_pinned"] = False
+    if not isinstance(preferences.get("pet_motion"), bool):
+        preferences["pet_motion"] = True
+    for key in ("position", "pet_position"):
+        if key in preferences:
+            preferences[key] = valid_position(preferences[key])
     preferences["pet_scale_percent"] = normalize_pet_scale(
         preferences.get("pet_scale_percent"))
     schema = preferences.get("settings_schema_version")

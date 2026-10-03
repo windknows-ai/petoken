@@ -875,6 +875,12 @@ class ActiveSessionPollerTests(unittest.TestCase):
             self.assertTrue(poller.drain(timeout=10))
         finally:
             release.set()
+            poller.close()
+            # The detector event precedes reader completion. Released
+            # workers must exit before Windows removes the fixture DB.
+            for worker in poller._workers.values():
+                worker.join(timeout=10)
+                self.assertFalse(worker.is_alive())
             del adapter._dv_current
         self.assertGreaterEqual(len(calls), 2)
         self.assertIsNone(adapter._dv_conn)
@@ -979,11 +985,13 @@ class CodexEnumerationTests(unittest.TestCase):
         rows = self._rows()
         self.assertEqual(store.activity.enumerate_working_tasks(rows),
                          [])
-        # Legacy fallback still sees the fresh token for primary
-        # context (backward compatibility, not membership).
+        # TOKEN CHANGE != WORKING: a completed/idle task with very
+        # recent accounting updates and no provider-trusted open turn
+        # stays Not Working on BOTH APIs (the legacy recent-token
+        # promotion is retired).
         legacy = store.activity.detect(rows, 't1', True)
-        self.assertTrue(legacy['active'])
-        self.assertEqual(legacy['reason'], 'recent_token_legacy')
+        self.assertFalse(legacy['active'])
+        self.assertEqual(legacy['reason'], 'no_running_session')
 
     def test_two_working_tasks_both_included(self):
         write_home(str(self.home), [{'id': 't1', 'working': True},
@@ -1048,6 +1056,384 @@ class CodexEnumerationTests(unittest.TestCase):
         # Legacy working_context path is unchanged by this fix: it
         # keeps its approved title behavior (documented, not new).
         self.assertEqual(read['working_context']['title'], secret)
+
+
+class CodexWorkingPredicateTests(unittest.TestCase):
+    """One shared task-level Working predicate for detect() + enumerate.
+
+    Synthetic homes only. Every test asserts BOTH APIs agree: the
+    enumerated set and the legacy detect() provider signal come from
+    the same qualified candidates. TOKEN CHANGE != WORKING and
+    foreground/focus never gate membership anywhere here.
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.home = Path(self.temp.name) / 'codex'
+        self.home.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def _rows(self):
+        import sqlite3
+        from contextlib import closing
+        with closing(sqlite3.connect(self.home / 'state_1.sqlite')) as db:
+            db.row_factory = sqlite3.Row
+            return [dict(r) for r in db.execute('select * from threads')]
+
+    def _append_turn(self, thread, kind, turn_id=None, home=None):
+        import json
+        payload = dict(type=kind)
+        if turn_id is not None:
+            payload['turn_id'] = turn_id
+        line = json.dumps(dict(
+            type='event_msg', timestamp='2026-09-19T12:00:01Z',
+            payload=payload)) + '\n'
+        with open((home or self.home) / f'{thread}.jsonl', 'a',
+                  encoding='utf-8') as handle:
+            handle.write(line)
+
+    def _write_ledger(self, turns):
+        import sqlite3
+        from contextlib import closing
+        path = self.home / 'thread_history_1.sqlite'
+        with closing(sqlite3.connect(path)) as db:
+            db.execute('CREATE TABLE IF NOT EXISTS thread_turns '
+                       '(thread_id TEXT, turn_id TEXT, status TEXT, '
+                       'started_at REAL, completed_at REAL)')
+            for turn in turns:
+                db.execute('INSERT INTO thread_turns VALUES (?,?,?,?,?)',
+                           (turn['thread_id'], turn.get('turn_id'),
+                            turn['status'], turn.get('started_at'),
+                            turn.get('completed_at')))
+            db.commit()
+
+    def _both(self, store, rows, expect):
+        """Assert enumerate() and detect() agree; detect across titles."""
+        found = store.activity.enumerate_working_tasks(rows)
+        self.assertEqual(sorted(item['thread'] for item in found),
+                         sorted(expect))
+        for title in ('t1', 'no-such-window', ''):
+            with self.subTest(title=title):
+                signal = store.activity.detect(rows, title, True)
+                if not expect:
+                    self.assertFalse(signal['active'])
+                    self.assertEqual(signal['reason'],
+                                     'no_running_session')
+                else:
+                    self.assertTrue(signal['active'])
+                    self.assertIn(signal['thread'], expect)
+
+    def test_long_turn_start_outside_tail_recovers_via_ledger(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        path = self.home / 't1.jsonl'
+        start = ('{"type":"event_msg","timestamp":"2026-09-19T12:00:01Z",'
+                 '"payload":{"type":"task_started","turn_id":"L1"}}\n')
+        filler = ('{"type":"response_item","payload":{"type":"text",'
+                  '"text":"' + 'x' * 200 + '"}}\n')
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(start)
+            for _ in range(11000):
+                handle.write(filler)
+        self.assertGreater(path.stat().st_size, 2 * 1024 * 1024)
+        self._write_ledger([dict(thread_id='t1', turn_id='L1',
+                                 status='inProgress', started_at=now)])
+        # Fresh store: empty detector cursors, as after a restart.
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['t1'])
+        found = store.activity.enumerate_working_tasks(self._rows())
+        self.assertIsNotNone(found[0]['activity_at'])
+
+    def test_stale_zombie_inprogress_is_not_working(self):
+        import os
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._write_ledger([dict(thread_id='t1', turn_id='L1',
+                                 status='inProgress', started_at=now)])
+        path = self.home / 't1.jsonl'
+        old = now - 400
+        os.utime(path, (old, old))
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), [])
+
+    def test_turn_aborted_closes_immediately(self):
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'T1')
+        self._append_turn('t1', 'turn_aborted', 'T1')
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), [])
+
+    def test_complete_with_recent_tokens_stays_not_working(self):
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'T1')
+        self._append_turn('t1', 'task_complete', 'T1')
+        self._append_turn('t1', 'token_count')
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), [])
+
+    def test_ledger_terminals_are_not_working(self):
+        import time
+        now = time.time()
+        for status in ('completed', 'failed', 'interrupted'):
+            with self.subTest(status=status):
+                home = Path(self.temp.name) / f'codex-{status}'
+                home.mkdir(parents=True, exist_ok=True)
+                write_home(str(home), [{'id': 't1'}])
+                with open(home / 't1.jsonl', 'a',
+                          encoding='utf-8') as handle:
+                    handle.write('{"type":"event_msg",'
+                                 '"timestamp":"2026-09-19T12:00:01Z",'
+                                 '"payload":{"type":"token_count"}}\n')
+                path = home / 'thread_history_1.sqlite'
+                import sqlite3
+                from contextlib import closing
+                with closing(sqlite3.connect(path)) as db:
+                    db.execute('CREATE TABLE thread_turns '
+                               '(thread_id TEXT, turn_id TEXT, status TEXT, '
+                               'started_at REAL, completed_at REAL)')
+                    db.execute('INSERT INTO thread_turns VALUES '
+                               "(?,?,?,?,?)",
+                               ('t1', 'L1', status, now, None))
+                    db.commit()
+                store = CodexStore(home)
+                with closing(sqlite3.connect(
+                        home / 'state_1.sqlite')) as db:
+                    db.row_factory = sqlite3.Row
+                    rows = [dict(r)
+                            for r in db.execute('select * from threads')]
+                found = store.activity.enumerate_working_tasks(rows)
+                self.assertEqual(found, [])
+                signal = store.activity.detect(rows, 't1', True)
+                self.assertFalse(signal['active'])
+
+    def test_old_terminal_does_not_close_new_start(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'TA')
+        self._append_turn('t1', 'task_complete', 'TA')
+        self._append_turn('t1', 'task_started', 'TB')
+        self._write_ledger([dict(thread_id='t1', turn_id='TB',
+                                 status='inProgress', started_at=now)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['t1'])
+
+    def test_old_abort_does_not_close_new_start(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'TA')
+        self._append_turn('t1', 'turn_aborted', 'TA')
+        self._append_turn('t1', 'task_started', 'TB')
+        self._write_ledger([dict(thread_id='t1', turn_id='TB',
+                                 status='inProgress', started_at=now)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['t1'])
+
+    def test_ledger_recovery_after_terminal(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'TA')
+        self._append_turn('t1', 'task_complete', 'TA')
+        # Ledger names a strictly newer turn; the bounded tail never
+        # saw its start, but fresh same-thread evidence corroborates.
+        self._write_ledger([dict(thread_id='t1', turn_id='TB',
+                                 status='inProgress', started_at=now)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['t1'])
+
+    def test_ledger_same_turn_race_terminal_wins(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'T1')
+        self._append_turn('t1', 'task_complete', 'T1')
+        self._write_ledger([dict(thread_id='t1', turn_id='T1',
+                                 status='inProgress', started_at=now)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), [])
+
+    def test_stale_ledger_terminal_ignored_for_open_turn(self):
+        import time
+        from usage import CodexActivityDetector
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1', 'working': True}])
+        old_start = (CodexActivityDetector._event_time(
+            '2026-09-19T12:00:01Z') or now) - 100
+        self._write_ledger([dict(thread_id='t1', turn_id='OLD',
+                                 status='completed',
+                                 started_at=old_start)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['t1'])
+
+    def test_running_and_idle_threads(self):
+        write_home(str(self.home), [{'id': 'ta', 'working': True},
+                                    {'id': 'tb', 'working': True}])
+        self._append_turn('tb', 'task_complete')
+        self._append_turn('tb', 'token_count')
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['ta'])
+
+    def test_two_concurrent_turns(self):
+        write_home(str(self.home), [{'id': 'ta', 'working': True},
+                                    {'id': 'tb', 'working': True}])
+        store = CodexStore(self.home)
+        found = store.activity.enumerate_working_tasks(self._rows())
+        self.assertEqual(sorted(item['thread'] for item in found),
+                         ['ta', 'tb'])
+        for title in ('ta', 'no-such-window', ''):
+            signal = store.activity.detect(self._rows(), title, True)
+            self.assertTrue(signal['active'])
+            self.assertIn(signal['thread'], ('ta', 'tb'))
+            self.assertEqual(signal['working_count'], 2)
+
+    def test_unreadable_rollout_fails_closed(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._write_ledger([dict(thread_id='t1', turn_id='L1',
+                                 status='inProgress', started_at=now)])
+        store = CodexStore(self.home)
+        rows = [dict(id='t1',
+                     rollout_path=str(self.home / 'missing.jsonl'))]
+        self._both(store, rows, [])
+
+    def test_rollout_open_without_ledger_still_qualifies(self):
+        write_home(str(self.home), [{'id': 't1', 'working': True}])
+        store = CodexStore(self.home)
+        self.assertFalse((self.home / 'thread_history_1.sqlite').exists())
+        self._both(store, self._rows(), ['t1'])
+
+    def test_production_store_resolves_ledger_from_home(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'TA')
+        self._append_turn('t1', 'task_complete', 'TA')
+        self._write_ledger([dict(thread_id='t1', turn_id='TB',
+                                 status='inProgress', started_at=now)])
+        with patch.dict(os.environ, {'CODEX_HOME': str(self.home)}):
+            store = CodexStore()
+            self.assertEqual(store.activity.ledger.path,
+                             self.home / 'thread_history_1.sqlite')
+            found = store.activity.enumerate_working_tasks(self._rows())
+            self.assertEqual([item['thread'] for item in found], ['t1'])
+
+    def test_uia_invalid_cannot_veto_verified_working(self):
+        write_home(str(self.home), [{'id': 't1', 'working': True}])
+        store = CodexStore(self.home)
+        rows = self._rows()
+        self.assertEqual(
+            [item['thread']
+             for item in store.activity.enumerate_working_tasks(rows)],
+            ['t1'])
+        for valid in (True, False):
+            for title in ('t1', 'unrelated-window', ''):
+                with self.subTest(valid=valid, title=title):
+                    signal = store.activity.detect(rows, title, valid)
+                    self.assertTrue(signal['active'])
+                    self.assertEqual(signal['thread'], 't1')
+
+    def test_same_turn_ledger_terminal_vetoes_rollout_start(self):
+        import time
+        now = time.time()
+        for status in ('completed', 'failed', 'interrupted'):
+            with self.subTest(status=status):
+                home = Path(self.temp.name) / f'codex-{status}'
+                home.mkdir(parents=True, exist_ok=True)
+                write_home(str(home), [{'id': 't1'}])
+                self._append_turn('t1', 'task_started', 'T1', home=home)
+                import json as json_module
+                starts = [
+                    json_module.loads(raw)
+                    for raw in (home / 't1.jsonl').read_text(
+                        encoding='utf-8').splitlines()
+                    if raw.strip()]
+                self.assertTrue(any(
+                    line.get('type') == 'event_msg'
+                    and (line.get('payload') or {}).get('type') == 'task_started'
+                    and (line.get('payload') or {}).get('turn_id') == 'T1'
+                    for line in starts),
+                    'fixture must contain task_started turn T1')
+                import sqlite3
+                from contextlib import closing
+                with closing(sqlite3.connect(
+                        home / 'thread_history_1.sqlite')) as db:
+                    db.execute('CREATE TABLE thread_turns '
+                               '(thread_id TEXT, turn_id TEXT, status TEXT, '
+                               'started_at REAL, completed_at REAL)')
+                    db.execute('INSERT INTO thread_turns VALUES '
+                               '(?,?,?,?,?)',
+                               ('t1', 'T1', status, now, None))
+                    db.commit()
+                store = CodexStore(home)
+                with closing(sqlite3.connect(
+                        home / 'state_1.sqlite')) as db:
+                    db.row_factory = sqlite3.Row
+                    rows = [dict(r)
+                            for r in db.execute('select * from threads')]
+                self.assertEqual(
+                    store.activity.enumerate_working_tasks(rows), [])
+                signal = store.activity.detect(rows, 't1', True)
+                self.assertFalse(signal['active'])
+
+    def test_stale_inprogress_never_reopens_aborted_turn(self):
+        import time
+        from usage import CodexActivityDetector
+        end = CodexActivityDetector._event_time('2026-09-19T12:00:01Z')
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'TB')
+        self._append_turn('t1', 'turn_aborted', 'TB')
+        # Ledger turn A is older, inside the skew window: still stale.
+        self._write_ledger([dict(thread_id='t1', turn_id='LA',
+                                 status='inProgress',
+                                 started_at=end - 3)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), [])
+        # A strictly newer ledger turn still recovers.
+        self._write_ledger([dict(thread_id='t1', turn_id='LC',
+                                 status='inProgress',
+                                 started_at=end + 10)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['t1'])
+
+    def test_close_turn_ids_within_skew_stay_distinct(self):
+        import time
+        from usage import CodexActivityDetector
+        base = CodexActivityDetector._event_time('2026-09-19T12:00:01Z')
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'TA')
+        self._append_turn('t1', 'task_complete', 'TA')
+        self._append_turn('t1', 'task_started', 'TB')
+        # Ledger terminal for TA starts 2s after TB's open: ids
+        # differ, so TA cannot close TB despite proximity.
+        self._write_ledger([dict(thread_id='t1', turn_id='TA',
+                                 status='completed',
+                                 started_at=base + 2)])
+        store = CodexStore(self.home)
+        self._both(store, self._rows(), ['t1'])
+        self._append_turn('t1', 'turn_aborted', 'TB')
+        self._both(store, self._rows(), [])
+
+    def test_recovery_reaches_provider_projection(self):
+        import time
+        now = time.time()
+        write_home(str(self.home), [{'id': 't1'}])
+        self._append_turn('t1', 'task_started', 'TA')
+        self._append_turn('t1', 'task_complete', 'TA')
+        self._write_ledger([dict(thread_id='t1', turn_id='TB',
+                                 status='inProgress', started_at=now)])
+        store = CodexStore(self.home)
+        read = store.read(active_title='nope', scope='global',
+                          activity_detection_valid=True)
+        tasks = read.get('active_tasks') or []
+        self.assertEqual([t['task_key'] for t in tasks], ['t1'])
+        self.assertTrue(tasks[0]['working'])
 
 
 class ActiveTaskPollerTests(unittest.TestCase):

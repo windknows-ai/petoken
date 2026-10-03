@@ -482,8 +482,8 @@ class CloseSafetyTests(unittest.TestCase):
             poller.close()
             poller.close()  # idempotent
             after = poller.poll({'scope': 'global'})
-            self.assertEqual(after['generation'], gen)
-            self.assertEqual(poller.generation, gen)
+            self.assertEqual(after['generation'], gen + 1)
+            self.assertEqual(poller.generation, gen + 1)
             self.assertEqual(poller._status, status_before)
             self.assertTrue(poller.drain(timeout=5))
         finally:
@@ -497,8 +497,8 @@ class ShutdownSubprocessTests(unittest.TestCase):
             child.write_text(
                 "import sys, tempfile, threading\n"
                 "from pathlib import Path\n"
-                "sys.path.insert(0, r'D:\\Documents\\ChatGPT\\codex-widget')\n"
-                "sys.path.insert(0, r'D:\\Documents\\ChatGPT\\codex-widget\\tests')\n"
+                f"sys.path.insert(0, {str(Path(__file__).resolve().parents[1])!r})\n"
+                f"sys.path.insert(0, {str(Path(__file__).resolve().parent)!r})\n"
                 "from provider_poller import ProviderPoller\n"
                 "from test_providers import write_home\n"
                 "from test_opencode_provider import write_store, make_session\n"
@@ -1049,8 +1049,8 @@ class LoopTickFallbackTests(unittest.TestCase):
         poller.close()
         out = poller.loop_tick({'scope': 'global'}, now=NOW_S)
         self.assertIsNotNone(out['result'].get('generation'))
-        self.assertEqual(out['generation'], gen)
-        self.assertEqual(poller.generation, gen)
+        self.assertEqual(out['generation'], gen + 1)
+        self.assertEqual(poller.generation, gen + 1)
         self.assertEqual(poller.selection.snapshot(), snapshot_before)
 
     def test_loop_tick_success_never_stamps_use(self):
@@ -1223,8 +1223,8 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
         out = poller.loop_tick(dict(prefs), now=NOW_S,
                                reset_requested=True)
         self.assertIsNotNone(out['result'].get('generation'))
-        self.assertEqual(out['generation'], gen)
-        self.assertEqual(poller.generation, gen)
+        self.assertEqual(out['generation'], gen + 1)
+        self.assertEqual(poller.generation, gen + 1)
         self.assertEqual(poller.selection.snapshot(), snapshot_before)
 
     def test_held_opencode_read_survives_failed_reset(self):
@@ -1719,8 +1719,8 @@ class QtFallbackBridgeTests(unittest.TestCase):
         poller.close()
         snap = self.panel.read_loop_once()
         self.assertIsNotNone(snap['result'].get('generation'))
-        self.assertEqual(snap['generation'], gen)
-        self.assertEqual(poller.generation, gen)
+        self.assertEqual(snap['generation'], gen + 1)
+        self.assertEqual(poller.generation, gen + 1)
 
     def test_current_decide_failure_renders_coherent_opencode(self):
         poller = self._seed_both()
