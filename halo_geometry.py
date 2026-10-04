@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import NamedTuple
 
-from pet_geometry import STAR_PAIR_MARGIN as PAIR_MARGIN, footprint_in_workarea, footprints_collide
+from pet_geometry import STAR_PAIR_MARGIN as PAIR_MARGIN, clamp_position, footprint_in_workarea, footprints_collide
 
 
 HIT_RADIUS = 22
@@ -27,6 +27,11 @@ class HaloPose(NamedTuple):
     rx: float
     ry: float
     tilt: float  # Radians, like the phase passed to project().
+
+
+class HaloPlacement(NamedTuple):
+    pet_rect: tuple
+    pose: HaloPose | None
 
 
 def projected_bounds(pose):
@@ -75,6 +80,55 @@ def fit_pose(pet_rect, screen_rect):
     cx = min(max(px + width / 2, left + ex), right + 1 - ex)
     cy = min(max(py + height * 0.60, top + ey), bottom + 1 - ey)
     return HaloPose(cx, cy, rx, ry, DEFAULT_TILT)
+
+
+def clamp_composition(pet_rect, screen_rect):
+    """Clamp the pet and its centered closed-cycle halo as one composition.
+
+    Pet origins are integer QWidget coordinates; dimensions are preserved.
+    A None pose means the workarea cannot contain the body and eight safe
+    fixed-size hits together. The returned pet is still normally clamped;
+    callers may hide or clip decoration, but cannot claim safe halo hits.
+    """
+    px, py, width, height = pet_rect
+    left, top, right, bottom = screen_rect
+    if (not all(math.isfinite(v) for v in (*pet_rect, *screen_rect))
+            or width <= 0 or height <= 0 or right < left or bottom < top):
+        raise ValueError('invalid pet rectangle or workarea')
+    x, y = clamp_position(round(px), round(py), width, height, screen_rect)
+    fallback = HaloPlacement((x, y, width, height), None)
+    if width > right + 1 - left or height > bottom + 1 - top:
+        return fallback
+
+    # The nearest body-contained integer origin to the workarea midpoint
+    # gives the largest symmetric halo, including an odd-width pixel grid.
+    best_x, best_y = clamp_position(
+        round((left + right + 1) / 2 - width / 2),
+        round((top + bottom + 1) / 2 - height * .60),
+        width, height, screen_rect)
+    cx, cy = best_x + width / 2, best_y + height * .60
+    x_limit = min(cx - left, right + 1 - cx) - MARGIN_X
+    y_limit = min(cy - top, bottom + 1 - cy) - MARGIN_Y
+    if min(x_limit, y_limit) < MIN_AXIS:
+        return fallback
+
+    rx, ry = max(MIN_AXIS, width * .58), max(MIN_AXIS, height * .25)
+    c, s = math.cos(DEFAULT_TILT), math.sin(DEFAULT_TILT)
+    dx, dy = rx - MIN_AXIS, ry - MIN_AXIS
+    fraction = min(1.0, _axis_fit(x_limit, dx, dy, c, s),
+                   _axis_fit(y_limit, dy, dx, c, s))
+    rx, ry = MIN_AXIS + dx * fraction, MIN_AXIS + dy * fraction
+    ex = math.hypot(rx * c, ry * s) + MARGIN_X
+    ey = math.hypot(rx * s, ry * c) + MARGIN_Y
+    # Epsilon corrects analytic-root roundoff before integer ceil/floor.
+    xmin = math.ceil(max(left, left + ex - width / 2) - 1e-9)
+    xmax = math.floor(min(right + 1 - width, right + 1 - ex - width / 2) + 1e-9)
+    ymin = math.ceil(max(top, top + ey - height * .60) - 1e-9)
+    ymax = math.floor(min(bottom + 1 - height, bottom + 1 - ey - height * .60) + 1e-9)
+    x, y = min(max(round(px), xmin), xmax), min(max(round(py), ymin), ymax)
+    return HaloPlacement((x, y, width, height),
+                         HaloPose(x + width / 2, y + height * .60,
+                                  rx, ry, DEFAULT_TILT))
 
 
 def project(pose, angle_rad):

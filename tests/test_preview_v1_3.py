@@ -2,6 +2,7 @@
 from contextlib import ExitStack, redirect_stderr
 from io import StringIO
 import json
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -9,20 +10,19 @@ from unittest.mock import patch
 
 from PySide6.QtWidgets import QApplication, QComboBox, QLabel
 from PySide6.QtGui import QColor, QImage, QPixmap
-from tools.preview_v1_3 import ANCHORS, Preview, fixture_tasks, main
+from pet_assets import PREVIEW_STATES
+import halo_geometry
+from tools.preview_v1_3 import ANCHORS, MAX_TASKS, Preview, fixture_tasks, main, parse_args
 
 
-class PreviewTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.app = QApplication.instance() or QApplication([])
-
+class PreviewFixtureTests(unittest.TestCase):
     def test_fixture_unknown_zero_partial_and_provider_identity(self):
-        for count in (0, 1, 8):
+        for count in (0, 1, 8, 24, 64):
             tasks = fixture_tasks(count)
             self.assertEqual(len(tasks), count)
             self.assertEqual(len({(t['provider_id'], t['task_key']) for t in tasks}), count)
             self.assertTrue(all(task['provider_id'] == 'codex' for task in tasks))
+            self.assertEqual(len({t['presentation']['tokens']['total_tokens'] for t in tasks}), count)
         for case in ('zero', 'unknown', 'partial'):
             for task in fixture_tasks(2, case=case):
                 projection = task['presentation']
@@ -44,6 +44,59 @@ class PreviewTests(unittest.TestCase):
         long_labels = fixture_tasks(1, case='long_labels')[0]
         self.assertGreater(len(long_labels['display']['project']), 100)
         self.assertGreater(len(long_labels['presentation']['model']), 100)
+
+    def test_cli_accepts_all_registered_poses_and_large_task_numbers(self):
+        for pose in PREVIEW_STATES:
+            for count in (24, MAX_TASKS):
+                with self.subTest(pose=pose, count=count):
+                    args = parse_args(['--pose', pose, '--count', str(count),
+                                       '--expand', str(count), '--smoke', '1'])
+                    self.assertEqual((args.pose, args.count, args.expand), (pose, count, count))
+
+    def test_cli_rejects_outside_fixture_bounds_before_gui_start(self):
+        for argv in (['--count', '-1'], ['--count', str(MAX_TASKS + 1)],
+                     ['--count', '24', '--expand', '25'], ['--expand', '0'],
+                     ['--pose', 'invented']):
+            with self.subTest(argv=argv), redirect_stderr(StringIO()), self.assertRaises(SystemExit) as result:
+                parse_args(argv)
+            self.assertEqual(result.exception.code, 2)
+
+
+class PreviewTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def test_all_activity_pose_controls_render_distinct_artwork_and_usage_alias(self):
+        with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
+            stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
+            monitor = stack.enter_context(patch('activity.ActivityMonitor.start',
+                                                side_effect=AssertionError('Live monitor started')))
+            preview = Preview(count=0)
+            try:
+                self.assertEqual(tuple(preview.pose.itemText(i) for i in range(preview.pose.count())),
+                                 PREVIEW_STATES)
+                self.assertEqual(preview.count.maximum(), MAX_TASKS)
+                self.assertEqual(preview.detail_task.maximum(), MAX_TASKS)
+                preview.motion.setChecked(False)
+                painted = {}
+                for pose in PREVIEW_STATES:
+                    preview.pose.setCurrentText(pose)
+                    self.assertEqual(preview.pet.current_state, pose)
+                    image = preview.pet.grab().toImage().convertToFormat(QImage.Format_RGBA8888)
+                    self.assertFalse(image.isNull())
+                    painted[pose] = hashlib.sha256(bytes(image.constBits())).hexdigest()
+                self.assertEqual(len({painted[pose] for pose in PREVIEW_STATES if pose != 'usage'}), 5)
+                self.assertEqual(painted['usage'], painted['idle'])
+                labels = '\n'.join(label.text() for label in preview.findChildren(QLabel))
+                self.assertIn('usage uses idle artwork', labels)
+                self.assertIn('do not verify live detection', labels)
+                monitor.assert_not_called()
+            finally:
+                preview.cleanup()
+                preview.close()
+                preview.deleteLater()
+                self.app.processEvents()
 
     def test_preview_isolated_controls_and_cleanup(self):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
@@ -78,10 +131,16 @@ class PreviewTests(unittest.TestCase):
                 preview.motion.setChecked(False)
                 self.assertFalse(preview.panel.prefs['pet_motion'])
                 preview.visible.setChecked(False)
-                self.assertFalse(preview.panel.task_manager.window_for(('codex', 'synthetic-qa-1')).isVisible())
+                self.assertFalse(preview.panel.isVisible())
+                self.assertTrue(preview.panel.task_manager.window_for(('codex', 'synthetic-qa-1')).isVisible())
                 preview.visible.setChecked(True)
+                preview.ring.setChecked(False)
+                self.assertFalse(preview.panel.prefs['star_ring_enabled'])
+                self.assertFalse(preview.panel.task_manager.window_for(('codex', 'synthetic-qa-1')).isVisible())
                 preview.language.setCurrentText('en')
                 self.assertEqual(preview.panel.language, 'en')
+                self.assertFalse(preview.panel.task_manager.window_for(('codex', 'synthetic-qa-1')).isVisible())
+                preview.ring.setChecked(True)
                 preview.count.setValue(0)
                 self.assertEqual(preview.panel.task_manager.window_count(), 0)
                 self.assertIn('SYNTHETIC QA', preview.panel.connection.text())
@@ -148,6 +207,46 @@ class PreviewTests(unittest.TestCase):
                 self.app.processEvents()
             self.assertIsNone(manager.detail_window)
 
+    def test_large_fixture_paging_and_off_page_detail_controls(self):
+        with tempfile.TemporaryDirectory() as directory, patch('widget.PREF_DIR', Path(directory)):
+            preview = Preview(count=24)
+            manager = preview.panel.task_manager
+            try:
+                for count in (24, MAX_TASKS):
+                    with self.subTest(count=count):
+                        preview.count.setValue(count)
+                        self.assertEqual(manager.total_task_count(), count)
+                        self.assertEqual(len(manager.task_identities()), count)
+                        self.assertLessEqual(manager.window_count(), 8)
+                        self.assertEqual(manager.page_count, (count + 7) // 8)
+                        labels = dict(manager._labels)
+                        preview.detail_task.setValue(count)
+                        key = next(key for key in manager.task_identities() if labels[key] == count)
+                        self.assertNotIn(key, manager.window_identities())
+                        preview.toggle_detail()
+                        self.assertEqual(manager.expanded_identity, key)
+                        self.assertTrue(manager.detail_window.isVisible())
+                        self.assertEqual(manager.page_index, (count - 1) // 8)
+                        self.assertEqual(preview.page.value(), manager.page_index + 1)
+                        self.assertEqual(manager._labels, labels)
+                        preview.toggle_detail()
+                        self.assertIsNone(manager.expanded_identity)
+                        preview.page.setValue(1)
+                        self.assertEqual(manager.page_index, 0)
+                        self.assertLessEqual(manager.window_count(), 8)
+                output = Path(directory) / 'large-fixture.png'
+                preview.capture(output)
+                evidence = json.loads(output.with_suffix('.json').read_text(encoding='utf-8'))
+                self.assertEqual(evidence['task_count'], MAX_TASKS)
+                self.assertEqual(evidence['requested_task_count'], MAX_TASKS)
+                self.assertLessEqual(evidence['star_window_count'], 8)
+                self.assertEqual(evidence['page_count'], 8)
+            finally:
+                preview.cleanup()
+                preview.close()
+                preview.deleteLater()
+                self.app.processEvents()
+
     def test_anchor_controls_use_actual_clamped_pet_position(self):
         with tempfile.TemporaryDirectory() as directory, patch('widget.PREF_DIR', Path(directory)):
             preview = Preview(count=0)
@@ -158,14 +257,25 @@ class PreviewTests(unittest.TestCase):
                         preview.anchor.setCurrentText(anchor)
                         rectangle = preview.pet.geometry()
                         self.assertTrue(screen.contains(rectangle))
-                        if 'left' in anchor:
-                            self.assertEqual(rectangle.left(), screen.left())
-                        if 'right' in anchor:
-                            self.assertEqual(rectangle.right(), screen.right())
-                        if 'top' in anchor:
-                            self.assertEqual(rectangle.top(), screen.top())
-                        if 'bottom' in anchor:
-                            self.assertEqual(rectangle.bottom(), screen.bottom())
+                        requested_x = (screen.left() if 'left' in anchor else
+                                       screen.right() - rectangle.width() + 1 if 'right' in anchor else
+                                       screen.center().x() - rectangle.width() // 2)
+                        requested_y = (screen.top() if 'top' in anchor else
+                                       screen.bottom() - rectangle.height() + 1 if 'bottom' in anchor else
+                                       screen.center().y() - rectangle.height() // 2)
+                        expected = halo_geometry.clamp_composition(
+                            (requested_x, requested_y, rectangle.width(), rectangle.height()),
+                            (screen.left(), screen.top(), screen.right(), screen.bottom()))
+                        self.assertEqual((rectangle.x(), rectangle.y(), rectangle.width(), rectangle.height()),
+                                         expected.pet_rect)
+                        self.assertIsNotNone(expected.pose)
+                        self.assertEqual(expected.pose.cx, rectangle.x() + rectangle.width() / 2)
+                        self.assertEqual(expected.pose.cy, rectangle.y() + rectangle.height() * .60)
+                        left, top, right, bottom = halo_geometry.projected_bounds(expected.pose)
+                        self.assertGreaterEqual(left, screen.left())
+                        self.assertGreaterEqual(top, screen.top())
+                        self.assertLessEqual(right, screen.right() + 1)
+                        self.assertLessEqual(bottom, screen.bottom() + 1)
             finally:
                 preview.cleanup()
                 preview.close()
@@ -177,6 +287,9 @@ class PreviewTests(unittest.TestCase):
             preview = Preview(count=3, case='partial')
             try:
                 preview.toggle_detail()
+                # This assertion covers the settled card; opening opacity is
+                # separately represented by the owned transition snapshot.
+                preview.panel.task_manager.detail_transition.animation.setCurrentTime(220)
                 detail = preview.panel.task_manager.detail_window
                 self.assertTrue(detail.isVisible())
                 preview.panel.move(detail.pos())

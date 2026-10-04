@@ -1,4 +1,6 @@
-# V1.3 Codex companion: human visual QA
+# Historical V1.3 Codex companion: human visual QA
+
+Superseded for the current development preview by [V1.4 visual QA](V1_4_VISUAL_QA.md). The following records the prior V1.3 package and its historical technical scope.
 
 **Human visual acceptance pending.** The current compact tilted star ring, pearl/cyan/lavender Stars, longer tapered trails, attached drag and Codex-only product have passed873 native regression tests and independent native source/layering review. Screen-edge motion is driven by the shared ring phase and does not require a travel path. Native topmost toggles and depth crossings preserve correct occlusion, editor visibility and focus. The isolated development package is for the walkthrough below; it does not replace the stable installation. No release or publication is authorized.
 

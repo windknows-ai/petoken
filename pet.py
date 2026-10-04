@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
 import pet_assets as assets
 import pet_geometry as geometry
+import halo_geometry
 import theme
 from token_format import format_tokens
 
@@ -132,6 +133,19 @@ class DesktopPet(QWidget):
 
     def hideEvent(self,event):
         self.timer.stop()
+
+    def _workarea_changed(self, *_):
+        self.move_clamped(self.pos())
+
+    def closeEvent(self, event):
+        screen = getattr(self, '_halo_screen', None)
+        if screen is not None:
+            try:
+                screen.availableGeometryChanged.disconnect(self._workarea_changed)
+            except (RuntimeError, TypeError):
+                pass
+            self._halo_screen = None
+        super().closeEvent(event)
 
     def update_activity(self):
         now=time.monotonic()
@@ -371,8 +385,20 @@ class DesktopPet(QWidget):
     def move_clamped(self,point):
         screen=QApplication.screenAt(point+self.rect().center()) or QApplication.primaryScreen()
         r=screen.availableGeometry()
-        x,y=geometry.clamp_position(point.x(),point.y(),self.width(),self.height(),
-                                    (r.left(),r.top(),r.right(),r.bottom()))
+        previous = getattr(self, '_halo_screen', None)
+        if previous is not screen:
+            if previous is not None:
+                try:
+                    previous.availableGeometryChanged.disconnect(self._workarea_changed)
+                except (RuntimeError, TypeError):
+                    pass
+            screen.availableGeometryChanged.connect(self._workarea_changed)
+            self._halo_screen = screen
+        self.halo_screen_rect = (r.left(), r.top(), r.right(), r.bottom())
+        self.halo_placement = halo_geometry.clamp_composition(
+            (point.x(), point.y(), self.width(), self.height()),
+            (r.left(), r.top(), r.right(), r.bottom()))
+        x, y = self.halo_placement.pet_rect[:2]
         # Explicit drag/keyboard/position commands carry the whole composition.
         # A queued geometry observation still uses the manager's bounded glide.
         self._anchor_transporting = True
@@ -380,3 +406,7 @@ class DesktopPet(QWidget):
             self.move(x,y)
         finally:
             self._anchor_transporting = False
+        # QWidget emits no moveEvent when resize/clamping keeps the same origin.
+        manager = getattr(self.panel, 'task_manager', None)
+        if manager is not None and getattr(self.panel, 'pet', None) is self:
+            manager.anchor_changed(transport=True)

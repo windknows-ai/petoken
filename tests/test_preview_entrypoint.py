@@ -6,6 +6,13 @@ import widget
 
 
 class PreviewEntrypointTests(unittest.TestCase):
+    def test_v14_dispatch_alias_is_isolated(self):
+        with patch('widget.sys.argv', ['petoken', '--preview-v1-4', '--count', '24']), \
+                patch('tools.preview_v1_3.main', return_value=0) as preview, \
+                patch('widget.QApplication', side_effect=AssertionError('Live Qt startup')):
+            self.assertEqual(widget.main(), 0)
+            preview.assert_called_once_with(['--count', '24'])
+
     def test_dispatch_before_live_startup(self):
         arguments = ['--count', '2', '--provider', 'codex', '--language', 'zh_CN',
                      '--anchor', 'bottom-right', '--expand', '1']

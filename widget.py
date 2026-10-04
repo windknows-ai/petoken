@@ -23,6 +23,7 @@ from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
 from trail_overlay import TrailOverlay
 from halo_scene import HaloScene
+from detail_transition import DetailTransition
 import halo_geometry
 import pet_assets as assets
 import pet_geometry as pet_geometry
@@ -713,8 +714,8 @@ class TaskOrbWindow(QWidget):
         painter.setOpacity(.72 + .28 * (self.depth + 1) / 2)
         cx, cy = pet_geometry.TASK_STAR_CENTER
         glow = QRadialGradient(cx, cy, 22)
-        glow.setColorAt(0, QColor(235, 234, 255, 85))
-        glow.setColorAt(.35, QColor(183, 170, 245, 32))
+        glow.setColorAt(0, QColor(245, 240, 255, 170))
+        glow.setColorAt(.35, QColor(173, 156, 255, 95))
         glow.setColorAt(1, QColor(158, 144, 222, 0))
         painter.setPen(Qt.NoPen)
         painter.setBrush(glow)
@@ -728,7 +729,7 @@ class TaskOrbWindow(QWidget):
         fill.setColorAt(.38, QColor('#ffffff'))
         fill.setColorAt(.55, QColor('#d6eaff'))
         fill.setColorAt(1, QColor('#a498e0'))
-        painter.setPen(QPen(QColor('#8c7fc5'), .85))
+        painter.setPen(QPen(QColor('#9b84ea'), 1.15))
         painter.setBrush(fill)
         painter.drawPolygon(polygon)
         # Alternating cuts keep the crystal legible at its real desktop size.
@@ -943,6 +944,15 @@ def _plan_parking_routes(inputs):
             'deferred': set()}
 
 
+class TaskPageControls(QWidget):
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBrush(QColor('#24233C'))
+        painter.setPen(QPen(QColor('#8E84BD'), 1))
+        painter.drawRoundedRect(QRectF(self.rect()).adjusted(.5, .5, -.5, -.5), 14, 14)
+
+
 class TaskPanelManager(HaloScene):
     """Own stable task Stars, task-local detail and the compact halo scene.
 
@@ -987,8 +997,12 @@ class TaskPanelManager(HaloScene):
         self._last_tick_center = None
         self._last_generation = None
         self._visible = True
+        self.page_index = 0
+        self._page_keys = []
+        self.page_controls = None
         self.last_activated = None
         self.detail_window = None
+        self.detail_transition = DetailTransition(panel)
         self.expanded_identity = None
         self.expanded_anchor = None
         self._expansion_geometry = None
@@ -1018,6 +1032,91 @@ class TaskPanelManager(HaloScene):
     def window_count(self):
         return len(self._windows)
 
+    def task_identities(self):
+        return sorted(self._universe, key=lambda k: self._slots[k])
+
+    def total_task_count(self):
+        return len(self._page_keys)
+
+    @property
+    def page_count(self):
+        return max(1, math.ceil(self.total_task_count() / halo_geometry.MAX_SAFE_STARS))
+
+    def set_page(self, index):
+        if self._shutdown or self.legacy_exterior_motion:
+            return
+        index = max(0, min(int(index), self.page_count - 1))
+        if index == self.page_index:
+            return
+        self.collapse_detail(replan=False)
+        self.page_index = index
+        self.apply_snapshot(list(self._universe.values()), self._task_preference,
+                            self._last_generation, self._task_language,
+                            self._last_pet_rect, self._last_screen_rect)
+
+    def activate_task(self, identity, keyboard=False):
+        if identity not in self._page_keys or self._shutdown:
+            return
+        if not self.legacy_exterior_motion:
+            self.set_page(self._page_keys.index(identity) // halo_geometry.MAX_SAFE_STARS)
+        self.orb_activated(identity, keyboard=keyboard)
+
+    def _update_page_controls(self):
+        if self.legacy_exterior_motion:
+            return
+        if self.page_controls is None and self.total_task_count() > halo_geometry.MAX_SAFE_STARS:
+            self.page_controls = TaskPageControls(None, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+            self.page_controls.setAttribute(Qt.WA_ShowWithoutActivating)
+            self.page_controls.setAttribute(Qt.WA_TranslucentBackground)
+            self.page_controls.setObjectName('pages')
+            self.page_controls.setStyleSheet(STYLE)
+            row = QHBoxLayout(self.page_controls)
+            row.setContentsMargins(4, 1, 4, 1)
+            self.page_previous = QPushButton('‹')
+            self.page_next = QPushButton('›')
+            self.page_caption = QLabel()
+            self.page_caption.setAlignment(Qt.AlignCenter)
+            for control, direction in ((self.page_previous, -1), (self.page_next, 1)):
+                control.setFixedWidth(28)
+                control.clicked.connect(lambda checked=False, d=direction: self.set_page(self.page_index + d))
+            row.addWidget(self.page_previous)
+            row.addWidget(self.page_caption, 1)
+            row.addWidget(self.page_next)
+            self.page_controls.setFixedSize(168, 32)
+        if self.page_controls is None:
+            return
+        start = self.page_index * halo_geometry.MAX_SAFE_STARS + 1
+        end = min(start + halo_geometry.MAX_SAFE_STARS - 1, self.total_task_count())
+        self.page_caption.setText(f'{start}–{end} / {self.total_task_count()}')
+        self.page_previous.setEnabled(self.page_index > 0)
+        self.page_next.setEnabled(self.page_index + 1 < self.page_count)
+        zh = self._task_language == 'zh_CN'
+        self.page_previous.setAccessibleName('上一页任务' if zh else 'Previous task page')
+        self.page_next.setAccessibleName('下一页任务' if zh else 'Next task page')
+        self.page_controls.setToolTip('全部任务可在 Usage Panel 的任务菜单中直接选择' if zh else 'Select any task directly from the Usage Panel task menu')
+        x, y, width, height = self._last_pet_rect
+        pose = self._halo_pose or self._fit_halo_pose(self._last_pet_rect, self._last_screen_rect)
+        left, top, right, bottom = halo_geometry.projected_bounds(pose)
+        left, top = min(left, x), min(top, y)
+        right, bottom = max(right, x + width), max(bottom, y + height)
+        candidates = ((round(pose.cx - 84), math.ceil(bottom) + 8),
+                      (round(pose.cx - 84), math.floor(top) - 40),
+                      (math.ceil(right) + 8, round(pose.cy - 16)),
+                      (math.floor(left) - 176, round(pose.cy - 16)))
+        area = QRect(self._last_screen_rect[0], self._last_screen_rect[1],
+                     self._last_screen_rect[2] - self._last_screen_rect[0] + 1,
+                     self._last_screen_rect[3] - self._last_screen_rect[1] + 1)
+        position = next((p for p in candidates if area.contains(QRect(*p, 168, 32))), None)
+        # When no adjacent strip fits, the Hub menu still exposes every task.
+        # An opaque pager must never cover the ring's interactive numbers.
+        if position is not None:
+            self.page_controls.move(*position)
+        on_top = bool((getattr(self.panel, 'prefs', None) or {}).get('always_on_top', True))
+        if bool(self.page_controls.windowFlags() & Qt.WindowStaysOnTopHint) != on_top:
+            self.page_controls.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
+        self.page_controls.setVisible(position is not None and self._visible
+                                      and self.total_task_count() > halo_geometry.MAX_SAFE_STARS)
+
     def label_text(self, identity, language):
         return text('task_panel_label', language, n=self._labels.get(identity, 0))
 
@@ -1037,7 +1136,13 @@ class TaskPanelManager(HaloScene):
         screen = (QApplication.screenAt(geometry.center())
                   or QApplication.primaryScreen())
         r = screen.availableGeometry()
-        return pet_rect, (r.left(), r.top(), r.right(), r.bottom())
+        screen_rect = (r.left(), r.top(), r.right(), r.bottom())
+        if (pet is not None and not self.legacy_exterior_motion
+                and getattr(pet, 'halo_screen_rect', None) != screen_rect):
+            pet.move_clamped(pet.pos())
+            g = pet.geometry()
+            pet_rect = (g.x(), g.y(), g.width(), g.height())
+        return pet_rect, screen_rect
 
     def apply_snapshot(self, tasks, preference='auto', generation=None,
                        language=None, pet_rect=None, screen_rect=None):
@@ -1071,6 +1176,10 @@ class TaskPanelManager(HaloScene):
         retired = [k for k in self._universe if k not in seen]
         for key in retired:
             self._universe.pop(key, None)
+        card = self.detail_window
+        if (self.detail_transition.running and card is not None and card.entry is not None
+                and task_identity(card.entry) not in self._universe):
+            self.detail_transition.cancel()
         for key in [k for k in self._labels if k not in self._universe]:
             self._labels.pop(key, None)
             self._slots.pop(key, None)
@@ -1086,6 +1195,15 @@ class TaskPanelManager(HaloScene):
                 self._slots[key] = self._claim_number(set(self._slots.values()))
         ordered_universe = order_tasks(list(self._universe.values()))
         wanted = [t for t in filter_tasks_for_preference(ordered_universe, preference)]
+        self._page_keys = sorted((task_identity(t) for t in wanted), key=lambda k: self._slots[k])
+        if not self.legacy_exterior_motion:
+            self._visible = bool((getattr(self.panel, 'prefs', None) or {}).get('star_ring_enabled', True))
+            self.page_index = min(self.page_index, self.page_count - 1)
+            if self.expanded_identity in self._page_keys:
+                self.page_index = self._page_keys.index(self.expanded_identity) // halo_geometry.MAX_SAFE_STARS
+            page_keys = set(self._page_keys[self.page_index * halo_geometry.MAX_SAFE_STARS:
+                                            (self.page_index + 1) * halo_geometry.MAX_SAFE_STARS])
+            wanted = [t for t in wanted if task_identity(t) in page_keys]
         wanted_keys = [task_identity(t) for t in wanted]
         if self.expanded_identity is not None and self.expanded_identity not in wanted_keys:
             self.collapse_detail(replan=False)
@@ -1128,6 +1246,7 @@ class TaskPanelManager(HaloScene):
             self.collapse_detail(replan=False)
         self._last_pet_rect = pet_rect
         self._last_screen_rect = screen_rect
+        self._update_page_controls()
         on_top = bool((getattr(self.panel, 'prefs', None) or {}).get('always_on_top', True))
         for task in wanted:
             key = task_identity(task)
@@ -2621,19 +2740,26 @@ class TaskPanelManager(HaloScene):
         self.expanded_anchor = (orb.x(), orb.y())
         self._last_tick = None
         self._clear_trails()
-        self._refresh_detail()
-        self.detail_window.show()
+        self._refresh_detail(preserve_transition=True)
+        self.detail_transition.open(self.detail_window,
+            (orb.x() + pet_geometry.TASK_STAR_CENTER[0], orb.y() + pet_geometry.TASK_STAR_CENTER[1]),
+            animated=self._motion_enabled() and not self.legacy_exterior_motion)
         self.detail_window.raise_()
+        if not self.legacy_exterior_motion:
+            self._stack_halo(force=True)
         if keyboard:
             self.detail_window.activateWindow()
             self.detail_window.collapse_button.setFocus(Qt.ShortcutFocusReason)
 
-    def _refresh_detail(self):
+    def _refresh_detail(self, preserve_transition=False):
         identity = self.expanded_identity
         if identity is None or identity not in self._universe:
             return
         provider = identity[0]
         card = self.detail_window
+        if (not preserve_transition or card is None or card.entry is None
+                or task_identity(card.entry) != identity):
+            self.detail_transition.cancel()
         if card is not None and card.provider_id != provider:
             card.manager = None
             card.close()
@@ -2667,12 +2793,18 @@ class TaskPanelManager(HaloScene):
         if self.expanded_identity is None:
             return
         dirty = self._expansion_dirty or self._motion_enabled() != self._last_motion_enabled
+        anchor = self.expanded_anchor
         self.expanded_identity = None
         self.expanded_anchor = None
         self._expansion_geometry = None
         self._expansion_dirty = False
         if self.detail_window is not None:
-            self.detail_window.hide()
+            self.detail_transition.close(self.detail_window,
+                (anchor[0] + pet_geometry.TASK_STAR_CENTER[0], anchor[1] + pet_geometry.TASK_STAR_CENTER[1]),
+                animated=replan and self._visible and not self._shutdown
+                         and self._motion_enabled() and not self.legacy_exterior_motion)
+        else:
+            self.detail_transition.cancel()
         self._clear_interaction_holds()
         self._last_tick = None
         if dirty:
@@ -2693,12 +2825,13 @@ class TaskPanelManager(HaloScene):
         if not self.legacy_exterior_motion:
             if self._shutdown or getattr(self.panel, 'closing', False):
                 return
+            self.detail_transition.cancel()
             pet_rect, screen_rect = self._anchor()
             if self.expanded_identity is not None:
                 self._expansion_dirty = True
                 self.collapse_detail(replan=False)
-            self._halo_target = halo_geometry.fit_pose(pet_rect, screen_rect)
-            if transport and self._windows and self._halo_pose is not None:
+            self._halo_target = self._fit_halo_pose(pet_rect, screen_rect)
+            if transport and self._halo_pose is not None:
                 # Intentional pet movement transports the attached scene. The
                 # shared orbit phase/slot offsets do not jump or catch up.
                 self._halo_pose = self._halo_target
@@ -2707,6 +2840,7 @@ class TaskPanelManager(HaloScene):
                 self._clear_interaction_holds()
                 self._last_tick = None
                 self._halo_commit(0.0, record=False)
+                self._update_page_controls()
             self.sync_motion()
             return
         if (self._shutdown or getattr(self.panel, 'closing', False)
@@ -3348,7 +3482,7 @@ class TaskPanelManager(HaloScene):
         self._refresh_detail()
 
     def set_visible(self, visible):
-        """Hide/show all task stars together with the main panel.
+        """Explicitly enable/disable the ring independently of the Hub.
 
         Staged newcomers stay hidden on restore: only the staged
         reveal path (validated final slots) may expose them.
@@ -3356,7 +3490,10 @@ class TaskPanelManager(HaloScene):
         if self._shutdown:
             return
         self._visible = bool(visible)
+        if not self.legacy_exterior_motion:
+            (getattr(self.panel, 'prefs', None) or {})['star_ring_enabled'] = self._visible
         if not self._visible:
+            self.detail_transition.cancel()
             self._clear_trails()
             self.collapse_detail(replan=False)
             self._cancel_park_planning()
@@ -3379,8 +3516,9 @@ class TaskPanelManager(HaloScene):
             self._hovered = None
         self.sync_motion()
         if not self.legacy_exterior_motion:
-            self.back_overlay.setVisible(bool(self._visible and self._windows))
-            self.trail_overlay.setVisible(bool(self._visible and self._windows))
+            self.back_overlay.setVisible(self._visible and self._halo_pose is not None)
+            self.trail_overlay.setVisible(self._visible and self._halo_pose is not None)
+            self._update_page_controls()
             self._stack_halo(force=True)
         if not self._visible:
             try:
@@ -3391,6 +3529,7 @@ class TaskPanelManager(HaloScene):
 
     def apply_topmost(self, on_top):
         """Mirror the always-on-top preference onto task stars."""
+        self.detail_transition.cancel()
         if not self.legacy_exterior_motion:
             layer = self.back_overlay
             visible = layer.isVisible()
@@ -3420,13 +3559,19 @@ class TaskPanelManager(HaloScene):
             # OFF/settled scenes have no timer to restore depth after HWND
             # recreation, so the preference boundary owns the native order.
             self._stack_halo(force=True)
+            self._update_page_controls()
 
     def shutdown(self):
         """Stop motion, close every task star and the trail layer."""
         if self._shutdown:
             return
         self._shutdown = True
+        if self.page_controls is not None:
+            self.page_controls.close()
+            self.page_controls.deleteLater()
+            self.page_controls = None
         self.collapse_detail(replan=False)
+        self.detail_transition.shutdown()
         if self.detail_window is not None:
             self.detail_window.manager = None
             self.detail_window.close()
@@ -3530,6 +3675,10 @@ class Settings(QDialog):
         self.topmost.setChecked(bool(panel.prefs.get('always_on_top', True)))
         self.topmost_label = label()
         self.form.addRow(self.topmost_label, self.topmost)
+        self.star_ring = QCheckBox()
+        self.star_ring.setChecked(bool(panel.prefs.get('star_ring_enabled', True)))
+        self.star_ring_label = label()
+        self.form.addRow(self.star_ring_label, self.star_ring)
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -3622,6 +3771,8 @@ class Settings(QDialog):
         self.topmost_label.setText(t('always_on_top'))
         self.topmost.setToolTip(t('always_on_top'))
         self.topmost.setAccessibleName(t('always_on_top'))
+        self.star_ring_label.setText(t('star_ring_enabled'))
+        self.star_ring.setAccessibleName(t('star_ring_enabled'))
         self.pet_scale_label.setText(t('character_size'))
         self.pet_scale.setToolTip(t('character_size'))
         self.pet_scale.setAccessibleName(t('character_size'))
@@ -3652,6 +3803,7 @@ class Settings(QDialog):
             self.token_format.findData(DEFAULT_TOKEN_NUMBER_FORMAT))
         self.currency.setCurrentIndex(self.currency.findData(DEFAULT_CURRENCY))
         self.topmost.setChecked(True)
+        self.star_ring.setChecked(True)
         self.pet_scale.setValue(pet_geometry.PET_SCALE_DEFAULT)
         self.apply_language()
 
@@ -3666,6 +3818,7 @@ class Settings(QDialog):
                      token_number_format=self.token_format.currentData(),
                      currency=self.currency.currentData(),
                      always_on_top=self.topmost.isChecked(),
+                     star_ring_enabled=self.star_ring.isChecked(),
                      pet_scale_percent=int(self.pet_scale.value()))
         # Legacy `manual_fx` / `prices` keys stay untouched in the file for
         # backward-compatible loading, but no longer drive pricing or FX.
@@ -3675,6 +3828,7 @@ class Settings(QDialog):
             self.error.setText(self.tr_text('settings_save_error'))
             return
         panel.prefs = prefs
+        panel.task_manager.set_visible(prefs['star_ring_enabled'])
         # Every save retires outstanding requests for the previous
         # settings, even when only scope/pinned changed: the new epoch
         # makes late completions identifiable as old. Only a changed-to-
@@ -3985,6 +4139,7 @@ class Panel(QWidget):
     def restore_companion(self):
         """Called after both windows exist; pinned startup uses the same anchor."""
         self.pet.show()
+        self.task_manager.apply_snapshot(list(self.task_manager._universe.values()))
         if self.is_pinned():
             self.pet.show_panel()
 
@@ -4309,7 +4464,7 @@ class Panel(QWidget):
 
     def refresh_task_controls(self, data=None):
         data = self.snapshot if data is None else data
-        count = self.task_manager.window_count()
+        count = self.task_manager.total_task_count()
         overview = self.tr_text('task_overview', count=count)
         self.tasks_button.setText(overview + ' ▾')
         self.tasks_button.setAccessibleName(overview)
@@ -4323,12 +4478,12 @@ class Panel(QWidget):
     def refresh_task_menu(self):
         self.task_menu.clear()
         manager = self.task_manager
-        for identity in manager.window_identities():
+        for identity in manager.task_identities():
             name = manager.label_text(identity, self.language)
             provider = PROVIDER_NAMES.get(identity[0], identity[0])
             action = self.task_menu.addAction(f'{name} · {provider}')
             action.setEnabled(identity not in manager._ring_staged)
-            action.triggered.connect(lambda checked=False, key=identity: manager.orb_activated(key, keyboard=True))
+            action.triggered.connect(lambda checked=False, key=identity: manager.activate_task(key, keyboard=True))
 
     def apply_hub_neutralization(self, provider_label, data):
         """Neutralize task identity on the companion hub when orbs exist.
@@ -4699,7 +4854,10 @@ class Panel(QWidget):
             self.hide()
         else:
             self.showMinimized()
-        self.task_manager.set_visible(False)
+        if self.task_manager.legacy_exterior_motion:
+            self.task_manager.set_visible(False)
+        else:
+            self.task_manager._stack_halo(force=True)
 
     def toggle_visible(self):
         if self.isVisible():
@@ -4707,7 +4865,10 @@ class Panel(QWidget):
         else:
             self.showNormal()
             self.raise_()
-            self.task_manager.set_visible(True)
+            if self.task_manager.legacy_exterior_motion:
+                self.task_manager.set_visible(True)
+            else:
+                self.task_manager._stack_halo(force=True)
 
     def closeEvent(self, event):
         if self.closing:
@@ -4736,14 +4897,14 @@ class Panel(QWidget):
 
 
 def main():
-    if '--preview-v1-3' in sys.argv[1:]:
+    if any(argument in ('--preview-v1-3', '--preview-v1-4') for argument in sys.argv[1:]):
         # Frozen/script entry is __main__; keep the preview on this module's
         # globals so its temporary preference directory isolates the real UI.
         if __name__ == '__main__':
             sys.modules['widget'] = sys.modules[__name__]
         from tools.preview_v1_3 import main as preview_main
         return preview_main([argument for argument in sys.argv[1:]
-                             if argument != '--preview-v1-3'])
+                             if argument not in ('--preview-v1-3', '--preview-v1-4')])
     parser = argparse.ArgumentParser()
     parser.add_argument('--smoke', type=Path, help='Save a local screenshot after five seconds and exit')
     args = parser.parse_args()

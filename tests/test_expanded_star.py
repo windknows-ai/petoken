@@ -514,8 +514,8 @@ class ExpandedStarTests(unittest.TestCase):
         self.assertTrue(QTest.qWaitForWindowActive(self.panel,1000))
         QTest.keyClick(self.panel.tasks_button,Qt.Key_Escape)
         self.app.processEvents()
-        self.assertFalse(self.manager._visible)
-        self.assertFalse(orb.isVisible())
+        self.assertTrue(self.manager._visible)
+        self.assertTrue(orb.isVisible())
         self.assertTrue(not self.panel.isVisible() or self.panel.isMinimized())
 
     def test_unknown_quota_missing_reset_clears_and_zero_is_valid(self):

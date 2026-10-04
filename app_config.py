@@ -24,6 +24,7 @@ DEFAULT_PREFERENCES = {
     "panel_pinned": False,
     "pet_scale_percent": PET_SCALE_DEFAULT,
     "pet_motion": True,
+    "star_ring_enabled": True,
 }
 
 
@@ -61,6 +62,8 @@ def normalize_preferences(data):
         preferences["panel_pinned"] = False
     if not isinstance(preferences.get("pet_motion"), bool):
         preferences["pet_motion"] = True
+    if not isinstance(preferences.get("star_ring_enabled"), bool):
+        preferences["star_ring_enabled"] = True
     for key in ("position", "pet_position"):
         if key in preferences:
             preferences[key] = valid_position(preferences[key])

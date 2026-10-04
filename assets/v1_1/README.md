@@ -1,8 +1,9 @@
-# Future V1.1 character assets (drop-in directory)
+# Approved character assets (drop-in directory)
 
-This directory is intentionally empty. It reserves the drop-in location for
-future explicitly approved V1.1 chibi artwork. No final artwork exists yet;
-do NOT generate, redraw, or invent assets here.
+This directory contains the approved idle, typing frames, Codex Working,
+microphone and music artwork. The registry uses these distinct poses today;
+Usage Panel visibility does not replace the activity pose. Do not generate,
+redraw or replace approved assets without explicit artwork authorization.
 
 ## Convention
 

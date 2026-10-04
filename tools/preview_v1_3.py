@@ -1,4 +1,4 @@
-"""Synthetic V1.3 visual QA; no provider reads or saved user preferences.
+"""Synthetic V1.4 visual QA; no provider reads or saved user preferences.
 
 Run: python tools/preview_v1_3.py --count 3 --language en
 Bounded native capture: add --smoke 2 --output /absolute/path/preview.png
@@ -21,10 +21,12 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFormLayout,
                               QLabel, QPushButton, QSpinBox, QWidget)
 
 from pet import DesktopPet
+from pet_assets import PREVIEW_STATES
 from providers import active_task
 from widget import Panel
 
 FIXTURE_CASES = ('known', 'zero', 'unknown', 'partial', 'same_project', 'long_labels')
+MAX_TASKS = 64
 ANCHORS = ('center', 'left', 'right', 'top', 'bottom',
            'top-left', 'top-right', 'bottom-left', 'bottom-right')
 
@@ -69,13 +71,13 @@ class Preview(QWidget):
         # Arm only the existing presentation timer; Panel remains live=False.
         self.panel.task_manager._live_armed = lambda: True
         screen = QApplication.primaryScreen().availableGeometry()
-        self.setWindowTitle('SYNTHETIC QA / 合成预览 — Petoken V1.3')
+        self.setWindowTitle('SYNTHETIC QA / 合成预览 — Petoken V1.4')
         layout = QFormLayout(self)
         banner = QLabel('Synthetic fixtures only / 仅合成数据\nNo provider reads; temporary settings / 不读取提供方；设置不保存')
         banner.setWordWrap(True)
         layout.addRow(banner)
         self.count = QSpinBox()
-        self.count.setRange(0, 8)
+        self.count.setRange(0, MAX_TASKS)
         self.count.setValue(count)
         layout.addRow('Tasks / 任务数量', self.count)
         layout.addRow('Source / 来源', QLabel('Codex — SYNTHETIC / 合成数据'))
@@ -85,16 +87,26 @@ class Preview(QWidget):
         layout.addRow('Language / 语言', self.language)
         self.anchor = self.combo(ANCHORS, anchor)
         layout.addRow('Pet position / 桌宠位置', self.anchor)
-        self.pose = self.combo(('idle', 'typing', 'working'), 'idle')
+        self.pose = self.combo(PREVIEW_STATES, 'idle')
         layout.addRow('Pet fixture / 桌宠状态', self.pose)
+        layout.addRow(QLabel('usage uses idle artwork / usage 使用 idle 图像\n'
+                             'Synthetic poses do not verify live detection / 合成姿态不验证实时检测'))
         self.motion = QCheckBox('Motion / 动画')
         self.motion.setChecked(True)
         self.motion.toggled.connect(self.pet.toggle_motion)
         layout.addRow(self.motion)
-        self.visible = QCheckBox('Show Hub and Stars / 显示 Hub 和 Star')
+        self.visible = QCheckBox('Show Hub / 显示 Hub')
         self.visible.setChecked(True)
         self.visible.toggled.connect(self.set_scene_visible)
         layout.addRow(self.visible)
+        self.ring = QCheckBox('Show Star ring / 显示 Star 环')
+        self.ring.setChecked(True)
+        self.ring.toggled.connect(self.set_ring_visible)
+        layout.addRow(self.ring)
+        self.page = QSpinBox()
+        self.page.setRange(1, 1)
+        self.page.valueChanged.connect(lambda number: self.panel.task_manager.set_page(number - 1))
+        layout.addRow('Star page / Star 页码', self.page)
         self.source = QCheckBox('Source available / 来源可用')
         self.source.setChecked(True)
         self.source.toggled.connect(self.refresh)
@@ -109,7 +121,7 @@ class Preview(QWidget):
         retire.clicked.connect(lambda: self.count.setValue(self.count.value() - 1))
         layout.addRow(add, retire)
         self.detail_task = QSpinBox()
-        self.detail_task.setRange(1, 8)
+        self.detail_task.setRange(1, MAX_TASKS)
         layout.addRow('Detail task number / 详情任务编号', self.detail_task)
         self.detail_button = QPushButton('Open / collapse task detail / 打开或收起任务详情')
         self.detail_button.clicked.connect(self.toggle_detail)
@@ -158,7 +170,11 @@ class Preview(QWidget):
         # Explicit fixture marking remains visible on the real Hub surface.
         self.panel.title.setFullText('Synthetic QA overview / 合成预览总览')
         self.panel.connection.setText('SYNTHETIC QA — no provider connection / 无提供方连接')
-        self.panel.task_manager.set_visible(self.visible.isChecked())
+        manager = self.panel.task_manager
+        self.page.blockSignals(True)
+        self.page.setRange(1, max(1, manager.page_count))
+        self.page.setValue(manager.page_index + 1)
+        self.page.blockSignals(False)
 
     def move_anchor(self, *_):
         screen = (self.pet.screen() or QApplication.primaryScreen()).availableGeometry()
@@ -179,17 +195,22 @@ class Preview(QWidget):
     def toggle_detail(self):
         manager = self.panel.task_manager
         number = self.detail_task.value()
-        key = next((identity for identity in manager.window_identities()
-                    if manager._labels.get(identity) == number
-                    and manager.window_for(identity).isVisible()), None)
+        key = next((identity for identity in manager.task_identities()
+                    if manager._labels.get(identity) == number), None)
         if key is None:
-            self.detail_status.setText('Select a visible task number / 请选择可见任务的编号')
+            self.detail_status.setText('Select an available task number / 请选择可用任务的编号')
             return
-        manager.orb_activated(key)
+        manager.activate_task(key)
+        self.page.blockSignals(True)
+        self.page.setValue(manager.page_index + 1)
+        self.page.blockSignals(False)
         self.detail_status.clear()
 
     def set_scene_visible(self, visible):
         self.panel.setVisible(visible)
+
+    def set_ring_visible(self, visible):
+        self.panel.prefs['star_ring_enabled'] = bool(visible)
         self.panel.task_manager.set_visible(visible)
 
     def capture(self, output):
@@ -198,10 +219,12 @@ class Preview(QWidget):
         manager = self.panel.task_manager
         stars = [manager.window_for(key) for key in manager.window_identities()]
         detail = getattr(manager, 'detail_window', None)
-        scene = [window for window in manager.capture_windows() if window is not detail]
+        transition = manager.detail_transition
+        overlay = transition.overlay
+        scene = [window for window in manager.capture_windows() if window not in (detail, overlay)]
         # The focused detail is raised by the real interaction. Preserve its
         # readability when the fixed Hub position overlaps an exported scene.
-        windows = [window for window in (*scene, self.panel, self, detail)
+        windows = [window for window in (*scene, self.panel, self, detail, overlay)
                    if window is not None
                    if window.isVisible()]
         bounds = windows[0].geometry()
@@ -213,6 +236,7 @@ class Preview(QWidget):
         canvas.fill(Qt.transparent)
         painter = QPainter(canvas)
         for window in windows:
+            painter.setOpacity(window.windowOpacity())
             painter.drawPixmap(window.pos() - bounds.topLeft(), window.grab())
         painter.end()
         output = Path(output)
@@ -224,7 +248,11 @@ class Preview(QWidget):
             fixture=self.case.currentText(), provider='codex',
             anchor=self.anchor.currentText(),
             live_provider_polling=bool(self.panel.live),
-            task_count=manager.window_count(),
+            requested_task_count=self.count.value(),
+            task_count=manager.total_task_count(),
+            star_window_count=manager.window_count(),
+            page_index=manager.page_index, page_count=manager.page_count,
+            ring_enabled=self.ring.isChecked(), hub_visible=self.panel.isVisible(),
             visible_star_count=sum(window.isVisible() for window in stars),
             expanded_task_number=manager._labels.get(manager.expanded_identity),
             detail_visible=bool(detail and detail.isVisible()),
@@ -249,16 +277,17 @@ class Preview(QWidget):
         event.accept()
 
 
-def main(argv=None):
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--count', type=int, choices=range(9), default=3)
+    parser.add_argument('--count', type=int, choices=range(MAX_TASKS + 1), default=3)
     parser.add_argument('--language', choices=('en', 'zh_CN'), default='en')
     parser.add_argument('--provider', choices=('codex',), default='codex')
     parser.add_argument('--anchor', choices=ANCHORS, default='center')
     parser.add_argument('--case', choices=FIXTURE_CASES, default='known')
-    parser.add_argument('--expand', type=int, choices=range(1, 9), metavar='TASK_NUMBER')
+    parser.add_argument('--expand', type=int, choices=range(1, MAX_TASKS + 1), metavar='TASK_NUMBER')
     parser.add_argument('--motion', choices=('on', 'off'), default='on')
-    parser.add_argument('--pose', choices=('idle', 'typing', 'working'), default='idle')
+    parser.add_argument('--pose', choices=PREVIEW_STATES, default='idle',
+                        help='Synthetic artwork pose; usage aliases idle (no live detection)')
     parser.add_argument('--smoke', type=float, metavar='SECONDS')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args(argv)
@@ -269,6 +298,11 @@ def main(argv=None):
         parser.error('--output requires --smoke SECONDS')
     if args.expand is not None and args.expand > args.count:
         parser.error('--expand must name a task within --count')
+    return args
+
+
+def main(argv=None):
+    args = parse_args(argv)
     app = QApplication.instance() or QApplication([])
     with ExitStack() as stack:
         directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-synthetic-qa-'))

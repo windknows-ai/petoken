@@ -21,6 +21,16 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(APP_VERSION, "1.2.0")
         self.assertEqual(desktop.APP_VERSION, APP_VERSION)
 
+    def test_ring_visibility_defaults_and_atomic_persistence(self):
+        self.assertTrue(load_preferences(self.path)['star_ring_enabled'])
+        save_preferences(self.path, {'star_ring_enabled': False, 'future_setting': {'kept': True}})
+        loaded = load_preferences(self.path)
+        self.assertFalse(loaded['star_ring_enabled'])
+        self.assertEqual(loaded['future_setting'], {'kept': True})
+        self.assertFalse(self.path.with_suffix('.tmp').exists())
+        for invalid in (None, 0, 1, 'false', [], {}):
+            self.assertTrue(load_preferences_from({'star_ring_enabled': invalid})['star_ring_enabled'])
+
     def test_missing_file_uses_new_field_defaults(self):
         self.assertEqual(load_preferences(self.path), DEFAULT_PREFERENCES)
         self.assertEqual(DEFAULT_PREFERENCES["scope"], "conversation")

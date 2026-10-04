@@ -4,7 +4,7 @@ import math
 import sys
 
 from PySide6.QtCore import Qt, QPointF
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QRadialGradient, QPolygonF
 from PySide6.QtWidgets import QWidget
 
 import halo_geometry as geometry
@@ -12,8 +12,8 @@ import pet_geometry
 
 
 class HaloLayer(QWidget):
-    AGE = 2.8
-    MAX_SAMPLES = 80
+    AGE = 3.6
+    MAX_SAMPLES = 96
 
     def __init__(self, front):
         super().__init__(None, Qt.Tool | Qt.FramelessWindowHint
@@ -81,42 +81,57 @@ class HaloLayer(QWidget):
             x, y, _ = geometry.project(self.pose, start + math.pi * i / 96)
             point = QPointF(x - self.x(), y - self.y())
             path.moveTo(point) if i == 0 else path.lineTo(point)
-        # Pearl wire with a violet rim; the character remains the focal point.
-        for width, color in ((6, QColor(158, 144, 222, 12 if self.front else 5)),
-                             (2.4, QColor(184, 190, 238, 60 if self.front else 25)),
-                             (1.6, QColor(150, 135, 200, 150 if self.front else 80)),
-                             (.8, QColor(247, 246, 255, 230 if self.front else 105))):
+        for width, color in ((13, QColor(132, 112, 255, 22 if self.front else 13)),
+                             (7, QColor(158, 144, 255, 42 if self.front else 25)),
+                             (3.4, QColor(177, 177, 255, 165 if self.front else 105)),
+                             (1.15, QColor(252, 250, 255, 255 if self.front else 215))):
             pen = QPen(color, width)
             pen.setCapStyle(Qt.RoundCap)
             painter.setPen(pen)
             painter.drawPath(path)
-        # A short champagne inlay and sparse orbit beads give the hoop a
-        # jewelry finish. They share the ring clock and add no hit surfaces.
+        # All ornament shares the projected plane and existing clock, and
+        # stays inside the hit-disc margin; no extra native input surfaces.
         inlay = QPainterPath()
         inset = self.pose._replace(rx=self.pose.rx - 4, ry=self.pose.ry - 4)
         for i in range(33):
             x, y, _ = geometry.project(inset, start + math.pi * (.15 + .55 * i / 32))
             point = QPointF(x - self.x(), y - self.y())
             inlay.moveTo(point) if i == 0 else inlay.lineTo(point)
-        painter.setPen(QPen(QColor(220, 198, 166, 90 if self.front else 38), .65))
+        painter.setPen(QPen(QColor(255, 218, 170, 210 if self.front else 145), 1.0))
         painter.drawPath(inlay)
-        outer = self.pose._replace(rx=self.pose.rx + 6, ry=self.pose.ry + 6)
+        outer = self.pose._replace(rx=self.pose.rx + 11, ry=self.pose.ry + 8)
         guide = QPainterPath()
-        for begin, end in ((.03, .27), (.73, .95)):
+        for begin, end in ((.01, .47), (.53, .99)):
             for i in range(25):
                 x, y, _ = geometry.project(outer, start + math.pi * (begin + (end - begin) * i / 24))
                 point = QPointF(x - self.x(), y - self.y())
                 guide.moveTo(point) if i == 0 else guide.lineTo(point)
-        pen = QPen(QColor(158, 144, 222, 135 if self.front else 65), .7)
-        pen.setDashPattern([2, 4])
+        pen = QPen(QColor(173, 153, 255, 210 if self.front else 150), 1.0)
+        pen.setDashPattern([1.5, 4])
         painter.setPen(pen)
         painter.drawPath(guide)
-        for fraction, radius in ((.13, 1.3), (.46, 1.8), (.82, 1.1)):
-            x, y, _ = geometry.project(self.pose, start + math.pi * fraction)
+        for index in range(12):
+            angle = start + math.pi * (index + .4) / 12
+            x, y, _ = geometry.project(outer if index % 3 else inset, angle)
             point = QPointF(x - self.x(), y - self.y())
-            painter.setPen(QPen(QColor(163, 147, 218, 175 if self.front else 80), .65))
-            painter.setBrush(QColor(244, 240, 255, 210 if self.front else 100))
-            painter.drawEllipse(point, radius, radius)
+            strength = .8 + .2 * math.sin(self.now * 1.8 + index * 2.4)
+            glow = QRadialGradient(point, 8)
+            glow.setColorAt(0, QColor(205, 190, 255, int(155 * strength)))
+            glow.setColorAt(1, QColor(160, 140, 255, 0))
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(glow)
+            painter.drawEllipse(point, 8, 8)
+            painter.setPen(QPen(QColor(172, 151, 246, 225), .7))
+            painter.setBrush(QColor(250, 245, 255, 245 if self.front else 190))
+            if index % 3 == 0:
+                size = 3.2 if index % 2 == 0 else 2.4
+                painter.drawPolygon(QPolygonF([point + QPointF(0, -size * 1.5),
+                                                point + QPointF(size, 0),
+                                                point + QPointF(0, size * 1.5),
+                                                point + QPointF(-size, 0)]))
+            else:
+                radius = 1.6 if index % 2 else 2.3
+                painter.drawEllipse(point, radius, radius)
         for x, y, depth in self.stars.values():
             if (depth >= 0) != self.front:
                 continue
@@ -135,9 +150,9 @@ class HaloLayer(QWidget):
                     continue
                 strength = fade * (.60 + .40 * (depth + 1) / 2)
                 a, b = QPointF(first[0] - self.x(), first[1] - self.y()), QPointF(x - self.x(), y - self.y())
-                for width, color in ((5, QColor(158, 144, 222, int(14 * strength))),
-                                     (1.7, QColor(184, 218, 244, int(85 * strength))),
-                                     (.6, QColor(247, 246, 255, int(175 * strength)))):
+                for width, color in ((8, QColor(158, 144, 255, int(30 * strength))),
+                                     (2.5, QColor(184, 218, 255, int(150 * strength))),
+                                     (.9, QColor(252, 249, 255, int(230 * strength)))):
                     pen = QPen(color, width * (.7 + .3 * fade))
                     pen.setCapStyle(Qt.RoundCap)
                     painter.setPen(pen)
@@ -171,8 +186,23 @@ class HaloScene:
         if not self.legacy_exterior_motion:
             self.back_overlay.clear_all()
 
+    def _fit_halo_pose(self, pet, screen):
+        placement = getattr(getattr(self.panel, 'pet', None), 'halo_placement', None)
+        companion = getattr(self.panel, 'pet', None)
+        if (placement is not None and tuple(pet) == placement.pet_rect
+                and tuple(screen) == getattr(companion, 'halo_screen_rect', None)):
+            if placement.pose is not None:
+                return placement.pose
+            # Impossible workareas keep a centered decorative hoop; fixed hit
+            # containment is unavailable here, never an excuse for a GUI crash.
+            return geometry.HaloPose(pet[0] + pet[2] / 2, pet[1] + pet[3] * .60,
+                                     max(12, min(pet[2] * .58, (screen[2] - screen[0]) / 2)),
+                                     max(12, min(pet[3] * .25, (screen[3] - screen[1]) / 2)),
+                                     geometry.DEFAULT_TILT)
+        return geometry.fit_pose(pet, screen)
+
     def _halo_apply(self, pet, screen):
-        target = geometry.fit_pose(pet, screen)
+        target = self._fit_halo_pose(pet, screen)
         self._halo_target = target
         if self._halo_pose is None:
             self._halo_pose = target
@@ -228,7 +258,7 @@ class HaloScene:
         if self._shutdown or not self._visible:
             self._last_tick = None
             return
-        target = geometry.fit_pose(pet, screen)
+        target = self._fit_halo_pose(pet, screen)
         self._halo_target = target
         dt = 0 if self._last_tick is None else max(0.0, min(.04, now - self._last_tick))
         self._last_tick = now
@@ -276,6 +306,8 @@ class HaloScene:
                 orb._halo_paint = paint
             if self._visible:
                 orb.show()
+            else:
+                orb.hide()
             if record:
                 for layer in (self.back_overlay, self.trail_overlay):
                     layer.record_sample(key, x, y, now, depths[key])
@@ -286,7 +318,9 @@ class HaloScene:
             for key in set(layer._trails) - set(self._windows):
                 layer.drop(key)
             layer.set_scene(self._halo_pose, now)
-            layer.setVisible(bool(self._visible and self._windows))
+            layer.setVisible(self._visible)
+        if self.page_controls is not None:
+            self._update_page_controls()
         self._stack_halo()
 
     def capture_windows(self):
@@ -294,13 +328,32 @@ class HaloScene:
         back = [w for k, w in self._windows.items() if self._halo_depths.get(k, 0) < 0]
         front = [w for k, w in self._windows.items() if self._halo_depths.get(k, 0) >= 0]
         result = [self.back_overlay, *back, pet, self.trail_overlay, *front]
+        if self.page_controls is not None:
+            result.append(self.page_controls)
         if self.detail_window is not None:
             result.append(self.detail_window)
+        transition = getattr(self, 'detail_transition', None)
+        if transition is not None and transition.overlay is not None:
+            result.append(transition.overlay)
         return [w for w in result if w is not None and w.isVisible()]
 
     def _stack_halo(self, force=False):
         windows = self.capture_windows()
         signature = tuple(int(w.winId()) for w in windows)
+        if sys.platform == 'win32' and not force and signature == self._halo_stack:
+            import ctypes
+            from ctypes import wintypes
+            get_window = getattr(self, '_halo_get_window', None)
+            if get_window is None:
+                get_window = ctypes.WinDLL('user32', use_last_error=True).GetWindow
+                get_window.argtypes = (wintypes.HWND, wintypes.UINT)
+                get_window.restype = wintypes.HWND
+                self._halo_get_window = get_window
+            # Clicking/raising the pet changes actual HWND order even when
+            # depths and handles are unchanged. The cached signature alone
+            # cannot prove that the front plane is still in front.
+            force = any(get_window(lower, 3) != upper
+                        for lower, upper in zip(signature, signature[1:]))
         if force or signature != self._halo_stack:
             pet = getattr(self.panel, 'pet', None)
             if sys.platform == 'win32' and pet in windows:

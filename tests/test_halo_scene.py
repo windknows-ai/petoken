@@ -319,8 +319,10 @@ class HaloSceneTests(unittest.TestCase):
         for layer in (self.manager.back_overlay, self.manager.trail_overlay):
             self.assertNotIn(keys[0], layer._trails)
         self.apply(())
-        self.assertFalse(self.manager.back_overlay.isVisible())
-        self.assertFalse(self.manager.trail_overlay.isVisible())
+        self.assertTrue(self.manager.back_overlay.isVisible())
+        self.assertTrue(self.manager.trail_overlay.isVisible())
+        self.assertFalse(self.manager.back_overlay.stars)
+        self.assertFalse(self.manager.trail_overlay.stars)
         self.manager.shutdown()
         self.manager.tick_visual(self.stamp + 100, pet_rect=CENTER, screen_rect=SCREEN)
         self.apply(range(8))
