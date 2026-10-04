@@ -1,4 +1,8 @@
-"""Slice 3: OpenCode read-only incremental adapter. Synthetic stores only."""
+"""Isolated historical adapter compatibility; absent from the active product.
+
+Synthetic stores only. Importing this test explicitly does not enable a
+provider in the application registry or poller.
+"""
 import json
 import os
 import sqlite3
@@ -439,11 +443,11 @@ class ProviderIsolationTests(unittest.TestCase):
         self.assertEqual(scoped_session_id('ses_shared'), 'opencode:ses_shared')
         self.assertEqual(scoped_project_id('proj-a'), 'opencode:proj-a')
 
-    def test_capability_lookup_matches_adapter(self):
+    def test_historical_capabilities_remain_local_and_unregistered(self):
         provider = OpenCodeProvider(Path('absent.db'))
         self.assertEqual(provider.capabilities, OPENCODE_CAPABILITIES)
         for capability in OPENCODE_CAPABILITIES:
-            self.assertTrue(is_supported('opencode', capability), capability)
+            self.assertFalse(is_supported('opencode', capability), capability)
         for denied in ('quotas', 'working_context', 'cost_estimate',
                        'cost_currency', 'completion', 'telepathy'):
             self.assertFalse(is_supported('opencode', denied), denied)

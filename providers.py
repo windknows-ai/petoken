@@ -2,20 +2,18 @@
 
 Wraps existing CodexStore reads and quota payloads with provider identity,
 capabilities, and freshness metadata. Every Codex field passes through
-untouched: the same Codex input produces equivalent values. OpenCode
-capabilities are proven by the Slice 3 adapter in opencode_provider.py and
-looked up there, so this module never denies implemented abilities. There
-are no shared assumed token schemas and no combined totals.
+untouched: the same Codex input produces equivalent values. The active
+product registry contains Codex alone; historical adapters are never
+imported or registered here. There are no combined totals.
 """
 from __future__ import annotations
 
 import time
 
 PROVIDER_CODEX = 'codex'
-# Identity for the OpenCode adapter (opencode_provider.py); capabilities
-# are looked up there via _opencode_capabilities().
+# Historical adapter identity only; absent from the active product registry.
 PROVIDER_OPENCODE = 'opencode'
-PROVIDER_NAMES = {PROVIDER_CODEX: 'Codex', PROVIDER_OPENCODE: 'OpenCode'}
+PROVIDER_NAMES = {PROVIDER_CODEX: 'Codex'}
 
 # Known Codex capabilities (fixed, factual per V1.1 behavior). Anything not
 # listed here is unsupported until a later slice proves it.
@@ -28,29 +26,15 @@ CODEX_CAPABILITIES = frozenset({
     'fork_accounting',   # fork-deduplicated aggregation
     'nullable_fields',   # explicit unknown instead of zero-filled
 })
-# OpenCode capabilities are proven by the Slice 3 adapter and live there;
-# this module delegates so the lookup can never deny implemented abilities.
-def _opencode_capabilities():
-    from opencode_provider import OPENCODE_CAPABILITIES
-    return OPENCODE_CAPABILITIES
-
-
 def _codex_capabilities():
     return CODEX_CAPABILITIES
 
 
-# Minimal runtime provider registry: infrastructure metadata only
-# (identity + capability lookup). Provider-local accounting semantics
-# (versions, models, token/cost/quota rules) stay in each provider's
-# own module and are never normalized here. Exactly Codex + OpenCode:
-# no placeholder entries, no disabled third provider. A synthetic
-# third provider ID exists only inside tests proving deterministic
-# N-provider selection; it is never registered here.
+# Current product boundary. Historical adapter source remains isolated and
+# is not imported, selectable or polled by the application.
 PROVIDER_REGISTRY = {
     PROVIDER_CODEX: dict(display_name='Codex',
                          capabilities=_codex_capabilities),
-    PROVIDER_OPENCODE: dict(display_name='OpenCode',
-                            capabilities=_opencode_capabilities),
 }
 
 

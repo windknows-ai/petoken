@@ -9,7 +9,6 @@ from contextlib import closing
 from pathlib import Path
 
 import providers
-from opencode_provider import OPENCODE_CAPABILITIES
 from providers import (CODEX_CAPABILITIES, PROVIDER_CODEX, PROVIDER_OPENCODE,
                        CodexProvider, base_result, is_supported, wrap_quota)
 from usage import CodexStore
@@ -60,15 +59,9 @@ class ProviderContractTests(unittest.TestCase):
         self.assertEqual(PROVIDER_OPENCODE, 'opencode')
         self.assertIn('working_context', CODEX_CAPABILITIES)
         self.assertIn('quotas', CODEX_CAPABILITIES)
-        # Slice 3: OpenCode capabilities are proven by the adapter and
-        # looked up there; the lookup must not deny implemented abilities.
-        self.assertIn('scopes', OPENCODE_CAPABILITIES)
-        self.assertIn('activity', OPENCODE_CAPABILITIES)
-        self.assertNotIn('quotas', OPENCODE_CAPABILITIES)
-        self.assertNotIn('working_context', OPENCODE_CAPABILITIES)
         self.assertTrue(is_supported('codex', 'scopes'))
         self.assertFalse(is_supported('codex', 'telepathy'))
-        self.assertTrue(is_supported('opencode', 'scopes'))
+        self.assertFalse(is_supported('opencode', 'scopes'))
         self.assertFalse(is_supported('opencode', 'telepathy'))
         self.assertFalse(is_supported('future', 'scopes'))
 
@@ -87,22 +80,19 @@ class ProviderContractTests(unittest.TestCase):
 
 
 class ProviderRegistryTests(unittest.TestCase):
-    """Slice A: the minimal runtime registry holds exactly Codex +
-    OpenCode with generic capability dispatch. No placeholder, no
-    third provider, no fake capabilities."""
+    """The current product registry exposes Codex alone."""
 
-    def test_registry_contains_exactly_codex_and_opencode(self):
+    def test_registry_contains_only_codex(self):
         from providers import PROVIDER_REGISTRY
         from provider_selection import KNOWN_PROVIDERS, TRACKING_CHOICES
-        self.assertEqual(tuple(PROVIDER_REGISTRY), ('codex', 'opencode'))
-        self.assertEqual(KNOWN_PROVIDERS, ('codex', 'opencode'))
+        self.assertEqual(tuple(PROVIDER_REGISTRY), ('codex',))
+        self.assertEqual(KNOWN_PROVIDERS, ('codex',))
         self.assertEqual(tuple(PROVIDER_REGISTRY), KNOWN_PROVIDERS)
-        self.assertEqual(TRACKING_CHOICES, ('auto', 'codex', 'opencode'))
+        self.assertEqual(TRACKING_CHOICES, ('codex',))
 
     def test_display_names_unchanged(self):
         from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
-        self.assertEqual(PROVIDER_NAMES, {'codex': 'Codex',
-                                          'opencode': 'OpenCode'})
+        self.assertEqual(PROVIDER_NAMES, {'codex': 'Codex'})
         for pid, entry in PROVIDER_REGISTRY.items():
             self.assertEqual(entry['display_name'], PROVIDER_NAMES[pid])
 
@@ -112,13 +102,9 @@ class ProviderRegistryTests(unittest.TestCase):
                             capability)
         self.assertFalse(is_supported('codex', 'telepathy'))
 
-    def test_opencode_capabilities_unchanged(self):
-        for capability in OPENCODE_CAPABILITIES:
-            self.assertTrue(is_supported('opencode', capability),
-                            capability)
-        self.assertFalse(is_supported('opencode', 'quotas'))
-        self.assertFalse(is_supported('opencode', 'working_context'))
-        self.assertFalse(is_supported('opencode', 'telepathy'))
+    def test_historical_adapter_is_not_an_active_capability_source(self):
+        for capability in ('scopes', 'activity', 'quotas', 'working_context'):
+            self.assertFalse(is_supported('opencode', capability))
 
     def test_unknown_provider_stays_unsupported_without_crash(self):
         self.assertFalse(is_supported('synthetic', 'scopes'))

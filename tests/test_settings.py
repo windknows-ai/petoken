@@ -78,25 +78,47 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(loaded["currency"], "USD")
 
 
-    def test_tracking_provider_defaults_auto_and_persists(self):
-        self.assertEqual(DEFAULT_PREFERENCES["tracking_provider"], "auto")
+    def test_tracking_provider_defaults_codex_and_persists(self):
+        self.assertEqual(DEFAULT_PREFERENCES["tracking_provider"], "codex")
         self.assertEqual(load_preferences(self.path)["tracking_provider"],
-                         "auto")
-        save_preferences(self.path, {"tracking_provider": "opencode"})
+                         "codex")
+        save_preferences(self.path, {"tracking_provider": "codex"})
         self.assertEqual(load_preferences(self.path)["tracking_provider"],
-                         "opencode")
+                         "codex")
 
     def test_tracking_provider_invalid_and_legacy_fall_back(self):
         save_preferences(self.path, {"tracking_provider": "All Providers"})
         self.assertEqual(load_preferences(self.path)["tracking_provider"],
-                         "auto")
+                         "codex")
         self.assertEqual(
             load_preferences_from({"scope": "global"})["tracking_provider"],
-            "auto")
+            "codex")
         self.assertEqual(
             load_preferences_from(
                 {"tracking_provider": " Codex "})["tracking_provider"],
             "codex")
+
+    def test_retired_choices_normalize_without_rewriting_on_load(self):
+        self.path.parent.mkdir(parents=True)
+        for retired in ("auto", "opencode", "All Providers", None):
+            with self.subTest(retired=retired):
+                original = json.dumps({"tracking_provider": retired,
+                                       "pinned": "thread-1",
+                                       "future_setting": {"kept": True}})
+                self.path.write_text(original, encoding="utf-8")
+                loaded = load_preferences(self.path)
+                self.assertEqual(loaded["tracking_provider"], "codex")
+                self.assertEqual(loaded["pinned"], "thread-1")
+                self.assertEqual(loaded["future_setting"], {"kept": True})
+                self.assertEqual(self.path.read_text(encoding="utf-8"), original)
+
+    def test_saving_retired_choice_persists_codex_only(self):
+        for retired in ("auto", "opencode"):
+            with self.subTest(retired=retired):
+                save_preferences(self.path, {"tracking_provider": retired})
+                self.assertEqual(load_preferences(self.path)["tracking_provider"], "codex")
+                self.assertEqual(json.loads(self.path.read_text(encoding="utf-8"))[
+                    "tracking_provider"], "codex")
 
 
 def load_preferences_from(data):

@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from provider_poller import ProviderPoller, _normalize_scope
-from tests.test_provider_poller import NOW_S, PollerFixture, make_session
+from tests.test_provider_poller import NOW_S, PollerFixture
 
 
 class PublicationRecoveryTests(unittest.TestCase):
@@ -13,8 +13,7 @@ class PublicationRecoveryTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         fixture = PollerFixture(self.temp.name)
         self.poller = ProviderPoller(
-            fixture.codex([{'id': 't1', 'working': True}]),
-            fixture.opencode([make_session('s1')]))
+            fixture.codex([{'id': 't1', 'working': True}]))
         self.prefs = {'scope': 'global', 'tracking_provider': 'codex'}
         self.events = []
         self.threads = []
@@ -89,14 +88,14 @@ class PublicationRecoveryTests(unittest.TestCase):
         out = self._obsolete_decision(lambda: self.poller.apply_settings(
             dict(self.prefs, tracking_provider='opencode'), now=NOW_S))
         self.assertEqual(out['result']['status'], 'obsolete_tick')
-        self.assertEqual(self.poller.selection.snapshot()['selected'], 'opencode')
+        self.assertEqual(self.poller.selection.snapshot()['selected'], 'codex')
 
     def test_newer_poll_generation_rejects_decision_without_epoch_change(self):
         epoch = self.poller._epoch
         self._obsolete_decision(lambda: self.poller.poll(
             dict(self.prefs, tracking_provider='opencode'), now=NOW_S))
         self.assertEqual(self.poller._epoch, epoch)
-        self.assertEqual(self.poller.selection.snapshot()['selected'], 'opencode')
+        self.assertEqual(self.poller.selection.snapshot()['selected'], 'codex')
 
     def test_close_rejects_decision_and_retains_selector_memory(self):
         out = self._obsolete_decision(self.poller.close)
@@ -157,7 +156,7 @@ class PublicationRecoveryTests(unittest.TestCase):
     def test_settings_serializes_with_final_merge(self):
         self._race_final_merge(lambda: self.poller.apply_settings(
             dict(self.prefs, tracking_provider='opencode'), now=NOW_S))
-        self.assertEqual(self.poller.selection.snapshot()['selected'], 'opencode')
+        self.assertEqual(self.poller.selection.snapshot()['selected'], 'codex')
 
     def test_direct_scope_inputs_reject_containers_and_preserve_supported_values(self):
         for value in ([], {}, None, True, 1, 'invalid', 'task'):

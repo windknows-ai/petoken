@@ -1,8 +1,8 @@
 """Background poll orchestration: providers -> selection -> snapshot (V1.2 slice 5).
 
-Qt-free worker logic. Two dedicated daemon workers (one slot per
-provider, never overlapping reads against one adapter, no GUI-thread
-I/O) replace the previous pool: a permanently blocked provider read
+Qt-free worker logic. One dedicated Codex daemon worker (never
+overlapping reads against the adapter, no GUI-thread I/O) replaces the
+previous pool: a permanently blocked provider read
 cannot keep the process alive, because daemon workers are never joined
 and close() never blocks. Every poll captures one immutable tick
 (generation, settings epoch, preference/scope/pinned, history mode and
@@ -35,20 +35,15 @@ import threading
 import time
 from concurrent.futures import CancelledError
 
-from opencode_provider import (OpenCodeProvider, opencode_active_display,
-                               opencode_display, opencode_working_context,
-                               strip_scope)
 from provider_selection import (FRESHNESS_S, ProviderSelection,
                                 codex_provider_status,
-                                normalize_tracking_provider,
-                                opencode_provider_status)
+                                normalize_tracking_provider)
 from providers import (CODEX_CAPABILITIES, PROVIDER_CODEX,
-                       PROVIDER_OPENCODE, CodexProvider, active_task_set,
-                       base_result)
+                       CodexProvider, active_task_set, base_result)
 from usage import CodexStore
 
-PROVIDER_KEYS = (PROVIDER_CODEX, PROVIDER_OPENCODE)
-POOL_THREADS = 2  # historical bound: one slot per provider, kept for docs.
+PROVIDER_KEYS = (PROVIDER_CODEX,)
+POOL_THREADS = 1  # One dedicated daemon slot for the active Codex adapter.
 
 _VALID_SCOPES = ('global', 'project', 'conversation')
 
@@ -61,20 +56,13 @@ def _normalize_scope(value):
 
 def filter_active_tasks(active_sets, statuses, success_at, preference,
                         now=None):
-    """Headless Auto/manual membership over accepted provider sets.
+    """Verified fresh Codex membership over accepted sets, without I/O.
 
-    Pure function (no debounce, no state): Auto unions the tasks of
-    every lane whose set is valid, whose shaped status is
-    source-available, and whose last success is fresh; a manual
-    preference exposes only that lane. Switching filters over
-    already accepted sets is immediate — it never waits for
-    ProviderSelection stability, a fresh detection cycle, or new
-    reads. Unknown preference normalizes to Auto; focus/click state
-    is not an input and cannot affect membership.
+    Legacy preferences normalize to Codex. Foreign provider sets cannot
+    enter the active product, even when supplied by an old caller.
     """
     now = time.time() if now is None else now
-    preference = normalize_tracking_provider(preference)
-    lanes = ([preference] if preference != 'auto' else list(PROVIDER_KEYS))
+    lanes = PROVIDER_KEYS
     merged = []
     for pid in lanes:
         entry = (active_sets or {}).get(pid) or {}
@@ -87,7 +75,9 @@ def filter_active_tasks(active_sets, statuses, success_at, preference,
         if not (isinstance(last, (int, float))
                 and now - last <= FRESHNESS_S):
             continue
-        merged.extend(entry.get('tasks') or [])
+        merged.extend(task for task in entry.get('tasks') or []
+                      if isinstance(task, dict)
+                      and task.get('provider_id') == pid)
     return merged
 
 
@@ -216,14 +206,6 @@ def _codex_failed():
                                          reason='status_read_failed')))
 
 
-def _opencode_failed():
-    from opencode_provider import OPENCODE_CAPABILITIES
-    return base_result(
-        PROVIDER_OPENCODE, available=False, status='unavailable',
-        reason='status_read_failed', capabilities=OPENCODE_CAPABILITIES,
-        notes=('status_read_failed',), payload=None)
-
-
 def _compatible(prov, req_scope, req_pinned):
     """Cached scoped data may serve the request only when it was read for
     the same scope (global ignores pinned) and the same pinned session."""
@@ -233,16 +215,14 @@ def _compatible(prov, req_scope, req_pinned):
         return False
     if req_scope == 'global':
         return True
-    return (strip_scope(prov.get('pinned') or '')
-            == strip_scope(req_pinned or ''))
+    return (prov.get('pinned') or '') == (req_pinned or '')
 
 
 class ProviderPoller:
-    """Owns adapters, selection, request epochs and two daemon workers."""
+    """Owns the Codex adapter, selection, request epochs and daemon slot."""
 
-    def __init__(self, codex_store=None, opencode_db=None):
+    def __init__(self, codex_store=None):
         self.codex = CodexProvider(codex_store)
-        self.opencode = OpenCodeProvider(opencode_db)
         self.selection = ProviderSelection()
         self.generation = 0
         self._lock = threading.RLock()
@@ -252,8 +232,7 @@ class ProviderPoller:
         self._epoch = 0
         # Provider-local invalidation for failed Codex resets: bumped only
         # when a reset construction fails, so pre-failure Codex completions
-        # retire without advancing the global epoch that guards the
-        # healthy OpenCode lane.
+        # retire without relabeling any already captured tick.
         self._codex_fence = 0
         self._inflight = {}
         self._jobs = {}
@@ -262,7 +241,6 @@ class ProviderPoller:
         self._status = {key: _unknown_status(key) for key in PROVIDER_KEYS}
         self._reads = {}
         self._provenance = {}
-        self._activity = None
         self._success_at = {}
         # Latest accepted per-provider active-task sets: {provider_id:
         # active-task-set dict}. Replaced atomically per lane with the
@@ -295,16 +273,6 @@ class ProviderPoller:
                 self._job_cond.notify_all()
             except Exception:
                 pass
-        # Terminally shut down the OpenCode commit detector
-        # (best-effort, no lock): an in-flight worker paused between
-        # generation checks must not reopen the handle after shutdown.
-        # Never blocks: no worker is joined, hung reads cannot delay
-        # this return; their late outcomes are discarded as retired.
-        try:
-            self.opencode.shutdown()
-        except Exception:
-            pass
-
     def _install_codex_locked(self, new_adapter):
         """Swap in a prebuilt Codex adapter. Caller holds the lock and has
         checked for close. Bumps the epoch (retiring in-flight work bound
@@ -335,16 +303,10 @@ class ProviderPoller:
             self._install_codex_locked(new_adapter)
 
     def _fail_codex_reset(self):
-        """Record a Codex-reset construction failure without touching the
-        OpenCode lane: the old adapter is kept, only the Codex request
-        barrier advances (fencing pre-failure Codex completions so a stale
-        Codex success cannot erase the marking), only a queued Codex read
-        is cancelled, and only the Codex source is marked failed
-        (mirroring an explicit Codex read failure). The global epoch is
-        left alone, so a running OpenCode request stays admissible and
-        the caller continues the same iteration so OpenCode still updates
-        independently; selection authority decides the outcome, and no
-        use-time is stamped."""
+        """Keep the old adapter and fence pre-failure completions after
+        reset construction fails. Cached live membership retires; only a
+        newer successful Codex read can restore it. No use-time is stamped.
+        """
         with self._lock:
             if self._closed:
                 return
@@ -359,7 +321,7 @@ class ProviderPoller:
             self._status[PROVIDER_CODEX] = self._shape(PROVIDER_CODEX)
             # Retire only this lane's live membership, keeping its
             # revision so only a newer accepted Codex outcome can
-            # replace it; the OpenCode lane is untouched.
+            # replace it.
             previous = self._active_sets.get(PROVIDER_CODEX)
             self._active_sets[PROVIDER_CODEX] = active_task_set(
                 PROVIDER_CODEX, (),
@@ -438,7 +400,7 @@ class ProviderPoller:
         request a new adapter.
         """
         with self._lock:
-            if self._closed:
+            if self._closed or key not in PROVIDER_KEYS:
                 return False
             pending = self._inflight.get(key)
             if pending is not None and not pending.done():
@@ -450,33 +412,13 @@ class ProviderPoller:
                 tick.scope, tick.pinned, tick.want_history,
                 tick.active_title, tick.detection_valid, tick.now,
                 self._codex_fence)
-            if key == PROVIDER_CODEX:
-                adapter = self.codex
+            adapter = self.codex
 
-                def reader(req, ad=adapter):
-                    return ad.read(
-                        active_title=req.active_title, pinned=req.pinned,
-                        scope=req.scope, include_history=req.want_history,
-                        activity_detection_valid=req.detection_valid)
-            else:
-                adapter = self.opencode
-
-                def reader(req, ad=adapter):
-                    try:
-                        read = ad.read(
-                            pinned=req.pinned, scope=req.scope,
-                            include_history=req.want_history)
-                    except Exception:
-                        read = _opencode_failed()
-                    try:
-                        activity = ad.activity_snapshot(now=req.now)
-                    except Exception:
-                        activity = None
-                    try:
-                        tasks = ad.active_tasks(now=req.now)
-                    except Exception:
-                        tasks = None
-                    return read, activity, tasks
+            def reader(req, ad=adapter):
+                return ad.read(
+                    active_title=req.active_title, pinned=req.pinned,
+                    scope=req.scope, include_history=req.want_history,
+                    activity_detection_valid=req.detection_valid)
             future = _SlotFuture(request)
             future.request = request
             self._jobs[key] = (request, reader, future)
@@ -492,19 +434,6 @@ class ProviderPoller:
             active_title=request.active_title, pinned=request.pinned,
             scope=request.scope, include_history=request.want_history,
             activity_detection_valid=request.detection_valid)
-
-    def _read_opencode(self, request):  # pragma: no cover - compat shim
-        try:
-            read = self.opencode.read(
-                pinned=request.pinned, scope=request.scope,
-                include_history=request.want_history)
-        except Exception:
-            read = _opencode_failed()
-        try:
-            activity = self.opencode.activity_snapshot(now=request.now)
-        except Exception:
-            activity = None
-        return read, activity
 
     def _collect(self):
         """Accept current-epoch newer-rid completions; discard the rest.
@@ -554,18 +483,11 @@ class ProviderPoller:
                     want_history=request.want_history, epoch=request.epoch,
                     rid=request.rid, generation=request.generation)
                 if failed:
-                    self._reads[key] = (
-                        _codex_failed() if key == PROVIDER_CODEX
-                        else _opencode_failed())
-                    if key == PROVIDER_OPENCODE:
-                        self._activity = None
+                    self._reads[key] = _codex_failed()
                     self._status[key] = self._shape(key)
                     self._store_active_set_locked(key, request, None)
                     continue
-                if key == PROVIDER_CODEX:
-                    self._reads[key] = outcome
-                else:
-                    self._reads[key], self._activity = outcome[0], outcome[1]
+                self._reads[key] = outcome
                 self._success_at[key] = request.now
                 self._status[key] = self._shape(key)
                 self._store_active_set_locked(key, request, outcome)
@@ -584,6 +506,8 @@ class ProviderPoller:
         lane failure: the lane's live membership retires truthfully
         to an empty invalid set while other lanes stay intact.
         """
+        if key not in PROVIDER_KEYS:
+            return
         previous = self._active_sets.get(key)
         if (previous is not None and request.rid <= previous.get(
                 'provider_revision', -1)):
@@ -593,23 +517,15 @@ class ProviderPoller:
                 key, (), revision=request.rid, observed_at=request.now,
                 valid=False, source_available=False,
                 reason='lane_failed')
-        elif key == PROVIDER_CODEX:
+        else:
             tasks = ((outcome.get('payload') or {}).get('active_tasks')
                      if isinstance(outcome, dict) else None) or []
+            tasks = [task for task in tasks if isinstance(task, dict)
+                     and task.get('provider_id') == key]
             entry = active_task_set(
                 key, tasks, revision=request.rid,
                 observed_at=request.now, valid=True,
                 source_available=True)
-        else:
-            incoming = (outcome[2] if isinstance(outcome, tuple)
-                        and len(outcome) > 2 else None)
-            if not isinstance(incoming, dict):
-                incoming = active_task_set(
-                    key, (), valid=False,
-                    reason='active_tasks_unavailable')
-            entry = dict(incoming, provider_id=key,
-                         provider_revision=request.rid,
-                         observed_at=request.now)
         lane_ok = self._status.get(key, {}).get('source_available', False)
         entry['valid'] = bool(entry.get('valid', False) and lane_ok)
         self._active_sets[key] = entry
@@ -636,12 +552,8 @@ class ProviderPoller:
 
     def _shape(self, key):
         """Shape the latest accepted read into a selection status."""
-        if key == PROVIDER_CODEX:
-            return codex_provider_status(
-                self._reads.get(key), self._success_at.get(key))
-        return opencode_provider_status(
-            self._reads.get(key), self._activity,
-            self._success_at.get(key))
+        return codex_provider_status(
+            self._reads.get(key), self._success_at.get(key))
 
     def _snapshot_statuses(self):
         with self._lock:
@@ -683,17 +595,8 @@ class ProviderPoller:
                         preference=tick.preference, selection=snapshot,
                         provider_id=result['provider_id'], result=result,
                         codex=self._reads.get(PROVIDER_CODEX),
-                        opencode=self._reads.get(PROVIDER_OPENCODE),
-                        opencode_activity=self._activity,
                         active_tasks=self._merged_active_tasks(
                             tick.preference, tick.now))
-
-    def _working_row(self):
-        """The activity-selected OpenCode session row, if still cached."""
-        primary = (self._activity or {}).get('primary_session_id') or ''
-        if not primary:
-            return None
-        return self.opencode.cached_session(strip_scope(primary))
 
     def _pending_result(self, selected, scope, live, generation):
         """Honest pending/unavailable panel for the requested scope.
@@ -702,15 +605,12 @@ class ProviderPoller:
         scoped tokens/cost are never filled from incompatible cache.
         """
         working = None
-        if live:
-            if selected == PROVIDER_OPENCODE:
-                working = opencode_working_context(self._working_row())
-            elif selected == PROVIDER_CODEX:
-                read = self._reads.get(PROVIDER_CODEX)
-                context = (read.get('working_context')
-                           if isinstance(read, dict) else None)
-                if isinstance(context, dict):
-                    working = dict(context, provider_id=PROVIDER_CODEX)
+        if live and selected == PROVIDER_CODEX:
+            read = self._reads.get(PROVIDER_CODEX)
+            context = (read.get('working_context')
+                       if isinstance(read, dict) else None)
+            if isinstance(context, dict):
+                working = dict(context, provider_id=PROVIDER_CODEX)
         return dict(provider_id=selected, status='no_reliable_record',
                     available=False, scope=scope, working_context=working)
 
@@ -727,28 +627,7 @@ class ProviderPoller:
             result['selection'] = snapshot
             result['generation'] = generation
             return result
-        if selected == PROVIDER_OPENCODE:
-            read = self._reads.get(PROVIDER_OPENCODE)
-            result = opencode_display(read)
-            # Provenance guarantees this display scope is the requested
-            # one; a defensive scope repair keeps Global/Project labels
-            # honest even if a future adapter path drifts.
-            result['scope'] = scope
-            row = self._working_row() if live else None
-            context = (opencode_working_context(row)
-                       if row is not None else None)
-            if context is not None and not result.get('available'):
-                # The requested scope names no session, but selection
-                # holds verified live evidence bound to this exact cached
-                # row: present the active session itself (explicitly
-                # marked), never a waiting panel over live context. A
-                # missing/unbound row keeps the honest unavailable panel.
-                active = opencode_active_display(
-                    row, scope, (read or {}).get('reason') or '')
-                if active is not None:
-                    result = active
-            result['working_context'] = context
-        elif selected == PROVIDER_CODEX:
+        if selected == PROVIDER_CODEX:
             read = self._reads.get(PROVIDER_CODEX) or {}
             result = dict(read.get('payload') or {})
             result['provider_id'] = PROVIDER_CODEX
@@ -787,18 +666,16 @@ class ProviderPoller:
         if isinstance(tick_or_pref, _Tick):
             tick = tick_or_pref
             self._submit(PROVIDER_CODEX, tick)
-            self._submit(PROVIDER_OPENCODE, tick)
             return
         with self._lock:
             if self._closed:
                 return
             epoch = self._epoch
             generation = self.generation
-        template = _Tick(generation, epoch, tick_or_pref,
+        template = _Tick(generation, epoch, normalize_tracking_provider(tick_or_pref),
                          _normalize_scope(scope), pinned or '',
                          want_history, active_title, detection_valid, now)
         self._submit(PROVIDER_CODEX, template)
-        self._submit(PROVIDER_OPENCODE, template)
 
     def _obsolete_result(self, tick):
         """Tick retired by a newer epoch/generation: no selection mutation,
@@ -808,8 +685,6 @@ class ProviderPoller:
                 return self._closed_result(tick)
             snapshot = self.selection.snapshot()
             codex_read = self._reads.get(PROVIDER_CODEX)
-            opencode_read = self._reads.get(PROVIDER_OPENCODE)
-            activity = self._activity
         result = dict(provider_id=tick.preference
                       if tick.preference != 'auto' else PROVIDER_CODEX,
                       status='obsolete_tick', available=False,
@@ -818,7 +693,6 @@ class ProviderPoller:
         return dict(generation=tick.generation, preference=tick.preference,
                     selection=snapshot, provider_id=result['provider_id'],
                     result=result, codex=codex_read,
-                    opencode=opencode_read, opencode_activity=activity,
                     active_tasks=[])
 
     def _closed_result(self, tick=None, prefs=None):
@@ -831,8 +705,6 @@ class ProviderPoller:
             scope = (tick.scope if tick is not None
                      else _normalize_scope((prefs or {}).get('scope')))
             codex_read = self._reads.get(PROVIDER_CODEX)
-            opencode_read = self._reads.get(PROVIDER_OPENCODE)
-            activity = self._activity
         result = dict(provider_id=preference
                       if preference != 'auto' else PROVIDER_CODEX,
                       status='no_reliable_record', available=False,
@@ -844,7 +716,6 @@ class ProviderPoller:
         return dict(generation=generation, preference=preference,
                     selection=snapshot, provider_id=result['provider_id'],
                     result=result, codex=codex_read,
-                    opencode=opencode_read, opencode_activity=activity,
                     active_tasks=[])
 
     @staticmethod
@@ -859,14 +730,10 @@ class ProviderPoller:
     def _coherent_failure(self, tick):
         """Current-tick failure with internally coherent selection.
 
-        The failure is fed through ProviderSelection as explicit
-        conservative statuses, so the snapshot cannot claim Live beside
+        The failure is fed through ProviderSelection as an explicit
+        conservative Codex status, so the snapshot cannot claim Live beside
         failed/unavailable data and the published working context is
-        always None. A manual preference fails only its own provider
-        (manual never fails over, so the result stays preference-bound
-        and unavailable); under Auto the whole tick fails instead of
-        letting one lane claim a fresh validation the failed tick never
-        performed. Compatible cached history stays stored internally but
+        always None. Compatible cached history stays stored internally but
         is never presented as freshly validated. A tick retired by a
         concurrent change returns its older generation untouched for the
         GUI guard; nothing here stamps use-time. Caller holds no lock."""
@@ -896,8 +763,6 @@ class ProviderPoller:
                 generation=tick.generation, preference=preference,
                 selection=snapshot, provider_id=result['provider_id'],
                 result=result, codex=self._reads.get(PROVIDER_CODEX),
-                opencode=self._reads.get(PROVIDER_OPENCODE),
-                opencode_activity=self._activity,
                 active_tasks=self._merged_active_tasks(
                     preference, tick.now, statuses=inputs))
 
@@ -1022,8 +887,7 @@ class ProviderPoller:
         bridge never receives an untagged fallback: Codex reset
         construction is failure-atomic (the old adapter is kept and only
         the Codex source is marked failed), the same iteration then
-        continues with a fresh poll so OpenCode still updates
-        independently, and poll-body failures return coherent results
+        continues with a fresh Codex poll; poll-body failures return coherent results
         for their own tick generation. Successful resets fall through
         to a fresh poll with a new tick. Never stamps use-time.
         """
@@ -1033,7 +897,7 @@ class ProviderPoller:
             preference = normalize_tracking_provider(
                 prefs.get('tracking_provider'))
         except Exception:
-            preference = 'auto'
+            preference = PROVIDER_CODEX
         try:
             scope = _normalize_scope(prefs.get('scope'))
         except Exception:
@@ -1050,8 +914,7 @@ class ProviderPoller:
                 # Failure-atomic and provider-isolated: construction
                 # failed before any shared mutation, so mark only the
                 # Codex source failed (keeping the old adapter) and fall
-                # through — the fresh poll below lets OpenCode update
-                # independently instead of inheriting a Codex failure.
+                # through to a fresh read on the retained adapter.
                 self._fail_codex_reset()
         if new_adapter is not None:
             with self._lock:

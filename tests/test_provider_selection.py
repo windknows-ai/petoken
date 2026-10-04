@@ -1,3 +1,5 @@
+# Historical multi-provider ranking is isolated through explicit provider-ID
+# injection. Production defaults and preference migration are tested separately.
 """Slice 4: deterministic provider selection. Fake clock, no I/O."""
 import copy
 import sqlite3
@@ -42,10 +44,10 @@ def status(pid, available=True, working=False, activity_at=None,
 
 
 class FailClosedDefaultsTests(unittest.TestCase):
-    """Production defaults with omitted flags: raw dicts, no helper."""
+    """Historical generic-selector flags: raw dicts, no helper."""
 
     def test_omitted_flags_exclude_from_workers(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         bare_working = {'provider_id': 'codex', 'available': True,
                         'working': True, 'activity_at': NOW,
                         'last_success_at': NOW}
@@ -61,7 +63,7 @@ class FailClosedDefaultsTests(unittest.TestCase):
         self.assertFalse(snap['live'])
 
     def test_omitted_flags_stay_unknown_in_output(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.mark_used('codex', now=NOW - 5)
         bare = {'provider_id': 'codex', 'available': True,
                 'source_available': True, 'last_success_at': NOW}
@@ -73,7 +75,7 @@ class FailClosedDefaultsTests(unittest.TestCase):
         self.assertFalse(snap['live'])
 
     def test_manual_requires_explicit_source(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         bare = {'provider_id': 'opencode', 'available': True,
                 'last_success_at': NOW}
         snap = sel.update({'codex': {'provider_id': 'codex',
@@ -94,25 +96,25 @@ class FailClosedDefaultsTests(unittest.TestCase):
 
 class PreferenceTests(unittest.TestCase):
     def test_normalize_tracking_provider(self):
-        self.assertEqual(normalize_tracking_provider('auto'), 'auto')
+        self.assertEqual(normalize_tracking_provider('auto'), 'codex')
         self.assertEqual(normalize_tracking_provider(' Codex '), 'codex')
-        self.assertEqual(normalize_tracking_provider('OPENCODE'), 'opencode')
+        self.assertEqual(normalize_tracking_provider('OPENCODE'), 'codex')
         for legacy in (None, '', 'all', 'All Providers', 5, True, ['auto']):
-            self.assertEqual(normalize_tracking_provider(legacy), 'auto')
+            self.assertEqual(normalize_tracking_provider(legacy), 'codex')
 
     def test_preferences_round_trip_isolated(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'prefs.json'
             save_preferences(path, {'tracking_provider': 'opencode'})
             self.assertEqual(load_preferences(path)['tracking_provider'],
-                             'opencode')
+                             'codex')
             save_preferences(path, {'tracking_provider': 'bogus'})
             loaded = load_preferences(path)
-            self.assertEqual(loaded['tracking_provider'], 'auto')
+            self.assertEqual(loaded['tracking_provider'], 'codex')
             # Legacy files without the key gain the default; old keys stay.
             save_preferences(path, {'scope': 'global'})
             loaded = load_preferences(path)
-            self.assertEqual(loaded['tracking_provider'], 'auto')
+            self.assertEqual(loaded['tracking_provider'], 'codex')
             self.assertEqual(loaded['scope'], 'global')
 
     def test_normalize_keeps_existing_keys(self):
@@ -124,7 +126,7 @@ class PreferenceTests(unittest.TestCase):
 
 class ManualSelectionTests(unittest.TestCase):
     def test_manual_wins_immediately_over_working_other(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         inputs = {'codex': status('codex', working=True, activity_at=NOW),
                   'opencode': status('opencode', working=True,
                                      activity_at=NOW - 10)}
@@ -134,7 +136,7 @@ class ManualSelectionTests(unittest.TestCase):
         self.assertFalse(snap['historical'])
 
     def test_manual_unavailable_lands_daily_immediately(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True,
                                    activity_at=NOW)}, now=NOW)
         snap = sel.update({'codex': status('codex', working=True,
@@ -149,7 +151,7 @@ class ManualSelectionTests(unittest.TestCase):
         self.assertEqual(snap['reason'], 'manual_unavailable')
 
     def test_manual_marks_use_time_externally(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.mark_used('opencode', now=NOW)
         self.assertEqual(sel.last_use, {'opencode': NOW})
         sel.mark_used('bogus', now=NOW)
@@ -158,7 +160,7 @@ class ManualSelectionTests(unittest.TestCase):
 
 class AutoRankingTests(unittest.TestCase):
     def test_sole_working_wins(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': status('codex', activity_at=NOW - 100),
              'opencode': status('opencode', working=True,
@@ -167,7 +169,7 @@ class AutoRankingTests(unittest.TestCase):
                          ('opencode', True, 'working'))
 
     def test_both_working_newest_activity_wins(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': status('codex', working=True, activity_at=NOW - 30),
              'opencode': status('opencode', working=True,
@@ -177,7 +179,7 @@ class AutoRankingTests(unittest.TestCase):
         self.assertTrue(snap['live'])
 
     def test_both_working_tie_retains_current(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         first = {'codex': status('codex', working=True, activity_at=NOW),
                  'opencode': status('opencode', working=True,
                                     activity_at=NOW - 5)}
@@ -190,7 +192,7 @@ class AutoRankingTests(unittest.TestCase):
         self.assertTrue(snap['tie_broken'])
 
     def test_both_working_tie_fresh_prefers_stable_order(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'opencode': status('opencode', working=True, activity_at=NOW),
              'codex': status('codex', working=True, activity_at=NOW)},
@@ -199,7 +201,7 @@ class AutoRankingTests(unittest.TestCase):
         self.assertTrue(snap['tie_broken'])
 
     def test_unknown_activity_sorts_last(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': status('codex', working=True, activity_at=None),
              'opencode': status('opencode', working=True,
@@ -207,7 +209,7 @@ class AutoRankingTests(unittest.TestCase):
         self.assertEqual(snap['selected'], 'opencode')
 
     def test_neither_working_newest_activity_wins_historical(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': status('codex', activity_at=NOW - 100),
              'opencode': status('opencode', activity_at=NOW - 10)}, now=NOW)
@@ -217,7 +219,7 @@ class AutoRankingTests(unittest.TestCase):
         self.assertTrue(snap['historical'])
 
     def test_explicit_use_beats_older_activity(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.mark_used('codex', now=NOW - 5)
         snap = sel.update(
             {'codex': status('codex', activity_at=NOW - 100),
@@ -225,14 +227,14 @@ class AutoRankingTests(unittest.TestCase):
         self.assertEqual(snap['selected'], 'codex')
 
     def test_auto_selection_never_refreshes_use_time(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', activity_at=NOW),
                     'opencode': status('opencode', activity_at=NOW - 50)},
                    now=NOW)
         self.assertEqual(sel.last_use, {})
 
     def test_all_unknown_retains_current(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', activity_at=NOW)}, now=NOW)
         snap = sel.update({'codex': status('codex'),
                            'opencode': status('opencode')}, now=NOW)
@@ -240,14 +242,14 @@ class AutoRankingTests(unittest.TestCase):
                          ('codex', 'retained_current'))
 
     def test_all_unknown_fresh_uses_stable_order(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update({'opencode': status('opencode'),
                            'codex': status('codex')}, now=NOW)
         self.assertEqual((snap['selected'], snap['reason']),
                          ('codex', 'stable_order'))
 
     def test_no_provider_means_unavailable_empty(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update({'codex': status('codex', available=False,
                                            source_available=False,
                                            activity_valid=False,
@@ -262,11 +264,11 @@ class AutoRankingTests(unittest.TestCase):
         self.assertEqual(snap['reason'], 'no_provider')
 
     def test_foreground_keys_cannot_change_ranking(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         base = {'codex': status('codex', activity_at=NOW - 100),
                 'opencode': status('opencode', activity_at=NOW - 10)}
         plain = sel.update(dict(base), now=NOW)
-        loaded = ProviderSelection()
+        loaded = ProviderSelection(('codex', 'opencode'))
         spiked = loaded.update(
             {'codex': status('codex', activity_at=NOW - 100,
                              foreground=True, active_title='Codex Task'),
@@ -278,7 +280,7 @@ class AutoRankingTests(unittest.TestCase):
 
 class StabilityTests(unittest.TestCase):
     def test_switch_waits_one_second(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW),
                     'opencode': status('opencode', activity_at=NOW - 50)},
                    now=NOW)
@@ -295,7 +297,7 @@ class StabilityTests(unittest.TestCase):
         self.assertIsNone(snap['pending_switch'])
 
     def test_flapping_never_switches(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW),
                     'opencode': status('opencode', activity_at=NOW - 50)},
                    now=NOW)
@@ -311,7 +313,7 @@ class StabilityTests(unittest.TestCase):
         self.assertEqual(snap['selected'], 'codex')
 
     def test_unavailable_current_switches_immediately(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW),
                     'opencode': status('opencode', activity_at=NOW - 50)},
                    now=NOW)
@@ -324,7 +326,7 @@ class StabilityTests(unittest.TestCase):
         self.assertIsNone(snap['pending_switch'])
 
     def test_badge_drops_immediately_on_stop(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW),
                     'opencode': status('opencode', activity_at=NOW - 500)},
                    now=NOW)
@@ -339,7 +341,7 @@ class StabilityTests(unittest.TestCase):
 
 class FreshnessFailureTests(unittest.TestCase):
     def test_stale_working_loses_live_but_stays_selectable(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': status('codex', working=True, activity_at=NOW - 100,
                              success_at=NOW - FRESHNESS_S - 1),
@@ -351,7 +353,7 @@ class FreshnessFailureTests(unittest.TestCase):
         self.assertTrue(snap['historical'])
 
     def test_failure_removes_live_immediately(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW)},
                    now=NOW)
         snap = sel.update({'codex': status('codex', available=False,
@@ -365,7 +367,7 @@ class FreshnessFailureTests(unittest.TestCase):
 
 class GenerationTests(unittest.TestCase):
     def test_late_generation_rejected(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         first = sel.update(
             {'codex': status('codex', activity_at=NOW)}, now=NOW,
             generation=5)
@@ -392,7 +394,7 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual(advanced['selected'], 'opencode')
 
     def test_late_result_after_switch_ignored(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW)},
                    now=NOW, generation=1)
         sel.update({'opencode': status('opencode', working=True,
@@ -444,7 +446,7 @@ class ProviderIntegrationTests(unittest.TestCase):
             fake_now = BASE_MS / 1000 + 101
             opencode_read = provider.read(scope='global')
             activity = provider.activity_snapshot(now=fake_now)
-            sel = ProviderSelection()
+            sel = ProviderSelection(('codex', 'opencode'))
             snap = sel.update(
                 {'codex': codex_provider_status(codex_read,
                                                 last_success_at=fake_now),
@@ -478,7 +480,7 @@ class ProviderIntegrationTests(unittest.TestCase):
             fake_now = BASE_MS / 1000 + 101
             opencode_read = provider.read(scope='global')
             activity = provider.activity_snapshot(now=fake_now)
-            sel = ProviderSelection()
+            sel = ProviderSelection(('codex', 'opencode'))
             snap = sel.update(
                 {'codex': codex_provider_status(codex_read,
                                                 last_success_at=fake_now),
@@ -493,7 +495,7 @@ class ProviderIntegrationTests(unittest.TestCase):
 
 class ManualBypassTests(unittest.TestCase):
     def test_manual_bypasses_debounce_both_directions(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         codex_live = {'codex': status('codex', working=True,
                                       activity_at=NOW),
                       'opencode': status('opencode', working=True,
@@ -514,7 +516,7 @@ class ManualBypassTests(unittest.TestCase):
         self.assertIsNone(back['pending_switch'])
 
     def test_manual_during_pending_auto_discards_pending(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW),
                     'opencode': status('opencode', activity_at=NOW - 50)},
                    now=NOW)
@@ -531,7 +533,7 @@ class ManualBypassTests(unittest.TestCase):
 
 class ValiditySeparationTests(unittest.TestCase):
     def test_missing_scope_working_provider_still_wins(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         codex = status('codex', available=False, source_available=True,
                        activity_valid=True, working=True, activity_at=NOW,
                        error='status_pinned_unavailable')
@@ -547,7 +549,7 @@ class ValiditySeparationTests(unittest.TestCase):
         self.assertFalse(snap['activity_unknown'])
 
     def test_unverified_activity_stays_unknown(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.mark_used('opencode', now=NOW - 5)
         codex = status('codex', available=True, source_available=True,
                        activity_valid=True, working=False, activity_at=None)
@@ -562,7 +564,7 @@ class ValiditySeparationTests(unittest.TestCase):
         self.assertTrue(snap['historical'])
 
     def test_invalid_activity_blocks_working_claim(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         codex = status('codex', available=True, source_available=True,
                        activity_valid=False, working=True, activity_at=NOW)
         opencode = status('opencode', available=True, source_available=True,
@@ -574,7 +576,7 @@ class ValiditySeparationTests(unittest.TestCase):
         self.assertFalse(snap['live'])
 
     def test_error_excludes_despite_history(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         codex = status('codex', available=False, source_available=False,
                        activity_valid=False, working=False, activity_at=None,
                        error='store_locked')
@@ -594,7 +596,7 @@ class LateReevaluationTests(unittest.TestCase):
     def test_late_batch_reevaluates_freshness(self):
         # Reviewer repro: generation 2 live at t, rejected generation 1
         # at t+6 must return live=False/stale=True, not frozen values.
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         live_batch = {'codex': status('codex', working=True,
                                       activity_at=NOW)}
         sel.update(live_batch, now=NOW, generation=2)
@@ -607,7 +609,7 @@ class LateReevaluationTests(unittest.TestCase):
         self.assertTrue(reevaluated['historical'])
 
     def test_manual_change_during_inflight_poll(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.update({'codex': status('codex', working=True, activity_at=NOW),
                     'opencode': status('opencode', activity_at=NOW - 50)},
                    now=NOW, generation=5)
@@ -622,7 +624,7 @@ class LateReevaluationTests(unittest.TestCase):
         self.assertEqual(switched['applied_generation'], 5)
 
     def test_mismatched_provider_tags_dropped(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         swapped = {'codex': status('opencode', working=True,
                                    activity_at=NOW),
                    'opencode': status('codex', working=False)}
@@ -708,7 +710,7 @@ class AttributableRecencyTests(unittest.TestCase):
         # The idle metadata edit moves no lifecycle instant.
         self.assertEqual(before['activity_at'], after['activity_at'])
         self.assertEqual(before['activity_at'], open_start_ms / 1000)
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         codex = status('codex', available=True, source_available=True,
                        activity_valid=True, working=True,
                        activity_at=sample_epoch, success_at=now_s)
@@ -716,7 +718,7 @@ class AttributableRecencyTests(unittest.TestCase):
             sel.update({'codex': codex,
                         'opencode': dict(before, last_success_at=now_s)},
                        now=now_s)['selected'], 'codex')
-        sel2 = ProviderSelection()
+        sel2 = ProviderSelection(('codex', 'opencode'))
         self.assertEqual(
             sel2.update({'codex': codex,
                          'opencode': dict(after, last_success_at=now_s)},
@@ -761,7 +763,7 @@ class AttributableRecencyTests(unittest.TestCase):
         self.assertTrue(activity['working'])
         self.assertEqual(before['activity_at'], open_start_ms / 1000)
         self.assertEqual(after_codex['activity_at'], sample_epoch)
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': after_codex,
              'opencode': dict(before, last_success_at=now_s)}, now=now_s)
@@ -776,7 +778,7 @@ class EndToEndValidityTests(unittest.TestCase):
         self.assertFalse(shaped['activity_valid'])
         self.assertFalse(shaped['working'])
         self.assertIsNone(shaped['activity_at'])
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         opencode = status('opencode', activity_at=NOW - 500)
         snap = sel.update({'codex': shaped, 'opencode': opencode}, now=NOW)
         self.assertEqual(snap['selected'], 'opencode')
@@ -794,7 +796,7 @@ class EndToEndValidityTests(unittest.TestCase):
         shaped = codex_provider_status(read, last_success_at=NOW)
         self.assertFalse(shaped['activity_valid'])
         self.assertFalse(shaped['working'])
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': shaped,
              'opencode': status('opencode', activity_at=NOW - 500)},
@@ -823,7 +825,7 @@ class EndToEndValidityTests(unittest.TestCase):
         self.assertFalse(shaped['source_available'])
         self.assertFalse(shaped['working'])
         self.assertTrue(shaped['available'])  # cached data displayable
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': shaped,
              'opencode': status('opencode', activity_at=NOW - 500)},
@@ -843,7 +845,7 @@ class EndToEndValidityTests(unittest.TestCase):
             active_title='t1', pinned='ghost', scope='conversation',
             activity_detection_valid=True)
         shaped = codex_provider_status(read, last_success_at=NOW)
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': shaped,
              'opencode': status('opencode', activity_at=NOW - 500)},
@@ -864,7 +866,7 @@ class EndToEndValidityTests(unittest.TestCase):
         self.assertTrue(shaped['source_available'])
         self.assertTrue(shaped['activity_valid'])
         self.assertFalse(shaped['working'])
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         opencode = status('opencode', activity_at=None)
         opencode['activity_valid'] = False
         snap = sel.update({'codex': shaped, 'opencode': opencode}, now=NOW)
@@ -890,7 +892,7 @@ class EndToEndValidityTests(unittest.TestCase):
         self.assertFalse(shaped['source_available'])
         self.assertFalse(shaped['working'])
         self.assertTrue(shaped['available'])  # cached data displayable
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': shaped,
              'opencode': status('opencode', activity_at=NOW - 500)},
@@ -925,7 +927,7 @@ class EndToEndValidityTests(unittest.TestCase):
             active_title='t1', scope='global',
             activity_detection_valid=True)
         shaped = codex_provider_status(read, last_success_at=NOW)
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         snap = sel.update(
             {'codex': shaped,
              'opencode': status('opencode', activity_at=NOW - 500)},
@@ -976,9 +978,9 @@ class DualLayerOpenCodeFailureTests(unittest.TestCase):
     def _run_chain(self, read, activity):
         shaped = opencode_provider_status(read, activity,
                                           last_success_at=NOW)
-        auto = ProviderSelection().update(
+        auto = ProviderSelection(('codex', 'opencode')).update(
             {'codex': self._opponent(), 'opencode': shaped}, now=NOW)
-        manual = ProviderSelection().update(
+        manual = ProviderSelection(('codex', 'opencode')).update(
             {'codex': self._opponent(), 'opencode': shaped},
             preference='opencode', now=NOW)
         return shaped, auto, manual
@@ -1027,7 +1029,7 @@ class DualLayerOpenCodeFailureTests(unittest.TestCase):
             read, activity = self._live_pair(directory)
             shaped = opencode_provider_status(read, activity,
                                               last_success_at=NOW)
-            sel = ProviderSelection()
+            sel = ProviderSelection(('codex', 'opencode'))
             snap = sel.update(
                 {'codex': self._opponent(), 'opencode': shaped}, now=NOW)
             self.assertEqual((snap['selected'], snap['live']),
@@ -1149,13 +1151,13 @@ class SyntheticThirdProviderTests(unittest.TestCase):
 
 
 class TrackingPreferenceTests(unittest.TestCase):
-    def test_unknown_persisted_preference_falls_back_to_auto(self):
-        self.assertEqual(normalize_tracking_provider('synthetic'), 'auto')
-        self.assertEqual(normalize_tracking_provider(''), 'auto')
-        self.assertEqual(normalize_tracking_provider(None), 'auto')
+    def test_unknown_persisted_preference_falls_back_to_codex(self):
+        self.assertEqual(normalize_tracking_provider('synthetic'), 'codex')
+        self.assertEqual(normalize_tracking_provider(''), 'codex')
+        self.assertEqual(normalize_tracking_provider(None), 'codex')
 
     def test_manual_codex_back_to_auto_resumes_ranking(self):
-        sel = ProviderSelection()
+        sel = ProviderSelection(('codex', 'opencode'))
         sel.mark_used('codex', now=NOW - 20)
         manual = sel.update(
             {'codex': status('codex', activity_at=NOW - 100),

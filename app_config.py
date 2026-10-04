@@ -71,6 +71,7 @@ def normalize_preferences(data):
         preferences["settings_schema_version"] = SETTINGS_SCHEMA_VERSION
     preferences["token_number_format"] = normalize_token_format(
         preferences.get("token_number_format"))
+    # Normalize retired provider choices in memory; loading never rewrites disk.
     preferences["tracking_provider"] = normalize_tracking_provider(
         preferences.get("tracking_provider"))
     preferences["language"] = normalize_language(preferences.get("language"))

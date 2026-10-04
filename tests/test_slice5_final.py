@@ -1,10 +1,11 @@
-"""V1.2 Slice 5 final correction pass: whole-poll immutability + safe shutdown.
+"""Codex-only Slice 5 regression: whole-poll immutability + safe shutdown.
 
 Deterministic Events/barriers/fake clocks only. No sleep-based primary
 proof (join timeouts guard hangs, never prove correctness).
 """
 import subprocess
 import sys
+import json
 import sqlite3
 import tempfile
 import threading
@@ -15,14 +16,31 @@ from pathlib import Path
 from unittest.mock import patch
 
 from provider_poller import ProviderPoller
-from providers import (PROVIDER_CODEX, PROVIDER_OPENCODE, CodexProvider)
-from opencode_provider import OpenCodeProvider
-from tests.test_opencode_provider import (BASE_MS, make_message, make_part,
-                                          make_session, write_store)
+from providers import (PROVIDER_CODEX, CodexProvider)
 from tests.test_providers import write_home
 from usage import CodexStore
 
-NOW_S = BASE_MS / 1000 + 100
+NOW_S = time.time()
+
+
+def write_codex_home(home, threads):
+    """Distinct synthetic task totals/projects expose cache relabeling."""
+    write_home(str(home), threads)
+    with closing(sqlite3.connect(Path(home) / 'state_1.sqlite')) as db:
+        for index, spec in enumerate(threads):
+            thread = spec['id']
+            db.execute('UPDATE threads SET project_id=?, cwd=? WHERE id=?',
+                       (f'proj-{index}', f'D:/synthetic/project-{index}', thread))
+            path = Path(home) / f'{thread}.jsonl'
+            rows = [json.loads(line) for line in path.read_text(encoding='utf-8').splitlines()]
+            for row in rows:
+                info = (row.get('payload') or {}).get('info')
+                if info:
+                    for key in ('total_token_usage', 'last_token_usage'):
+                        info[key] = {key: value * (index * 2 + 1)
+                                     for key, value in info[key].items()}
+            path.write_text(''.join(json.dumps(row) + '\n' for row in rows), encoding='utf-8')
+        db.commit()
 
 
 class FinalFixture:
@@ -37,21 +55,22 @@ class FinalFixture:
     def codex(self, threads):
         home = self._fresh('codex')
         home.mkdir(parents=True, exist_ok=True)
-        write_home(str(home), threads)
+        write_codex_home(home, threads)
         return CodexStore(home)
 
-    def opencode(self, sessions, messages=(), parts=()):
-        path = self._fresh('open.db')
-        write_store(path, sessions, messages, parts)
-        return path
 
 
 def _sync(poller, prefs=None, **kw):
+    kw.setdefault('active_title', 't1')
+    kw.setdefault('detection_valid', True)
     poller.poll(prefs, **kw)
     assert poller.drain(timeout=10), 'reads did not finish'
     poller.poll(prefs, **kw)
     assert poller.drain(timeout=10), 'reads did not finish'
-    return poller.poll(prefs, **kw)
+    result = poller.poll(prefs, **kw)
+    assert poller.drain(timeout=10), 'last read did not finish'
+    poller._collect()
+    return result
 
 
 class WholePollRaceTests(unittest.TestCase):
@@ -75,16 +94,7 @@ class WholePollRaceTests(unittest.TestCase):
     def _poller(self):
         store = self.fixture.codex(
             [{'id': 't1', 'working': True}, {'id': 't2'}])
-        db = self.fixture.opencode(
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
         return poller
 
@@ -102,11 +112,11 @@ class WholePollRaceTests(unittest.TestCase):
         poller._collect = blocking
         return entered, release
 
-    def test_codex_global_to_opencode_project_race(self):
+    def test_codex_global_to_project_whole_tick_race(self):
         poller = self._poller()
         _sync(poller, {'scope': 'global'}, active_title='t1',
               detection_valid=True, now=NOW_S)
-        # Old global provenance is cached for both providers now.
+        # Global provenance is cached for the sole Codex source.
         entered, release = self._block_collect(poller)
         outcome = {}
         thread = threading.Thread(
@@ -117,14 +127,14 @@ class WholePollRaceTests(unittest.TestCase):
             daemon=True)
         thread.start()
         self.assertTrue(entered.wait(timeout=10))
-        # Settings change mid-tick: must publish OpenCode/project honestly,
-        # never Global (30) relabeled as Project (10).
+        # Settings change mid-tick: must publish Codex/project honestly,
+        # never Global (440) relabeled as Project (110).
         immediate = poller.apply_settings(
-            {'scope': 'project', 'pinned': 'ses_a',
-             'tracking_provider': 'opencode'},
-            mark_provider='opencode', now=NOW_S)
-        self.assertEqual(immediate['selection']['selected'], 'opencode')
-        self.assertEqual(immediate['result']['provider_id'], 'opencode')
+            {'scope': 'project', 'pinned': 't1',
+             'tracking_provider': 'codex'},
+            mark_provider='codex', now=NOW_S)
+        self.assertEqual(immediate['selection']['selected'], 'codex')
+        self.assertEqual(immediate['result']['provider_id'], 'codex')
         self.assertEqual(immediate['result']['scope'], 'project')
         # No project cache yet: honest pending, never Global-as-Project.
         self.assertFalse(immediate['result']['available'])
@@ -136,33 +146,34 @@ class WholePollRaceTests(unittest.TestCase):
         self.assertEqual(old['result']['scope'], 'global')
         self.assertLess(old['generation'], immediate['generation'])
         # Obsolete tick never submitted old values under the new epoch:
-        # provenance for opencode is still the old global read.
-        self.assertEqual(poller._provenance['opencode']['scope'], 'global')
+        # provenance for Codex is still the old global read.
+        self.assertEqual(poller._provenance['codex']['scope'], 'global')
         # Settle the new scope (three rounds: the first may be blocked by
         # the retired previous-epoch slot, the second submits, the third
         # collects); only then does Project data appear.
         for _ in range(2):
-            poller.poll({'scope': 'project', 'pinned': 'ses_a',
-                         'tracking_provider': 'opencode'}, now=NOW_S)
+            poller.poll({'scope': 'project', 'pinned': 't1',
+                         'tracking_provider': 'codex'}, now=NOW_S)
             self.assertTrue(poller.drain(timeout=10))
         settled = poller.poll(
-            {'scope': 'project', 'pinned': 'ses_a',
-             'tracking_provider': 'opencode'}, now=NOW_S)
+            {'scope': 'project', 'pinned': 't1',
+             'tracking_provider': 'codex'}, now=NOW_S)
         self.assertEqual(settled['result']['scope'], 'project')
         self.assertTrue(settled['result']['available'])
-        self.assertEqual(settled['result']['tokens']['input'], 10)
+        self.assertEqual(settled['result']['tokens']['total_tokens'], 110)
+        self.assertEqual(settled['result']['thread'], 't1')
 
-    def test_opencode_project_to_codex_global_race(self):
+    def test_codex_project_to_global_whole_tick_race(self):
         poller = self._poller()
-        _sync(poller, {'scope': 'project', 'pinned': 'ses_a',
-                       'tracking_provider': 'opencode'}, now=NOW_S)
+        _sync(poller, {'scope': 'project', 'pinned': 't1',
+                       'tracking_provider': 'codex'}, now=NOW_S)
         entered, release = self._block_collect(poller)
         outcome = {}
         thread = threading.Thread(
             target=lambda: outcome.setdefault(
                 'out', poller.poll(
-                    {'scope': 'project', 'pinned': 'ses_a',
-                     'tracking_provider': 'opencode'}, now=NOW_S)),
+                    {'scope': 'project', 'pinned': 't1',
+                     'tracking_provider': 'codex'}, now=NOW_S)),
             daemon=True)
         thread.start()
         self.assertTrue(entered.wait(timeout=10))
@@ -177,14 +188,13 @@ class WholePollRaceTests(unittest.TestCase):
         # (If a global read was already cached from earlier seeding it
         # would be compatible; here the last provenance is project, so
         # the immediate must not reuse it as global.)
-        prov = poller._provenance.get('codex')
-        if prov is not None and prov.get('scope') != 'global':
-            self.assertFalse(immediate['result']['available'])
+        self.assertEqual(poller._provenance['codex']['scope'], 'project')
+        self.assertFalse(immediate['result']['available'])
         release.set()
         thread.join(timeout=10)
         self.assertFalse(thread.is_alive())
         old = outcome['out']
-        self.assertEqual(old['result']['provider_id'], 'opencode')
+        self.assertEqual(old['result']['provider_id'], 'codex')
         self.assertLess(old['generation'], immediate['generation'])
 
 
@@ -205,54 +215,54 @@ class ScopeCompatibilityTests(unittest.TestCase):
 
     def _poller(self):
         store = self.fixture.codex([{'id': 't1'}, {'id': 't2'}])
-        db = self.fixture.opencode(
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
         return poller
 
     def test_global_to_project_is_pending_not_mislabeled(self):
         poller = self._poller()
         _sync(poller, {'scope': 'global',
-                       'tracking_provider': 'opencode'}, now=NOW_S)
+                       'tracking_provider': 'codex'}, now=NOW_S)
         out = poller.apply_settings(
-            {'scope': 'project', 'pinned': 'ses_a',
-             'tracking_provider': 'opencode'}, now=NOW_S)
+            {'scope': 'project', 'pinned': 't1',
+             'tracking_provider': 'codex'}, now=NOW_S)
         self.assertEqual(out['result']['scope'], 'project')
         self.assertFalse(out['result']['available'])
-        # Global sum (30) must never appear as Project (10).
-        tokens = (out['result'].get('tokens') or {})
-        self.assertNotEqual(tokens.get('input'), 30)
+        # Global sum (440) must never appear as Project (110).
+        self.assertIsNone(out['result'].get('tokens'))
+        settled = _sync(poller, {'scope': 'project', 'pinned': 't1'}, now=NOW_S)
+        self.assertEqual(settled['result']['tokens']['total_tokens'], 110)
 
     def test_project_to_conversation_is_pending(self):
         poller = self._poller()
-        _sync(poller, {'scope': 'project', 'pinned': 'ses_a',
-                       'tracking_provider': 'opencode'}, now=NOW_S)
+        _sync(poller, {'scope': 'project', 'pinned': 't1',
+                       'tracking_provider': 'codex'}, now=NOW_S)
         out = poller.apply_settings(
-            {'scope': 'conversation', 'pinned': 'ses_b',
-             'tracking_provider': 'opencode'}, now=NOW_S)
+            {'scope': 'conversation', 'pinned': 't2',
+             'tracking_provider': 'codex'}, now=NOW_S)
         self.assertEqual(out['result']['scope'], 'conversation')
         self.assertFalse(out['result']['available'])
+        settled = _sync(poller, {'scope': 'conversation', 'pinned': 't2'}, now=NOW_S)
+        self.assertEqual(settled['result']['thread'], 't2')
+        self.assertEqual(settled['result']['tokens']['total_tokens'], 330)
 
     def test_pinned_a_to_pinned_b_is_pending(self):
         poller = self._poller()
-        _sync(poller, {'scope': 'conversation', 'pinned': 'ses_a',
-                       'tracking_provider': 'opencode'}, now=NOW_S)
-        before = poller._provenance['opencode']
+        _sync(poller, {'scope': 'conversation', 'pinned': 't1',
+                       'tracking_provider': 'codex'}, now=NOW_S)
+        before = poller._provenance['codex']
         self.assertEqual(before['scope'], 'conversation')
         out = poller.apply_settings(
-            {'scope': 'conversation', 'pinned': 'ses_b',
-             'tracking_provider': 'opencode'}, now=NOW_S)
+            {'scope': 'conversation', 'pinned': 't2',
+             'tracking_provider': 'codex'}, now=NOW_S)
         self.assertEqual(out['result']['scope'], 'conversation')
         self.assertFalse(out['result']['available'])
-        # Never label ses_a data as ses_b.
-        self.assertNotEqual(out['result'].get('session_id'),
-                            'opencode:ses_a')
+        # Never label t1 data as t2.
+        self.assertNotEqual(out['result'].get('thread'),
+                            't1')
+        settled = _sync(poller, {'scope': 'conversation', 'pinned': 't2'}, now=NOW_S)
+        self.assertEqual(settled['result']['thread'], 't2')
+        self.assertEqual(settled['result']['tokens']['total_tokens'], 330)
 
 
 class LateOutcomeTests(unittest.TestCase):
@@ -275,12 +285,8 @@ class LateOutcomeTests(unittest.TestCase):
 
     def _poller(self):
         store = self.fixture.codex(
-            [{'id': 't1', 'working': True}])
-        db = self.fixture.opencode([make_session('ses_1', updated=BASE_MS)],
-                                   [make_message('m1', 'ses_1')],
-                                   [make_part('p1', 'ses_1',
-                                              created=BASE_MS - 100000)])
-        poller = ProviderPoller(store, db)
+            [{'id': 't1', 'working': True}, {'id': 't2'}])
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
         return poller
 
@@ -308,7 +314,7 @@ class LateOutcomeTests(unittest.TestCase):
         thread.start()
         return thread, outcome
 
-    def test_late_success_after_provider_change_cannot_repaint(self):
+    def test_late_success_after_settings_epoch_cannot_repaint(self):
         poller = self._poller()
         _sync(poller, {'scope': 'global'}, active_title='t1',
               detection_valid=True, now=NOW_S)
@@ -319,21 +325,35 @@ class LateOutcomeTests(unittest.TestCase):
                 detection_valid=True, now=NOW_S)
             self.assertTrue(entered.wait(timeout=10))
             thread.join(timeout=10)
+            request = poller._inflight['codex'].request
+            frozen = (request.epoch, request.generation, request.scope,
+                      request.pinned, request.active_title, request.detection_valid,
+                      request.want_history, request.now)
+            accepted = poller._accepted_rid['codex']
             manual = poller.apply_settings(
-                {'scope': 'global', 'tracking_provider': 'opencode'},
-                mark_provider='opencode', now=NOW_S)
-            self.assertEqual(manual['selection']['selected'], 'opencode')
+                {'scope': 'conversation', 'pinned': 't1',
+                 'tracking_provider': 'codex'}, now=NOW_S)
+            self.assertEqual(manual['selection']['selected'], 'codex')
+            self.assertEqual((request.epoch, request.generation, request.scope,
+                              request.pinned, request.active_title,
+                              request.detection_valid, request.want_history,
+                              request.now), frozen)
+            self.assertLess(request.epoch, poller._epoch)
             release.set()
             self.assertTrue(poller.drain(timeout=10))
+            poller._collect()
+            self.assertEqual(poller._accepted_rid['codex'], accepted)
             settled = poller.poll(
-                {'scope': 'global', 'tracking_provider': 'opencode'},
+                {'scope': 'conversation', 'pinned': 't1',
+                 'tracking_provider': 'codex'},
                 now=NOW_S)
-            self.assertEqual(settled['selection']['selected'], 'opencode')
-            self.assertLess(thread.ident, 10 ** 12)  # thread finished
+            self.assertEqual(settled['selection']['selected'], 'codex')
+            self.assertEqual(settled['result']['scope'], 'conversation')
+            self.assertFalse(thread.is_alive())
         finally:
             release.set()
 
-    def test_late_error_after_provider_change_cannot_repaint(self):
+    def test_late_error_after_settings_epoch_cannot_repaint(self):
         poller = self._poller()
         _sync(poller, {'scope': 'global'}, active_title='t1',
               detection_valid=True, now=NOW_S)
@@ -344,16 +364,20 @@ class LateOutcomeTests(unittest.TestCase):
                 detection_valid=True, now=NOW_S)
             self.assertTrue(entered.wait(timeout=10))
             thread.join(timeout=10)
+            accepted = poller._accepted_rid['codex']
             manual = poller.apply_settings(
-                {'scope': 'global', 'tracking_provider': 'opencode'},
-                mark_provider='opencode', now=NOW_S)
+                {'scope': 'project', 'pinned': 't1',
+                 'tracking_provider': 'codex'}, now=NOW_S)
             gen = manual['generation']
             release.set()
             self.assertTrue(poller.drain(timeout=10))
+            poller._collect()
+            self.assertEqual(poller._accepted_rid['codex'], accepted)
             settled = poller.poll(
-                {'scope': 'global', 'tracking_provider': 'opencode'},
+                {'scope': 'project', 'pinned': 't1',
+                 'tracking_provider': 'codex'},
                 now=NOW_S)
-            self.assertEqual(settled['selection']['selected'], 'opencode')
+            self.assertEqual(settled['selection']['selected'], 'codex')
             self.assertGreaterEqual(settled['generation'], gen)
         finally:
             release.set()
@@ -401,8 +425,7 @@ class ResetRaceTests(unittest.TestCase):
 
     def test_reset_codex_during_inflight_uses_old_adapter_and_retires(self):
         store = self.fixture.codex([{'id': 't1', 'working': True}])
-        db = self.fixture.opencode([make_session('ses_1')])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
         _sync(poller, {'scope': 'global'}, active_title='t1',
               detection_valid=True)
@@ -468,8 +491,7 @@ class CloseSafetyTests(unittest.TestCase):
 
     def test_close_twice_safe_and_no_post_close_mutation(self):
         store = self.fixture.codex([{'id': 't1', 'working': True}])
-        db = self.fixture.opencode([make_session('ses_1')])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         try:
             _sync(poller, {'scope': 'global'}, active_title='t1',
                   detection_valid=True)
@@ -501,16 +523,13 @@ class ShutdownSubprocessTests(unittest.TestCase):
                 f"sys.path.insert(0, {str(Path(__file__).resolve().parent)!r})\n"
                 "from provider_poller import ProviderPoller\n"
                 "from test_providers import write_home\n"
-                "from test_opencode_provider import write_store, make_session\n"
                 "from usage import CodexStore\n"
                 "from providers import CodexProvider\n"
                 "tmp = tempfile.TemporaryDirectory()\n"
                 "home = Path(tmp.name) / 'codex'\n"
                 "home.mkdir()\n"
                 "write_home(str(home), [{'id': 't1'}])\n"
-                "db = Path(tmp.name) / 'open.db'\n"
-                "write_store(db, [make_session('ses_1')])\n"
-                "poller = ProviderPoller(CodexStore(home), db)\n"
+                "poller = ProviderPoller(CodexStore(home))\n"
                 "entered = threading.Event()\n"
                 "orig = CodexProvider.read\n"
                 "def held(self, *a, **k):\n"
@@ -552,8 +571,7 @@ class PollExceptionTests(unittest.TestCase):
 
     def test_poll_exception_returns_tick_fallback_without_raise(self):
         store = self.fixture.codex([{'id': 't1', 'working': True}])
-        db = self.fixture.opencode([make_session('ses_1')])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
         _sync(poller, {'scope': 'global'}, active_title='t1',
               detection_valid=True)
@@ -573,58 +591,53 @@ class PollExceptionTests(unittest.TestCase):
         self.assertIsNotNone(out['generation'])
         # A newer settings publish still wins; the fallback is older.
         newer = poller.apply_settings(
-            {'scope': 'global', 'tracking_provider': 'opencode'},
-            mark_provider='opencode')
+            {'scope': 'global', 'tracking_provider': 'codex'},
+            mark_provider='codex')
         self.assertGreater(newer['generation'], out['generation'])
 
     def test_late_pinned_change_success_cannot_repaint(self):
         store = self.fixture.codex([{'id': 't1'}, {'id': 't2'}])
-        db = self.fixture.opencode(
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0))])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
-        _sync(poller, {'scope': 'conversation', 'pinned': 'ses_a',
-                       'tracking_provider': 'opencode'}, now=NOW_S)
+        _sync(poller, {'scope': 'conversation', 'pinned': 't1',
+                       'tracking_provider': 'codex'}, now=NOW_S)
         entered = threading.Event()
         release = threading.Event()
-        orig = OpenCodeProvider.read
+        orig = CodexProvider.read
         try:
             def blocking(inner_self, *args, **kwargs):
                 entered.set()
                 assert release.wait(timeout=30)
                 return orig(inner_self, *args, **kwargs)
-            OpenCodeProvider.read = blocking
+            CodexProvider.read = blocking
             outcome = {}
             thread = threading.Thread(
                 target=lambda: outcome.setdefault(
                     'out', poller.poll(
-                        {'scope': 'conversation', 'pinned': 'ses_a',
-                         'tracking_provider': 'opencode'}, now=NOW_S)),
+                        {'scope': 'conversation', 'pinned': 't1',
+                         'tracking_provider': 'codex'}, now=NOW_S)),
                 daemon=True)
             thread.start()
             self.assertTrue(entered.wait(timeout=10))
             thread.join(timeout=10)
             poller.apply_settings(
-                {'scope': 'conversation', 'pinned': 'ses_b',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
+                {'scope': 'conversation', 'pinned': 't2',
+                 'tracking_provider': 'codex'}, now=NOW_S)
             release.set()
             self.assertTrue(poller.drain(timeout=10))
             for _ in range(2):
-                poller.poll({'scope': 'conversation', 'pinned': 'ses_b',
-                             'tracking_provider': 'opencode'}, now=NOW_S)
+                poller.poll({'scope': 'conversation', 'pinned': 't2',
+                             'tracking_provider': 'codex'}, now=NOW_S)
                 self.assertTrue(poller.drain(timeout=10))
             settled = poller.poll(
-                {'scope': 'conversation', 'pinned': 'ses_b',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
-            self.assertNotEqual(settled['result'].get('session_id'),
-                                'opencode:ses_a')
+                {'scope': 'conversation', 'pinned': 't2',
+                 'tracking_provider': 'codex'}, now=NOW_S)
+            self.assertNotEqual(settled['result'].get('thread'),
+                                't1')
+            self.assertEqual(settled['result']['thread'], 't2')
+            self.assertEqual(settled['result']['tokens']['total_tokens'], 330)
         finally:
-            OpenCodeProvider.read = orig
+            CodexProvider.read = orig
             release.set()
 
 
@@ -644,6 +657,8 @@ class QtBridgeRaceTests(unittest.TestCase):
         self.panel = Panel(live=False)
         self.panel.pet = DesktopPet(self.panel)
         self.panel.pet.activity_timer.stop()
+        self.panel.active.title = 't1'
+        self.panel.active.seen = time.time()
         self.work = Path(self.temp.name) / 'stores'
         self.work.mkdir()
 
@@ -667,27 +682,23 @@ class QtBridgeRaceTests(unittest.TestCase):
     def _home(self, name, threads):
         home = self.work / name
         home.mkdir(exist_ok=True)
-        write_home(str(home), threads)
+        write_codex_home(home, threads)
         return CodexStore(home)
 
-    def _db(self, name, sessions, messages=(), parts=()):
-        path = self.work / name
-        write_store(path, sessions, messages, parts)
-        return path
 
-    def _attach(self, threads, sessions, messages=(), parts=()):
+    def _attach(self, threads):
         from provider_poller import ProviderPoller as Poller
         self.panel.provider_poller.drain(timeout=10)
         self.panel.provider_poller.close()
         home = self._home(f'codex-{len(list(self.work.iterdir()))}',
                           threads)
-        db = self._db(f'open-{len(list(self.work.iterdir()))}.db',
-                      sessions, messages, parts)
-        self.panel.provider_poller = Poller(home, db)
+        self.panel.provider_poller = Poller(home)
         return self.panel.provider_poller
 
     def _poll_render(self, prefs=None, now=None, **kw):
         prefs = dict({'scope': 'global'}, **(prefs or {}))
+        kw.setdefault('active_title', 't1')
+        kw.setdefault('detection_valid', True)
         poller = self.panel.provider_poller
         poller.poll(prefs, now=now, **kw)
         self.assertTrue(poller.drain(), 'reads did not finish')
@@ -699,17 +710,7 @@ class QtBridgeRaceTests(unittest.TestCase):
         return out
 
     def test_whole_poll_race_rejected_through_qt_bridge(self):
-        from providers import CodexProvider as _Codex
-        poller = self._attach(
-            [{'id': 't1', 'working': True}, {'id': 't2'}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
+        poller = self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
         self._poll_render(active_title='t1', detection_valid=True,
                           now=NOW_S)
         entered = threading.Event()
@@ -731,18 +732,17 @@ class QtBridgeRaceTests(unittest.TestCase):
                         now=NOW_S)), daemon=True)
             thread.start()
             self.assertTrue(entered.wait(timeout=10))
-            thread.join(timeout=10)
             # Production settings path: persist, apply, synchronous emit.
             self.panel.prefs.update(
-                scope='project', pinned='ses_a',
-                tracking_provider='opencode')
+                scope='project', pinned='t1',
+                tracking_provider='codex')
             immediate = poller.apply_settings(
-                dict(self.panel.prefs), mark_provider='opencode',
+                dict(self.panel.prefs), mark_provider='codex',
                 now=NOW_S)
             # Actual Qt bridge/render path for the immediate emission.
             self.panel.bridge.data.emit(immediate['result'])
             self.app.processEvents()
-            self.assertIn('OpenCode', self.panel.connection.text())
+            self.assertIn('Codex', self.panel.connection.text())
             self.assertEqual(immediate['result']['scope'], 'project')
             self.assertFalse(immediate['result']['available'])
             release.set()
@@ -754,7 +754,7 @@ class QtBridgeRaceTests(unittest.TestCase):
             # Late obsolete emission through the same bridge path.
             self.panel.bridge.data.emit(old['result'])
             self.app.processEvents()
-            self.assertIn('OpenCode', self.panel.connection.text())
+            self.assertIn('Codex', self.panel.connection.text())
             self.assertEqual(
                 self.panel._render_generation,
                 immediate['generation'])
@@ -764,71 +764,44 @@ class QtBridgeRaceTests(unittest.TestCase):
 
     def test_settings_save_paths(self):
         from widget import Settings
-        poller = self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
-        self._poll_render(active_title='t1', detection_valid=True,
-                          now=NOW_S)
+        poller = self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
+        self._poll_render(active_title='t1', detection_valid=True, now=NOW_S)
         gen0 = poller.generation
-        # Manual change applies immediately without another poll.
         settings = Settings(self.panel)
-        settings.tracking.setCurrentIndex(
-            settings.tracking.findData('opencode'))
-        settings.scope.setCurrentIndex(
-            settings.scope.findData('project'))
-        settings.task.setCurrentIndex(max(
-            0, settings.task.findData('ses_a')))
+        self.assertEqual(settings.tracking.count(), 1)
+        self.assertEqual(settings.tracking.itemData(0), 'codex')
+        self.assertTrue(settings.tracking.isHidden())
+        settings.scope.setCurrentIndex(settings.scope.findData('project'))
+        settings.task.setCurrentIndex(max(0, settings.task.findData('t1')))
         settings.save()
-        self.assertEqual(
-            self.panel.prefs['tracking_provider'], 'opencode')
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'codex')
         self.assertEqual(self.panel.prefs['scope'], 'project')
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
         self.assertGreater(poller.generation, gen0)
-        # Simultaneous scope/pinned stay source-consistent: the immediate
-        # project panel is honest pending (no Global relabeled as Project)
-        # and never shows another pinned session's data.
-        immediate_scope = self.panel.snapshot.get('scope')
-        self.assertEqual(immediate_scope, 'project')
-        # Pending unavailable clears the heroes (em-dash, never stale
-        # Global numbers).
+        self.assertEqual(self.panel.snapshot.get('scope'), 'project')
         self.assertEqual(self.panel.total.text(), '—')
-        # Cancel changes nothing (generation + prefs stable).
-        gen1 = poller.generation
+        gen1, prefs1 = poller.generation, dict(self.panel.prefs)
         settings = Settings(self.panel)
-        settings.tracking.setCurrentIndex(
-            settings.tracking.findData('codex'))
+        settings.scope.setCurrentIndex(settings.scope.findData('global'))
         settings.reject()
-        self.assertEqual(
-            self.panel.prefs['tracking_provider'], 'opencode')
+        self.assertEqual(self.panel.prefs, prefs1)
         self.assertEqual(poller.generation, gen1)
-        # Reset applies Auto/default scope honestly (no mislabeled cache).
         settings = Settings(self.panel)
         settings.reset_to_defaults()
         settings.reset_to_defaults()
         settings.save()
-        self.assertEqual(
-            self.panel.prefs['tracking_provider'], 'auto')
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'codex')
         self.assertEqual(self.panel.prefs['scope'], 'conversation')
-        # Failed save invalidates nothing and changes no running state.
-        gen2 = poller.generation
-        sel_before = dict(poller.selection.snapshot())
+        gen2, prefs2 = poller.generation, dict(self.panel.prefs)
+        selection = dict(poller.selection.snapshot())
         settings = Settings(self.panel)
-        settings.tracking.setCurrentIndex(
-            settings.tracking.findData('codex'))
-        with patch('widget.write_preferences',
-                   side_effect=OSError('disk-full')):
+        settings.scope.setCurrentIndex(settings.scope.findData('global'))
+        with patch('widget.write_preferences', side_effect=OSError('disk-full')):
             settings.save()
-        self.assertNotEqual(
-            self.panel.prefs['tracking_provider'], 'codex')
+        self.assertEqual(self.panel.prefs, prefs2)
         self.assertEqual(poller.generation, gen2)
-        self.assertEqual(poller.selection.snapshot(), sel_before)
+        self.assertEqual(poller.selection.snapshot(), selection)
+        self.assertTrue(settings.error.text())
 
 
 class LoopTickFallbackTests(unittest.TestCase):
@@ -857,16 +830,7 @@ class LoopTickFallbackTests(unittest.TestCase):
         threads = ([{'id': 't1', 'working': True}, {'id': 't2'}]
                    if codex_working else [{'id': 't1'}, {'id': 't2'}])
         store = self.fixture.codex(threads)
-        db = self.fixture.opencode(
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
         return poller
 
@@ -886,7 +850,7 @@ class LoopTickFallbackTests(unittest.TestCase):
         target.read = blocking
         return entered, release
 
-    def test_codex_failure_never_pulls_opencode_off(self):
+    def test_held_codex_read_returns_prompt_tagged_snapshot(self):
         poller = self._poller()
         _sync(poller, {'scope': 'global',
                        'tracking_provider': 'opencode'}, now=NOW_S)
@@ -895,30 +859,40 @@ class LoopTickFallbackTests(unittest.TestCase):
             out = poller.loop_tick(
                 {'scope': 'global', 'tracking_provider': 'opencode'},
                 now=NOW_S)
+            self.assertTrue(entered.wait(timeout=10))
             # loop_tick itself never blocks on the held provider.
             self.assertIsNotNone(out['result'].get('generation'))
-            self.assertEqual(out['provider_id'], 'opencode')
-            self.assertEqual(out['selection']['selected'], 'opencode')
+            self.assertEqual(out['provider_id'], 'codex')
+            self.assertEqual(out['selection']['selected'], 'codex')
         finally:
             release.set()
         self.assertTrue(poller.drain(timeout=10))
         settled = poller.loop_tick(
-            {'scope': 'global', 'tracking_provider': 'opencode'},
+            {'scope': 'global', 'tracking_provider': 'codex'},
             now=NOW_S)
-        self.assertEqual(settled['provider_id'], 'opencode')
+        self.assertEqual(settled['provider_id'], 'codex')
         self.assertEqual(poller.selection.last_use, {})
 
-    def test_opencode_failure_never_pulls_codex_off(self):
+    def test_held_codex_read_preserves_verified_cache_until_stale(self):
+        from provider_selection import FRESHNESS_S
         poller = self._poller()
         _sync(poller, {'scope': 'global'}, active_title='t1',
               detection_valid=True, now=NOW_S)
-        entered, release = self._hold(OpenCodeProvider)
+        entered, release = self._hold(CodexProvider)
         try:
             out = poller.loop_tick(
                 {'scope': 'global', 'tracking_provider': 'codex'},
                 active_title='t1', detection_valid=True, now=NOW_S)
             self.assertIsNotNone(out['result'].get('generation'))
             self.assertEqual(out['provider_id'], 'codex')
+            self.assertTrue(entered.wait(timeout=10))
+            self.assertTrue(out['selection']['live'])
+            self.assertTrue(out['result']['available'])
+            stale = poller.loop_tick({'scope': 'global'}, active_title='t1',
+                                    detection_valid=True, now=NOW_S + FRESHNESS_S + 1)
+            self.assertFalse(stale['selection']['live'])
+            self.assertIsNone(stale['result'].get('working_context'))
+            self.assertEqual(stale['active_tasks'], [])
         finally:
             release.set()
         self.assertTrue(poller.drain(timeout=10))
@@ -944,21 +918,21 @@ class LoopTickFallbackTests(unittest.TestCase):
         self.assertIsNone(out['result'].get('working_context'))
         self.assertEqual(poller.selection.last_use, {})
 
-    def test_current_opencode_failure_is_tagged_and_honest(self):
+    def test_current_codex_project_failure_is_tagged_and_honest(self):
         poller = self._poller()
-        _sync(poller, {'scope': 'project', 'pinned': 'ses_a',
-                       'tracking_provider': 'opencode'}, now=NOW_S)
-        with patch.object(OpenCodeProvider, 'read',
+        _sync(poller, {'scope': 'project', 'pinned': 't1',
+                       'tracking_provider': 'codex'}, now=NOW_S)
+        with patch.object(CodexProvider, 'read',
                           side_effect=RuntimeError('boom')):
             out = poller.loop_tick(
-                {'scope': 'project', 'pinned': 'ses_a',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
+                {'scope': 'project', 'pinned': 't1',
+                 'tracking_provider': 'codex'}, now=NOW_S)
             self.assertTrue(poller.drain(timeout=10))
             out = poller.loop_tick(
-                {'scope': 'project', 'pinned': 'ses_a',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
+                {'scope': 'project', 'pinned': 't1',
+                 'tracking_provider': 'codex'}, now=NOW_S)
         self.assertIsNotNone(out['result'].get('generation'))
-        self.assertEqual(out['result']['provider_id'], 'opencode')
+        self.assertEqual(out['result']['provider_id'], 'codex')
         self.assertEqual(out['result']['scope'], 'project')
         self.assertFalse(out['result']['available'])
         self.assertNotIn('gpt-6-astra', repr(out['result']))
@@ -967,52 +941,37 @@ class LoopTickFallbackTests(unittest.TestCase):
     def test_poll_raise_returns_preference_bound_failure(self):
         poller = self._poller()
         _sync(poller, {'scope': 'global',
-                       'tracking_provider': 'opencode'}, now=NOW_S)
+                       'tracking_provider': 'codex'}, now=NOW_S)
         with patch.object(ProviderPoller, 'poll',
                           side_effect=RuntimeError('poll-boom')):
             out = poller.loop_tick(
-                {'scope': 'project', 'pinned': 'ses_a',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
-        # Bound to the request preference — never hard-coded Codex.
+                {'scope': 'project', 'pinned': 't1',
+                 'tracking_provider': 'codex'}, now=NOW_S)
+        # Bound to the requested scope/pin despite an outer poll failure.
         self.assertIsNotNone(out['result'].get('generation'))
-        self.assertEqual(out['provider_id'], 'opencode')
+        self.assertEqual(out['provider_id'], 'codex')
         self.assertEqual(out['result']['scope'], 'project')
         self.assertFalse(out['result']['available'])
         self.assertEqual(poller.selection.last_use, {})
 
-    def test_reset_failure_keeps_opencode_live_and_adapter(self):
+    def test_failed_reset_retains_adapter_and_revokes_retired_choice(self):
         poller = self._poller()
-        live = _sync(poller, {'scope': 'global',
-                              'tracking_provider': 'opencode'}, now=NOW_S)
+        prefs = {'scope': 'global', 'tracking_provider': 'opencode'}
+        live = _sync(poller, prefs, active_title='t1', detection_valid=True, now=NOW_S)
         self.assertTrue(live['selection']['live'])
-        old_adapter = poller.codex
-        with patch('provider_poller.CodexStore',
-                   side_effect=OSError('store-gone')):
-            out = poller.loop_tick(
-                {'scope': 'global', 'tracking_provider': 'opencode'},
-                now=NOW_S, reset_requested=True)
-        # Provider-isolated: the Codex reset failure never becomes an
-        # OpenCode failure. The healthy lane updates independently and
-        # stays coherent (live, available, genuine success status).
-        self.assertEqual(out['provider_id'], 'opencode')
-        self.assertEqual(out['result']['scope'], 'global')
-        self.assertTrue(out['result']['available'])
-        self.assertTrue(out['selection']['live'])
-        self.assertNotEqual(out['result'].get('status'),
-                            'status_read_failed')
-        self.assertIsNotNone(out['result'].get('generation'))
+        old_adapter, epoch, fence = poller.codex, poller._epoch, poller._codex_fence
+        with patch('provider_poller.CodexStore', side_effect=OSError('store-gone')):
+            out = poller.loop_tick(prefs, active_title='t1', detection_valid=True,
+                                   now=NOW_S, reset_requested=True)
+        self.assertEqual(out['provider_id'], 'codex')
+        self.assertFalse(out['selection']['live'])
+        self.assertFalse(out['result']['available'])
+        self.assertEqual(out['active_tasks'], [])
         self.assertIs(poller.codex, old_adapter)
-        self.assertNotEqual(
-            (poller._reads.get(PROVIDER_OPENCODE) or {}).get('reason'),
-            'status_read_failed')
-        self.assertFalse(poller._status[PROVIDER_CODEX]['source_available'])
-        self.assertTrue(
-            poller._status[PROVIDER_OPENCODE]['source_available'])
+        self.assertEqual(poller._epoch, epoch)
+        self.assertEqual(poller._codex_fence, fence + 1)
         self.assertEqual(poller.selection.last_use, {})
-        # A newer settings result still orders after the failure tick.
-        newer = poller.apply_settings(
-            {'scope': 'global', 'tracking_provider': 'opencode'},
-            mark_provider='opencode', now=NOW_S)
+        newer = poller.apply_settings({'scope': 'project', 'pinned': 't2'}, now=NOW_S)
         self.assertGreater(newer['generation'], out['generation'])
 
     def test_reset_failure_codex_selected_is_honest_unavailable(self):
@@ -1030,7 +989,7 @@ class LoopTickFallbackTests(unittest.TestCase):
                 active_title='t1', detection_valid=True, now=NOW_S,
                 reset_requested=True)
         # Codex-selected reset failure: tagged Codex unavailable with
-        # Live revoked and no OpenCode values leaking under Codex.
+        # Live revoked; failed source cannot expose cached task metrics.
         self.assertEqual(out['provider_id'], 'codex')
         self.assertFalse(out['result']['available'])
         self.assertFalse(out['selection']['live'])
@@ -1082,16 +1041,7 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
     def _poller(self):
         store = self.fixture.codex(
             [{'id': 't1', 'working': True}, {'id': 't2'}])
-        db = self.fixture.opencode(
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
-        poller = ProviderPoller(store, db)
+        poller = ProviderPoller(store)
         self._pollers.append(poller)
         return poller
 
@@ -1103,18 +1053,18 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
         self.assertFalse(out['result']['available'])
         self.assertIsNone(out['result'].get('working_context'))
 
-    def test_internal_failure_manual_opencode_revokes_live(self):
+    def test_internal_failure_project_context_revokes_live(self):
         poller = self._poller()
-        prefs = {'scope': 'global', 'tracking_provider': 'opencode'}
+        prefs = {'scope': 'global', 'tracking_provider': 'codex'}
         live = _sync(poller, prefs, now=NOW_S)
         self.assertTrue(live['selection']['live'])
         with patch.object(ProviderPoller, '_decide',
                           side_effect=RuntimeError('decide-boom')):
             out = poller.poll(prefs, now=NOW_S)
-        self._assert_coherent_failure(out, 'opencode', 'global')
+        self._assert_coherent_failure(out, 'codex', 'global')
         self.assertEqual(poller.selection.last_use, {})
         newer = poller.apply_settings(
-            dict(prefs), mark_provider='opencode', now=NOW_S)
+            dict(prefs), mark_provider='codex', now=NOW_S)
         self.assertGreater(newer['generation'], out['generation'])
 
     def test_internal_failure_manual_codex_revokes_live(self):
@@ -1128,19 +1078,19 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
             out = poller.poll(prefs, active_title='t1',
                               detection_valid=True, now=NOW_S)
         self._assert_coherent_failure(out, 'codex', 'global')
-        self.assertNotIn('ses_b', repr(out['result']))
+        self.assertNotIn('t2', repr(out['result']))
         self.assertEqual(poller.selection.last_use, {})
 
-    def test_outer_raise_manual_opencode_cannot_look_successful(self):
+    def test_outer_raise_project_context_cannot_look_successful(self):
         poller = self._poller()
-        prefs = {'scope': 'project', 'pinned': 'ses_a',
-                 'tracking_provider': 'opencode'}
+        prefs = {'scope': 'project', 'pinned': 't1',
+                 'tracking_provider': 'codex'}
         live = _sync(poller, prefs, now=NOW_S)
         self.assertTrue(live['selection']['live'])
         with patch.object(ProviderPoller, 'poll',
                           side_effect=RuntimeError('poll-boom')):
             out = poller.loop_tick(dict(prefs), now=NOW_S)
-        self._assert_coherent_failure(out, 'opencode', 'project')
+        self._assert_coherent_failure(out, 'codex', 'project')
         self.assertEqual(poller.selection.last_use, {})
 
     def test_outer_raise_manual_codex_cannot_look_successful(self):
@@ -1157,8 +1107,8 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
         self.assertEqual(poller.selection.last_use, {})
 
     def test_first_run_manual_failures_stay_preference_bound(self):
-        for tracking, provider in (('opencode', 'opencode'),
-                                   ('codex', 'codex')):
+        for tracking, provider in (('opencode', 'codex'),
+                                   ('auto', 'codex'), ('codex', 'codex')):
             poller = self._poller()
             prefs = {'scope': 'global', 'tracking_provider': tracking}
             with patch.object(ProviderPoller, '_decide',
@@ -1178,7 +1128,7 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
 
     def test_reset_failure_orders_before_settings_change(self):
         poller = self._poller()
-        prefs = {'scope': 'global', 'tracking_provider': 'opencode'}
+        prefs = {'scope': 'global', 'tracking_provider': 'codex'}
         _sync(poller, prefs, now=NOW_S)
         with patch('provider_poller.CodexStore',
                    side_effect=OSError('store-gone')):
@@ -1186,15 +1136,15 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
                                       reset_requested=True)
         self.assertIsNotNone(failed['result'].get('generation'))
         newer = poller.apply_settings(
-            {'scope': 'project', 'pinned': 'ses_a',
-             'tracking_provider': 'opencode'},
-            mark_provider='opencode', now=NOW_S)
+            {'scope': 'project', 'pinned': 't1',
+             'tracking_provider': 'codex'},
+            mark_provider='codex', now=NOW_S)
         self.assertGreater(newer['generation'], failed['generation'])
         self.assertEqual(newer['result']['scope'], 'project')
 
     def test_repeated_reset_failures_stay_bounded(self):
         poller = self._poller()
-        prefs = {'scope': 'global', 'tracking_provider': 'opencode'}
+        prefs = {'scope': 'global', 'tracking_provider': 'codex'}
         _sync(poller, prefs, now=NOW_S)
         with patch('provider_poller.CodexStore',
                    side_effect=OSError('store-gone')):
@@ -1206,15 +1156,15 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
                 generations.append(out['generation'])
                 self.assertTrue(poller.drain(timeout=10))
         # One poll tick per iteration (failed resets add no generation of
-        # their own); workers stay at exactly the two bounded lanes.
+        # their own); workers stay at exactly one bounded Codex lane.
         steps = [b - a for a, b in zip(generations, generations[1:])]
         self.assertTrue(all(step == 1 for step in steps), steps)
-        self.assertEqual(len(poller._workers), 2)
+        self.assertEqual(len(poller._workers), 1)
         self.assertEqual(poller.selection.last_use, {})
 
     def test_close_during_reset_request_stays_tagged(self):
         poller = self._poller()
-        prefs = {'scope': 'global', 'tracking_provider': 'opencode'}
+        prefs = {'scope': 'global', 'tracking_provider': 'codex'}
         _sync(poller, prefs, now=NOW_S)
         gen = poller.generation
         snapshot_before = poller.selection.snapshot()
@@ -1227,155 +1177,83 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
         self.assertEqual(poller.generation, gen + 1)
         self.assertEqual(poller.selection.snapshot(), snapshot_before)
 
-    def test_held_opencode_read_survives_failed_reset(self):
-        from opencode_provider import OpenCodeProvider as _Open
+    def test_held_codex_success_is_fenced_by_failed_reset(self):
         poller = self._poller()
-        prefs = {'scope': 'global', 'tracking_provider': 'opencode'}
+        prefs = {'scope': 'global', 'tracking_provider': 'codex'}
         _sync(poller, prefs, now=NOW_S)
-        # Settle: leftovers done so the held thread submits fresh reads.
         self.assertTrue(poller.drain(timeout=10))
-        epoch_before = poller._epoch
-        entered = threading.Event()
-        release = threading.Event()
-        orig = _Open.read
+        accepted = poller._accepted_rid['codex']
+        epoch, fence, old_adapter = poller._epoch, poller._codex_fence, poller.codex
+        entered, release = threading.Event(), threading.Event()
+        original = CodexProvider.read
+        def held(adapter, *args, **kwargs):
+            entered.set()
+            self.assertTrue(release.wait(timeout=30))
+            return original(adapter, *args, **kwargs)
         try:
-            def blocking(inner_self, *args, **kwargs):
-                entered.set()
-                self.assertTrue(release.wait(timeout=30))
-                return orig(inner_self, *args, **kwargs)
-
-            _Open.read = blocking
-            outcome = {}
-            thread = threading.Thread(
-                target=lambda: outcome.setdefault(
-                    'out', poller.poll(dict(prefs), now=NOW_S)),
-                daemon=True)
-            thread.start()
+            CodexProvider.read = held
+            poller.poll(prefs, active_title='t1', detection_valid=True, now=NOW_S)
             self.assertTrue(entered.wait(timeout=10))
-            thread.join(timeout=10)
-            self.assertFalse(thread.is_alive())
-            held = poller._inflight.get('opencode')
-            self.assertIsNotNone(held)
-            held_rid = held.request.rid
-            self.assertFalse(held.done())
-            with patch('provider_poller.CodexStore',
-                       side_effect=OSError('store-gone')):
-                out = poller.loop_tick(dict(prefs), now=NOW_S,
-                                       reset_requested=True)
-            # Provider-local: no global invalidation, no OpenCode cancel.
-            self.assertEqual(poller._epoch, epoch_before)
-            self.assertIs(poller._inflight.get('opencode'), held)
-            self.assertFalse(held.done())
-            self.assertEqual(out['provider_id'], 'opencode')
-            # An identifiable update lands while the read is held, then
-            # the exact held result is accepted (never retired by the
-            # Codex-owned barrier). In-place INSERT (never a file
-            # replace: readers hold the store open, and Windows blocks
-            # replacement of open files at OS level).
-            new_row = make_session('ses_new', project='proj-c',
-                                   directory='/synthetic/gamma',
-                                   tokens=(70, 7, 7, 7, 0), cost=0.05,
-                                   updated=BASE_MS)
-            with closing(sqlite3.connect(
-                    poller.opencode.db_path)) as db:
-                db.execute(
-                    'INSERT INTO session VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                    tuple(new_row[key] for key in (
-                        'id', 'project_id', 'parent_id', 'directory',
-                        'agent', 'model', 'version', 'tokens_input',
-                        'tokens_output', 'tokens_reasoning',
-                        'tokens_cache_read', 'tokens_cache_write',
-                        'cost', 'time_created', 'time_updated')))
-                db.commit()
+            future = poller._inflight['codex']
+            self.assertEqual(future.request.codex_fence, fence)
+            with patch('provider_poller.CodexStore', side_effect=OSError('store-gone')):
+                failed = poller.loop_tick(prefs, now=NOW_S, reset_requested=True)
+            self.assertEqual(poller._epoch, epoch)
+            self.assertIs(poller.codex, old_adapter)
+            self.assertIs(poller._inflight['codex'], future)
+            self.assertFalse(future.done())
+            self.assertEqual(poller._codex_fence, fence + 1)
+            self.assertFalse(failed['selection']['live'])
+            self.assertEqual(failed['active_tasks'], [])
             release.set()
             self.assertTrue(poller.drain(timeout=10))
-            settled = poller.poll(dict(prefs), now=NOW_S)
-            self.assertEqual(poller._accepted_rid.get('opencode'), held_rid)
-            self.assertEqual(
-                poller._provenance['opencode']['rid'], held_rid)
-            self.assertEqual(
-                settled['result']['tokens']['input'], 10 + 20 + 70)
-            self.assertEqual(settled['provider_id'], 'opencode')
-            self.assertTrue(settled['selection']['live'])
+            poller._collect()
+            self.assertEqual(poller._accepted_rid['codex'], accepted)
+            self.assertEqual(poller._reads['codex']['reason'], 'status_read_failed')
+            self.assertFalse(poller._status['codex']['source_available'])
+            CodexProvider.read = original
+            recovered = _sync(poller, prefs, now=NOW_S)
+            self.assertGreater(poller._accepted_rid['codex'], future.request.rid)
+            self.assertTrue(recovered['result']['available'])
+            self.assertTrue(recovered['selection']['live'])
         finally:
-            _Open.read = orig
             release.set()
+            CodexProvider.read = original
 
-    def test_simultaneous_lanes_only_codex_fenced(self):
-        from opencode_provider import OpenCodeProvider as _Open
+    def test_repeated_reset_while_held_has_one_bounded_codex_lane(self):
         poller = self._poller()
         prefs = {'scope': 'global', 'tracking_provider': 'opencode'}
         _sync(poller, prefs, now=NOW_S)
-        # Settle: leftovers done so the held thread submits fresh reads.
         self.assertTrue(poller.drain(timeout=10))
-        entered_codex = threading.Event()
-        release_codex = threading.Event()
-        entered_open = threading.Event()
-        release_open = threading.Event()
-        orig_codex = CodexProvider.read
-        orig_open = _Open.read
+        entered, release = threading.Event(), threading.Event()
+        original = CodexProvider.read
+        accepted = poller._accepted_rid['codex']
+        def held(adapter, *args, **kwargs):
+            entered.set()
+            self.assertTrue(release.wait(timeout=30))
+            return original(adapter, *args, **kwargs)
         try:
-            def blocking_codex(inner_self, *args, **kwargs):
-                entered_codex.set()
-                self.assertTrue(release_codex.wait(timeout=30))
-                return orig_codex(inner_self, *args, **kwargs)
-
-            def blocking_open(inner_self, *args, **kwargs):
-                entered_open.set()
-                self.assertTrue(release_open.wait(timeout=30))
-                return orig_open(inner_self, *args, **kwargs)
-
-            CodexProvider.read = blocking_codex
-            _Open.read = blocking_open
-            outcome = {}
-            thread = threading.Thread(
-                target=lambda: outcome.setdefault(
-                    'out', poller.poll(dict(prefs), now=NOW_S)),
-                daemon=True)
-            thread.start()
-            self.assertTrue(entered_codex.wait(timeout=10))
-            self.assertTrue(entered_open.wait(timeout=10))
-            thread.join(timeout=10)
-            self.assertFalse(thread.is_alive())
-            held_open = poller._inflight.get('opencode')
-            held_codex = poller._inflight.get('codex')
-            self.assertIsNotNone(held_open)
-            self.assertIsNotNone(held_codex)
-            open_rid = held_open.request.rid
-            codex_accepted_mid = poller._accepted_rid.get('codex')
-            with patch('provider_poller.CodexStore',
-                       side_effect=OSError('store-gone')):
-                poller.loop_tick(dict(prefs), now=NOW_S,
-                                 reset_requested=True)
-            # Only the Codex lane is fenced: epoch untouched, OpenCode
-            # request still pending on the same future, OpenCode health
-            # untouched, Codex marked failed.
-            self.assertEqual(
-                poller._inflight.get('opencode'), held_open)
-            self.assertFalse(held_open.done())
-            self.assertTrue(
-                poller._status[PROVIDER_OPENCODE]['source_available'])
-            self.assertFalse(
-                poller._status[PROVIDER_CODEX]['source_available'])
-            release_open.set()
-            release_codex.set()
+            CodexProvider.read = held
+            poller.poll(prefs, now=NOW_S)
+            self.assertTrue(entered.wait(timeout=10))
+            future = poller._inflight['codex']
+            old_fence = poller._codex_fence
+            with patch('provider_poller.CodexStore', side_effect=OSError('store-gone')):
+                for offset in range(1, 6):
+                    out = poller.loop_tick(prefs, now=NOW_S, reset_requested=True)
+                    self.assertEqual(poller._codex_fence, old_fence + offset)
+                    self.assertIs(poller._inflight['codex'], future)
+                    self.assertEqual(tuple(poller._workers), ('codex',))
+                    self.assertFalse(out['selection']['live'])
+                    self.assertEqual(out['active_tasks'], [])
+            release.set()
             self.assertTrue(poller.drain(timeout=10))
-            poller.poll(dict(prefs), now=NOW_S)
-            # Released OpenCode result admitted; released pre-failure
-            # Codex success fenced out and cannot clear the marking.
-            self.assertEqual(poller._accepted_rid.get('opencode'), open_rid)
-            self.assertEqual(
-                poller._accepted_rid.get('codex'), codex_accepted_mid)
-            self.assertEqual(
-                (poller._reads.get(PROVIDER_CODEX) or {}).get('reason'),
-                'status_read_failed')
-            self.assertFalse(
-                poller._status[PROVIDER_CODEX]['source_available'])
+            poller._collect()
+            self.assertEqual(poller._accepted_rid['codex'], accepted)
+            self.assertEqual(poller._reads['codex']['reason'], 'status_read_failed')
         finally:
-            CodexProvider.read = orig_codex
-            _Open.read = orig_open
-            release_codex.set()
-            release_open.set()
+            release.set()
+            CodexProvider.read = original
 
 
 class QtFallbackBridgeTests(unittest.TestCase):
@@ -1398,6 +1276,8 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.panel = Panel(live=False)
         self.panel.pet = DesktopPet(self.panel)
         self.panel.pet.activity_timer.stop()
+        self.panel.active.title = 't1'
+        self.panel.active.seen = time.time()
         self.work = Path(self.temp.name) / 'stores'
         self.work.mkdir()
 
@@ -1421,27 +1301,23 @@ class QtFallbackBridgeTests(unittest.TestCase):
     def _home(self, name, threads):
         home = self.work / name
         home.mkdir(exist_ok=True)
-        write_home(str(home), threads)
+        write_codex_home(home, threads)
         return CodexStore(home)
 
-    def _db(self, name, sessions, messages=(), parts=()):
-        path = self.work / name
-        write_store(path, sessions, messages, parts)
-        return path
 
-    def _attach(self, threads, sessions, messages=(), parts=()):
+    def _attach(self, threads):
         from provider_poller import ProviderPoller as Poller
         self.panel.provider_poller.drain(timeout=10)
         self.panel.provider_poller.close()
         home = self._home(f'codex-{len(list(self.work.iterdir()))}',
                           threads)
-        db = self._db(f'open-{len(list(self.work.iterdir()))}.db',
-                      sessions, messages, parts)
-        self.panel.provider_poller = Poller(home, db)
+        self.panel.provider_poller = Poller(home)
         return self.panel.provider_poller
 
     def _poll_render(self, prefs=None, now=None, **kw):
         prefs = dict({'scope': 'global'}, **(prefs or {}))
+        kw.setdefault('active_title', 't1')
+        kw.setdefault('detection_valid', True)
         poller = self.panel.provider_poller
         poller.poll(prefs, now=now, **kw)
         self.assertTrue(poller.drain(), 'reads did not finish')
@@ -1467,38 +1343,28 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.addCleanup(setattr, target, 'read', orig)
         return entered, release
 
-    def _seed_both(self):
-        return self._attach(
-            [{'id': 't1', 'working': True}, {'id': 't2'}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
+    def _seed_codex(self):
+        return self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
 
-    def test_obsolete_codex_failure_cannot_overwrite_opencode(self):
-        from providers import CodexProvider as _Codex
-        poller = self._seed_both()
+    def test_obsolete_global_failure_cannot_overwrite_project(self):
+        poller = self._seed_codex()
         self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
+            scope='project', pinned='t1',
+            tracking_provider='codex')
         for _ in range(2):
             poller.poll(dict(self.panel.prefs), now=NOW_S)
             self.assertTrue(poller.drain())
         current = poller.poll(dict(self.panel.prefs), now=NOW_S)
         self.panel.render(current['result'])
         self.app.processEvents()
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
         self.assertTrue(poller.drain(timeout=10))
         current_gen = current['generation']
         # Old Codex/global iteration started before the settings change:
         # hold its provider read, then fail it on release.
         self.panel.prefs.update(scope='global', pinned='',
                                 tracking_provider='codex')
-        entered, release = self._hold_read(_Codex, fail=True)
+        entered, release = self._hold_read(CodexProvider, fail=True)
         outcome = {}
         thread = threading.Thread(
             target=lambda: outcome.setdefault(
@@ -1508,16 +1374,16 @@ class QtFallbackBridgeTests(unittest.TestCase):
             self.assertTrue(entered.wait(timeout=10))
             thread.join(timeout=10)
             self.assertFalse(thread.is_alive())
-            # Newer OpenCode/Project wins while the old tick is held.
+            # Newer Codex/Project wins while the old tick is held.
             self.panel.prefs.update(
-                scope='project', pinned='ses_a',
-                tracking_provider='opencode')
+                scope='project', pinned='t1',
+                tracking_provider='codex')
             newer = poller.apply_settings(
-                dict(self.panel.prefs), mark_provider='opencode',
+                dict(self.panel.prefs), mark_provider='codex',
                 now=NOW_S)
             self.panel.bridge.data.emit(newer['result'])
             self.app.processEvents()
-            self.assertIn('OpenCode', self.panel.connection.text())
+            self.assertIn('Codex', self.panel.connection.text())
             self.assertGreaterEqual(newer['generation'], current_gen)
             release.set()
             thread.join(timeout=10)
@@ -1527,31 +1393,23 @@ class QtFallbackBridgeTests(unittest.TestCase):
             self.assertLess(old['generation'], newer['generation'])
             self.panel.bridge.data.emit(old['result'])
             self.app.processEvents()
-            self.assertIn('OpenCode', self.panel.connection.text())
+            self.assertIn('Codex', self.panel.connection.text())
             self.assertEqual(self.panel._render_generation,
                              newer['generation'])
         finally:
             release.set()
 
-    def test_obsolete_opencode_failure_cannot_overwrite_codex(self):
-        from opencode_provider import OpenCodeProvider as _Open
-        # Codex working, OpenCode idle: the seed honestly renders Codex.
-        poller = self._attach(
-            [{'id': 't1', 'working': True}, {'id': 't2'}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0))])
+    def test_obsolete_project_failure_cannot_overwrite_conversation(self):
+        # A held project tick cannot overwrite a newer conversation tick.
+        poller = self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
         self._poll_render(active_title='t1', detection_valid=True,
                           now=NOW_S)
         self.assertIn('Codex', self.panel.connection.text())
         self.assertTrue(poller.drain(timeout=10))
         self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
-        entered, release = self._hold_read(_Open)
+            scope='project', pinned='t1',
+            tracking_provider='codex')
+        entered, release = self._hold_read(CodexProvider, fail=True)
         outcome = {}
         thread = threading.Thread(
             target=lambda: outcome.setdefault(
@@ -1561,7 +1419,7 @@ class QtFallbackBridgeTests(unittest.TestCase):
             self.assertTrue(entered.wait(timeout=10))
             thread.join(timeout=10)
             self.assertFalse(thread.is_alive())
-            # Newer Codex wins while the old OpenCode tick is held: the
+            # Newer Codex wins while the old Codex tick is held: the
             # settings path publishes synchronously, no drain needed.
             self.panel.prefs.update(
                 scope='conversation', pinned='',
@@ -1585,13 +1443,12 @@ class QtFallbackBridgeTests(unittest.TestCase):
         finally:
             release.set()
 
-    def test_current_opencode_failure_renders_honest_project(self):
-        from opencode_provider import OpenCodeProvider as _Open
-        self._seed_both()
+    def test_current_codex_failure_renders_honest_project(self):
+        self._seed_codex()
         self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
-        with patch.object(_Open, 'read',
+            scope='project', pinned='t1',
+            tracking_provider='codex')
+        with patch.object(CodexProvider, 'read',
                           side_effect=RuntimeError('boom')):
             snap = self.panel.read_loop_once()
             self.assertTrue(
@@ -1600,38 +1457,36 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.assertIsNotNone(snap['result'].get('generation'))
         self.panel.bridge.data.emit(snap['result'])
         self.app.processEvents()
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
         self.assertEqual(snap['result']['scope'], 'project')
         self.assertFalse(snap['selection']['live'])
         self.assertNotIn('gpt-6-astra', self.panel.model.text())
         self.assertNotIn('gpt-6-astra', self.panel.title.toolTip())
 
-    def test_initial_manual_opencode_failure_stays_opencode(self):
-        from opencode_provider import OpenCodeProvider as _Open
-        self._seed_both()
+    def test_initial_codex_project_failure_stays_tagged(self):
+        self._seed_codex()
         self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
+            scope='project', pinned='t1',
+            tracking_provider='codex')
         self.assertIsNone(self.panel._render_generation)
-        with patch.object(_Open, 'read',
+        with patch.object(CodexProvider, 'read',
                           side_effect=RuntimeError('boom')):
             snap = self.panel.read_loop_once()
             self.assertTrue(
                 self.panel.provider_poller.drain(timeout=10))
             snap = self.panel.read_loop_once()
         self.assertIsNotNone(snap['result'].get('generation'))
-        self.assertEqual(snap['provider_id'], 'opencode')
+        self.assertEqual(snap['provider_id'], 'codex')
         self.panel.bridge.data.emit(snap['result'])
         self.app.processEvents()
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
         self.assertIsNotNone(self.panel._render_generation)
 
     def test_old_global_failure_rejected_after_project_change(self):
-        from opencode_provider import OpenCodeProvider as _Open
-        self._seed_both()
+        self._seed_codex()
         self.panel.prefs.update(scope='global',
-                                tracking_provider='opencode')
-        with patch.object(_Open, 'read',
+                                tracking_provider='codex')
+        with patch.object(CodexProvider, 'read',
                           side_effect=RuntimeError('boom')):
             old_fail = self.panel.read_loop_once()
             self.assertTrue(
@@ -1641,10 +1496,10 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.assertEqual(old_fail['result']['scope'], 'global')
         self.assertFalse(old_fail['result']['available'])
         self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
+            scope='project', pinned='t1',
+            tracking_provider='codex')
         newer = self.panel.provider_poller.apply_settings(
-            dict(self.panel.prefs), mark_provider='opencode', now=NOW_S)
+            dict(self.panel.prefs), mark_provider='codex', now=NOW_S)
         self.panel.bridge.data.emit(newer['result'])
         self.app.processEvents()
         self.assertGreater(newer['generation'], old_fail['generation'])
@@ -1652,15 +1507,14 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.app.processEvents()
         self.assertEqual(self.panel._render_generation,
                          newer['generation'])
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
 
     def test_old_pinned_failure_rejected_after_pinned_change(self):
-        from opencode_provider import OpenCodeProvider as _Open
-        self._seed_both()
+        self._seed_codex()
         self.panel.prefs.update(
-            scope='conversation', pinned='ses_a',
-            tracking_provider='opencode')
-        with patch.object(_Open, 'read',
+            scope='conversation', pinned='t1',
+            tracking_provider='codex')
+        with patch.object(CodexProvider, 'read',
                           side_effect=RuntimeError('boom')):
             old_fail = self.panel.read_loop_once()
             self.assertTrue(
@@ -1669,15 +1523,15 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.assertIsNotNone(old_fail['result'].get('generation'))
         self.assertFalse(old_fail['result']['available'])
         self.panel.prefs.update(
-            scope='conversation', pinned='ses_b',
-            tracking_provider='opencode')
+            scope='conversation', pinned='t2',
+            tracking_provider='codex')
         newer = self.panel.provider_poller.apply_settings(
             dict(self.panel.prefs), now=NOW_S)
         self.panel.bridge.data.emit(newer['result'])
         self.app.processEvents()
         self.assertGreater(newer['generation'], old_fail['generation'])
         self.assertNotEqual(
-            newer['result'].get('session_id'), 'opencode:ses_a')
+            newer['result'].get('thread'), 't1')
         self.panel.bridge.data.emit(old_fail['result'])
         self.app.processEvents()
         self.assertEqual(self.panel._render_generation,
@@ -1686,10 +1540,10 @@ class QtFallbackBridgeTests(unittest.TestCase):
     def test_no_production_emission_without_generation(self):
         import inspect
         from widget import Panel as _Panel
-        poller = self._seed_both()
+        poller = self._seed_codex()
         self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
+            scope='project', pinned='t1',
+            tracking_provider='codex')
         snapshots = [self.panel.read_loop_once()]
         with patch.object(ProviderPoller, 'poll',
                           side_effect=RuntimeError('poll-boom')):
@@ -1713,7 +1567,7 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.assertNotIn('.emit(', tail)
 
     def test_closing_during_failure_stays_tagged(self):
-        self._seed_both()
+        self._seed_codex()
         poller = self.panel.provider_poller
         gen = poller.generation
         poller.close()
@@ -1722,19 +1576,21 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.assertEqual(snap['generation'], gen + 1)
         self.assertEqual(poller.generation, gen + 1)
 
-    def test_current_decide_failure_renders_coherent_opencode(self):
-        poller = self._seed_both()
+    def test_current_decide_failure_renders_coherent_codex(self):
+        poller = self._seed_codex()
         self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
+            scope='project', pinned='t1',
+            tracking_provider='codex')
         for _ in range(2):
-            poller.poll(dict(self.panel.prefs), now=NOW_S)
+            poller.poll(dict(self.panel.prefs), active_title='t1',
+                        detection_valid=True, now=NOW_S)
             self.assertTrue(poller.drain(timeout=10))
-        live = poller.poll(dict(self.panel.prefs), now=NOW_S)
+        live = poller.poll(dict(self.panel.prefs), active_title='t1',
+                           detection_valid=True, now=NOW_S)
         self.panel.render(live['result'])
         self.app.processEvents()
         self.assertTrue(live['selection']['live'])
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
         with patch.object(ProviderPoller, '_decide',
                           side_effect=RuntimeError('decide-boom')):
             snap = self.panel.read_loop_once()
@@ -1743,65 +1599,37 @@ class QtFallbackBridgeTests(unittest.TestCase):
         self.assertIsNone(snap['result'].get('working_context'))
         self.panel.bridge.data.emit(snap['result'])
         self.app.processEvents()
-        # Coherent: OpenCode unavailable, no false Working bubble or
+        # Coherent: Codex unavailable, no false Working bubble or
         # context, mode hysteresis untouched (no token arming).
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
         self.assertIsNone(self.panel.pet.working_context)
         self.assertFalse(self.panel.pet.token_bubble_visible())
         self.assertFalse(snap['result']['available'])
 
-    def test_reset_failure_opencode_stays_live_through_bridge(self):
-        from unittest.mock import patch as _patch
-        # Real-time fixtures: read_loop_once runs on the wall clock, so
-        # lifecycle/freshness evidence must be wall-clock fresh.
-        now_ms = int(time.time() * 1000)
-        poller = self._attach(
-            [{'id': 't1'}, {'id': 't2'}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0),
-                          created=now_ms - 60000, updated=now_ms),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0),
-                          created=now_ms - 60000, updated=now_ms)],
-            [make_message('m1', 'ses_b', created=now_ms - 1000)],
-            [make_part('p1', 'ses_b', created=now_ms - 1000)])
-        self.panel.prefs.update(
-            scope='project', pinned='ses_a',
-            tracking_provider='opencode')
-        for _ in range(2):
-            poller.poll(dict(self.panel.prefs))
-            self.assertTrue(poller.drain(timeout=10))
-        live = poller.poll(dict(self.panel.prefs))
-        self.panel.render(live['result'])
-        self.app.processEvents()
+    def test_retired_choice_reset_failure_revokes_live_through_bridge(self):
+        poller = self._seed_codex()
+        self.panel.prefs.update(scope='project', pinned='t1', tracking_provider='opencode')
+        live = self._poll_render(dict(self.panel.prefs), active_title='t1',
+                                 detection_valid=True, now=NOW_S)
         self.assertTrue(live['selection']['live'])
         old_adapter = poller.codex
-        with _patch('provider_poller.CodexStore',
-                    side_effect=OSError('store-gone')):
+        with patch('provider_poller.CodexStore', side_effect=OSError('store-gone')):
             self.panel.reset_store.set()
             snap = self.panel.read_loop_once()
-            self.panel.reset_store.clear()
-        # The Codex reset failure never becomes an OpenCode failure:
-        # the healthy lane stays live with genuine success status.
-        self.assertEqual(snap['provider_id'], 'opencode')
-        self.assertTrue(snap['selection']['live'])
-        self.assertTrue(snap['result']['available'])
-        self.assertNotEqual(snap['result'].get('status'),
-                            'status_read_failed')
+        self.assertEqual(snap['provider_id'], 'codex')
+        self.assertFalse(snap['selection']['live'])
+        self.assertFalse(snap['result']['available'])
+        self.assertEqual(snap['active_tasks'], [])
         self.assertIs(poller.codex, old_adapter)
         self.panel.bridge.data.emit(snap['result'])
         self.app.processEvents()
-        self.assertIn('OpenCode', self.panel.connection.text())
+        self.assertIn('Codex', self.panel.connection.text())
+        self.assertIsNone(self.panel.pet.working_context)
+        self.assertFalse(self.panel.pet.token_bubble_visible())
 
     def test_reset_failure_codex_selected_renders_unavailable(self):
         from unittest.mock import patch as _patch
-        poller = self._attach(
-            [{'id': 't1', 'working': True}, {'id': 't2'}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0))])
+        poller = self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
         self._poll_render(active_title='t1', detection_valid=True,
                           now=NOW_S)
         self.panel.prefs.update(tracking_provider='codex')

@@ -1,6 +1,7 @@
 """Deterministic provider selection: preference + activity ranking (V1.2 slice 4).
 
-Pure logic over provider status snapshots; no I/O, no threads, no UI.
+Production exposes Codex alone. Explicit provider-ID injection retains
+historical pure ranking tests without activating adapters. No I/O or threads.
 A status snapshot is a plain dict per provider::
 
     {provider_id, available, source_available, activity_valid, working,
@@ -62,10 +63,9 @@ from providers import PROVIDER_CODEX, PROVIDER_OPENCODE, PROVIDER_REGISTRY
 PREFERENCE_AUTO = 'auto'
 PREFERENCE_CODEX = PROVIDER_CODEX
 PREFERENCE_OPENCODE = PROVIDER_OPENCODE
-# Derived from the runtime registry (never duplicated): Auto plus
-# exactly the registered provider IDs, in registry order.
-TRACKING_CHOICES = (PREFERENCE_AUTO,) + tuple(PROVIDER_REGISTRY)
-DEFAULT_TRACKING_PROVIDER = PREFERENCE_AUTO
+# Persisted Auto/OpenCode preferences migrate to the sole active provider.
+TRACKING_CHOICES = tuple(PROVIDER_REGISTRY)
+DEFAULT_TRACKING_PROVIDER = PREFERENCE_CODEX
 KNOWN_PROVIDERS = tuple(PROVIDER_REGISTRY)
 
 # A newly preferred provider must hold for 1 s before switching (00).
@@ -82,13 +82,14 @@ CODEX_SOURCE_FAILURES = frozenset(
     {'status_no_local_data', 'status_database_unavailable',
      'status_read_failed'})
 
-# OpenCode store failures, likewise checked at both layers.
+# Inert historical status shaping, used only by explicitly isolated adapter
+# tests/callers. Production registry and poller never invoke this path.
 OPENCODE_SOURCE_FAILURES = frozenset(
     {'missing_store', 'store_locked', 'unsupported_schema'})
 
 
 def normalize_tracking_provider(value):
-    """Tolerant tracking preference: Auto default, legacy/invalid to Auto."""
+    """Normalize current and legacy preferences to the active Codex product."""
     if isinstance(value, str) and value.strip().lower() in TRACKING_CHOICES:
         return value.strip().lower()
     return DEFAULT_TRACKING_PROVIDER
@@ -222,6 +223,7 @@ class ProviderSelection:
     """
 
     def __init__(self, provider_ids=None):
+        self._generic = provider_ids is not None
         self._allowed = (tuple(provider_ids) if provider_ids is not None
                          else KNOWN_PROVIDERS)
         self.current = None
@@ -235,7 +237,8 @@ class ProviderSelection:
                               source_available=False, data_available=False,
                               reason='no_provider', detail='', tie_broken=False,
                               pending_switch=None,
-                              preference=PREFERENCE_AUTO,
+                              preference=(PREFERENCE_AUTO if self._generic
+                                          else DEFAULT_TRACKING_PROVIDER),
                               applied_generation=None)
 
     def mark_used(self, provider_id, now=None):
@@ -399,7 +402,14 @@ class ProviderSelection:
         nor a stale Auto winner can survive them.
         """
         now = time.time() if now is None else now
-        preference = normalize_tracking_provider(preference)
+        if self._generic:
+            # Explicit injected IDs exercise isolated historical ranking logic;
+            # production always normalizes against the active registry.
+            preference = (preference if isinstance(preference, str)
+                          and preference in (PREFERENCE_AUTO,) + self._allowed
+                          else PREFERENCE_AUTO)
+        else:
+            preference = normalize_tracking_provider(preference)
         if generation is not None:
             if (self.applied_generation is not None
                     and generation < self.applied_generation):
