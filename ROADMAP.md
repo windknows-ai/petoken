@@ -17,6 +17,6 @@ Directions only — no schedule promises. `Available now` always matches [Releas
 - Codex-only runtime, settings and synthetic QA; alternate-provider integration is outside current scope
 - Compatibility and reliability work
 
-Human visual QA rejected the previous wide flat orbit and edge freeze. This bounded refinement is in progress; previous affected technical acceptance is superseded until fresh validation and independent review. No release is authorized.
+Human visual QA rejected the previous wide flat orbit and edge freeze. The compact Codex-only source now passes873 native tests and independent native review; refreshed package validation and human visual acceptance are separate gates. No release is authorized.
 
 No timelines are promised, and no unreleased capability is described as available. Commercial-only ideas (project analytics, budgets, alerts, licensing, advanced exports) are intentionally out of this public roadmap for now.

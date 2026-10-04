@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from PySide6.QtWidgets import QApplication, QComboBox, QLabel
+from PySide6.QtGui import QColor, QImage, QPixmap
 from tools.preview_v1_3 import ANCHORS, Preview, fixture_tasks, main
 
 
@@ -165,6 +166,38 @@ class PreviewTests(unittest.TestCase):
                             self.assertEqual(rectangle.top(), screen.top())
                         if 'bottom' in anchor:
                             self.assertEqual(rectangle.bottom(), screen.bottom())
+            finally:
+                preview.cleanup()
+                preview.close()
+                preview.deleteLater()
+                self.app.processEvents()
+
+    def test_capture_retains_detail_pixels_when_hub_overlaps(self):
+        with tempfile.TemporaryDirectory() as directory, patch('widget.PREF_DIR', Path(directory)):
+            preview = Preview(count=3, case='partial')
+            try:
+                preview.toggle_detail()
+                detail = preview.panel.task_manager.detail_window
+                self.assertTrue(detail.isVisible())
+                preview.panel.move(detail.pos())
+                self.app.processEvents()
+                marker = QPixmap(detail.size())
+                marker.fill(QColor('#ff00f0'))
+                output = Path(directory) / 'overlapping-detail.png'
+                windows = [*preview.panel.task_manager.capture_windows(), preview.panel]
+                bounds = windows[0].geometry()
+                for window in windows[1:]:
+                    bounds = bounds.united(window.geometry())
+                overlap = detail.geometry().intersected(preview.panel.geometry())
+                self.assertFalse(overlap.isEmpty())
+                point = overlap.center() - bounds.topLeft()
+                with patch.object(detail, 'grab', return_value=marker):
+                    preview.capture(output)
+                image = QImage(str(output))
+                dpr = preview.devicePixelRatioF()
+                self.assertEqual(image.pixelColor(round(point.x() * dpr),
+                                                  round(point.y() * dpr)),
+                                 QColor('#ff00f0'))
             finally:
                 preview.cleanup()
                 preview.close()

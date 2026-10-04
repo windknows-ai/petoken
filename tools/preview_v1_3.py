@@ -198,7 +198,11 @@ class Preview(QWidget):
         manager = self.panel.task_manager
         stars = [manager.window_for(key) for key in manager.window_identities()]
         detail = getattr(manager, 'detail_window', None)
-        windows = [window for window in (*manager.capture_windows(), self.panel, self)
+        scene = [window for window in manager.capture_windows() if window is not detail]
+        # The focused detail is raised by the real interaction. Preserve its
+        # readability when the fixed Hub position overlaps an exported scene.
+        windows = [window for window in (*scene, self.panel, self, detail)
+                   if window is not None
                    if window.isVisible()]
         bounds = windows[0].geometry()
         for window in windows[1:]:
