@@ -1,0 +1,234 @@
+"""Local workbench persistence; every database lives in a temporary directory."""
+import hashlib
+from contextlib import closing
+from pathlib import Path
+import sqlite3
+import tempfile
+import unittest
+from uuid import uuid4
+
+from workbench_store import WorkbenchError, WorkbenchStore
+
+
+class WorkbenchStoreTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.path = Path(self.directory.name) / 'workbench.sqlite3'
+        self.store = WorkbenchStore(self.path)
+        self.addCleanup(self.store.close)
+
+    def test_empty_and_unicode_crud_durable_reopen(self):
+        self.assertEqual(self.store.list_projects(), [])
+        self.assertEqual(self.store.list_todos(), [])
+        self.assertEqual(self.store.list_notes(), [])
+        self.assertEqual(self.store.task_links(), {})
+        project = self.store.create_project(' 项目 🦋 ', 'D:/资料/项目')
+        self.assertEqual(project['name'], ' 项目 🦋 ')
+        self.assertEqual(project['directory'], 'D:/资料/项目')
+        self.assertEqual(set(project), {'id', 'name', 'directory', 'created_at', 'updated_at'})
+        updated = self.store.update_project(project['id'], project['name'], project['directory'])
+        self.assertEqual(updated['created_at'], project['created_at'])
+        self.assertGreaterEqual(updated['updated_at'], project['updated_at'])
+        todo = self.store.create_todo("任务 '; DROP TABLE notes; --", project['id'])
+        note = self.store.create_note('笔记 📝', '第一行\nsecond line\x00end', project['id'])
+        self.assertEqual(set(todo), {'id', 'title', 'project_id', 'done', 'created_at', 'updated_at'})
+        self.assertEqual(set(note), {'id', 'title', 'body', 'project_id', 'created_at', 'updated_at'})
+        todo = self.store.update_todo(todo['id'], '已完成', project['id'], True)
+        note = self.store.update_note(note['id'], '新版', '正文 🦋\nplain text', project['id'])
+        project = self.store.update_project(project['id'], '新项目', '')
+        self.store.link_task('codex', 'task:/私密-key', project['id'])
+        self.store.close()
+        self.store = WorkbenchStore(self.path)
+        self.addCleanup(self.store.close)
+        self.assertEqual(self.store.list_projects(), [project])
+        self.assertEqual(self.store.list_todos(), [todo])
+        self.assertEqual(self.store.list_notes(), [note])
+        self.assertEqual(self.store.get_note(note['id']), note)
+        self.assertIs(self.store.list_todos()[0]['done'], True)
+        self.assertEqual(self.store.task_links(), {('codex', 'task:/私密-key'): project['id']})
+        self.assertEqual(todo['created_at'][:10], todo['updated_at'][:10])
+        self.assertGreaterEqual(todo['updated_at'], todo['created_at'])
+        self.store.delete_todo(todo['id'])
+        self.store.delete_note(note['id'])
+        self.store.delete_project(project['id'])
+        self.assertEqual(self.store.list_todos(), [])
+        self.assertEqual(self.store.list_notes(), [])
+        self.assertEqual(self.store.task_links(), {})
+
+    def test_all_unassigned_project_and_completion_filters(self):
+        a, b = self.store.create_project('A'), self.store.create_project('B')
+        todos = [self.store.create_todo('Inbox'), self.store.create_todo('A todo', a['id']),
+                 self.store.create_todo('A done', a['id'], True), self.store.create_todo('B todo', b['id'])]
+        notes = [self.store.create_note('Inbox'), self.store.create_note('A note', project_id=a['id']),
+                 self.store.create_note('B note', project_id=b['id'])]
+        self.assertEqual(self.store.list_todos(), todos)
+        self.assertEqual(self.store.list_todos(''), todos[:1])
+        self.assertEqual(self.store.list_todos(a['id']), todos[1:3])
+        self.assertEqual(self.store.list_todos(a['id'], include_completed=False), todos[1:2])
+        self.assertEqual(self.store.list_todos(include_completed=False), [todos[0], todos[1], todos[3]])
+        self.assertEqual(self.store.list_notes(), notes)
+        self.assertEqual(self.store.list_notes(''), notes[:1])
+        self.assertEqual(self.store.list_notes(b['id']), notes[2:])
+        moved = self.store.update_todo(todos[1]['id'], 'Moved', b['id'])
+        self.assertEqual(self.store.list_todos(b['id']), [moved, todos[3]])
+        self.assertFalse(self.store.update_todo(todos[2]['id'], 'Reopen')['done'])
+        self.assertIsNone(self.store.update_note(notes[1]['id'], 'Unassigned', '')['project_id'])
+
+    def test_project_delete_retains_children_and_cascades_links(self):
+        project = self.store.create_project('Delete')
+        todo = self.store.create_todo('Keep', project['id'], True)
+        note = self.store.create_note('Keep', 'body', project['id'])
+        self.store.link_task('codex', 'stable', project['id'])
+        self.store.delete_project(project['id'])
+        self.assertEqual(self.store.list_todos('')[0], {**todo, 'project_id': None})
+        self.assertEqual(self.store.get_note(note['id']), {**note, 'project_id': None})
+        self.assertEqual(self.store.task_links(), {})
+        with closing(sqlite3.connect(self.path)) as connection, connection:
+            self.assertEqual(connection.execute('PRAGMA foreign_key_check').fetchall(), [])
+
+    def test_links_replace_remove_and_reject_foreign_provider_or_project(self):
+        a, b = self.store.create_project('A'), self.store.create_project('B')
+        self.store.link_task('codex', 'key', a['id'])
+        self.store.link_task('codex', 'key', b['id'])
+        self.assertEqual(self.store.task_links(), {('codex', 'key'): b['id']})
+        for provider, key, project in [('opencode', 'key', a['id']), ('codex', '', a['id']),
+                                      ('codex', None, a['id']), ('codex', 'other', str(uuid4()))]:
+            with self.subTest(provider=provider, key=key), self.assertRaises(WorkbenchError):
+                self.store.link_task(provider, key, project)
+        self.assertEqual(self.store.task_links(), {('codex', 'key'): b['id']})
+        self.store.link_task('codex', 'key', None)
+        self.store.link_task('codex', 'missing', None)
+        self.assertEqual(self.store.task_links(), {})
+
+    def test_validation_no_truncation_or_partial_mutation(self):
+        project = self.store.create_project('Valid')
+        note = self.store.create_note('Note', 'original')
+        for text in ('', ' \t\n', 'x' * 201, None, 4, 'bad\ud800'):
+            for method in (self.store.create_project, self.store.create_todo, self.store.create_note):
+                with self.subTest(method=method.__name__, text=repr(text)[:25]), self.assertRaises(WorkbenchError):
+                    method(text)
+        for action in (lambda: self.store.update_project(project['id'], 'Name', None),
+                       lambda: self.store.create_note('Title', 'x' * 1_000_001),
+                       lambda: self.store.update_note(note['id'], 'Title', None),
+                       lambda: self.store.update_note(note['id'], 'Title', 'x' * 1_000_001),
+                       lambda: self.store.create_todo('Title', done=1),
+                       lambda: self.store.list_todos(include_completed=1),
+                       lambda: self.store.create_todo('Title', project_id=''),
+                       lambda: self.store.create_note('Title', project_id=str(uuid4()))):
+            with self.assertRaises(WorkbenchError):
+                action()
+        self.assertEqual(self.store.list_projects(), [project])
+        self.assertEqual(self.store.get_note(note['id']), note)
+        self.assertEqual(self.store.list_todos(), [])
+        self.assertEqual(len(self.store.create_note('x' * 200, 'x' * 1_000_000)['body']), 1_000_000)
+
+    def test_invalid_missing_ids_fail(self):
+        for record_id in (None, 0, True, '', 'not-a-uuid', str(uuid4())):
+            for method in (self.store.delete_project, self.store.delete_todo,
+                           self.store.delete_note, self.store.get_note):
+                with self.subTest(method=method.__name__, record_id=record_id), self.assertRaises(WorkbenchError):
+                    method(record_id)
+        for method in (self.store.list_todos, self.store.list_notes):
+            with self.assertRaises(WorkbenchError):
+                method(project_id='invalid')
+        for action in (lambda: self.store.update_project(str(uuid4()), 'A'),
+                       lambda: self.store.update_todo(str(uuid4()), 'A'),
+                       lambda: self.store.update_note(str(uuid4()), 'A', 'body')):
+            with self.assertRaises(WorkbenchError):
+                action()
+
+    def test_transaction_rollback_retains_project_children_links(self):
+        project = self.store.create_project('Project')
+        todo = self.store.create_todo('Todo', project['id'])
+        note = self.store.create_note('Note', project_id=project['id'])
+        self.store.link_task('codex', 'key', project['id'])
+        with closing(sqlite3.connect(self.path)) as connection, connection:
+            connection.execute("CREATE TRIGGER reject_delete AFTER DELETE ON projects BEGIN SELECT RAISE(ABORT, 'injected failure'); END")
+        with self.assertRaises(WorkbenchError):
+            self.store.delete_project(project['id'])
+        self.assertEqual(self.store.list_projects(), [project])
+        self.assertEqual(self.store.list_todos(), [todo])
+        self.assertEqual(self.store.list_notes(), [note])
+        self.assertEqual(self.store.task_links(), {('codex', 'key'): project['id']})
+        with closing(sqlite3.connect(self.path)) as connection, connection:
+            connection.execute('DROP TRIGGER reject_delete')
+        self.store.delete_project(project['id'])
+
+    def test_locked_write_fails_without_losing_saved_records_then_recovers(self):
+        project = self.store.create_project('Saved')
+        connection = sqlite3.connect(self.path)
+        self.addCleanup(connection.close)
+        connection.execute('BEGIN IMMEDIATE')
+        with self.assertRaises(WorkbenchError):
+            self.store.create_note('Blocked')
+        connection.rollback()
+        self.assertEqual(self.store.list_projects(), [project])
+        self.assertEqual(self.store.list_notes(), [])
+        self.assertEqual(self.store.create_note('Recovered')['title'], 'Recovered')
+
+    def test_blocked_commit_rolls_back_and_never_returns_unsaved_record(self):
+        saved = self.store.create_note('Saved', 'body')
+        reader = sqlite3.connect(self.path)
+        self.addCleanup(reader.close)
+        reader.execute('BEGIN')
+        reader.execute('SELECT * FROM notes').fetchall()
+        with self.assertRaises(WorkbenchError):
+            self.store.create_note('Unsaved draft', 'keep editor content')
+        self.assertEqual(self.store.list_notes(), [saved])
+        reader.rollback()
+        reopened = WorkbenchStore(self.path)
+        self.addCleanup(reopened.close)
+        self.assertEqual(reopened.list_notes(), [saved])
+        self.assertEqual(self.store.create_note('Retry saved')['title'], 'Retry saved')
+
+    def test_close_idempotent_and_operations_fail_after_close(self):
+        self.store.close()
+        self.store.close()
+        for action in (self.store.list_projects, self.store.list_todos, self.store.list_notes,
+                       self.store.task_links, lambda: self.store.create_project('Closed'),
+                       lambda: self.store.link_task('codex', 'key', None)):
+            with self.assertRaises(WorkbenchError):
+                action()
+
+    def test_corrupt_future_unrecognized_schema_files_remain_identical(self):
+        self.store.close()
+        for kind in ('corrupt', 'empty', 'foreign', 'future', 'changed', 'changed_constraint', 'broken_foreign_keys'):
+            path = Path(self.directory.name) / f'{kind}.sqlite3'
+            if kind == 'corrupt':
+                path.write_bytes(b'not sqlite\x00personal content')
+            elif kind == 'empty':
+                path.touch()
+            elif kind == 'foreign':
+                with closing(sqlite3.connect(path)) as connection, connection:
+                    connection.execute('CREATE TABLE personal(content TEXT)')
+                    connection.execute("INSERT INTO personal VALUES ('keep me')")
+            else:
+                path.write_bytes(self.path.read_bytes())
+                with closing(sqlite3.connect(path)) as connection, connection:
+                    if kind == 'future':
+                        connection.execute('PRAGMA user_version=999')
+                    elif kind == 'changed':
+                        connection.execute('ALTER TABLE notes ADD COLUMN unsupported TEXT')
+                    elif kind == 'changed_constraint':
+                        sql = connection.execute("SELECT sql FROM sqlite_master WHERE name='task_links'").fetchone()[0]
+                        connection.execute('DROP TABLE task_links')
+                        connection.execute(sql.replace("'codex'", "'CODEX'"))
+                    else:
+                        connection.execute("INSERT INTO todos VALUES (?, 'orphan', ?, 0, 'now', 'now')",
+                                           (str(uuid4()), str(uuid4())))
+            original = hashlib.sha256(path.read_bytes()).hexdigest()
+            with self.subTest(kind=kind), self.assertRaises(WorkbenchError):
+                WorkbenchStore(path)
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), original)
+
+    def test_new_nested_path_creates_empty_store(self):
+        nested = Path(self.directory.name) / 'nested' / 'data.sqlite3'
+        store = WorkbenchStore(nested)
+        self.addCleanup(store.close)
+        self.assertEqual(store.list_projects(), [])
+        self.assertTrue(nested.is_file())
+
+
+if __name__ == '__main__':
+    unittest.main()
