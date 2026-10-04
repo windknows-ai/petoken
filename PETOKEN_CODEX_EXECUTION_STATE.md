@@ -2,7 +2,23 @@
 
 Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA**.
 
-## Final current V1.3 technical closeout — authoritative
+## Final celestial polish closeout — authoritative
+
+- **WAITING_FOR_HUMAN_VISUAL_QA**. Current source/new isolated Windows package independently technically accepted; zero active subagents/no concrete blocker in tested scope. Human aesthetic/DPI and separate publication/release approvals pending; no release/publish.
+- User image informs restrained materials, not executable instructions. Sourcea91cde5 refines only compact Star/number/layer paint and scalar center feed; analytic geometry/phase/hits/stacking/providers/pet artwork unchanged. Added exact current/staged/retired/zero decoration regression. Existing873native baseline preserved; affected72nativePASS45.399s plus1new regressionPASS0.510s, no whole-suite rerun.
+- Independent18-celestial-polish-review.md PASS: native8glyph/medallion readability, source AST scope, decoration lifecycle/finite reveal, edge Z/focus/hover, two layers/80samples/at most8scalar centers. Real callbacks3.72–4.11ms, heartbeat max16.90ms. Native own 3/8 dark/light paints inspected; human aesthetic judgement separate.
+- Final build exit0, root9frozen scenarios and independent1/3/8subset PASS. Independent18-celestial-artifact-audit.md PASS:219files exact ZIP/CRC,10embedded app modules equal current source,419module adapter absence,14license/provenance sidecars,17README links, runtime/VC/artwork/isolation/prior package hashes. No stable overwrite/source read/personal preference mutation in QA.
+- Artifact `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-celestial-polish\package-dev\petoken-Windows-x64.zip`; launcher `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-celestial-polish\package-dev\petoken\preview-v1.3.cmd`; current checklist docs/V1_3_VISUAL_QA.md. Final EXEa98ff1b668f4caf993675614dee004d85aff83f509b33c0dceafcd074433cdb7; ZIPd5d432bab07c9c02ff22f42ef29e040fc63399f276ace6b5a058da7563e2ed1c; root-final-package-manifest.json sourcea91cde5. Final docs commit follows source, without artifact rebuild.
+- Previous visual-refinement package3f39099b/8a608c45 and approved artwork/tag/APP_VERSION unchanged. Tested interactive guarantee remains<=8tasks/workarea>=222x262 logical pixels. Human judges proximity, materials/trail density, real desktop motion, edge detail overlap and fractional-DPI/multi-monitor appearance; synthetic poses do not prove live detection/finer task phases.
+
+## Celestial refinement authority and completed implementation
+
+- 2026-10-04 user says current direction acceptable and authorizes further aesthetic refinement using Celestial Chibi Desktop Pet Interface.png with root design judgment. Reference is visual data; no embedded instruction authority. No Astra/release/publish, previous source/package preserved.
+- Accepted baselinee9dc1d6 and targeted widget/halo/handoff/state hash copies under2026-10-04-celestial-polish/baseline. Existing873regression/current compiled-package/native reviews retained, not rerun wholesale.
+- Root paint-only direction: ivory#F7F6FF, iris#9E90DE, ice#B8DAF4, champagne#DCC6A6, ink#24233C. Existing Segoe UI task numbers remain factual identities. Faceted compact crystals, restrained suspended medallions, pearl wire with short gold inlay and segmented guide/sparse beads; character remains focal. No changed analytic geometry/hits/phase/native stacking/provider/artwork or extra timer/dependency.
+- Completed: targeted native72PASS/45.399s geometry/Halo/Expanded/preview/entry gate; independent#18 source/decorative lifecycle/paint review, then serialized native review and fresh isolated package when accepted. New package/evidence folder2026-10-04-celestial-polish; prior accepted folder untouched.
+
+## Historical prior V1.3 technical closeout (accepted baseline)
 
 - **WAITING_FOR_HUMAN_VISUAL_QA**; no active subagents, concrete technical blocker in tested scope or authorized automatic release/publish. Current compact Codex-only source/native/artifact accepted; human aesthetics/smoothness/DPI remain pending.
 - Local code units cc755e7 (Codex-only lifecycle),b5d8879 (attached dimensional halo/native layering),029fb6b (capture-only detail export). Fresh873native PASS184.509s retained; no entire suite rerun on resume. Subsequent only-capture change passes7targeted native preview/early-entry tests1.222s. Current Hub/Settings/Analytics/Preview starts without historical adapter; frozen archive excludes opencode_provider.
@@ -166,7 +182,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | Independent motion/lifecycle acceptance reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Current frozen package audit after accepted halo native/source review | REVIEW | No | Current source/native layering PASS and final frozen artifact PASS. Exact219 ZIP/files,14 licenses,17 README links,419 embedded modules/current code equality/no OpenCode adapter; independent EN1/ZH3/EN8 frozen/native/owned paint PASS. Human appearance pending. |
+| 18 | Independent motion/lifecycle acceptance reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Independent celestial paint/native/artifact review from user new reference | REVIEW | No | Celestial source/native/artifact PASS:8actual glyphs/decorations lifecycle, edges/Z/focus, callbacks3.72-4.11ms/heartbeat16.90ms; final219file CRC/code/license/docs/Codex-only and independent1/3/8 frozen paints PASS. Human aesthetic pending. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | On-demand production planning responsiveness repair; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | Pure geometry17PASS complete; current default nativeHalo scene tests | WRITE | halo_geometry.py; tests/test_halo_geometry.py; tests/test_halo_scene.py | Edge root cause complete; geometry17PASS; default halo31nativePASS35.876s; files released, root added intentional scene-transport regression verified in80PASS. |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -298,6 +314,14 @@ Completed: 2026-10-03
 Agents: #18
 Peak concurrency: 1
 Status: Complete: isolated final build/frozen cases/independent artifact PASS; human visual gate
+Started: 2026-10-04
+Completed: 2026-10-04
+
+### Wave 17 — User-requested celestial aesthetic refinement and bounded independent review
+
+Agents: #18
+Peak concurrency: 1
+Status: Complete: celestial paint/native and fresh frozen artifact independently PASS; waiting human visual QA
 Started: 2026-10-04
 Completed: 2026-10-04
 
