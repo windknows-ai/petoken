@@ -1,5 +1,5 @@
 # Current Progress
-- **RELEASE_PREPARATION — v1.3.0 authorized on 2026-10-04.** The user accepted the candidate developed as V1.4 and explicitly requested GitHub publication as V1.3. Earlier no-release constraints below record the prior checkpoint. User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
+- **RELEASED — Petoken v1.3.0 published on 2026-10-04 and marked Latest.** The user accepted the candidate developed as V1.4 and requested publication as V1.3. Earlier no-release constraints below record the prior checkpoint. User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
 - Preserved baseline99bfb0f and prior packages; targeted immutable files/hashes in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\baseline`. Unrelated.autopilot remains untracked/untouched. Root instructions synced without changing unrelated AGENTS content.
 - Implemented joint pet/ring clamping and explicit resize/no-move notifications; current-screen workarea signal/cached-screen invalidation; native HWND order validation after pet raises; Settings ring enable independently of Hub/source count; truthful zeroStars with retained decoration; stable-number pages<=8Stars and all-task menu/24-64fixtures.
 - Implemented220ms Star-origin anisotropic unfold/fade, reverse close with continuous same-task reversal, focus/nonactivation and terminal cancel on retirement/disable/move/shutdown. Brighter violet/pearl/champagne hoop, dotted arcs/crystal beads and96sample3.6strails reuse existing Qt/clock/assets. All original approved activity poses/typing frames remain byte-identical; QA now exposes all poses.
@@ -27,7 +27,8 @@
 - [x] Human visual QA accepted by the user on 2026-10-04 for the current candidate.
 - [x] Explicit GitHub publication/version promotion authorized on 2026-10-04 as v1.3.0.
 - [x]26targeted release checks, isolated rebuild/223files/14modules/Codex-only and9frozen cases PASS.
-- [ ] Fast-forward GitHub main, push v1.3.0 tag, publish ZIP/checksums, verify remote assets. Local stable installation is not replaced.
+- [x] Fast-forward GitHub main, push v1.3.0 tag, publish ZIP/checksums and verify Latest/remote assets.
+- No required release work remains; future changes need a new task. Local stable installation is not replaced.
 
 # Open Issues
 - Current candidate appearance/visual QA is accepted by the user. This does not establish exhaustive multi-monitor/fractional-DPI/tiny-workarea or physical activity detection coverage; no universal-device claim.
@@ -41,4 +42,7 @@
 
 - Completed: v1.3.0 version/docs prepared; only runtime differences are APP_VERSION and synthetic preview title/docstring. Existing 914 effective acceptance retained; 26 settings/preview/entry tests PASS2.071s. Current tracked text/new history credential-pattern scan PASS; .autopilot excluded.
 - Completed: release source afa6c7f built successfully;223-file ZIP CRC/content/licenses/docs and14compiled modules match current source,420modules/no OpenCode; actual embedded APP_VERSION1.3.0. Nine frozen current scenarios PASS, preferences/lock/artwork unchanged. EXE b40bd8a301194e570333a6e795f4ea65f49c3e4bdb83735c84ec2c4480708eb8; ZIP 6842151d6b09dda498cc06d630feeacb0e5607d1bc6928ad817df1920a20ad32. Release ZIP/SHA256SUMS.txt/notes saved under2026-10-04-v1.3.0-release.
-- IN PROGRESS: fast-forward existing GitHub main and push annotated v1.3.0 tag from this verified release state; upload Windows ZIP/checksums and publish Latest, then verify remote commit/tag/assets/digests. No force push or local stable overwrite.
+- Completed: atomic push fast-forwarded GitHub main from6f63bc1 to5d033ff and created annotated v1.3.0 tag; no force push.
+- Completed: GitHub Latest release published at https://github.com/windknows-ai/petoken/releases/tag/v1.3.0; draft=false/prerelease=false. ZIP66414340bytes and SHA256SUMS185bytes uploaded; both GitHub server SHA256 digests match local files. Release tag5d033ff; built sourceafa6c7f; final continuity-only commit follows. Local stable installation unchanged. Evidence:2026-10-04-v1.3.0-release/github-publication-verification.json.
+
+- Windows GitHub API verification uses explicit subprocess encoding=utf-8. Initial GBK decode failure was corrected; full remote release/tag/asset/digest assertions PASS.
