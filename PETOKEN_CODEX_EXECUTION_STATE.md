@@ -1,6 +1,20 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **RELEASED — v1.3.0 (GitHub Latest)**.
+Updated: 2026-10-04 (America/Toronto). Status: **V1.4 WORKBENCH IN PROGRESS**.
+
+## V1.4 workbench current authority
+
+- User approved home/basic project spaces/todos/notes: Codex work assistant plus personal desktop assistant; raising postponed. Keep released v1.3.0/tag/installation intact; APP_VERSION1.3.0 until separate release preparation. No V1.4 publication. No Astra in any role; agents strictly on demand.
+- Baseline c953268 preserved in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4-workbench/baseline.json`; current branch codex/v1.4-workbench. Unrelated.autopilot untouched. Root owns shared continuity/Git, GUI work serialized.
+
+## Current V1.4 progress
+
+- Store implementation committed ba7b26c: projects/todos/notes/explicit Codex task links; #8 12PASS0.755s incl durability/transaction/rollback/blockedCOMMIT/locked/corrupt/future schema. No dependencies or new provider reads.
+- Native modeless Home/Todos/Notes/Projects plus Hub/tray/pet entries, local-only database, bilingual UI/dirty-note Save-Discard-Cancel guard and isolated temporary preview implemented. Source design/plan and QA/build docs recorded.
+- Initial independent #18 review BLOCKED WB1 closed CRUD dialog after failed save and WB2 phantom dirty clean note after project deletion. Root exact2nativeFAIL reproduced; both causes repaired and independently reaccepted PASS. Old BLOCKED report retained; reviewer GUI released. Genuine locked/invalid dialogs retain all fields/retry; clean/dirty project deletion and Cancel clocks pass. Eight compact bilingual native tabs exactly680x460; synchronous locked submit measured~289–311ms incl native handling.
+- Current segmented gate:273affectednativePASS105.235s;17workbench/integrationPASS2.504s;17entry/settingsPASS0.488s;4previewCLI PASS0.366s. Existing full-suite evidence retained, no unnecessary full rerun.
+- Seven source native own-window captures PASS: bilingual tabs/minimum-size/0-24-64tasks; personal settings/lock/workbench database unchanged. Root inspected actual pixels and repaired scrollbar checkerboard paint; last narrow native capture PASS. Requested680x460, empty native layout461high; Qt may grow for text/errors as documented.
+- IN PROGRESS: commit accepted source and build isolated Windows package; frozen/archive/source/Codex-only/privacy validation next, then WAITING_FOR_HUMAN_VISUAL_QA. No V1.4 human acceptance/publication.
 
 ## v1.3.0 release authority (accepted V1.4 working name)
 
@@ -192,7 +206,7 @@ None.
 | 5 | Repository Cartographer; /root/resume_repo_cartographer | /root | gpt-6.1-sol | Completed | Resume role1 repository map; module/asset/build inclusion supplement | READ ONLY | No | Map plus packaging/asset verification complete; immutable SHA matches; preview developer-only |
 | 6 | Git Historian; /root/resume_git_historian | /root | gpt-6.1-sol | Completed | Resume role2 Git preservation/history/checkpoint scope | READ ONLY | No | Preservation hashes and stable baseline verified; conservative joint checkpoint allowlists recorded |
 | 7 | Handoff Archaeologist; /root/resume_handoff_archaeologist | /root | gpt-6.1-sol | Completed | Resume role3 full master/context/D2 history/QA document consistency | READ ONLY | No | Full master/history/QA contract reconciled; historical Astra/publish instructions superseded |
-| 8 | V1.4 activity audit / isolated QA; /root/resume_architecture_analyst | /root | gpt-6.1-sol high | Completed | V1.4 all poses and overflow fixtures | WRITE/REVIEW | tools/preview_v1_3.py; tests/test_preview_v1_3.py | V1.4 all original pose/frame bytes retained;26nativePASS2.506s,3purePASS,sixCLIactualrenders24/offpage24; QA64/paging/Hubindependence; fileownershipreleased |
+| 8 | V1.4 workbench local-store implementer; /root/resume_architecture_analyst | /root | gpt-6.1-sol high | Completed | workbench_store.py and pure temporary-store tests only | WRITE/TEST | workbench_store.py; tests/test_workbench_store.py | V1.4 local store12PASS0.755s, transactionalFK/reopen/rollback/lock/blockedCOMMIT/schema/corrupt-file protection; report8-store-report.md, released ownership; noGUI/dependencies/provider/Git changes |
 | 9 | Test-System Analyst; /root/resume_test_system_analyst | /root | gpt-6.1-sol | Completed | Resume role5 tests/fixtures/native baseline | READ ONLY | No | Native809 tests/108.899s:805pass4fail;22new tests pass; old home and paint gates unresolved |
 | 10 | D2B Motion Specialist; /root/resume_d2b_motion_specialist | /root | gpt-6.1-sol high | Completed | Resume role6 motion continuity/liveness | READ ONLY | No | 24native focusedpass; legal pet+100px parking stall100s; planning1.7-5.6s; fallback needed, Expanded Star missing |
 | 11 | Provider/State Truth Specialist; /root/resume_provider_truth_specialist | /root | gpt-6.1-sol high | Completed | Resume role7 provider/model/task/usage truth | READ ONLY | No | 82bounded tests pass; rendering, invalid quota, URI privacy, malformed source and stale tooltip blockers |
@@ -202,7 +216,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 package222files/sourcecode/Codexonly/finalpaint | REVIEW | No source; externalaudit/captures | V1.4 final independent artifact/native/frozen PASS;222 exact ZIP files/420 modules/no OpenCode/14 compiled source equality; real EXE0/24/64; packaged-code pager50/75/100/150% opaque/readable/12 layouts; continuous reversal/terminal cancellation/workarea/focus/HWND PASS; GUI released. 18-v14-final-artifact-audit.md |
+| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 workbench WB1/WB2 repair/native compact reacceptance | READ ONLY + NATIVE QA | No source; external18-workbench probes/report | V1.4 initialBLOCKEDWB1/WB2→independent fresh repair reacceptancePASS: true SQLite locks/validation modal retention+retry, clean/dirty note unassignment, Cancel clocks,8compactbilingual native tabs680x460/readable. Lockedsubmit289–311ms measured. GUIreleased; external18-workbench-reaccept report. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -352,6 +366,14 @@ Peak concurrency: 3
 Status: Complete: accepted technical/human visual QA; refinements released as v1.3.0 by user request on2026-10-04
 Started: 2026-10-04
 Completed: 2026-10-04
+
+### Wave 19 — V1.4 native workbench home/projects/todos/notes
+
+Agents: #8, #18
+Peak concurrency: 1
+Status: Running
+Started: 2026-10-04
+Completed: Pending
 
 ## Consolidated closeout plan (historical prior baseline)
 

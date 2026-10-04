@@ -27,6 +27,20 @@ Download [Petoken-v1.3.0-Windows-x64.zip](https://github.com/windknows-ai/petoke
 
 ## Supported source
 
+### In development — V1.4 workbench
+
+The development branch adds a native Home / Projects / Todos / Notes workbench,
+opened from the Hub, character menu or tray. Personal records stay on this device
+in `%LOCALAPPDATA%\CodexWisp\workbench.sqlite3`; notes use explicit Save / Ctrl+S
+and protect unsaved drafts on navigation or exit. It uses current accepted Codex
+tasks for optional project links and the existing task detail view.
+
+This is not part of the published v1.3.0 download. For the isolated development
+package, use `preview-workbench.cmd` and the
+[workbench QA guide](docs/V1_4_WORKBENCH_QA.md). Sample records are temporary.
+
+### Current Codex source
+
 | Source | Status | What you get |
 | --- | --- | --- |
 | Codex desktop client | Supported in v1.3.0 | Verified usage totals, available 5-hour / weekly quotas with resets, supported API-equivalent cost, working/idle context |

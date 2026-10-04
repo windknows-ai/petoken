@@ -21,4 +21,23 @@ Directions only — no schedule promises. `Available now` always matches [Releas
 
 The compact Codex-only implementation and rebuilt package passed technical and independent review; human visual QA was accepted on 2026-10-04. The refinements developed under the V1.4 working name are included in v1.3.0 by user request.
 
-No timelines are promised, and no unreleased capability is described as available. Commercial-only ideas (project analytics, budgets, alerts, licensing, advanced exports) are intentionally out of this public roadmap for now.
+## In development — v1.4 workbench foundation
+
+- Native workbench home with current Codex tasks and personal pending items
+- Basic project spaces with optional folder links
+- Local todos and plain-text notes, with explicit saving and draft protection
+- Optional task-to-project links, independent of the accepted companion ring
+
+## Proposed later phases
+
+| Phase | Direction |
+| --- | --- |
+| Remaining 1.x | Notification center, clearer task/data views, stable everyday interactions |
+| 2.x | Personal desktop workspace: small tools, richer projects and customizable home |
+| 3.x | Codex workflow assistance and integrations where supported interfaces allow |
+| 4.x | Optional modules and plugins, after the core workflows are proven |
+| 5.x | Optional skins and companion interaction; raising features come later |
+
+Both Codex work assistance and personal desktop tools are desired directions.
+These are proposals, not release commitments or verified integration capabilities.
+No timelines are promised; unreleased features are not described as available.
