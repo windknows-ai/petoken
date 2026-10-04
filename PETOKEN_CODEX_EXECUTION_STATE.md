@@ -1,9 +1,10 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — V1.4**.
+Updated: 2026-10-04 (America/Toronto). Status: **HUMAN_VISUAL_QA_PASSED — V1.4; awaiting release authorization**.
 
 ## V1.4 current engineering authority
 
+- 2026-10-04 user acceptance: “可以我这里通过了”. Current V1.4 candidate human visual QA PASS. This approves the visual QA gate only; no release/publish authorization, version bump, tag, push or stable overwrite. Source `27e3438`, technical continuity `c40270a` and artifact hashes below unchanged.
 - Human reports edge center drift, front ring occlusion, stale resize visibility and Hub hiding the ring. Requires always-visible ring unless explicitly disabled in Settings, smooth Star detail transition, >8-task handling, all original microphone/music/keyboard activity poses, and ornate reference-image effects. Preserve Codex-only source truth and historical baseline.
 - Completed implementation: joint centered clamp22purePASS; root6reported-scene gatesPASS; pet-raise native Z regression reproducedFAILEDthenrepairPASS; paged24/64/all-original-poses QA26nativePASS; detail module16PASS incl13native and16actual animationframes125%DPI. Ornament now brighter with dotted outerarcs/crystals/pearl bloom and96sample3.6strails.
 - Initial independent18-v14-review BLOCKED: same-task reverse resets progress, workarea cache lacks screenkey, opaque pager covers75% numberstrip. Root fixed these with red→green tests and closing-retire/disable/move cancellation;11root scenePASS2.787s/40module-settings-boundaryPASS3.520s. Old reports retained as superseded evidence.
@@ -14,7 +15,7 @@ Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA —
 - Root9currentfrozen casesPASSexit0 (0/1/3/8/9/24/64, allposes/offpageidentity/partialzeroUnknown; personalprefslockassetunchanged).
 - Independent#18 static artifactPASS:222files exactCRC/content,14compiledmodulescurrent/420frozenmodules/noOpenCodeadapter,14licenses/provenance,18READMElinks,bothlaunchers, artwork/dependencies/priorpackagebytes.
 - Final independent #18 PASS: actual frozen EXE 0/24/64 cases exit0; packaged-code native 50/75/100/150% opaque/readable pager, 12 layout cases, same-task reversal, terminal cancellation, workarea signal, keyboard focus and native HWND ordering. Final own dark/light 3/8-task paint viewed by reviewer and root. Report `18-v14-final-artifact-audit.md`; GUI released, no active work remains.
-- **WAITING_FOR_HUMAN_VISUAL_QA**. Launcher `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken\preview-v1.4.cmd`; ZIP `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken-Windows-x64.zip`; checklist `docs/V1_4_VISUAL_QA.md`. Source27e3438; final continuity-only commit follows, no rebuild required. Baseline99bfb0f/old artifacts preserved. Human appearance, perceived motion, real DPI/monitor behavior and physical activity detection remain unapproved. No Astra/release/publish; agents strictly on demand.
+- **HUMAN_VISUAL_QA_PASSED; awaiting explicit release authorization**. Launcher `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken\preview-v1.4.cmd`; ZIP `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken-Windows-x64.zip`; checklist `docs/V1_4_VISUAL_QA.md`. Source27e3438; technical continuityc40270a; documentation-only user acceptance, no rebuild required. Baseline99bfb0f/old artifacts preserved. Human visual QA now accepted; exhaustive DPI/monitor coverage and physical activity detection are not newly established by this approval. No Astra/release/publish; agents strictly on demand.
 
 ## Final celestial polish closeout — historical baseline
 

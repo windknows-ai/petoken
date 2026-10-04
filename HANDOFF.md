@@ -1,5 +1,5 @@
 # Current Progress
-- **WAITING_FOR_HUMAN_VISUAL_QA — V1.4 technical closeout complete. No release/publication/Astra.** User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
+- **HUMAN_VISUAL_QA_PASSED — V1.4 accepted by the user on 2026-10-04. Release/publication remains unauthorized.** User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
 - Preserved baseline99bfb0f and prior packages; targeted immutable files/hashes in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\baseline`. Unrelated.autopilot remains untracked/untouched. Root instructions synced without changing unrelated AGENTS content.
 - Implemented joint pet/ring clamping and explicit resize/no-move notifications; current-screen workarea signal/cached-screen invalidation; native HWND order validation after pet raises; Settings ring enable independently of Hub/source count; truthful zeroStars with retained decoration; stable-number pages<=8Stars and all-task menu/24-64fixtures.
 - Implemented220ms Star-origin anisotropic unfold/fade, reverse close with continuous same-task reversal, focus/nonactivation and terminal cancel on retirement/disable/move/shutdown. Brighter violet/pearl/champagne hoop, dotted arcs/crystal beads and96sample3.6strails reuse existing Qt/clock/assets. All original approved activity poses/typing frames remain byte-identical; QA now exposes all poses.
@@ -9,8 +9,8 @@
 - Complete: fresh isolated Windows build/package exit0, source still frozen. Source unit27e3438 committed; root222file ZIPCRC/equality/license/README manifestPASS. EXE31d4364649d81d15d02847b4f7b365d3717b493da66bb6b741b1a5938a012741; ZIPd01922af3a32eabcba115a929523e15c7bb0ea604450124ce948b46d6c8313c9. Root9current frozen scenariosPASSexit0 (0/1/3/8/9/24/64, off-page details, mic/music/typing/working, zero/Unknown/Partial, personalprefs/lock/artworkunchanged). Independent#18 static artifactPASS:222files exactCRC/content,14compiledmodulescurrent/420frozenmodules/noOpenCodeadapter,14licenses/provenance,18READMElinks, allartwork/dependencies/priorpackagebytes. Independent final actual EXE 0/24/64 scenarios PASS; packaged-code native 50/75/100/150% pager opacity/readability, 12 layout cases, exact same-task reversal, terminal cancellation, workarea signal, keyboard focus and HWND ordering PASS. GUI released, all review processes closed. No release or stable overwrite.
 
 
-- Final independent report: `18-v14-final-artifact-audit.md` under `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4`. Root viewed final three100-dark and eight75-light captures; appearance/subjective motion still needs human approval.
-- Human launcher: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken\preview-v1.4.cmd`; ZIP: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken-Windows-x64.zip`; checklist: `docs/V1_4_VISUAL_QA.md`. Source checkpoint `27e3438`; final continuity-only commit follows without a rebuild.
+- Final independent report: `18-v14-final-artifact-audit.md` under `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4`. Root viewed final three100-dark and eight75-light captures; user subsequently approved the current visual QA candidate on 2026-10-04 (“可以我这里通过了”).
+- Human launcher: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken\preview-v1.4.cmd`; ZIP: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken-Windows-x64.zip`; checklist: `docs/V1_4_VISUAL_QA.md`. Source checkpoint `27e3438`; technical continuity checkpoint `c40270a`; user acceptance is a documentation-only update, with package/runtime unchanged.
 
 # Decisions
 - Agents only on demand; reused#18 for independent current artifact audit, no new spawn for packaging. Historical total22 is actual lifetime history, never a target. GPT-6 Astra prohibited for every role and never used in this refinement.
@@ -24,10 +24,11 @@
 - [x] Full914effective current regression/31UIrecheck and isolated Windows build completed; source27e3438 committed and root9frozen casesPASS.
 - [x] Independent #18 current frozen executable/files/Codex-only/isolation and final pager dark/light native paint review completed PASS.
 - [x] Refreshed isolated package and final reports recorded; returned to WAITING_FOR_HUMAN_VISUAL_QA.
-- [ ] Human tests docs/V1_4_VISUAL_QA.md on real desktops/DPI/monitors. Release/publication remains separately unauthorized.
+- [x] Human visual QA accepted by the user on 2026-10-04 for the current candidate.
+- [ ] Await explicit release/publication authorization before version promotion, tagging, pushing or replacing the stable installation.
 
 # Open Issues
-- Human appearance and perceived motion remain unapproved. Multi-monitor/fractional-DPI appearance and physically smaller workareas need actual human inspection; no universal-device claim.
+- Current candidate appearance/visual QA is accepted by the user. This does not establish exhaustive multi-monitor/fractional-DPI/tiny-workarea or physical activity detection coverage; no universal-device claim.
 - Current safe ring has up to8hits per page;24/64task universes are tested and production is not truncated to64. Whole composition requires enough workarea for body plus fixed hit footprints; impossible tiny workareas retain decoration without containment guarantee. Detail overlap/appearance remain human judgment. Synthetic poses prove rendering, not live physical keyboard/microphone/media detection.
 - Approved asset SHA2567ce0d2fbd0eb89d2f6786c9bb1d5bada1aff7d89ea2f5dd079cce8a26483e1a0 and stable v1.2.0 peeled6f63bc1c951fe1c938495bf70d3fbf3491917591 unchanged. Earlier package EXE9d8767a583fa01cba7d387fe83ffa52b37883cb67e2a0b6960302e22f0083149 and ZIPb2d0b0fcb7ac6db62471030738ad649ad0936d07103a94c33dc3af0f2776a259 byte hashes preserved.
 
