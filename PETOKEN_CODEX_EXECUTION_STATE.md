@@ -1,6 +1,6 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **V1.4 WORKBENCH IN PROGRESS**.
+Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — V1.4 WORKBENCH**.
 
 ## V1.4 workbench current authority
 
@@ -14,7 +14,9 @@ Updated: 2026-10-04 (America/Toronto). Status: **V1.4 WORKBENCH IN PROGRESS**.
 - Initial independent #18 review BLOCKED WB1 closed CRUD dialog after failed save and WB2 phantom dirty clean note after project deletion. Root exact2nativeFAIL reproduced; both causes repaired and independently reaccepted PASS. Old BLOCKED report retained; reviewer GUI released. Genuine locked/invalid dialogs retain all fields/retry; clean/dirty project deletion and Cancel clocks pass. Eight compact bilingual native tabs exactly680x460; synchronous locked submit measured~289–311ms incl native handling.
 - Current segmented gate:273affectednativePASS105.235s;17workbench/integrationPASS2.504s;17entry/settingsPASS0.488s;4previewCLI PASS0.366s. Existing full-suite evidence retained, no unnecessary full rerun.
 - Seven source native own-window captures PASS: bilingual tabs/minimum-size/0-24-64tasks; personal settings/lock/workbench database unchanged. Root inspected actual pixels and repaired scrollbar checkerboard paint; last narrow native capture PASS. Requested680x460, empty native layout461high; Qt may grow for text/errors as documented.
-- IN PROGRESS: commit accepted source and build isolated Windows package; frozen/archive/source/Codex-only/privacy validation next, then WAITING_FOR_HUMAN_VISUAL_QA. No V1.4 human acceptance/publication.
+- Source94245b4/docs6639742 committed; isolated buildexit0. Root actual7workbench+3legacyfrozenPASS; artifact226exactZIPfiles/17compiledmodule/source/423archive/noOpenCode/14licenses/19links/currentguide/launchers/art/oldreleasePASS. Helper-only initialTypeError retained then corrected; no rebuild/codechange needed. Personalprefs/lock/workbenchDBunchanged.
+- EXEbc69126794119ae637581cf117a78aae7b49c87f888409187361f633286b5856; ZIP470d28eee51aa6ba061a16bca6cf47765b5d8d5cebfe8e1785cf2005d6039ff4. Package:2026-10-04-v1.4-workbench/package-dev/petoken; humanlauncher preview-workbench.cmd.
+- **WAITING_FOR_HUMAN_VISUAL_QA.** Independent#18 finalartifactPASS:226exactZIPfiles/423modules/17compiledsource/14licenses/19links/currentlauncherguide/noOpenCodeorpersonalDB/oldreleasebytesunchanged. Two fresh native frozen ENnotes24 and ZHempty0 PASS; personalprefs/lock/workbenchDB unchanged and temporaryDBs cleaned; actual compact pixels viewed. Report18-workbench-artifact.md/json. GUIreleased, zero active agents/jobs. Only human workbench QA and a separate future release decision remain; no V1.4 publish/push/stableoverwrite.
 
 ## v1.3.0 release authority (accepted V1.4 working name)
 
@@ -216,7 +218,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 workbench WB1/WB2 repair/native compact reacceptance | READ ONLY + NATIVE QA | No source; external18-workbench probes/report | V1.4 initialBLOCKEDWB1/WB2→independent fresh repair reacceptancePASS: true SQLite locks/validation modal retention+retry, clean/dirty note unassignment, Cancel clocks,8compactbilingual native tabs680x460/readable. Lockedsubmit289–311ms measured. GUIreleased; external18-workbench-reaccept report. |
+| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 source repairs and final Windows artifact acceptance | READ ONLY + NATIVE QA | No source; external18-workbench probes/report | InitialWB1/WB2BLOCKED→source reacceptancePASS→finalartifactPASS.226exactfiles/423modules/17compiledsource/14licenses/19links/noOpenCodeorpersonalDB,2actualfrozenENnotes24/ZHempty0readable/privatefilesunchanged; allpriorreleasebytesretained. Reports18-workbench-review/reaccept/artifact; GUIreleased. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -371,9 +373,9 @@ Completed: 2026-10-04
 
 Agents: #8, #18
 Peak concurrency: 1
-Status: Running
+Status: Complete — WAITING_FOR_HUMAN_VISUAL_QA
 Started: 2026-10-04
-Completed: Pending
+Completed: 2026-10-04
 
 ## Consolidated closeout plan (historical prior baseline)
 
