@@ -12,6 +12,34 @@ from tools.preview_v1_3 import fixture_tasks
 
 
 class WorkbenchIntegrationTests(unittest.TestCase):
+    def test_queued_tutorial_after_shutdown_does_not_create_workbench(self):
+        self.assertTrue(self.panel.shutdown())
+        self.panel.open_workbench_tutorial()
+        self.assertIsNone(self.panel.workbench_window)
+        self.assertIsNone(self.panel._workbench_temp)
+
+    def test_tutorial_skip_persists_and_menu_reopens_without_new_records(self):
+        self.panel.open_workbench_tutorial()
+        window = self.panel.workbench_window
+        self.assertTrue(window.tutorial.isVisible())
+        self.assertTrue(window.tutorial.finish())
+        from widget import read_preferences
+        self.assertTrue(read_preferences()['workbench_tutorial_seen'])
+        self.panel.tray_actions['wb_tutorial'].trigger()
+        self.assertTrue(window.tutorial.isVisible())
+        self.assertEqual(window.store.list_projects(), [])
+        self.assertEqual(window.store.list_notes(), [])
+
+    def test_tutorial_failed_settings_write_can_be_retried(self):
+        self.panel.open_workbench_tutorial()
+        window = self.panel.workbench_window
+        with patch('widget.write_preferences', side_effect=OSError('locked')):
+            self.assertFalse(window.tutorial.finish())
+        self.assertFalse(self.panel.prefs['workbench_tutorial_seen'])
+        self.assertTrue(window.tutorial.isVisible())
+        self.assertTrue(window.tutorial.finish())
+        self.assertTrue(self.panel.prefs['workbench_tutorial_seen'])
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

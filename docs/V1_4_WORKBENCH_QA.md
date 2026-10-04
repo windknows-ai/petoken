@@ -24,6 +24,20 @@ version/package requires its own acceptance and publication decision.
 
 ## What to check
 
+- **Getting started:** the first normal application launch (or first workbench
+  visit) opens a five-step optional guide:
+  moving/opening the pet, projects, todos, saving notes, and Codex task stars.
+  Its buttons use the real controls. Try Back/Next, Skip/Finish and replay from
+  the workbench header, character right-click menu or tray. Skip/Finish are
+  remembered after a successful settings save; closing the guide only dismisses
+  it for this session. The guide creates no sample records automatically.
+  Canceling a note action must keep its unsaved draft.
+
+The refreshed launcher starts with an empty workbench and zero synthetic Codex
+tasks, matching a newcomer. The QA controls can add synthetic tasks. For seeded
+samples, run `petoken.exe --preview-workbench`; for a bounded tutorial capture,
+use `--tutorial --tutorial-step 0..4 --smoke SECONDS --output PATH.png`.
+
 - **Home:** character header, counts, pending items and current Codex tasks are
   readable in Chinese and English, including at the smallest supported window.
 - **Projects:** create/edit a name and optional folder; filter with the sidebar.

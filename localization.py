@@ -426,6 +426,49 @@ EN.update({
     'wb_delete_project_confirm': 'Delete this project? Todos and notes move to Unassigned. Codex tasks are kept.',
 })
 
+ZH_CN.update({
+    'wb_tutorial': '新手教程', 'wb_tutorial_step': '第 {n} / 5 步',
+    'wb_tutorial_skip': '跳过教程', 'wb_tutorial_back': '上一步',
+    'wb_tutorial_next': '下一步', 'wb_tutorial_done': '完成教程',
+    'wb_tutorial_hint': '点击操作会收起教程。工作台右上角的「新手教程」可以继续或重新查看。',
+    'wb_tutorial_title_0': '和桌宠一起开始',
+    'wb_tutorial_body_0': '拖动人物可以移动桌宠，右键人物或托盘图标可打开工作台、用量面板和设置。\n\n工作台用来整理项目、待办和便签。即使没有运行 Codex，也可以使用这些功能。\n\n先看看界面，或点击「下一步」跟着试一试。',
+    'wb_tutorial_action_0': '先看看工作台',
+    'wb_tutorial_title_1': '先给事情一个家',
+    'wb_tutorial_body_1': '项目把相关的待办和便签放在一起，例如「学习」或「我的桌宠」。\n\n点击下面的按钮，填写项目名称。文件夹是可选的，方便以后打开资料。\n\n左侧选择一个项目，就能查看属于它的内容；「未分类」用来随手记录。',
+    'wb_tutorial_action_1': '创建一个项目',
+    'wb_tutorial_title_2': '写下下一件事',
+    'wb_tutorial_body_2': '进入「待办」，输入一件想做的事，选择所属项目，然后点「添加」或按回车。\n\n做完后勾选它；需要继续时，取消勾选即可重新打开。\n\n「首页」会汇总当前项目中尚未完成的事项。',
+    'wb_tutorial_action_2': '去添加待办',
+    'wb_tutorial_title_3': '把想法留下来',
+    'wb_tutorial_body_3': '新建便签，写一个标题和内容，点击「保存」或按 Ctrl+S。便签和待办保存在这台设备上。\n\n切换便签、项目或退出时，未保存的编辑会提示你选择保存、放弃或取消。\n\n现在试着写下一句话吧。',
+    'wb_tutorial_action_3': '新建一张便签',
+    'wb_tutorial_title_4': '让星星陪你工作',
+    'wb_tutorial_body_4': '每颗星星对应一个当前 Codex 任务。点击星星，或在首页选择任务后点「查看详情」，可以查看它的用量信息。\n\n「关联项目」可以把这个任务放进你自己的项目空间。\n\n没有任务时列表为空是正常的。使用 Codex 后，可用任务会自动出现；个人待办和便签照常使用。',
+    'wb_tutorial_action_4': '看看 Codex 任务',
+})
+EN.update({
+    'wb_tutorial': 'Getting started', 'wb_tutorial_step': 'Step {n} of 5',
+    'wb_tutorial_skip': 'Skip tutorial', 'wb_tutorial_back': 'Back',
+    'wb_tutorial_next': 'Next', 'wb_tutorial_done': 'Finish',
+    'wb_tutorial_hint': 'An action hides this guide. Use Getting started at the top right to resume or revisit it.',
+    'wb_tutorial_title_0': 'A small place to start',
+    'wb_tutorial_body_0': 'Drag the character to move your pet. Right-click the character or tray icon to open the workbench, usage panel or settings.\n\nUse the workbench for projects, todos and notes, even when Codex is not running.\n\nLook around, or choose Next to try the basics.',
+    'wb_tutorial_action_0': 'Look around the workbench',
+    'wb_tutorial_title_1': 'Give your work a home',
+    'wb_tutorial_body_1': 'A project keeps related todos and notes together, such as Study or My desktop pet.\n\nChoose the button below and enter a name. A folder is optional and lets you open your materials later.\n\nSelect a project in the sidebar to filter its content. Unassigned is a place for quick captures.',
+    'wb_tutorial_action_1': 'Create a project',
+    'wb_tutorial_title_2': 'Write your next step',
+    'wb_tutorial_body_2': 'In Todos, enter something you want to do, choose a project, then select Add or press Enter.\n\nCheck it off when done. Uncheck it to reopen it.\n\nHome collects the pending items for the selected project.',
+    'wb_tutorial_action_2': 'Go to Todos',
+    'wb_tutorial_title_3': 'Keep a small idea',
+    'wb_tutorial_body_3': 'Create a note, write a title and some text, then select Save or press Ctrl+S. Notes and todos stay on this device.\n\nWhen you switch notes or projects, or exit, unsaved edits prompt you to Save, Discard or Cancel.\n\nTry writing one sentence.',
+    'wb_tutorial_action_3': 'Create a note',
+    'wb_tutorial_title_4': 'Work alongside the stars',
+    'wb_tutorial_body_4': 'Each star represents a current Codex task. Select a star, or choose a task on Home and View details, to see its available usage.\n\nLink project puts the task in your own project space.\n\nAn empty task list is normal when none are available. Supported Codex tasks appear automatically; personal todos and notes still work.',
+    'wb_tutorial_action_4': 'Look at Codex tasks',
+})
+
 STRINGS = {"zh_CN": ZH_CN, "en": EN}
 
 

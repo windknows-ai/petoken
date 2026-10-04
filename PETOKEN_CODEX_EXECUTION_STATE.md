@@ -1,6 +1,6 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — V1.4 WORKBENCH**.
+Updated: 2026-10-04 (America/Toronto). Status: **V1.4 ONBOARDING IN PROGRESS**.
 
 ## V1.4 workbench current authority
 
@@ -8,6 +8,9 @@ Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA —
 - Baseline c953268 preserved in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4-workbench/baseline.json`; current branch codex/v1.4-workbench. Unrelated.autopilot untouched. Root owns shared continuity/Git, GUI work serialized.
 
 ## Current V1.4 progress
+
+- **V1.4 ONBOARDING TECHNICAL SOURCE PASS** — five-step optional native EN/ZH first-use guide, actual actions and workbench/pet/tray replay; normal unseen startup opens it, Skip/Finish persist strictbool with failure rollback. Closing terminal Panel cannot run queued guide.95unique related cases segmented (90+1+3+1); last38PASS3.087s. Five source step captures and independent10compact bilingual/real-persistence/CTA probesPASS; required discoverability/terminal repairs independently reaccepted5actualmaincasesPASS. Original red/BLOCKED evidence retained. No Astra/publish.
+- IN PROGRESS: commit verified tutorial source/docs/tests, build fresh isolatedWindows package under2026-10-04-v1.4-onboarding/package-dev, validate compiled/source/files and actualEXE ordinary/tutorial scenes, then independent artifact review and humanQA. Prior0a0d5b9 workbench/package and stablev1.3.0 preserved.
 
 - Store implementation committed ba7b26c: projects/todos/notes/explicit Codex task links; #8 12PASS0.755s incl durability/transaction/rollback/blockedCOMMIT/locked/corrupt/future schema. No dependencies or new provider reads.
 - Native modeless Home/Todos/Notes/Projects plus Hub/tray/pet entries, local-only database, bilingual UI/dirty-note Save-Discard-Cancel guard and isolated temporary preview implemented. Source design/plan and QA/build docs recorded.
@@ -187,15 +190,15 @@ Original turn's first wave was read-only and platform capacity was root plus thr
 ## Subagent Ledger
 
 Total spawned: 22
-Currently active: 0
-Completed: 17
+Currently active: 1
+Completed: 16
 Failed: 1
 Interrupted/Cancelled: 4
 Peak concurrency: 8 subagents (Main excluded)
 
 ### Current Active Subagents
 
-None.
+- #18 /root/review_motion_routes: V1.4 final frozen artifact/native paint auditor; parent /root; actual model gpt-6.1-sol high; assignment V1.4 onboarding independent native/source acceptance; mode READ ONLY + NATIVE QA; status Active.
 
 ### Full History
 
@@ -218,7 +221,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 source repairs and final Windows artifact acceptance | READ ONLY + NATIVE QA | No source; external18-workbench probes/report | InitialWB1/WB2BLOCKED→source reacceptancePASS→finalartifactPASS.226exactfiles/423modules/17compiledsource/14licenses/19links/noOpenCodeorpersonalDB,2actualfrozenENnotes24/ZHempty0readable/privatefilesunchanged; allpriorreleasebytesretained. Reports18-workbench-review/reaccept/artifact; GUIreleased. |
+| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Active | V1.4 onboarding independent native/source acceptance | READ ONLY + NATIVE QA | No source; external18-workbench probes/report | Priorworkbench/source/artifactPASS retained. New5-step beginner guide independentreviewrunning; firstshow/persistence/actions/dirtyguards/nativebilingual/isolatedpreview, reviewerGUIlease. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -376,6 +379,14 @@ Peak concurrency: 1
 Status: Complete — WAITING_FOR_HUMAN_VISUAL_QA
 Started: 2026-10-04
 Completed: 2026-10-04
+
+### Wave 20 — V1.4 first-use tutorial and refreshed preview
+
+Agents: #18
+Peak concurrency: 1
+Status: Running
+Started: 2026-10-04
+Completed: Pending
 
 ## Consolidated closeout plan (historical prior baseline)
 

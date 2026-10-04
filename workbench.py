@@ -1,13 +1,13 @@
 """Native personal workbench; user records are separate from Codex telemetry."""
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import Qt, QUrl, QTimer
 from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
+    QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
     QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
     QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTabWidget,
-    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
+    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget, QScrollArea, QProgressBar,
 )
 
 from localization import text
@@ -26,6 +26,7 @@ class WorkbenchWindow(QWidget):
         self._projects, self._todos, self._links = [], {}, {}
         self._loading = False
         self._shutdown = False
+        self._tutorial_auto_shown = False
         self._captions = []
         self.setObjectName('workbench')
         self.setWindowIcon(panel.windowIcon())
@@ -82,9 +83,7 @@ class WorkbenchWindow(QWidget):
         words.addWidget(self.caption('wb_heading', 'heading'))
         words.addWidget(self.caption('wb_subtitle', 'muted'))
         header.addLayout(words, 1)
-        mark = QLabel('✧  PETOKEN')
-        mark.setObjectName('section')
-        header.addWidget(mark)
+        self.tutorial_button = self.button(header, 'wb_tutorial', self.open_tutorial)
         root.addWidget(hero)
         split = QSplitter()
         sidebar = QWidget()
@@ -113,6 +112,7 @@ class WorkbenchWindow(QWidget):
         root.addWidget(self.status)
         self.save_shortcut = QShortcut(QKeySequence.Save, self)
         self.save_shortcut.activated.connect(self.save_note)
+        self.tutorial = WorkbenchTutorial(self)
         self.apply_language()
 
     @property
@@ -623,6 +623,8 @@ class WorkbenchWindow(QWidget):
         if saved:
             self.refresh()
 
+        return saved
+
     def edit_selected_project(self):
         record = self._selected_project()
         if record:
@@ -662,9 +664,28 @@ class WorkbenchWindow(QWidget):
                             (self.notes_list, 'wb_notes'), (self.task_list, 'wb_codex_tasks')]:
             widget.setAccessibleName(self.tr(key))
         self.refresh()
+        self.tutorial.apply_language()
+
+    def open_tutorial(self):
+        if self._shutdown:
+            return
+        if self.panel.prefs.get('workbench_tutorial_seen') is True:
+            self.tutorial.set_step(0)
+        self.tutorial.open_guide()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._tutorial_auto_shown:
+            self._tutorial_auto_shown = True
+            def first_visit():
+                if (not self._shutdown and self.isVisible()
+                        and self.panel.prefs.get('workbench_tutorial_seen') is not True):
+                    self.open_tutorial()
+            QTimer.singleShot(0, self, first_visit)
 
     def closeEvent(self, event):
         if self._guard_note():
+            self.tutorial.hide()
             event.accept()
         else:
             event.ignore()
@@ -677,3 +698,138 @@ class WorkbenchWindow(QWidget):
         self.store.close()
         self._shutdown = True
         return True
+
+
+class WorkbenchTutorial(QDialog):
+    """Nonmodal first-use guide; actions reuse the actual workbench controls."""
+    def __init__(self, owner):
+        super().__init__(owner)
+        self.owner = owner
+        self.step = 0
+        self.setWindowIcon(owner.windowIcon())
+        self.setMinimumSize(440, 360)
+        self.resize(500, 440)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 22, 24, 20)
+        layout.setSpacing(14)
+        self.position_label = QLabel()
+        self.position_label.setObjectName('section')
+        layout.addWidget(self.position_label)
+        self.title = QLabel()
+        self.title.setObjectName('heading')
+        self.title.setWordWrap(True)
+        layout.addWidget(self.title)
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 5)
+        self.progress.setTextVisible(False)
+        self.progress.setFixedHeight(5)
+        self.progress.setStyleSheet(f'QProgressBar {{border:0; background:{theme.TRACK};}} '
+                                   f'QProgressBar::chunk {{background:{theme.VIOLET};}}')
+        layout.addWidget(self.progress)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.viewport().setStyleSheet(f'background:{theme.BG};')
+        self.body = QLabel()
+        self.body.setWordWrap(True)
+        self.body.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.body.setMargin(4)
+        self.body.setStyleSheet(f'background:{theme.BG};')
+        scroll.setWidget(self.body)
+        layout.addWidget(scroll, 1)
+        self.action = QPushButton()
+        self.action.setObjectName('primary')
+        self.action.clicked.connect(self.perform_action)
+        layout.addWidget(self.action)
+        self.hint = QLabel()
+        self.hint.setObjectName('muted')
+        self.hint.setWordWrap(True)
+        layout.addWidget(self.hint)
+        self.error = QLabel()
+        self.error.setWordWrap(True)
+        self.error.hide()
+        layout.addWidget(self.error)
+        buttons = QHBoxLayout()
+        self.skip = QPushButton()
+        self.skip.clicked.connect(self.finish)
+        buttons.addWidget(self.skip)
+        buttons.addStretch()
+        self.back = QPushButton()
+        self.back.clicked.connect(lambda: self.set_step(self.step - 1))
+        buttons.addWidget(self.back)
+        self.next = QPushButton()
+        self.next.clicked.connect(self.advance)
+        buttons.addWidget(self.next)
+        layout.addLayout(buttons)
+
+    def apply_language(self):
+        tr = self.owner.tr
+        self.setWindowTitle(tr('wb_tutorial') + ' · Petoken')
+        self.position_label.setText(tr('wb_tutorial_step', n=self.step + 1))
+        self.title.setText(tr(f'wb_tutorial_title_{self.step}'))
+        self.body.setText(tr(f'wb_tutorial_body_{self.step}'))
+        self.action.setText(tr(f'wb_tutorial_action_{self.step}'))
+        self.hint.setText(tr('wb_tutorial_hint'))
+        self.skip.setText(tr('wb_tutorial_skip'))
+        self.back.setText(tr('wb_tutorial_back'))
+        self.next.setText(tr('wb_tutorial_done' if self.step == 4 else 'wb_tutorial_next'))
+        self.error.setText(tr('settings_save_failed'))
+        self.back.setEnabled(self.step > 0)
+        self.progress.setValue(self.step + 1)
+        for button in [self.skip, self.back, self.next, self.action]:
+            button.setAccessibleName(button.text())
+
+    def set_step(self, step):
+        self.step = max(0, min(4, step))
+        self.apply_language()
+
+    def advance(self):
+        if self.step == 4:
+            self.finish()
+        else:
+            self.set_step(self.step + 1)
+
+    def open_guide(self):
+        self.apply_language()
+        self.show()
+        area = self.owner.screen().availableGeometry()
+        center = self.owner.frameGeometry().center()
+        self.move(max(area.left(), min(center.x() - self.width() // 2, area.right() - self.width() + 1)),
+                  max(area.top(), min(center.y() - self.height() // 2, area.bottom() - self.height() + 1)))
+        self.raise_()
+        self.activateWindow()
+
+    def finish(self):
+        prefs = self.owner.panel.prefs
+        present = 'workbench_tutorial_seen' in prefs
+        previous = prefs.get('workbench_tutorial_seen')
+        prefs['workbench_tutorial_seen'] = True
+        if self.owner.panel.persist() is False:
+            if present:
+                prefs['workbench_tutorial_seen'] = previous
+            else:
+                prefs.pop('workbench_tutorial_seen', None)
+            self.error.show()
+            return False
+        self.error.hide()
+        self.hide()
+        return True
+
+    def perform_action(self):
+        self.hide()
+        window = self.owner
+        window.raise_()
+        if self.step == 1:
+            window.tabs.setCurrentIndex(3)
+            if not window.edit_project():
+                self.open_guide()
+        elif self.step == 2:
+            window.tabs.setCurrentIndex(1)
+            window.todo_input.setFocus()
+        elif self.step == 3:
+            if not window.new_note():
+                self.open_guide()
+        else:
+            window.tabs.setCurrentIndex(0)
+            if self.step == 4:
+                window.task_list.setFocus()

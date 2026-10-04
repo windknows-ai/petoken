@@ -35,6 +35,10 @@ in `%LOCALAPPDATA%\CodexWisp\workbench.sqlite3`; notes use explicit Save / Ctrl+
 and protect unsaved drafts on navigation or exit. It uses current accepted Codex
 tasks for optional project links and the existing task detail view.
 
+A skippable Chinese/English first-use tutorial explains the pet and walks through
+projects, todos, notes and task stars. Reopen Getting started from the workbench,
+character menu or tray; completing or skipping the guide is remembered locally.
+
 This is not part of the published v1.3.0 download. For the isolated development
 package, use `preview-workbench.cmd` and the
 [workbench QA guide](docs/V1_4_WORKBENCH_QA.md). Sample records are temporary.

@@ -25,6 +25,7 @@ DEFAULT_PREFERENCES = {
     "pet_scale_percent": PET_SCALE_DEFAULT,
     "pet_motion": True,
     "star_ring_enabled": True,
+    "workbench_tutorial_seen": False,
 }
 
 
@@ -64,6 +65,8 @@ def normalize_preferences(data):
         preferences["pet_motion"] = True
     if not isinstance(preferences.get("star_ring_enabled"), bool):
         preferences["star_ring_enabled"] = True
+    if not isinstance(preferences.get("workbench_tutorial_seen"), bool):
+        preferences["workbench_tutorial_seen"] = False
     for key in ("position", "pet_position"):
         if key in preferences:
             preferences[key] = valid_position(preferences[key])

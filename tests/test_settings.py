@@ -10,6 +10,15 @@ from localization import DEFAULT_LANGUAGE, normalize_language, text
 
 
 class SettingsTests(unittest.TestCase):
+    def test_tutorial_flag_is_durable_and_strictly_boolean(self):
+        self.assertFalse(load_preferences(self.path)['workbench_tutorial_seen'])
+        save_preferences(self.path, {'workbench_tutorial_seen': True, 'future_setting': {'kept': True}})
+        prefs = load_preferences(self.path)
+        self.assertTrue(prefs['workbench_tutorial_seen'])
+        self.assertEqual(prefs['future_setting'], {'kept': True})
+        for value in (None, 1, 0, 'true', [], {}):
+            self.assertFalse(load_preferences_from({'workbench_tutorial_seen': value})['workbench_tutorial_seen'])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.path = Path(self.temp.name) / "CodexWisp" / "settings.json"

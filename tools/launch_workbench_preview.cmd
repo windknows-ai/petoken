@@ -5,4 +5,4 @@ if not exist "%~dp0petoken.exe" (
     pause
     exit /b 1
 )
-start "" "%~dp0petoken.exe" --preview-workbench --language zh_CN
+start "" "%~dp0petoken.exe" --preview-workbench --language zh_CN --empty --count 0

@@ -4090,6 +4090,7 @@ class Panel(QWidget):
             'show_hide': menu.addAction('', self.toggle_visible),
             'show_hide_pet': menu.addAction('', self.toggle_pet),
             'workbench_open': menu.addAction('', self.open_workbench),
+            'wb_tutorial': menu.addAction('', self.open_workbench_tutorial),
             'analytics_button': menu.addAction('', self.open_analytics),
             'collapse_expand': menu.addAction('', self.toggle_compact),
             'settings_help': menu.addAction('', self.open_settings),
@@ -4662,6 +4663,13 @@ class Panel(QWidget):
         self.workbench_window.raise_()
         self.workbench_window.activateWindow()
 
+    def open_workbench_tutorial(self):
+        if self.closing:
+            return
+        self.open_workbench()
+        if self.workbench_window:
+            self.workbench_window.open_tutorial()
+
     def open_analytics(self):
         self.want_history.set()
         if self.analytics_window is None:
@@ -4875,8 +4883,10 @@ class Panel(QWidget):
     def persist(self):
         try:
             write_preferences(self.prefs)
+            return True
         except OSError:
             self.status.setText(self.tr_text('settings_save_failed'))
+            return False
 
     def handle_escape(self):
         if self.task_manager.expanded_identity is not None:
@@ -4967,6 +4977,8 @@ def main():
     from pet import DesktopPet
     panel.pet=DesktopPet(panel)
     panel.restore_companion()
+    if not args.smoke and panel.prefs.get('workbench_tutorial_seen') is not True:
+        QTimer.singleShot(0, panel, panel.open_workbench_tutorial)
     if args.smoke:
         panel.show()
         panel.open_analytics()

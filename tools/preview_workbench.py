@@ -23,6 +23,8 @@ def parse_args(argv=None):
     parser.add_argument('--width', type=int, default=980)
     parser.add_argument('--height', type=int, default=700)
     parser.add_argument('--empty', action='store_true', help='No sample projects, todos or notes')
+    parser.add_argument('--tutorial', action='store_true', help='Show/capture the native first-use tutorial')
+    parser.add_argument('--tutorial-step', type=int, choices=range(5), default=0)
     parser.add_argument('--smoke', type=float, metavar='SECONDS')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args(argv)
@@ -70,6 +72,9 @@ def main(argv=None):
         directory = Path(stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-workbench-preview-')))
         stack.enter_context(patch('widget.PREF_DIR', directory))
         preview = Preview(args.count, args.language)
+        # Bounded ordinary captures retain their previous content; tutorial
+        # captures and interactive previews exercise a fresh first visit.
+        preview.panel.prefs['workbench_tutorial_seen'] = args.smoke is not None and not args.tutorial
         preview.setWindowTitle('SYNTHETIC QA / 合成预览 — V1.4 Workbench')
         stack.callback(preview.cleanup)
         preview.panel.open_workbench()
@@ -93,13 +98,17 @@ def main(argv=None):
         preview.show()
         window.show()
         window.raise_()
+        if args.tutorial:
+            window.open_tutorial()
+            window.tutorial.set_step(args.tutorial_step)
         failed = []
         if args.smoke is not None:
             def finish():
                 try:
                     if args.output:
                         args.output.parent.mkdir(parents=True, exist_ok=True)
-                        if not window.grab().save(str(args.output)):
+                        target = window.tutorial if args.tutorial else window
+                        if not target.grab().save(str(args.output)):
                             raise OSError('Could not save workbench capture')
                         manager = preview.panel.task_manager
                         report = dict(kind='SYNTHETIC_WORKBENCH_QA', language=args.language,
@@ -111,6 +120,8 @@ def main(argv=None):
                             star_windows=manager.window_count(), star_visible=sum(
                                 manager.window_for(key).isVisible() for key in manager.window_identities()),
                             width=window.width(), height=window.height(), provider='codex',
+                            tutorial_visible=window.tutorial.isVisible(), tutorial_step=window.tutorial.step,
+                            tutorial_seen=preview.panel.prefs['workbench_tutorial_seen'],
                             opencode_adapter_imported='opencode_provider' in sys.modules)
                         args.output.with_suffix('.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
                 except Exception as error:
