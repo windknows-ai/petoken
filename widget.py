@@ -7,6 +7,7 @@ import json
 import math
 import os
 import sys
+import tempfile
 import threading
 import time
 from datetime import datetime
@@ -3865,6 +3866,8 @@ class Panel(QWidget):
         self.quota_provider = None
         self.snapshot = {}
         self.analytics_window = None
+        self.workbench_window = None
+        self._workbench_temp = None
         self.want_history = threading.Event()
         self.quota = {}
         self.fx_data = self.prefs.get('fx_cache') or dict(
@@ -4009,6 +4012,8 @@ class Panel(QWidget):
         self.insights.setWordWrap(True)
         body.addWidget(self.insights)
         details_row = QHBoxLayout()
+        self.workbench_button = button('', '', self.open_workbench)
+        details_row.addWidget(self.workbench_button)
         details_row.addStretch()
         self.details_button = button('', '', self.open_analytics)
         details_row.addWidget(self.details_button)
@@ -4084,6 +4089,7 @@ class Panel(QWidget):
         self.tray_actions = {
             'show_hide': menu.addAction('', self.toggle_visible),
             'show_hide_pet': menu.addAction('', self.toggle_pet),
+            'workbench_open': menu.addAction('', self.open_workbench),
             'analytics_button': menu.addAction('', self.open_analytics),
             'collapse_expand': menu.addAction('', self.toggle_compact),
             'settings_help': menu.addAction('', self.open_settings),
@@ -4186,6 +4192,8 @@ class Panel(QWidget):
         self.details_button.setText(t('analytics_button'))
         self.details_button.setToolTip(t('analytics_button_tip'))
         self.details_button.setAccessibleName(t('analytics_button_tip'))
+        self.workbench_button.setText(t('workbench_open'))
+        self.workbench_button.setAccessibleName(t('workbench_open'))
         self.context.set_title(t('context_used'))
         self.five.set_title(t('five_hour_limit'))
         self.week.set_title(t('weekly_limit'))
@@ -4203,6 +4211,8 @@ class Panel(QWidget):
             action.setText(t(key))
         if self.analytics_window:
             self.analytics_window.apply_language()
+        if self.workbench_window:
+            self.workbench_window.apply_language()
         if hasattr(self, 'pet'):
             self.pet.apply_language()
         if self.snapshot:
@@ -4474,6 +4484,8 @@ class Panel(QWidget):
                                   scope=scope_text(data.get('scope', self.prefs.get('scope')), self.language))
         self.task_provenance.setFullText(provenance)
         self.tasks_button.setToolTip(provenance)
+        if self.workbench_window and self.workbench_window.isVisible():
+            self.workbench_window.update_tasks()
 
     def refresh_task_menu(self):
         self.task_menu.clear()
@@ -4626,6 +4638,29 @@ class Panel(QWidget):
     def open_settings(self):
         self.show()
         Settings(self).exec()
+
+    def open_workbench(self):
+        from workbench import WorkbenchWindow
+        from workbench_store import WorkbenchError, WorkbenchStore
+        from PySide6.QtWidgets import QMessageBox
+        if self.workbench_window is None:
+            if not self.live:
+                self._workbench_temp = tempfile.TemporaryDirectory(prefix='petoken-workbench-qa-')
+            directory = Path(self._workbench_temp.name) if self._workbench_temp else PREF_DIR
+            try:
+                store = WorkbenchStore(directory / 'workbench.sqlite3')
+            except WorkbenchError:
+                QMessageBox.warning(self, self.tr_text('workbench_open'), self.tr_text('wb_open_error'))
+                return
+            try:
+                self.workbench_window = WorkbenchWindow(self, store)
+            except Exception:
+                store.close()
+                raise
+        self.workbench_window.refresh()
+        self.workbench_window.show()
+        self.workbench_window.raise_()
+        self.workbench_window.activateWindow()
 
     def open_analytics(self):
         self.want_history.set()
@@ -4878,6 +4913,8 @@ class Panel(QWidget):
             self.hide_to_tray()
 
     def shutdown(self):
+        if self.workbench_window and not self.workbench_window.shutdown():
+            return False
         self.closing = True
         self.stop.set()
         self.active.stop.set()
@@ -4893,10 +4930,20 @@ class Panel(QWidget):
         self.prefs['position'] = [self.x(),self.y()]
         self.persist()
         self.tray.hide()
+        if self._workbench_temp:
+            self._workbench_temp.cleanup()
+            self._workbench_temp = None
         QApplication.instance().quit()
+        return True
 
 
 def main():
+    if '--preview-workbench' in sys.argv[1:]:
+        if __name__ == '__main__':
+            sys.modules['widget'] = sys.modules[__name__]
+        from tools.preview_workbench import main as preview_main
+        return preview_main([argument for argument in sys.argv[1:]
+                             if argument != '--preview-workbench'])
     if any(argument in ('--preview-v1-3', '--preview-v1-4') for argument in sys.argv[1:]):
         # Frozen/script entry is __main__; keep the preview on this module's
         # globals so its temporary preference directory isolates the real UI.

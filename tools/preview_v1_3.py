@@ -262,7 +262,9 @@ class Preview(QWidget):
 
     def cleanup(self):
         if self.closed:
-            return
+            return True
+        if self.panel.workbench_window and not self.panel.workbench_window.shutdown():
+            return False
         self.closed = True
         self.panel.clock.stop()
         self.panel.size_timer.stop()
@@ -271,10 +273,13 @@ class Preview(QWidget):
         if not self.panel.closing:
             self.panel.shutdown()
         self.panel.task_manager.shutdown()
+        return True
 
     def closeEvent(self, event):
-        self.cleanup()
-        event.accept()
+        if self.cleanup():
+            event.accept()
+        else:
+            event.ignore()
 
 
 def parse_args(argv=None):

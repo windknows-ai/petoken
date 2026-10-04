@@ -358,6 +358,7 @@ class DesktopPet(QWidget):
         menu.setStyleSheet(self.panel.styleSheet())
         menu.addAction(self.tr_text('pet_toggle_panel'),self.toggle_panel)
         menu.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
+        menu.addAction(self.tr_text('workbench_open'),self.panel.open_workbench)
         menu.addAction(self.tr_text('pet_settings'),self.panel.open_settings)
         topmost=menu.addAction(self.tr_text('always_on_top'));topmost.setCheckable(True)
         topmost.setChecked(bool(self.panel.prefs.get('always_on_top',True)))

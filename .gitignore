@@ -15,7 +15,8 @@ dist/
 *.pfx
 credentials*.json
 secrets*.json
-# Local runtime databases (the app only reads the user's own tool stores).
+# Local runtime databases, including user-owned workbench records.
+workbench.sqlite3*
 *.db-wal
 *.db-shm
 *.db-journal

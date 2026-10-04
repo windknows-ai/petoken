@@ -6,6 +6,17 @@ import widget
 
 
 class PreviewEntrypointTests(unittest.TestCase):
+    def test_workbench_dispatch_before_live_startup(self):
+        with patch('widget.sys.argv', ['petoken', '--preview-workbench', '--tab', 'notes']), \
+                patch('tools.preview_workbench.main', return_value=0) as preview, \
+                patch('widget.QApplication', side_effect=AssertionError('Live startup')), \
+                patch('widget.Panel', side_effect=AssertionError('Live provider')), \
+                patch('widget.QLockFile', side_effect=AssertionError('Personal lock')), \
+                patch('widget.PREF_DIR') as preferences:
+            self.assertEqual(widget.main(), 0)
+            preview.assert_called_once_with(['--tab', 'notes'])
+            preferences.mkdir.assert_not_called()
+
     def test_v14_dispatch_alias_is_isolated(self):
         with patch('widget.sys.argv', ['petoken', '--preview-v1-4', '--count', '24']), \
                 patch('tools.preview_v1_3.main', return_value=0) as preview, \
