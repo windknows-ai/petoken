@@ -2,6 +2,8 @@
 
 **Human visual acceptance pending.** The current compact tilted star ring, pearl/cyan/lavender Stars, longer tapered trails, attached drag and Codex-only product have passed873 native regression tests and independent native source/layering review. Screen-edge motion is driven by the shared ring phase and does not require a travel path. Native topmost toggles and depth crossings preserve correct occlusion, editor visibility and focus. The isolated development package is for the walkthrough below; it does not replace the stable installation. No release or publication is authorized.
 
+Current celestial refinement adds faceted crystal highlights, fine champagne/silver inlay, sparse orbit beads and suspended number medallions. Compare those at the actual desktop size on both dark and light backgrounds; the reference illustration is inspiration, not a promised pixel-for-pixel copy. Geometry, task identity, screen-edge behavior and Codex-only scope retain the accepted contract.
+
 ## Open the isolated preview
 
 Extract the refreshed development package separately and run `preview-v1.3.cmd` beside `petoken.exe`. The real Hub, task Stars and task detail use conspicuous synthetic markings, temporary settings and no provider polling. The stable installation is not replaced.

@@ -573,8 +573,8 @@ class TaskOrbWindow(QWidget):
             cx, cy = pet_geometry.TASK_STAR_CENTER
             self.number_label.setGeometry(cx - 9, cy + halo_geometry.LABEL_TOP, 18, 14)
             self.number_label.setStyleSheet(
-                'color:#F4F2FF;background:rgba(33,30,57,215);'
-                'border:1px solid rgba(166,152,238,110);border-radius:5px;font-size:10px;')
+                'color:#F7F5FF;background:transparent;border:none;'
+                'font-family:"Segoe UI";font-size:10px;font-weight:600;')
             self.star_scale = .7
         else:
             self.number_label.setGeometry(*pet_geometry.STAR_LABEL_RECT)
@@ -713,9 +713,9 @@ class TaskOrbWindow(QWidget):
         painter.setOpacity(.72 + .28 * (self.depth + 1) / 2)
         cx, cy = pet_geometry.TASK_STAR_CENTER
         glow = QRadialGradient(cx, cy, 22)
-        glow.setColorAt(0, QColor(214, 216, 255, 100))
-        glow.setColorAt(.45, QColor(169, 157, 255, 35))
-        glow.setColorAt(1, QColor(151, 132, 255, 0))
+        glow.setColorAt(0, QColor(235, 234, 255, 85))
+        glow.setColorAt(.35, QColor(183, 170, 245, 32))
+        glow.setColorAt(1, QColor(158, 144, 222, 0))
         painter.setPen(Qt.NoPen)
         painter.setBrush(glow)
         painter.drawEllipse(QPointF(cx, cy), 22, 22)
@@ -724,20 +724,37 @@ class TaskOrbWindow(QWidget):
                   (0, 20), (-4, 5), (-14, 0), (-4, -5)]
         polygon = QPolygonF([QPointF(cx + x * scale, cy + y * scale) for x, y in points])
         fill = QLinearGradient(cx - 12, cy - 20, cx + 12, cy + 20)
-        fill.setColorAt(0, QColor('#cbc0ff'))
-        fill.setColorAt(.42, QColor('#ffffff'))
-        fill.setColorAt(.64, QColor('#e5f6ff'))
-        fill.setColorAt(1, QColor('#9d9afa'))
-        painter.setPen(QPen(QColor('#9686ed'), .9))
+        fill.setColorAt(0, QColor('#eee8ff'))
+        fill.setColorAt(.38, QColor('#ffffff'))
+        fill.setColorAt(.55, QColor('#d6eaff'))
+        fill.setColorAt(1, QColor('#a498e0'))
+        painter.setPen(QPen(QColor('#8c7fc5'), .85))
         painter.setBrush(fill)
         painter.drawPolygon(polygon)
-        # Opposed translucent facets give the crystal a cut surface.
+        # Alternating cuts keep the crystal legible at its real desktop size.
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(146, 156, 248, 90))
-        painter.drawPolygon(QPolygonF([QPointF(cx, cy), polygon[2], polygon[3], polygon[4]]))
-        painter.setPen(QPen(QColor(255, 255, 255, 235), .85))
-        painter.drawLine(QPointF(cx, cy - 17 * scale), QPointF(cx, cy + 8 * scale))
-        painter.drawLine(QPointF(cx - 10 * scale, cy), QPointF(cx + 9 * scale, cy))
+        center = QPointF(cx, cy)
+        for index, color in ((0, '#d7cafa'), (2, '#a4bce9'),
+                             (4, '#b4a0e5'), (6, '#f5f2ff')):
+            painter.setBrush(QColor(color))
+            painter.drawPolygon(QPolygonF([center, polygon[index], polygon[index + 1]]))
+        painter.setPen(QPen(QColor(255, 255, 255, 230), .7))
+        painter.drawLine(polygon[0], polygon[4])
+        painter.drawLine(polygon[2], polygon[6])
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor('#ffffff'))
+        painter.drawEllipse(center, 1.4, 1.4)
+        # The medallion stays inside the already verified number hit strip.
+        badge_y = cy + halo_geometry.LABEL_TOP + halo_geometry.LABEL_HEIGHT / 2
+        badge = QLinearGradient(cx, badge_y - 6, cx, badge_y + 6)
+        badge.setColorAt(0, QColor('#44405e'))
+        badge.setColorAt(1, QColor('#24233c'))
+        painter.setBrush(badge)
+        painter.setPen(QPen(QColor('#dcc6a6'), .8))
+        painter.drawEllipse(QPointF(cx, badge_y), 8, 6.2)
+        painter.setBrush(Qt.NoBrush)
+        painter.setPen(QPen(QColor(218, 210, 249, 100), .5))
+        painter.drawEllipse(QPointF(cx, badge_y), 6.5, 4.7)
 
     def refresh(self, number_text, provider_name, language):
         """Update visible identity text. Values only, never raw sources."""

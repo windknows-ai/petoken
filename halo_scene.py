@@ -24,6 +24,7 @@ class HaloLayer(QWidget):
         self.front = front
         self.pose = None
         self.now = 0.0
+        self.stars = {}
         self._trails = {}
 
     def record_sample(self, identity, x, y, stamp, depth=0.0):
@@ -80,15 +81,50 @@ class HaloLayer(QWidget):
             x, y, _ = geometry.project(self.pose, start + math.pi * i / 96)
             point = QPointF(x - self.x(), y - self.y())
             path.moveTo(point) if i == 0 else path.lineTo(point)
-        # A restrained luminous band: violet outer bloom, icy body, pearl core.
-        for width, color in ((7, QColor(145, 122, 255, 10 if self.front else 5)),
-                             (2.8, QColor(178, 183, 255, 55 if self.front else 22)),
-                             (1.9, QColor(134, 117, 211, 140 if self.front else 70)),
-                             (1.1, QColor(235, 246, 255, 230 if self.front else 100))):
+        # Pearl wire with a violet rim; the character remains the focal point.
+        for width, color in ((6, QColor(158, 144, 222, 12 if self.front else 5)),
+                             (2.4, QColor(184, 190, 238, 60 if self.front else 25)),
+                             (1.6, QColor(150, 135, 200, 150 if self.front else 80)),
+                             (.8, QColor(247, 246, 255, 230 if self.front else 105))):
             pen = QPen(color, width)
             pen.setCapStyle(Qt.RoundCap)
             painter.setPen(pen)
             painter.drawPath(path)
+        # A short champagne inlay and sparse orbit beads give the hoop a
+        # jewelry finish. They share the ring clock and add no hit surfaces.
+        inlay = QPainterPath()
+        inset = self.pose._replace(rx=self.pose.rx - 4, ry=self.pose.ry - 4)
+        for i in range(33):
+            x, y, _ = geometry.project(inset, start + math.pi * (.15 + .55 * i / 32))
+            point = QPointF(x - self.x(), y - self.y())
+            inlay.moveTo(point) if i == 0 else inlay.lineTo(point)
+        painter.setPen(QPen(QColor(220, 198, 166, 90 if self.front else 38), .65))
+        painter.drawPath(inlay)
+        outer = self.pose._replace(rx=self.pose.rx + 6, ry=self.pose.ry + 6)
+        guide = QPainterPath()
+        for begin, end in ((.03, .27), (.73, .95)):
+            for i in range(25):
+                x, y, _ = geometry.project(outer, start + math.pi * (begin + (end - begin) * i / 24))
+                point = QPointF(x - self.x(), y - self.y())
+                guide.moveTo(point) if i == 0 else guide.lineTo(point)
+        pen = QPen(QColor(158, 144, 222, 135 if self.front else 65), .7)
+        pen.setDashPattern([2, 4])
+        painter.setPen(pen)
+        painter.drawPath(guide)
+        for fraction, radius in ((.13, 1.3), (.46, 1.8), (.82, 1.1)):
+            x, y, _ = geometry.project(self.pose, start + math.pi * fraction)
+            point = QPointF(x - self.x(), y - self.y())
+            painter.setPen(QPen(QColor(163, 147, 218, 175 if self.front else 80), .65))
+            painter.setBrush(QColor(244, 240, 255, 210 if self.front else 100))
+            painter.drawEllipse(point, radius, radius)
+        for x, y, depth in self.stars.values():
+            if (depth >= 0) != self.front:
+                continue
+            x, y = x - self.x(), y - self.y()
+            painter.setPen(QPen(QColor(220, 198, 166, 155 if self.front else 80), .65))
+            painter.drawLine(QPointF(x, y + 19), QPointF(x, y + geometry.LABEL_TOP))
+            painter.setBrush(QColor('#f7f6ff'))
+            painter.drawEllipse(QPointF(x, y + 24), 1.1, 1.1)
         for trail in self._trails.values():
             for first, last in zip(trail, list(trail)[1:]):
                 x, y, stamp, depth = last
@@ -99,9 +135,9 @@ class HaloLayer(QWidget):
                     continue
                 strength = fade * (.60 + .40 * (depth + 1) / 2)
                 a, b = QPointF(first[0] - self.x(), first[1] - self.y()), QPointF(x - self.x(), y - self.y())
-                for width, color in ((5, QColor(170, 132, 255, int(12 * strength))),
-                                     (1.8, QColor(186, 214, 255, int(70 * strength))),
-                                     (.7, QColor(249, 248, 255, int(160 * strength)))):
+                for width, color in ((5, QColor(158, 144, 222, int(14 * strength))),
+                                     (1.7, QColor(184, 218, 244, int(85 * strength))),
+                                     (.6, QColor(247, 246, 255, int(175 * strength)))):
                     pen = QPen(color, width * (.7 + .3 * fade))
                     pen.setCapStyle(Qt.RoundCap)
                     painter.setPen(pen)
@@ -244,6 +280,9 @@ class HaloScene:
                 for layer in (self.back_overlay, self.trail_overlay):
                     layer.record_sample(key, x, y, now, depths[key])
         for layer in (self.back_overlay, self.trail_overlay):
+            layer.stars = {k: (self._placed[k][0] + pet_geometry.TASK_STAR_CENTER[0],
+                               self._placed[k][1] + pet_geometry.TASK_STAR_CENTER[1],
+                               depths[k]) for k in centers}
             for key in set(layer._trails) - set(self._windows):
                 layer.drop(key)
             layer.set_scene(self._halo_pose, now)

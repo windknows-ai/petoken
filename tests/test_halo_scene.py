@@ -465,6 +465,17 @@ class HaloSceneTests(unittest.TestCase):
         self.assertIsNone(self.panel.pet.working_context)
         self.assertNotIn('foreign task', self.panel.pet.toolTip())
 
+    def test_suspended_decoration_uses_current_visible_centers_only(self):
+        self.apply(range(8))
+        for numbers in (range(8), range(1, 8), range(3), ()):
+            self.apply(numbers)
+            self.step()
+            expected = {key: (x + 56, y + 48, self.manager._halo_depths[key])
+                        for key, (x, y) in self.positions().items()}
+            for layer in (self.manager.back_overlay, self.manager.trail_overlay):
+                self.assertEqual(layer.stars, expected)
+                self.assertLessEqual(len(layer.stars), 8)
+
 
 def _edge_full_cycle(count, name, pet_rect):
     def test(self):
