@@ -1,9 +1,10 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **RELEASE_PREPARATION — v1.3.0 authorized**.
+Updated: 2026-10-04 (America/Toronto). Status: **RELEASE_READY — v1.3.0 authorized; publication in progress**.
 
 ## V1.4 current engineering authority
 
+- Release build/validation complete fromafa6c7f:223files ZIPCRC/exactcontent,14compiled source comparisons,420modules/no OpenCode,14licenses/18READMElinks and embedded version1.3.0 PASS. Nine actual frozen cases PASS; personalprefs/lock/artwork unchanged. EXE b40bd8a301194e570333a6e795f4ea65f49c3e4bdb83735c84ec2c4480708eb8; ZIP 6842151d6b09dda498cc06d630feeacb0e5607d1bc6928ad817df1920a20ad32. Canonical release asset Petoken-v1.3.0-Windows-x64.zip and SHA256SUMS.txt prepared. IN PROGRESS: authorized fast-forward main/annotatedtag/Latest release then remote asset verification.
 - Release metadata checks complete: APP_VERSION1.3.0/previewV1.3, docs/notes/checklist canonical V1.3; no geometry/provider/animation changes. Native26targetedPASS2.071s and current/new-history credential-pattern scanPASS. Preserve earlier914effective accepted coverage; no redundant full rerun. Next: isolated rebuild, frozen/module/file validation, authorized publication and remote verification.
 - Latest authority (2026-10-04): user says “可以发布到GitHub了，就算作1.3”. Publish the accepted candidate as v1.3.0 to the existing PUBLIC windknows-ai/petoken repository. Earlier no-release statements are historical and superseded for this GitHub release; local stable installation stays untouched. Astra remains prohibited. IN PROGRESS: version/docs, isolated final package and validation, fast-forward main/tag/release, remote verification.
 - 2026-10-04 user acceptance: “可以我这里通过了”. Current V1.4 candidate human visual QA PASS. This approves the visual QA gate only; no release/publish authorization, version bump, tag, push or stable overwrite. Source `27e3438`, technical continuity `c40270a` and artifact hashes below unchanged.

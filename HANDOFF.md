@@ -26,7 +26,8 @@
 - [x] Refreshed isolated package and final reports recorded; returned to WAITING_FOR_HUMAN_VISUAL_QA.
 - [x] Human visual QA accepted by the user on 2026-10-04 for the current candidate.
 - [x] Explicit GitHub publication/version promotion authorized on 2026-10-04 as v1.3.0.
-- [ ] Finish targeted version/preview checks and isolated rebuilt release package validation, then fast-forward GitHub main, push v1.3.0 tag and publish assets/checksums. Local stable installation is not replaced.
+- [x]26targeted release checks, isolated rebuild/223files/14modules/Codex-only and9frozen cases PASS.
+- [ ] Fast-forward GitHub main, push v1.3.0 tag, publish ZIP/checksums, verify remote assets. Local stable installation is not replaced.
 
 # Open Issues
 - Current candidate appearance/visual QA is accepted by the user. This does not establish exhaustive multi-monitor/fractional-DPI/tiny-workarea or physical activity detection coverage; no universal-device claim.
@@ -39,4 +40,5 @@
 - Owned captures prove paint/content; actual HWND order/focus is measured separately. Never use ordinary live --smoke for isolated QA; use --preview-v1-4 (old --preview-v1-3 remains compatible). Human visual approval is separate from technical acceptance.
 
 - Completed: v1.3.0 version/docs prepared; only runtime differences are APP_VERSION and synthetic preview title/docstring. Existing 914 effective acceptance retained; 26 settings/preview/entry tests PASS2.071s. Current tracked text/new history credential-pattern scan PASS; .autopilot excluded.
-- IN PROGRESS: commit release metadata, build isolated Windows package under 2026-10-04-v1.3.0-release, verify current code/files/frozen scenarios, then publish authorized main/tag/release. No stable installation overwrite.
+- Completed: release source afa6c7f built successfully;223-file ZIP CRC/content/licenses/docs and14compiled modules match current source,420modules/no OpenCode; actual embedded APP_VERSION1.3.0. Nine frozen current scenarios PASS, preferences/lock/artwork unchanged. EXE b40bd8a301194e570333a6e795f4ea65f49c3e4bdb83735c84ec2c4480708eb8; ZIP 6842151d6b09dda498cc06d630feeacb0e5607d1bc6928ad817df1920a20ad32. Release ZIP/SHA256SUMS.txt/notes saved under2026-10-04-v1.3.0-release.
+- IN PROGRESS: fast-forward existing GitHub main and push annotated v1.3.0 tag from this verified release state; upload Windows ZIP/checksums and publish Latest, then verify remote commit/tag/assets/digests. No force push or local stable overwrite.
