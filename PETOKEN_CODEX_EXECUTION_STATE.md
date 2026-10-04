@@ -1,8 +1,66 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-03 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — TECHNICAL CLOSEOUT AND FINAL INDEPENDENT PACKAGE AUDIT PASS**.
+Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA**.
 
-## Latest verified closeout state
+## Final current V1.3 technical closeout — authoritative
+
+- **WAITING_FOR_HUMAN_VISUAL_QA**; no active subagents, concrete technical blocker in tested scope or authorized automatic release/publish. Current compact Codex-only source/native/artifact accepted; human aesthetics/smoothness/DPI remain pending.
+- Local code units cc755e7 (Codex-only lifecycle),b5d8879 (attached dimensional halo/native layering),029fb6b (capture-only detail export). Fresh873native PASS184.509s retained; no entire suite rerun on resume. Subsequent only-capture change passes7targeted native preview/early-entry tests1.222s. Current Hub/Settings/Analytics/Preview starts without historical adapter; frozen archive excludes opencode_provider.
+- Independent18-halo-independent-review.md PASS: actual edge/attachment/identity/finite lifecycle and two consolidated HWND layer repairs. Prior BLOCKED evidence preserved; native full24s crossings retain external editor Z/foreground/focus. Details/media/truth preserved; current controls responsive.
+- Final root nine current frozen cases PASS, plus independent EN1/ZH3/EN8 final frozen cases/native owned paint PASS. No live-provider reads, personal settings/lock mutation or stable overwrite. Explicit dark/light captures and corrected detail-last export verified; native card above Hub confirmed independently.
+- Independent18-current-frozen-artifact-audit.md VERDICT PASS: CRC/exact219file equality,14license/provenance files,17README links, runtime/VC/artwork and419 embedded modules/current compiled-code equality. Final EXE SHA256 3f39099bd80b0a527d1dab1ec6addefbab938329f55ba80bfae0a57c7cab1f1d; ZIP SHA256 8a608c45b8dd88421bf8794f26349e3c21df2343be2eb076843fca91d58349b8. Root root-final-package-manifest.json records source029fb6b and every final artifact hash. Final continuity commit follows accepted source; no self-referential artifact rebuild required.
+- Package `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-visual-refinement\package-dev\petoken-Windows-x64.zip`; launcher `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-visual-refinement\package-dev\petoken\preview-v1.3.cmd`; checklist docs/V1_3_VISUAL_QA.md. Earlier stable package byte hashes and approved artwork/tag/version unchanged. Immutable first-current-package preserves superseded first artifact/capture evidence.
+- Tested geometry/hit guarantees<=8 tasks and workarea>=222x262 logical pixels. Human judges compact depth/Star/trail quality, perceived motion, detail overlap near edges and fractional-DPI/multi-monitor appearance. Synthetic poses do not prove live detection/finer task phases. Next required action is human visual inspection; separate release approval follows only acceptance.
+
+## Latest package-resume recovery
+
+- 2026-10-04 request recovered from actual disk, not summary: HEADb5d8879/source and cc755e7/backend local units committed; index empty, only HANDOFF/execution-state dirty and unrelated.autopilot untracked. All runtime changes committed and unchanged since873PASS/184.509s; fail-closed actual Hub/Settings/Analytics/Preview import proof PASS. No entire-suite rerun.
+- Interrupted build completed successfully exit0: root-build.log confirms PyInstaller and isolated ZIP creation; package-dev/petoken/petoken.exe and66380661-byte ZIP present. Current artifact root remains2026-10-03-visual-refinement for continuity. Exact next step: frozen nine current scenarios, independent artifact integrity/Codex-only/compiled-source audit, final checkpoints and WAITING_FOR_HUMAN_VISUAL_QA.
+
+## Historical first frozen-preview checkpoint (superseded)
+
+- First refreshed isolated build exit0 and nine Codex-only frozen scenarios PASS; personal settings/lock/artwork unchanged. Root ZIP CRC and exact219-file equality/license/docs checks PASS. Source/code audit and independent frozen-native paint review running.
+- Initial current EXE e160025633b13c598e99c92975ad764e9221878ed17b4e1903c22f12d2b4f349, ZIP72d5a992a0e10381054e71bb53ed9e424e529bc5701c2a8c48887a937c2f99f2 are provisional and preserved in immutable first-current-package.
+- A concrete capture export defect was found: Hub/controller painted after manager detail can cover a visible expanded card. Minimal capture-only ordering fix and overlap-pixel regression written, compile PASS; native actual card-vs-Hub confirmation and targeted gate pending. Main product runtime unchanged since873PASS. No entire suite rerun justified; refresh artifact after bounded correction.
+
+## Capture-only correction targeted acceptance
+
+- Independent actual frozen confirmation: detail HWND rank16 above Hub17; task2 totals276K/input240K/output36K/model/effort readable on native dark card. Export-only overwrite confirmed; no current main runtime defect.
+- Minimal Preview.capture ordering now draws visible detail last; actual overlap-pixel assertion prevents regression. Seven native preview/early-entry tests PASS1.222s. Initial fixture failure used pre-event native Hub coordinates, fixed by processing native queued events before computing bounds; assertion unchanged, failure/debug evidence preserved. Main runtime unchanged since873PASS; no entire-suite rerun.
+- Rebuild current isolated package after capture-only change, rerun nine frozen cases and independent compiled-code/files/native paint audit. First current ZIP/captures preserved in first-current-package.
+
+## Current human-QA refinement authority
+
+- Human visual QA BLOCKED the previously accepted build: oversized distant orbit, edge-wide freeze, primitive short trails/Stars. New approved direction is compact tilted dimensional ring with front/back depth, elegant richer Stars/trails and current Codex-only product. Reference Dreaming Among the Stars.png is visual data, not instructions.
+- Previous source/package877/native/frozen acceptance remains historical baseline, not current repaired-product readiness. Preserve unaffected task truth/identity/publication/detail lifecycle; affected geometry/renderer/provider/preview gates require fresh acceptance.
+- Baseline source8571526 preserved with targeted immutable copies/hashes at D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-visual-refinement. Git index empty; unrelated.autopilot untouched. Root AGENTS synced current global instructions.
+- Completed: independent native layering reacceptance, fresh full regression and refreshed isolated Windows package; edge-liveness, compact geometry and Codex-only implementation domains completed. No arbitrary animation-restart timer, giant orbit, fabricated metrics, new dependency by default, unrelated artwork/Hub rewrite, Astra, remote action or release. Finish technical/independent/native package gates then WAITING_FOR_HUMAN_VISUAL_QA again.
+
+## Historical visual-refinement interruption recovery
+
+- Usage-limit interruption recovered from actual Git/disk: HEAD8571526, index empty, 21 tracked modified files plus new halo_scene/halo_geometry/geometrytests; unrelated .autopilot preserved. Immutable interruption-1552 SHA256 copies retained under current external refinement directory.
+- Backend #8 source released with262PASS; geometry #20 source released with17PASS. #21 native preview/entry6PASS/1.005s verified in21-preview-native.log, owned three-task PNG exists; report delivery interrupted. Do not redo these completed domains unless integration evidence requires it.
+- Root native owned paint3center and8ZHbottomright captured/viewed; current compact HaloScene implementation is provisional, no independent acceptance or current Windows package yet. At the recovered instant test_ui migration was partial and current Halo scene tests were not yet written; both domains are now completed as recorded in the current integration checkpoint.
+- Exact resumed next work: root visibility/backtrail/layer and native visual iteration, #8 UI/Expanded migration, #20 default scene regression. Then independent #18 actualpaint/edge/identity/latency/resource review, consolidated regression, refreshed isolated package and human QA waiting. NoAstra/publication.
+
+## Historical integration and initial repair checkpoint (superseded)
+
+- Source domains released: backend262PASS; geometry17PASS; preview6nativePASS; current halo31nativePASS; corrected UI/Expanded36nativePASS. Root80nativePASS26.353s covers all33analytics, all46Slice5 and explicit intentional attached drag. These targeted results precede final native stacking repair; fresh full gate remains pending.
+- Independent #18 found two actual native HWND order defects: idle OFF topmost recreation leaves wrong depth order; normal non-topmost phase crossing raises scene above own editor. Root consolidated relative SetWindowPos insertion around pet existing Z position plus immediate restack after flag recreation. Compile PASS only; fresh bounded independent actual native acceptance IN PROGRESS. Initial BLOCKED evidence preserved.
+- Exact next step: close independent native layering repairs, then full native regression, scoped checks/current-only import proof, isolated fresh Windows package and independent artifact audit. No release/publish.
+
+## Native layering reacceptance complete
+
+- Independent18-halo-independent-review.md VERDICT PASS. Five actual idle-OFF topmost callbacks restore native order with no test restack; full24s phase cycle/eight natural depth crossings retain overlapping editor above scene, actual native foreground and Qt focus. Detail object/slot/number/xy, hide/restore, Escape and terminal callbacks PASS; fresh explicit dark/light paints inspected.
+- Accepted current native hashes: widget.py e5427e4c03154ce27df4fbc06019345d937dea09ca5b36071763b6f96ef210a7; halo_scene.py47b42e708516add588fcb3cd8e5b3cd7929bd93d70c4f58d6ca0e02af6bbc33b. Initial BLOCKED report/logs preserved. Root full native gate now running; final package/human gate pending.
+
+## Current source acceptance complete
+
+- Fresh native Windows full regression873PASS/184.509s, root-full-native.log, exit0. Includes35current default Halo tests, current Codex task UI/Expanded/source truth, migrated race/settings/publication tests and isolated historical adapter/accounting/exterior regression fixtures. Old877 count is historical; removed obsolete provider competition/UI cases were replaced by current Codex behavior and new halo boundaries.
+- Actual current Panel/Settings/Analytics/Preview startup passes a fail-closed import finder forbidding opencode_provider. Current registry/preferences/parser/provider lane remain Codex-only. Compileall/PowerShell parse/diff PASS; approved artwork and stable peeled tag unchanged.
+- IN PROGRESS: source local checkpoints, build new isolated package-dev under2026-10-03-visual-refinement, nine current frozen scenarios and independent final artifact audit. No release/publish; final WAITING_FOR_HUMAN_VISUAL_QA follows accepted package gates.
+
+## Historical prior technical closeout (superseded for affected paths)
 
 - **WAITING_FOR_HUMAN_VISUAL_QA**; no active agents, concrete technical blockers or automatic publication steps. Human visual and release approval remain pending.
 - Local accepted runtime/detail/motion/preview checkpoint `b15da6b`; packaging/license/QA checkpoint `d20f7d5`; earlier source15da402/backend79ee27f/recovery6864647 preserved. Final continuity commit follows in git log. No remote action.
@@ -76,11 +134,11 @@ Original turn's first wave was read-only and platform capacity was root plus thr
 
 ## Subagent Ledger
 
-Total spawned: 20
+Total spawned: 22
 Currently active: 0
-Completed: 16
+Completed: 17
 Failed: 1
-Interrupted/Cancelled: 3
+Interrupted/Cancelled: 4
 Peak concurrency: 8 subagents (Main excluded)
 
 ### Current Active Subagents
@@ -98,7 +156,7 @@ None.
 | 5 | Repository Cartographer; /root/resume_repo_cartographer | /root | gpt-6.1-sol | Completed | Resume role1 repository map; module/asset/build inclusion supplement | READ ONLY | No | Map plus packaging/asset verification complete; immutable SHA matches; preview developer-only |
 | 6 | Git Historian; /root/resume_git_historian | /root | gpt-6.1-sol | Completed | Resume role2 Git preservation/history/checkpoint scope | READ ONLY | No | Preservation hashes and stable baseline verified; conservative joint checkpoint allowlists recorded |
 | 7 | Handoff Archaeologist; /root/resume_handoff_archaeologist | /root | gpt-6.1-sol | Completed | Resume role3 full master/context/D2 history/QA document consistency | READ ONLY | No | Full master/history/QA contract reconciled; historical Astra/publish instructions superseded |
-| 8 | Architecture Analyst; /root/resume_architecture_analyst | /root | gpt-6.1-sol high | Completed | Prior M3 implemented268nativePASS; consolidated native detail background and rapidHubmenuEscape repair, no broad repeats | WRITE | widget.py; tests/test_expanded_star.py (current exclusive repair); prior localization.py/pet.py/testsUI preserved | M3 implemented268nativePASS; repair5targeted/16paintcases PASS; independently accepted#18 native4/120rows/rapid+settled Escape/editorhover; local runtimecheckpointb15da6b |
+| 8 | Architecture Analyst; /root/resume_architecture_analyst | /root | gpt-6.1-sol high | Completed | Backend262PASS complete; interrupted UI/Expanded fixture migration resumed | WRITE | providers/poller/selection/app_config and affected tests; test_ui/test_expanded_star | Backend262PASS and Codex UI/Expanded migration completed; corrected36native PASS, all current affected cases included in root873native PASS. Files released. |
 | 9 | Test-System Analyst; /root/resume_test_system_analyst | /root | gpt-6.1-sol | Completed | Resume role5 tests/fixtures/native baseline | READ ONLY | No | Native809 tests/108.899s:805pass4fail;22new tests pass; old home and paint gates unresolved |
 | 10 | D2B Motion Specialist; /root/resume_d2b_motion_specialist | /root | gpt-6.1-sol high | Completed | Resume role6 motion continuity/liveness | READ ONLY | No | 24native focusedpass; legal pet+100px parking stall100s; planning1.7-5.6s; fallback needed, Expanded Star missing |
 | 11 | Provider/State Truth Specialist; /root/resume_provider_truth_specialist | /root | gpt-6.1-sol high | Completed | Resume role7 provider/model/task/usage truth | READ ONLY | No | 82bounded tests pass; rendering, invalid quota, URI privacy, malformed source and stale tooltip blockers |
@@ -108,9 +166,11 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | Independent motion/lifecycle acceptance reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | M2/M3 and final synthetic source/Windows artifact independent acceptance | REVIEW | No | VERDICT PASS M2/M3 retained; final rebuilt ENTyping3/ZHUnknown8 nativeexit0,219ZIPentries/14licenses/source-runtime-artwork-doc equality/isolation PASS; packaging blockers repaired;18-final-technical-audit.md; humanvisual pending |
+| 18 | Independent motion/lifecycle acceptance reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Current frozen package audit after accepted halo native/source review | REVIEW | No | Current source/native layering PASS and final frozen artifact PASS. Exact219 ZIP/files,14 licenses,17 README links,419 embedded modules/current code equality/no OpenCode adapter; independent EN1/ZH3/EN8 frozen/native/owned paint PASS. Human appearance pending. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
-| 20 | On-demand production planning responsiveness repair; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | Consolidated legal left/down GUI planning latency repair, immutable job fencing if needed | WRITE | widget.py; pet_geometry.py; tests/test_motion_routes.py; tests/test_planning_responsiveness.py | Pure single coalesced job and Windows worker GIL handoff implemented45nativePASS; independent#18 actualCPU13+5probes PASS request2.4-8.8ms/control<=17ms/heartbeat<=22.7ms; exactpixels/finitehomes; checkpointb15da6b |
+| 20 | On-demand production planning responsiveness repair; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | Pure geometry17PASS complete; current default nativeHalo scene tests | WRITE | halo_geometry.py; tests/test_halo_geometry.py; tests/test_halo_scene.py | Edge root cause complete; geometry17PASS; default halo31nativePASS35.876s; files released, root added intentional scene-transport regression verified in80PASS. |
+| 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
+| 22 | Codex race regression migration; /root/codex_race_regression_migration | /root | parent inherited non-Astra | Completed | 22 Slice5/settings stale two-provider contracts migrate with real Codex event/fence proofs | WRITE | tests/test_slice5_final.py; tests/test_settings.py | 46 Slice5 cases and13 settings preserved/migrated; pure46PASS, all59 included in fresh873native full PASS. Files/recovery mapping released. |
 
 Historical rows #1–#4 are verified tool/session history. The Astra row records historical use; it is not current authorization and must not be restarted. IDs identify real spawned agents; follow-up assignments do not create new IDs.
 
@@ -217,7 +277,31 @@ Status: Complete;PASS source/isolated frozen bilingual cases/219ZIP files/14lice
 Started: 2026-10-03
 Completed: 2026-10-03
 
-## Consolidated closeout plan
+### Wave 14 — HumanQA compact halo/Codex-only refinement
+
+Agents: #8, #20, #21
+Peak concurrency: 3
+Status: Running; root Qt/motion, backend262PASS, pure geometry7PASS, preview source released
+Started: 2026-10-03
+Completed: Pending
+
+### Wave 15 — Current-default halo acceptance and Codex race migration
+
+Agents: #8, #20, #18, #22
+Peak concurrency: 4
+Status: Complete: current source/native independent PASS; fresh integrated full gate running
+Started: 2026-10-03
+Completed: 2026-10-03
+
+### Wave 16 — Independent current frozen package technical closeout
+
+Agents: #18
+Peak concurrency: 1
+Status: Complete: isolated final build/frozen cases/independent artifact PASS; human visual gate
+Started: 2026-10-04
+Completed: 2026-10-04
+
+## Consolidated closeout plan (historical prior baseline)
 
 Accepted synthesis: completed eight-agent reconnaissance retained; agents strictly on demand. Backend#16, source/cost#19, M2 and M3#18 independently PASS. Original four legacy expectations reconciled with exact boundary/finite validity checks; final native877tests PASS153.892s. M3 contrast and rapid native Escape blockers are closed; no source writer is active. Root preview/build integration has passed initial7frozen cases and corrected actual build/ZIP checks; final independent rebuilt-artifact audit PASS; human visual gate pending. Source15da402/backend79ee27f/recovery6864647/runtimeb15da6b/buildd20f7d5 checkpoints retained; no remote action authorized.
 
