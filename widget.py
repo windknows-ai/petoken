@@ -72,7 +72,7 @@ QComboBox QAbstractItemView {{ background:{theme.CONTROL_BG}; selection-backgrou
 QScrollArea {{ border:0; background:transparent; }}
 QCheckBox {{ spacing:8px; }}
 QCheckBox::indicator {{ width:16px; height:16px; border:1px solid {theme.BORDER_CONTROL}; border-radius:5px; background:{theme.CONTROL_BG}; }}
-QCheckBox::indicator:checked {{ background:{theme.ICE}; border-color:{theme.ICE}; }}
+QCheckBox::indicator:checked {{ background:{theme.ICE}; border-color:{theme.ICE}; image:url("{assets.ASSETS_DIR.as_posix()}/checkmark.svg"); }}
 QSlider::groove:horizontal {{ background:{theme.TRACK}; height:6px; border-radius:3px; }}
 QSlider::handle:horizontal {{ background:{theme.ICE}; width:16px; height:16px; margin:-5px 0; border-radius:8px; border:none; }}
 '''

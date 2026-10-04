@@ -24,6 +24,11 @@ version/package requires its own acceptance and publication decision.
 
 ## What to check
 
+- **Selection controls:** Todo/project Edit and Delete appear only after a valid
+  row is selected; note Delete and task Details/Link follow their selected record.
+  Empty or deselected lists hide these controls. The completed-todo filter has a
+  visible tick when checked; mouse and Space toggle it without changing records.
+
 - **Getting started:** the first normal application launch (or first workbench
   visit) opens a five-step optional guide:
   moving/opening the pet, projects, todos, saving notes, and Codex task stars.

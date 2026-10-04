@@ -59,6 +59,172 @@ class WorkbenchTests(unittest.TestCase):
         self.assertFalse(self.store.list_todos()[0]['done'])
         self.assertEqual(self.window.todo_list.item(0).checkState(), Qt.Unchecked)
 
+    def test_completed_filter_has_visible_checkmark_and_keyboard_toggle(self):
+        from PySide6.QtTest import QTest
+        from PySide6.QtWidgets import QStyle, QStyleOptionButton
+        from widget import STYLE
+        self.panel.setStyleSheet(STYLE)
+        self.panel.prefs['workbench_tutorial_seen'] = True
+        self.store.create_todo('Pending')
+        done = self.store.create_todo('Completed')
+        self.store.update_todo(done['id'], done['title'], done=True)
+        self.window.refresh()
+        self.window.tabs.setCurrentIndex(1)
+        self.window.show()
+        self.app.processEvents()
+        checkbox = self.window.show_completed
+        option = QStyleOptionButton()
+        checkbox.initStyleOption(option)
+        indicator = checkbox.style().subElementRect(QStyle.SE_CheckBoxIndicator, option, checkbox)
+        image = checkbox.grab().toImage()
+        scale = image.devicePixelRatio()
+        interior = indicator.adjusted(3, 3, -3, -3)
+        dark = sum(image.pixelColor(round(x * scale), round(y * scale)).lightness() < 90
+                   for x in range(interior.left(), interior.right() + 1)
+                   for y in range(interior.top(), interior.bottom() + 1))
+        self.assertGreater(dark, 5, 'Checked indicator must contain a contrasting tick')
+        self.assertEqual(self.window.todo_list.count(), 2)
+        checkbox.setFocus()
+        QTest.keyClick(checkbox, Qt.Key_Space)
+        self.assertFalse(checkbox.isChecked())
+        self.assertEqual(self.window.todo_list.count(), 1)
+        QTest.keyClick(checkbox, Qt.Key_Space)
+        self.assertTrue(checkbox.isChecked())
+        self.assertEqual(self.window.todo_list.count(), 2)
+
+    def test_todo_actions_require_selection_and_follow_delete_and_filter(self):
+        self.assertTrue(self.window.todo_edit_button.isHidden())
+        self.assertTrue(self.window.todo_delete_button.isHidden())
+        self.store.create_todo('One')
+        self.window.refresh()
+        self.assertTrue(self.window.todo_edit_button.isHidden())
+        self.window.todo_list.setCurrentRow(0)
+        self.assertFalse(self.window.todo_edit_button.isHidden())
+        self.assertFalse(self.window.todo_delete_button.isHidden())
+        self.window.todo_list.clearSelection()
+        self.assertTrue(self.window.todo_edit_button.isHidden())
+        with patch.object(self.window, '_record_dialog') as edit, \
+                patch.object(self.window, '_confirm') as confirm:
+            self.window.edit_todo()
+            self.window.delete_todo()
+        edit.assert_not_called()
+        confirm.assert_not_called()
+        self.window.todo_list.setCurrentRow(0)
+        self.window.todo_list.item(0).setCheckState(Qt.Checked)
+        self.window.todo_list.setCurrentRow(0)
+        self.window.show_completed.setChecked(False)
+        self.assertEqual(self.window.todo_list.count(), 0)
+        self.assertTrue(self.window.todo_edit_button.isHidden())
+        self.window.show_completed.setChecked(True)
+        self.window.todo_list.setCurrentRow(0)
+        with patch.object(self.window, '_confirm', return_value=True):
+            self.window.delete_todo()
+        self.assertEqual(self.window.todo_list.count(), 0)
+        self.assertTrue(self.window.todo_delete_button.isHidden())
+
+    def test_project_actions_require_selection_and_folder(self):
+        self.assertTrue(self.window.project_edit_button.isHidden())
+        self.assertTrue(self.window.project_delete_button.isHidden())
+        self.store.create_project('No folder')
+        self.store.create_project('With folder', self.temp.name)
+        self.window.refresh()
+        self.window.projects_table.setCurrentItem(self.window.projects_table.topLevelItem(0))
+        self.assertFalse(self.window.project_edit_button.isHidden())
+        self.assertTrue(self.window.project_folder_button.isHidden())
+        self.window.projects_table.setCurrentItem(self.window.projects_table.topLevelItem(1))
+        self.assertFalse(self.window.project_folder_button.isHidden())
+        self.window.projects_table.clearSelection()
+        self.assertTrue(self.window.project_edit_button.isHidden())
+        self.assertTrue(self.window.project_delete_button.isHidden())
+        self.assertTrue(self.window.project_folder_button.isHidden())
+        with patch.object(self.window, '_confirm') as confirm:
+            self.window.delete_project()
+        confirm.assert_not_called()
+
+    def test_note_actions_hide_for_empty_and_unselected_records(self):
+        self.assertTrue(self.window.save_button.isHidden())
+        self.assertTrue(self.window.note_delete_button.isHidden())
+        self.window.new_note()
+        self.assertFalse(self.window.save_button.isHidden())
+        self.assertFalse(self.window.note_delete_button.isHidden())
+        self.window.notes_list.clearSelection()
+        self.assertTrue(self.window.note_delete_button.isHidden())
+        with patch.object(self.window, '_confirm') as confirm:
+            self.window.delete_note()
+        confirm.assert_not_called()
+        self.window.notes_list.setCurrentRow(0)
+        with patch.object(self.window, '_confirm', return_value=True):
+            self.window.delete_note()
+        self.assertTrue(self.window.note_delete_button.isHidden())
+        self.assertTrue(self.window.save_button.isHidden())
+
+    def test_task_actions_require_valid_selected_task(self):
+        self.assertTrue(self.window.task_detail_button.isHidden())
+        self.assertTrue(self.window.task_link_button.isHidden())
+        self.window.task_list.setCurrentRow(0)
+        self.assertFalse(self.window.task_detail_button.isHidden())
+        self.window.task_list.clearSelection()
+        with patch('workbench.QDialog') as dialog:
+            self.window.open_selected_task()
+            self.window.link_selected_task()
+        self.assertEqual(self.activations, [])
+        dialog.assert_not_called()
+        self.assertTrue(self.window.task_detail_button.isHidden())
+        self.window.task_list.setCurrentRow(0)
+        key = self.window.task_list.currentItem().data(Qt.UserRole)
+        self.panel.task_manager._ring_staged.add(key)
+        self.window.update_tasks()
+        self.assertTrue(self.window.task_detail_button.isHidden())
+        self.assertTrue(self.window.task_link_button.isHidden())
+        self.panel.task_manager._universe.clear()
+        self.window.update_tasks()
+        self.assertEqual(self.window.task_list.count(), 0)
+        self.assertTrue(self.window.task_detail_button.isHidden())
+
+    def test_native_note_click_cancel_restores_selection_and_actions(self):
+        from PySide6.QtTest import QTest
+        first = self.store.create_note('First')
+        second = self.store.create_note('Second')
+        self.window.refresh(note_id=first['id'])
+        self.panel.prefs['workbench_tutorial_seen'] = True
+        self.window.tabs.setCurrentIndex(2)
+        self.window.show()
+        self.app.processEvents()
+        self.window.note_body.setPlainText('Keep this draft')
+        target = next(self.window.notes_list.item(i) for i in range(self.window.notes_list.count())
+                      if self.window.notes_list.item(i).data(Qt.UserRole) == second['id'])
+        with patch('workbench.QMessageBox.question', return_value=QMessageBox.Cancel):
+            QTest.mouseClick(self.window.notes_list.viewport(), Qt.LeftButton,
+                            pos=self.window.notes_list.visualItemRect(target).center())
+        self.assertEqual(self.window.note_id, first['id'])
+        self.assertEqual(self.window.note_body.toPlainText(), 'Keep this draft')
+        item = self.window.notes_list.currentItem()
+        self.assertEqual(item.data(Qt.UserRole), first['id'])
+        self.assertTrue(item.isSelected())
+        self.assertFalse(self.window.note_delete_button.isHidden())
+        self.assertTrue(self.window.note_delete_button.isEnabled())
+
+    def test_task_link_modal_revalidates_retired_and_staged_identity(self):
+        for staged in [False, True]:
+            with self.subTest(staged=staged):
+                manager = self.panel.task_manager
+                key = ('codex', '1')
+                manager._universe[key] = {}
+                manager._ring_staged.clear()
+                self.window.update_tasks()
+                self.window.task_list.setCurrentRow(0)
+                def invalidate_and_accept():
+                    if staged:
+                        manager._ring_staged.add(key)
+                    else:
+                        manager._universe.pop(key)
+                    self.window.update_tasks()
+                    dialog = self.app.activeModalWidget()
+                    dialog.findChild(QDialogButtonBox).button(QDialogButtonBox.Ok).click()
+                QTimer.singleShot(0, invalidate_and_accept)
+                self.window.link_selected_task()
+                self.assertNotIn(key, self.store.task_links())
+
     def test_project_scope_and_explicit_off_page_task_link(self):
         project = self.store.create_project('A')
         self.store.create_todo('Inbox')

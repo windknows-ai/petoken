@@ -165,9 +165,10 @@ class WorkbenchWindow(QWidget):
             setattr(self, attr + '_empty', hint)
             body.addWidget(hint)
             if attr == 'task_list':
+                listing.itemSelectionChanged.connect(self._update_actions)
                 actions = QHBoxLayout()
-                self.button(actions, 'wb_details', self.open_selected_task)
-                self.button(actions, 'wb_link', self.link_selected_task)
+                self.task_detail_button = self.button(actions, 'wb_details', self.open_selected_task)
+                self.task_link_button = self.button(actions, 'wb_link', self.link_selected_task)
                 body.addLayout(actions)
             columns.addWidget(card)
         columns.setSizes([300, 300])
@@ -189,6 +190,7 @@ class WorkbenchWindow(QWidget):
         layout.addLayout(add)
         self.todo_list = QListWidget()
         self.todo_list.itemChanged.connect(self._todo_changed)
+        self.todo_list.itemSelectionChanged.connect(self._update_actions)
         layout.addWidget(self.todo_list, 1)
         self.todo_empty = self.caption('wb_empty_todos', 'muted')
         layout.addWidget(self.todo_empty)
@@ -199,8 +201,8 @@ class WorkbenchWindow(QWidget):
         self.show_completed.toggled.connect(lambda _: self.refresh())
         actions.addWidget(self.show_completed)
         actions.addStretch()
-        self.button(actions, 'wb_edit', self.edit_todo)
-        self.button(actions, 'wb_delete', self.delete_todo)
+        self.todo_edit_button = self.button(actions, 'wb_edit', self.edit_todo)
+        self.todo_delete_button = self.button(actions, 'wb_delete', self.delete_todo)
         layout.addLayout(actions)
 
     def _build_notes(self):
@@ -209,11 +211,13 @@ class WorkbenchWindow(QWidget):
         self.button(actions, 'wb_new_note', self.new_note, True)
         actions.addStretch()
         self.save_button = self.button(actions, 'wb_save', self.save_note)
-        self.button(actions, 'wb_delete', self.delete_note)
+        self.note_delete_button = self.button(actions, 'wb_delete', self.delete_note)
         layout.addLayout(actions)
         split = QSplitter()
         self.notes_list = QListWidget()
-        self.notes_list.currentItemChanged.connect(self._note_changed)
+        # Current-item changes precede mouse selection; guard the committed selection.
+        self.notes_list.itemSelectionChanged.connect(self._note_changed)
+        self.notes_list.itemSelectionChanged.connect(self._update_actions)
         split.addWidget(self.notes_list)
         editor = QWidget()
         body = QVBoxLayout(editor)
@@ -242,15 +246,16 @@ class WorkbenchWindow(QWidget):
         self.projects_table.setRootIsDecorated(False)
         self.projects_table.setColumnCount(2)
         self.projects_table.setColumnWidth(0, 180)
+        self.projects_table.itemSelectionChanged.connect(self._update_actions)
         layout.addWidget(self.projects_table, 1)
         self.projects_empty = self.caption('wb_empty_projects', 'muted')
         layout.addWidget(self.projects_empty)
         actions = QHBoxLayout()
         self.button(actions, 'wb_new_project', lambda: self.edit_project(), True)
-        self.button(actions, 'wb_edit', self.edit_selected_project)
-        self.button(actions, 'wb_folder_open', self.open_folder)
+        self.project_edit_button = self.button(actions, 'wb_edit', self.edit_selected_project)
+        self.project_folder_button = self.button(actions, 'wb_folder_open', self.open_folder)
         actions.addStretch()
-        self.button(actions, 'wb_delete', self.delete_project)
+        self.project_delete_button = self.button(actions, 'wb_delete', self.delete_project)
         layout.addLayout(actions)
 
     def _attempt(self, callback, *args, **kwargs):
@@ -364,7 +369,7 @@ class WorkbenchWindow(QWidget):
             return
         self._task_fingerprint = fingerprint
         current = self.task_list.currentItem()
-        selected = current.data(Qt.UserRole) if current else None
+        selected = current.data(Qt.UserRole) if current and current.isSelected() else None
         self.task_list.clear()
         for key, title in rows:
             item = QListWidgetItem(title + ' · Codex')
@@ -375,18 +380,26 @@ class WorkbenchWindow(QWidget):
             if key == selected:
                 self.task_list.setCurrentItem(item)
         self.task_list_empty.setVisible(not rows)
+        self._update_actions()
+
+    def _selected_task(self):
+        item = self.task_list.currentItem()
+        manager = self.panel.task_manager
+        if (item and item.isSelected() and item.flags() & Qt.ItemIsEnabled
+                and item.data(Qt.UserRole) in manager._universe
+                and item.data(Qt.UserRole) not in manager._ring_staged):
+            return item
+        return None
 
     def open_selected_task(self):
-        item = self.task_list.currentItem()
+        item = self._selected_task()
         if item is None:
             return
-        identity = item.data(Qt.UserRole)
-        manager = self.panel.task_manager
-        if identity in manager._universe and identity not in manager._ring_staged:
-            manager.activate_task(identity, keyboard=True)
+        self.panel.task_manager.activate_task(item.data(Qt.UserRole), keyboard=True)
 
     def assign_task(self, identity, project_id):
-        if identity not in self.panel.task_manager._universe:
+        if (identity not in self.panel.task_manager._universe
+                or identity in self.panel.task_manager._ring_staged):
             return False
         ok, _ = self._attempt(self.store.link_task, *identity, project_id)
         if ok:
@@ -394,18 +407,20 @@ class WorkbenchWindow(QWidget):
         return ok
 
     def link_selected_task(self):
-        item = self.task_list.currentItem()
+        item = self._selected_task()
         if item is None:
             return
+        # Task refresh can delete list items during the modal event loop.
+        identity = item.data(Qt.UserRole)
         dialog = QDialog(self)
         dialog.setWindowTitle(self.tr('wb_link'))
         layout = QVBoxLayout(dialog)
         combo = QComboBox()
-        self._combo(combo, self._links.get(item.data(Qt.UserRole)))
+        self._combo(combo, self._links.get(identity))
         layout.addWidget(combo)
         self._dialog_buttons(dialog, layout)
         if dialog.exec() == QDialog.Accepted:
-            self.assign_task(item.data(Qt.UserRole), combo.currentData())
+            self.assign_task(identity, combo.currentData())
 
     def _project_changed(self, current, previous):
         if not self._loading and current is not None:
@@ -504,9 +519,30 @@ class WorkbenchWindow(QWidget):
         if directory:
             edit.setText(directory)
 
-    def edit_todo(self):
+    def _selected_todo(self):
         item = self.todo_list.currentItem()
-        record = self._todos.get(item.data(Qt.UserRole)) if item else None
+        return self._todos.get(item.data(Qt.UserRole)) if item and item.isSelected() else None
+
+    def _update_actions(self):
+        if self._loading:
+            return
+        todo = self._selected_todo()
+        project = self._selected_project()
+        note = self.notes_list.currentItem()
+        selected_note = bool(note and note.isSelected() and note.data(Qt.UserRole) == self.note_id)
+        task = self._selected_task()
+        for button, available in [
+                (self.task_detail_button, bool(task)), (self.task_link_button, bool(task)),
+                (self.todo_edit_button, bool(todo)), (self.todo_delete_button, bool(todo)),
+                (self.project_edit_button, bool(project)), (self.project_delete_button, bool(project)),
+                (self.project_folder_button, bool(project and project['directory'])),
+                (self.note_delete_button, selected_note)]:
+            button.setVisible(available)
+            button.setEnabled(available)
+        self.save_button.setVisible(self.note_id is not None)
+
+    def edit_todo(self):
+        record = self._selected_todo()
         if not record:
             return
         saved = self._record_dialog(self.tr('wb_edit'), record['title'], record['project_id'],
@@ -515,9 +551,9 @@ class WorkbenchWindow(QWidget):
             self.refresh()
 
     def delete_todo(self):
-        item = self.todo_list.currentItem()
-        if item and self._confirm('wb_delete_confirm'):
-            if self._attempt(self.store.delete_todo, item.data(Qt.UserRole))[0]:
+        record = self._selected_todo()
+        if record and self._confirm('wb_delete_confirm'):
+            if self._attempt(self.store.delete_todo, record['id'])[0]:
                 self.refresh()
 
     @property
@@ -531,6 +567,7 @@ class WorkbenchWindow(QWidget):
         if self._loading:
             return
         self.save_button.setEnabled(self.note_id is not None)
+        self._update_actions()
         self.draft_status.setText(self.tr('wb_unsaved' if self.note_dirty else
                                         'wb_saved' if self.note_id else 'wb_empty_notes'))
 
@@ -560,9 +597,10 @@ class WorkbenchWindow(QWidget):
             return ok
         return False
 
-    def _note_changed(self, current, previous):
-        if not self._loading and current is not None:
-            self.select_note(current.data(Qt.UserRole))
+    def _note_changed(self):
+        selected = self.notes_list.selectedItems()
+        if not self._loading and selected:
+            self.select_note(selected[0].data(Qt.UserRole))
 
     def select_note(self, identity):
         if identity == self.note_id:
@@ -600,7 +638,9 @@ class WorkbenchWindow(QWidget):
         return ok
 
     def delete_note(self):
-        if self.note_id is None or not self._confirm('wb_delete_note_confirm'):
+        item = self.notes_list.currentItem()
+        if (not item or not item.isSelected() or item.data(Qt.UserRole) != self.note_id
+                or not self._confirm('wb_delete_note_confirm')):
             return
         if self._attempt(self.store.delete_note, self.note_id)[0]:
             self._loading = True
@@ -610,7 +650,8 @@ class WorkbenchWindow(QWidget):
 
     def _selected_project(self):
         item = self.projects_table.currentItem()
-        return next((r for r in self._projects if item and r['id'] == item.data(0, Qt.UserRole)), None)
+        return next((r for r in self._projects if item and item.isSelected()
+                     and r['id'] == item.data(0, Qt.UserRole)), None)
 
     def edit_project(self, record=None):
         def save(name, directory):

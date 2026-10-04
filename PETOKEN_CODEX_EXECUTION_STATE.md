@@ -1,6 +1,6 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — V1.4 onboarding**.
+Updated: 2026-10-04 (America/Toronto). Status: **V1.4 CHECKBOX/SELECTION REFINEMENT IN PROGRESS**.
 
 ## V1.4 workbench current authority
 
@@ -9,6 +9,8 @@ Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA —
 
 ## Current V1.4 progress
 
+- **V1.4 checkbox/selection SOURCE PASS** — explicit native checked SVG, valid-selection-only Todo/Project/Note/Task actions; folder action needs configured path and Save remains available for an active draft. Empty/deselected controls hide and cannot dispatch.92focused native/workbench/tutorial/settings/UI casesPASS10.799s. IndependentSEL1 modal retirement/staging andSEL2 native dirty-Cancel row mismatch repaired; four fresh native reaccept probesPASS, originalBLOCKED/red proof retained. No Astra/publish/dependency.
+- IN PROGRESS: commit current source/docs/tests, build fresh isolatedWindows package under2026-10-04-v1.4-checkbox/package-dev; validate227files/compiledsource/SVG and actualEXE workbench/tutorial paints, then hand back to humanQA. Prior onboarding/source/package accepted and unchanged.
 - **V1.4 ONBOARDING — WAITING_FOR_HUMAN_VISUAL_QA.** Optional five-step native EN/ZH tutorial explains the pet, projects, todos, notes and Codex task stars. Unseen normal startup opens it; Skip/Finish remember strict boolean state, X/Escape only dismiss. Real action links and workbench/pet/tray replay reuse existing controls. No Astra, V1.4 publication, stable overwrite or new dependency.
 - Source checkpoint `14751bd` on `codex/v1.4-workbench`. Changed tutorial/runtime/settings/menus/localization, isolated preview/launcher and focused tests/docs.95 unique related cases accepted in segments (90+1+3+1); final startup/tutorial/integration/settings/entry38PASS3.087s. Earlier full regression and workbench323 evidence retained without redundant reruns.
 - Independent#18 source/native PASS: actual first show, strict flags, real persistence/restart/file-failure rollback/retry, all five actions/dirty Cancel, native menu replay and10compact bilingual step paints. Required normal-startup discovery and ONB1 shutdown callback resurrection repaired; exact red/BLOCKED evidence retained, five fresh actual-main nonlive cases independently reaccepted PASS.
@@ -198,15 +200,15 @@ Original turn's first wave was read-only and platform capacity was root plus thr
 ## Subagent Ledger
 
 Total spawned: 22
-Currently active: 0
-Completed: 17
+Currently active: 1
+Completed: 16
 Failed: 1
 Interrupted/Cancelled: 4
 Peak concurrency: 8 subagents (Main excluded)
 
 ### Current Active Subagents
 
-None.
+- #18 /root/review_motion_routes: V1.4 final frozen artifact/native paint auditor; parent /root; actual model gpt-6.1-sol high; assignment Human checkbox/selection-state independent native review; mode REVIEW / READ ONLY; status Active.
 
 ### Full History
 
@@ -229,7 +231,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 onboarding source/native/startup/frozen/artifact independent acceptance | REVIEW / READ ONLY | No source/shared writes; external18-onboarding reports/probes/owned captures only | Guide/source/native/persistence/actions/10compact paints PASS; ONB1 terminal callback BLOCKED then5actualmain reacceptPASS. Artifact turn usage-limit interruption resumed only missing work:226files/423archive/17source/14licenses/19links/Codexonly/oldpackages +defaultinteractivefrozen auto/Skip/replay/cleanup/privatefilesPASS. Final18-onboarding-artifact.md/json; GUIreleased. |
+| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Active | Human checkbox/selection-state independent native review | REVIEW / READ ONLY | No source/shared writes; external18-onboarding reports/probes/owned captures only | Prior onboarding source/artifact accepted; fresh59targeted sourcePASS, rootcheckbox paint0darkpixelsFAIL fixed by bundledSVG; reviewing actualselection/dirtyguard/delete/filter lifecycle only, GUIlease18. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -395,6 +397,14 @@ Peak concurrency: 1
 Status: Complete
 Started: 2026-10-04
 Completed: 2026-10-04
+
+### Wave 21 — Human checkbox and selection-dependent workbench actions
+
+Agents: #18
+Peak concurrency: 1
+Status: Running
+Started: 2026-10-04
+Completed: Pending
 
 ## Consolidated closeout plan (historical prior baseline)
 
