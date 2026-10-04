@@ -1,6 +1,6 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **V1.4 CHECKBOX/SELECTION REFINEMENT IN PROGRESS**.
+Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — checkbox/selection**.
 
 ## V1.4 workbench current authority
 
@@ -9,8 +9,16 @@ Updated: 2026-10-04 (America/Toronto). Status: **V1.4 CHECKBOX/SELECTION REFINEM
 
 ## Current V1.4 progress
 
-- **V1.4 checkbox/selection SOURCE PASS** — explicit native checked SVG, valid-selection-only Todo/Project/Note/Task actions; folder action needs configured path and Save remains available for an active draft. Empty/deselected controls hide and cannot dispatch.92focused native/workbench/tutorial/settings/UI casesPASS10.799s. IndependentSEL1 modal retirement/staging andSEL2 native dirty-Cancel row mismatch repaired; four fresh native reaccept probesPASS, originalBLOCKED/red proof retained. No Astra/publish/dependency.
-- IN PROGRESS: commit current source/docs/tests, build fresh isolatedWindows package under2026-10-04-v1.4-checkbox/package-dev; validate227files/compiledsource/SVG and actualEXE workbench/tutorial paints, then hand back to humanQA. Prior onboarding/source/package accepted and unchanged.
+- **V1.4 checkbox/selection — WAITING_FOR_HUMAN_VISUAL_QA.** Checked checkboxes now show a contrasting navy tick on the existing cyan field; source/frozen native pixels inspected. Todo/project Edit/Delete, note Delete and task Details/Link show only for valid selected records. Folder action needs a configured directory; Save is hidden for an empty editor and remains available for an active draft.
+- Source `a1b2bb8` on `codex/v1.4-workbench`; changed widget.py/workbench.py/assets/checkmark.svg, focused tests and QA guide.92currenttargeted native/workbench/tutorial/settings/UItestsPASS10.799s. No full regression repeat, new dependency, Astra, publication or stable overwrite.
+- Independent#18 initially found SEL1 deleted taskitem during Link modal and SEL2 real Win32 dirty-note Cancel selection mismatch. Exact root regressions reproduced; immutable identity/postmodal universe+staging validation and committed note-selection routing repaired. Four fresh independent native probesPASS, including valid linking; initialBLOCKED/red proof retained. Six other selection/checkbox scopes retained, actual EN/ZH tick and empty/deselected paints reviewed.
+- Isolated build froma1b2bb8 exit0. Root227exactZIPfiles/CRC/content,17compiledapplication modules equal current source,423archive/noOpenCodeorpersonalDB,14licenses/19links/currentdocs+launchers/SVG/dependencies/art preserved. Previous onboarding/workbench and releasedv1.3.0 EXE/ZIP byte hashes unchanged. Root7workbench+5tutorial actualEXE casesPASS, personalsettings/lock/DBmetadata unchanged; frozenTodo paint shows tick and no invalid Edit/Delete controls. Independent review covers source/native; fresh artifact acceptance is root-scoped.
+- EXE SHA256 `6b9e069fdc5633bf7239010009cc2c59c72e7d8cae789d144ba4ad73eb3a1c82`; ZIP `a06026a513d1153feec1a14a67d71ae8f7bc022212ef138ab0aceca4fef7e0ad`. Embedded1.3.0 deliberately retained during unreleasedV1.4 development.
+- Current launcher: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4-checkbox\package-dev\petoken\preview-workbench.cmd`; ZIP sibling `petoken-Windows-x64.zip`. Evidence: root-selection-acceptance.json, root-package-audit.json and18-selection-reaccept.md/json under2026-10-04-v1.4-checkbox. Empty first-use isolated preview discards records on exit; do not keep important notes there.
+- Technical work complete; zero active agents/GUI/jobs. Human tutorial/workbench visual/daily-use QA and separate future publication authorization pending. Existing source/onboarding acceptance retained; unrelated.autopilot untouched.
+
+### Prior accepted onboarding baseline
+
 - **V1.4 ONBOARDING — WAITING_FOR_HUMAN_VISUAL_QA.** Optional five-step native EN/ZH tutorial explains the pet, projects, todos, notes and Codex task stars. Unseen normal startup opens it; Skip/Finish remember strict boolean state, X/Escape only dismiss. Real action links and workbench/pet/tray replay reuse existing controls. No Astra, V1.4 publication, stable overwrite or new dependency.
 - Source checkpoint `14751bd` on `codex/v1.4-workbench`. Changed tutorial/runtime/settings/menus/localization, isolated preview/launcher and focused tests/docs.95 unique related cases accepted in segments (90+1+3+1); final startup/tutorial/integration/settings/entry38PASS3.087s. Earlier full regression and workbench323 evidence retained without redundant reruns.
 - Independent#18 source/native PASS: actual first show, strict flags, real persistence/restart/file-failure rollback/retry, all five actions/dirty Cancel, native menu replay and10compact bilingual step paints. Required normal-startup discovery and ONB1 shutdown callback resurrection repaired; exact red/BLOCKED evidence retained, five fresh actual-main nonlive cases independently reaccepted PASS.
@@ -200,15 +208,15 @@ Original turn's first wave was read-only and platform capacity was root plus thr
 ## Subagent Ledger
 
 Total spawned: 22
-Currently active: 1
-Completed: 16
+Currently active: 0
+Completed: 17
 Failed: 1
 Interrupted/Cancelled: 4
 Peak concurrency: 8 subagents (Main excluded)
 
 ### Current Active Subagents
 
-- #18 /root/review_motion_routes: V1.4 final frozen artifact/native paint auditor; parent /root; actual model gpt-6.1-sol high; assignment Human checkbox/selection-state independent native review; mode REVIEW / READ ONLY; status Active.
+None.
 
 ### Full History
 
@@ -231,7 +239,7 @@ Peak concurrency: 8 subagents (Main excluded)
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Active | Human checkbox/selection-state independent native review | REVIEW / READ ONLY | No source/shared writes; external18-onboarding reports/probes/owned captures only | Prior onboarding source/artifact accepted; fresh59targeted sourcePASS, rootcheckbox paint0darkpixelsFAIL fixed by bundledSVG; reviewing actualselection/dirtyguard/delete/filter lifecycle only, GUIlease18. |
+| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Checkbox/selection native source review and bounded repair reacceptance | REVIEW / READ ONLY | No source/shared writes; external18-selection reports/probes/owned captures only | Six initial selection/checkbox scopes PASS; SEL1 modal deleteditem/SEL2 actualWin32Cancel mismatch BLOCKED then rootrepairs independently reaccepted4nativeprobesPASS including unchanged validlink. InitialBLOCKED preserved,18-selection-reaccept.md/json; GUIreleased. Fresh package verification root-scoped, no independentartifactclaim. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -402,9 +410,9 @@ Completed: 2026-10-04
 
 Agents: #18
 Peak concurrency: 1
-Status: Running
+Status: Complete — source/native independent PASS; root frozen/package PASS; human QA pending
 Started: 2026-10-04
-Completed: Pending
+Completed: 2026-10-04
 
 ## Consolidated closeout plan (historical prior baseline)
 
