@@ -344,9 +344,9 @@ Completed: 2026-10-03
 
 Agents: #8, #20, #21
 Peak concurrency: 3
-Status: Running; root Qt/motion, backend262PASS, pure geometry7PASS, preview source released
+Status: Complete — historical running snapshot reconciled with accepted Wave15/16 and v1.3.0 release
 Started: 2026-10-03
-Completed: Pending
+Completed: 2026-10-04 (reconciled from accepted closeout evidence)
 
 ### Wave 15 — Current-default halo acceptance and Codex race migration
 
