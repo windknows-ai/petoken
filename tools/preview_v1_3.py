@@ -1,4 +1,4 @@
-"""Synthetic V1.4 visual QA; no provider reads or saved user preferences.
+"""Synthetic V1.3 visual QA; no provider reads or saved user preferences.
 
 Run: python tools/preview_v1_3.py --count 3 --language en
 Bounded native capture: add --smoke 2 --output /absolute/path/preview.png
@@ -71,7 +71,7 @@ class Preview(QWidget):
         # Arm only the existing presentation timer; Panel remains live=False.
         self.panel.task_manager._live_armed = lambda: True
         screen = QApplication.primaryScreen().availableGeometry()
-        self.setWindowTitle('SYNTHETIC QA / 合成预览 — Petoken V1.4')
+        self.setWindowTitle('SYNTHETIC QA / 合成预览 — Petoken V1.3')
         layout = QFormLayout(self)
         banner = QLabel('Synthetic fixtures only / 仅合成数据\nNo provider reads; temporary settings / 不读取提供方；设置不保存')
         banner.setWordWrap(True)

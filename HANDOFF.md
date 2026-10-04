@@ -1,5 +1,5 @@
 # Current Progress
-- **HUMAN_VISUAL_QA_PASSED — V1.4 accepted by the user on 2026-10-04. Release/publication remains unauthorized.** User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
+- **RELEASE_PREPARATION — v1.3.0 authorized on 2026-10-04.** The user accepted the candidate developed as V1.4 and explicitly requested GitHub publication as V1.3. Earlier no-release constraints below record the prior checkpoint. User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
 - Preserved baseline99bfb0f and prior packages; targeted immutable files/hashes in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\baseline`. Unrelated.autopilot remains untracked/untouched. Root instructions synced without changing unrelated AGENTS content.
 - Implemented joint pet/ring clamping and explicit resize/no-move notifications; current-screen workarea signal/cached-screen invalidation; native HWND order validation after pet raises; Settings ring enable independently of Hub/source count; truthful zeroStars with retained decoration; stable-number pages<=8Stars and all-task menu/24-64fixtures.
 - Implemented220ms Star-origin anisotropic unfold/fade, reverse close with continuous same-task reversal, focus/nonactivation and terminal cancel on retirement/disable/move/shutdown. Brighter violet/pearl/champagne hoop, dotted arcs/crystal beads and96sample3.6strails reuse existing Qt/clock/assets. All original approved activity poses/typing frames remain byte-identical; QA now exposes all poses.
@@ -18,14 +18,15 @@
 - Intentional drag/keyboard/preview movement transports attached composition while retaining phase/identity and clearing travel streaks. Autonomous orbit/membership/geometry observations preserve exact boundary pixels and16logical-pixel/40ms continuity. Motion OFF settles/fades then idles; no path/restart timer is required.
 - Windows relative SetWindowPos insertion anchors to existing pet global Z position without activation; explicit topmost flag recreation restores native depth immediately. Official Qt QWidget/Microsoft SetWindowPos references recorded in DESIGN.md; no external implementation copied.
 - Native Qt only, QT_QPA_PLATFORM unset, existing codex-widget Python environment; no installs. Isolated synthetic QA has temporary preferences and no live providers/keyboard workers. Explicit dark/light owned paint distinguishes transparent PNG display artifacts from actual native appearance.
-- Explicit Git allowlists, local commits only. No push/tag/version promotion/stable installation overwrite. APP_VERSION stays1.2.0 pending separately authorized release.
+- Explicit Git allowlists. Current authorization permits GitHub main/tag/release as v1.3.0; APP_VERSION is promoted to1.3.0. Preserve local stable installation and unrelated .autopilot. Existing public repository and fast-forward history are retained.
 
 # Next Steps
 - [x] Full914effective current regression/31UIrecheck and isolated Windows build completed; source27e3438 committed and root9frozen casesPASS.
 - [x] Independent #18 current frozen executable/files/Codex-only/isolation and final pager dark/light native paint review completed PASS.
 - [x] Refreshed isolated package and final reports recorded; returned to WAITING_FOR_HUMAN_VISUAL_QA.
 - [x] Human visual QA accepted by the user on 2026-10-04 for the current candidate.
-- [ ] Await explicit release/publication authorization before version promotion, tagging, pushing or replacing the stable installation.
+- [x] Explicit GitHub publication/version promotion authorized on 2026-10-04 as v1.3.0.
+- [ ] Finish targeted version/preview checks and isolated rebuilt release package validation, then fast-forward GitHub main, push v1.3.0 tag and publish assets/checksums. Local stable installation is not replaced.
 
 # Open Issues
 - Current candidate appearance/visual QA is accepted by the user. This does not establish exhaustive multi-monitor/fractional-DPI/tiny-workarea or physical activity detection coverage; no universal-device claim.
@@ -36,3 +37,6 @@
 - Python/PySide6: Codex Hub overview, stable task-local Star, one manager-owned detail; Unknown/N/A/zero/Partial distinct. Preserve provider/scope/generation truth and privacy boundaries.
 - HANDOFF is concise continuity; PETOKEN_CODEX_EXECUTION_STATE.md retains permanent ledger/waves and historical evidence. Reports/logs/captures/package stay external under takeover backups.
 - Owned captures prove paint/content; actual HWND order/focus is measured separately. Never use ordinary live --smoke for isolated QA; use --preview-v1-4 (old --preview-v1-3 remains compatible). Human visual approval is separate from technical acceptance.
+
+- Completed: v1.3.0 version/docs prepared; only runtime differences are APP_VERSION and synthetic preview title/docstring. Existing 914 effective acceptance retained; 26 settings/preview/entry tests PASS2.071s. Current tracked text/new history credential-pattern scan PASS; .autopilot excluded.
+- IN PROGRESS: commit release metadata, build isolated Windows package under 2026-10-04-v1.3.0-release, verify current code/files/frozen scenarios, then publish authorized main/tag/release. No stable installation overwrite.

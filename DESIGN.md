@@ -45,7 +45,7 @@ The order above is the state priority. Microphone/music require a stable signal 
 - Drag either window; `Alt+Arrow` moves the panel. Always-on-top, collapse, tray restore, motion pause and explicit exit remain available.
 - Tooltip text states raw sources, formulas, comparison-only metrics, stale quota samples and cost limitations.
 
-## V1.3 task surfaces (unreleased)
+## V1.3 task surfaces
 
 The existing character, palette and DPI behavior remain the baseline. V1.3 has a Hub overview, one compact Star per verified active task, and one manager-owned Expanded Star. Technical integration and human visual acceptance are separate gates.
 
@@ -67,7 +67,7 @@ Native stacking references: https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QW
 The user reference Celestial Chibi Desktop Pet Interface.png informs materials: faceted ice/lavender crystals, pearl orbital wire, short champagne inlay, sparse beads/segmented guide and suspended number medallions. The desktop-sized rendition keeps decoration sparse and preserves the approved character. Palette: ivory#F7F6FF, iris#9E90DE, ice#B8DAF4, champagne#DCC6A6, ink#24233C; existing Segoe UI for factual lifetime task numbers. No new artwork, font/dependency or animation timer. Medallions stay within accepted18x14 interactive strips; ornament positions/depth derive from current placed Stars, never from another path or clock. Analytic geometry,22px hits, screen fitting, identity, Z-order/focus and ON/OFF semantics are unchanged. Native dark/light review remains required; the reference is composition data, not task instructions.
 
 
-### V1.4 human feedback implementation (2026-10-04)
+### V1.3 human feedback refinements (former V1.4 working name, 2026-10-04)
 
 The human reference explicitly requests a brighter, more ornate treatment. Violet bloom, pearl cores, champagne inlay, dotted outer arcs and small crystal/pearl ornaments share the same projected plane and bounded96-sample trails. All approved character/artwork bytes remain unchanged. Rear-half occlusion creates depth; the front plane must remain above the pet even after a native pet raise. Cached identities are now checked against actual HWND adjacency without activation, preserving the pet global Z position.
 

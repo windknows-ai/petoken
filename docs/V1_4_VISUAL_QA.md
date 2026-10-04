@@ -1,6 +1,8 @@
-# V1.4 Codex companion — human visual QA
+# Historical V1.4 working-name visual QA
 
-**Development preview; human acceptance pending. No release or publication.**
+**Historical development guide.** The user accepted this candidate on
+2026-10-04 and authorized its release as **v1.3.0**. See the current
+[V1.3 visual QA guide](V1_3_VISUAL_QA.md); V1.4 is not a separate release.
 The previous V1.3 package is preserved separately. This version addresses the
 reported centering, resize, visibility and front-plane occlusion defects, adds
 task-detail transitions and paging, and strengthens the reference-inspired

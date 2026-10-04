@@ -2,6 +2,27 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V1.3.0 — 2026-10-04
+
+Codex-only desktop companion. Includes the user-accepted visual/interaction refinements developed under the V1.4 working name; published as v1.3.0 by user request.
+
+### Added
+- Compact tilted star ring with front/back depth, luminous crystal Stars, pearl/violet/champagne arcs and longer tapered trails.
+- Stable task numbers and pages of up to 8 Stars, with all tasks reachable through the Hub and off-page detail selection.
+- Smooth 220 ms task-detail open/close animation with continuous reversal and immediate reduced-motion behavior.
+- Explicit star-ring setting, independent of Hub visibility; isolated preview exposes original idle, typing, working, microphone and music artwork.
+
+### Changed
+- Codex is the sole supported runtime provider. Alternate-provider selection/polling is removed; the historical OpenCode adapter is excluded from the Windows executable.
+- Hub overview and task-local details preserve source/scope identity and explicit Unknown, N/A, zero and partial coverage.
+
+### Fixed
+- Pet/ring drift and screen-edge stalls, stale ring geometry after resize, front-plane occlusion after native pet raises, and disappearing decoration on Hub interaction.
+- Off-page task lifecycle, stale/retired detail snapshots, workarea changes while motion is disabled and pager overlap/transparent backing.
+- Provider publication/shutdown races, task projection responsiveness, malformed timestamps, large token formatting and privacy-safe labels.
+
+See [release notes](docs/RELEASE_NOTES_v1.3.0.md) for installation, verification and supported limits.
+
 ## V1.2.0 — 2026-09-22 (local release candidate; not yet published)
 
 Dual-provider companion: the pet follows Codex and OpenCode tasks side by side, verified against `D:\Desktop\petoken\V1.2.0`, implementation accepted for release preparation.

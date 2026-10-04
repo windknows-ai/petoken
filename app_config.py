@@ -11,7 +11,7 @@ from provider_selection import (DEFAULT_TRACKING_PROVIDER,
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 from pet_geometry import PET_SCALE_DEFAULT, normalize_pet_scale
 
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
 SETTINGS_SCHEMA_VERSION = 1
 DEFAULT_PREFERENCES = {
     "settings_schema_version": SETTINGS_SCHEMA_VERSION,

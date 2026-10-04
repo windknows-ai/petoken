@@ -1,9 +1,11 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **HUMAN_VISUAL_QA_PASSED — V1.4; awaiting release authorization**.
+Updated: 2026-10-04 (America/Toronto). Status: **RELEASE_PREPARATION — v1.3.0 authorized**.
 
 ## V1.4 current engineering authority
 
+- Release metadata checks complete: APP_VERSION1.3.0/previewV1.3, docs/notes/checklist canonical V1.3; no geometry/provider/animation changes. Native26targetedPASS2.071s and current/new-history credential-pattern scanPASS. Preserve earlier914effective accepted coverage; no redundant full rerun. Next: isolated rebuild, frozen/module/file validation, authorized publication and remote verification.
+- Latest authority (2026-10-04): user says “可以发布到GitHub了，就算作1.3”. Publish the accepted candidate as v1.3.0 to the existing PUBLIC windknows-ai/petoken repository. Earlier no-release statements are historical and superseded for this GitHub release; local stable installation stays untouched. Astra remains prohibited. IN PROGRESS: version/docs, isolated final package and validation, fast-forward main/tag/release, remote verification.
 - 2026-10-04 user acceptance: “可以我这里通过了”. Current V1.4 candidate human visual QA PASS. This approves the visual QA gate only; no release/publish authorization, version bump, tag, push or stable overwrite. Source `27e3438`, technical continuity `c40270a` and artifact hashes below unchanged.
 - Human reports edge center drift, front ring occlusion, stale resize visibility and Hub hiding the ring. Requires always-visible ring unless explicitly disabled in Settings, smooth Star detail transition, >8-task handling, all original microphone/music/keyboard activity poses, and ornate reference-image effects. Preserve Codex-only source truth and historical baseline.
 - Completed implementation: joint centered clamp22purePASS; root6reported-scene gatesPASS; pet-raise native Z regression reproducedFAILEDthenrepairPASS; paged24/64/all-original-poses QA26nativePASS; detail module16PASS incl13native and16actual animationframes125%DPI. Ornament now brighter with dotted outerarcs/crystals/pearl bloom and96sample3.6strails.
