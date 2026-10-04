@@ -1,6 +1,6 @@
 """Synthetic V1.3 visual QA; no provider reads or saved user preferences.
 
-Run: python tools/preview_v1_3.py --count 3 --provider mixed --language en
+Run: python tools/preview_v1_3.py --count 3 --language en
 Bounded native capture: add --smoke 2 --output /absolute/path/preview.png
 """
 import argparse
@@ -25,58 +25,50 @@ from providers import active_task
 from widget import Panel
 
 FIXTURE_CASES = ('known', 'zero', 'unknown', 'partial', 'same_project', 'long_labels')
+ANCHORS = ('center', 'left', 'right', 'top', 'bottom',
+           'top-left', 'top-right', 'bottom-left', 'bottom-right')
 
 
-def fixture_tasks(count=3, provider='mixed', case='known'):
-    """Build isolated provider-local projections, never aggregate providers."""
+def fixture_tasks(count=3, case='known'):
+    """Build explicitly synthetic, distinct Codex task-local projections."""
     tasks = []
     for index in range(count):
-        lane = provider if provider != 'mixed' else ('codex' if index % 2 == 0 else 'opencode')
         unknown, zero = case == 'unknown', case == 'zero'
-        values = [None] * 6 if unknown else ([0] * 6 if zero else [120000, 18000, 7000, 90000, 0, 138000])
-        if lane == 'codex':
-            names = ('input_tokens', 'output_tokens', 'reasoning_output_tokens',
-                     'cached_input_tokens', 'cache_write_input_tokens', 'total_tokens')
-            tokens = dict(zip(names, values))
-        else:
-            names = ('input', 'output', 'reasoning', 'cache_read', 'cache_write', 'total')
-            tokens = dict(zip(names, values))
-            tokens['total'] = None if unknown else sum(values[:5])
+        values = ([None] * 6 if unknown else [0] * 6 if zero else
+                  [value * (index + 1) for value in (120000, 18000, 7000, 90000, 0, 138000)])
+        names = ('input_tokens', 'output_tokens', 'reasoning_output_tokens',
+                 'cached_input_tokens', 'cache_write_input_tokens', 'total_tokens')
+        tokens = dict(zip(names, values))
         if case == 'partial':
-            tokens['cache_write_input_tokens' if lane == 'codex' else 'cache_write'] = None
-            if lane == 'opencode':
-                tokens['total'] = None
+            tokens['cache_write_input_tokens'] = None
         project = ('Synthetic QA shared project' if case == 'same_project'
                    else f'Synthetic QA project {index + 1}')
         model = None if unknown else 'synthetic-qa-model'
         if case == 'long_labels':
             project += ' — Long project label / 较长项目名称' * 8
             model += '-long-model-label' * 12
-        tasks.append(active_task(lane, f'synthetic-qa-{index + 1}',
+        tasks.append(active_task('codex', f'synthetic-qa-{index + 1}',
             activity_at=time.time(), display=dict(project=project),
             presentation=dict(tokens=tokens, model=model,
                 effort=None if unknown else 'high', context=None,
-                cost_amount=None if unknown else (0.0 if zero else 0.125),
-                version='1.18.31' if lane == 'opencode' else None,
+                cost_amount=0.0 if zero else None,
                 available=not unknown, source_available=True,
                 partial=case == 'partial', notes=())))
     return tasks
 
 
 class Preview(QWidget):
-    def __init__(self, count=3, provider='mixed', language='en', case='known'):
+    def __init__(self, count=3, language='en', case='known', anchor='center'):
         super().__init__()
         self.closed = False
         self.generation = 0
         self.panel = Panel(live=False)
-        self.panel.prefs.update(language=language, panel_pinned=True, tracking_provider='auto')
+        self.panel.prefs.update(language=language, panel_pinned=True, tracking_provider='codex')
         self.panel.pet = self.pet = DesktopPet(self.panel)
         self.pet.activity_timer.stop()
         # Arm only the existing presentation timer; Panel remains live=False.
         self.panel.task_manager._live_armed = lambda: True
         screen = QApplication.primaryScreen().availableGeometry()
-        self.pet.move_clamped(QPoint(screen.center().x() - self.pet.width() // 2,
-                                    screen.center().y() - self.pet.height() // 2))
         self.setWindowTitle('SYNTHETIC QA / 合成预览 — Petoken V1.3')
         layout = QFormLayout(self)
         banner = QLabel('Synthetic fixtures only / 仅合成数据\nNo provider reads; temporary settings / 不读取提供方；设置不保存')
@@ -86,14 +78,13 @@ class Preview(QWidget):
         self.count.setRange(0, 8)
         self.count.setValue(count)
         layout.addRow('Tasks / 任务数量', self.count)
-        self.provider = self.combo(('mixed', 'codex', 'opencode'), provider)
-        layout.addRow('Fixture providers / 预览提供方', self.provider)
+        layout.addRow('Source / 来源', QLabel('Codex — SYNTHETIC / 合成数据'))
         self.case = self.combo(FIXTURE_CASES, case)
         layout.addRow('Usage fixture / 用量样例', self.case)
         self.language = self.combo(('en', 'zh_CN'), language)
         layout.addRow('Language / 语言', self.language)
-        self.preference = self.combo(('auto', 'codex', 'opencode'), 'auto')
-        layout.addRow('Provider filter / 提供方筛选', self.preference)
+        self.anchor = self.combo(ANCHORS, anchor)
+        layout.addRow('Pet position / 桌宠位置', self.anchor)
         self.pose = self.combo(('idle', 'typing', 'working'), 'idle')
         layout.addRow('Pet fixture / 桌宠状态', self.pose)
         self.motion = QCheckBox('Motion / 动画')
@@ -129,11 +120,13 @@ class Preview(QWidget):
         quit_button = QPushButton('Exit preview / 退出预览')
         quit_button.clicked.connect(self.close)
         layout.addRow(quit_button)
-        for control in (self.count, self.provider, self.case, self.language, self.preference):
+        for control in (self.count, self.case, self.language):
             signal = control.valueChanged if isinstance(control, QSpinBox) else control.currentTextChanged
             signal.connect(self.refresh)
         self.pose.currentTextChanged.connect(self.set_pose)
+        self.anchor.currentTextChanged.connect(self.move_anchor)
         self.move(screen.left() + 20, screen.top() + 20)
+        self.move_anchor()
         self.pet.show()
         self.panel.show()
         self.refresh()
@@ -151,24 +144,32 @@ class Preview(QWidget):
             return
         self.generation += 1
         self.panel.prefs.update(language=self.language.currentText(),
-                                tracking_provider=self.preference.currentText())
+                                tracking_provider='codex')
         self.panel.apply_language()
-        tasks = fixture_tasks(self.count.value(), self.provider.currentText(), self.case.currentText())
+        tasks = fixture_tasks(self.count.value(), self.case.currentText())
         if not self.source.isChecked():
             tasks = []
-        selected = ('opencode' if self.preference.currentText() == 'opencode'
-                    or (self.preference.currentText() == 'auto'
-                        and self.provider.currentText() == 'opencode') else 'codex')
-        self.panel.render(dict(provider_id=selected, generation=self.generation,
-            preference=self.preference.currentText(), active_tasks=tasks,
+        self.panel.render(dict(provider_id='codex', generation=self.generation,
+            preference='codex', active_tasks=tasks,
             scope='global', available=False, tokens={}, partial=False,
-            selection=dict(selected=selected, source_available=self.source.isChecked(), live=bool(tasks),
+            selection=dict(selected='codex', source_available=self.source.isChecked(), live=bool(tasks),
                            stale=False, activity_unknown=not self.source.isChecked()),
             codex_activity=dict(active=bool(tasks), valid=self.source.isChecked())))
         # Explicit fixture marking remains visible on the real Hub surface.
         self.panel.title.setFullText('Synthetic QA overview / 合成预览总览')
         self.panel.connection.setText('SYNTHETIC QA — no provider connection / 无提供方连接')
         self.panel.task_manager.set_visible(self.visible.isChecked())
+
+    def move_anchor(self, *_):
+        screen = (self.pet.screen() or QApplication.primaryScreen()).availableGeometry()
+        anchor = self.anchor.currentText()
+        x = (screen.left() if 'left' in anchor else
+             screen.right() - self.pet.width() + 1 if 'right' in anchor else
+             screen.center().x() - self.pet.width() // 2)
+        y = (screen.top() if 'top' in anchor else
+             screen.bottom() - self.pet.height() + 1 if 'bottom' in anchor else
+             screen.center().y() - self.pet.height() // 2)
+        self.pet.move_clamped(QPoint(x, y))
 
     def set_pose(self, *_):
         self.pet.preview_state = self.pose.currentText()
@@ -197,10 +198,8 @@ class Preview(QWidget):
         manager = self.panel.task_manager
         stars = [manager.window_for(key) for key in manager.window_identities()]
         detail = getattr(manager, 'detail_window', None)
-        windows = [window for window in QApplication.topLevelWidgets()
-                   if window.isVisible() and (window is self or window is self.panel
-                      or window is self.pet or window in stars
-                      or window is manager.trail_overlay or window is detail)]
+        windows = [window for window in (*manager.capture_windows(), self.panel, self)
+                   if window.isVisible()]
         bounds = windows[0].geometry()
         for window in windows[1:]:
             bounds = bounds.united(window.geometry())
@@ -218,8 +217,8 @@ class Preview(QWidget):
             raise OSError(f'Could not save preview: {output}')
         output.with_suffix('.json').write_text(json.dumps(dict(
             kind='SYNTHETIC_QA', language=self.panel.language,
-            fixture=self.case.currentText(), provider=self.provider.currentText(),
-            provider_filter=self.preference.currentText(),
+            fixture=self.case.currentText(), provider='codex',
+            anchor=self.anchor.currentText(),
             live_provider_polling=bool(self.panel.live),
             task_count=manager.window_count(),
             visible_star_count=sum(window.isVisible() for window in stars),
@@ -250,7 +249,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--count', type=int, choices=range(9), default=3)
     parser.add_argument('--language', choices=('en', 'zh_CN'), default='en')
-    parser.add_argument('--provider', choices=('codex', 'opencode', 'mixed'), default='mixed')
+    parser.add_argument('--provider', choices=('codex',), default='codex')
+    parser.add_argument('--anchor', choices=ANCHORS, default='center')
     parser.add_argument('--case', choices=FIXTURE_CASES, default='known')
     parser.add_argument('--expand', type=int, choices=range(1, 9), metavar='TASK_NUMBER')
     parser.add_argument('--motion', choices=('on', 'off'), default='on')
@@ -269,7 +269,7 @@ def main(argv=None):
     with ExitStack() as stack:
         directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-synthetic-qa-'))
         stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
-        preview = Preview(args.count, args.provider, args.language, args.case)
+        preview = Preview(args.count, args.language, args.case, args.anchor)
         preview.motion.setChecked(args.motion == 'on')
         preview.pose.setCurrentText(args.pose)
         if args.expand is not None:

@@ -16,7 +16,7 @@ Only these states exist in this version:
 
 Usage is an overlay, not a character pose. The runtime pose priority is:
 
-1. `working`: explicit task lifecycle activity from the selected provider — a Codex task-started event or a verified OpenCode open step (distinct from typing).
+1. `working`: explicit verified Codex task lifecycle activity (distinct from typing).
 2. `microphone`: an active Windows capture session.
 3. `music`: an active Windows system-media playback session, with an optional verified subtitle line from platform media metadata.
 4. `typing`: recent non-modifier keyboard activity, with alternating tap phases.
@@ -33,7 +33,7 @@ The order above is the state priority. Microphone/music require a stable signal 
 
 ## Usage panel contract
 
-- Follow the current task: the accessible Codex task title, or the verified OpenCode working session. Never select from the stale initial-route URL. If inaccessible or ambiguous, show the recent-task fallback label; allow explicit pinning.
+- Follow the current verified Codex task. Never select from the stale initial-route URL. If inaccessible or ambiguous, show the recent-task fallback label; allow explicit pinning.
 - Tokens/cost use Global, Project or Conversation scope. Model, reasoning, context and raw latest snapshot describe the selected task. Quotas describe the account.
 - Poll once per second with at most one quota RPC in flight. Numeric usage changes when Codex writes events, not through an invented counter.
 - Preserve all reliable raw token fields. Unknown values display as N/A; cached input and reasoning output are never added twice.
@@ -50,10 +50,14 @@ The order above is the state priority. Microphone/music require a stable signal 
 The existing character, palette and DPI behavior remain the baseline. V1.3 has a Hub overview, one compact Star per verified active task, and one manager-owned Expanded Star. Technical integration and human visual acceptance are separate gates.
 
 - The Hub lists the current visible task set, including multiple tasks from the same project. Its usage values retain their selected provider and scope provenance; they are not totals across all providers or Stars.
-- Stars retain their neutral lifetime number, provider identity, window and slot. Their approved 112 × 112 geometry and full disc/number-label footprint are unchanged.
+- Stars retain their neutral lifetime number, provider identity, window and slot. The native window remains112 ×112; current compact hit regions are a22px disc and18 ×14 number label, distinct and screen-contained.
 - Opening a task reuses its task-local metadata projection in one detail card. The retained Star's current integer position is the anchor; the card clamps independently and scrolls on short screens. Switching detail does not change provider selection or scope or read a provider.
-- While detail is expanded, group translation pauses across ring, arc, blend and parking paths. Metadata and lifecycle updates continue; newcomers requiring recomposition stay staged. Collapse resumes from the displayed pixels with a fresh clock and no elapsed-time catch-up.
+- While detail is expanded, projected phase, pose and slot recomposition pause. Metadata and lifecycle updates continue; newcomers requiring recomposition stay staged. Collapse resumes from the displayed pixels with a fresh clock and no elapsed-time catch-up.
 - Removing/filtering the expanded task or hiding the task surfaces closes detail. Restore does not reopen it. Shutdown closes the card, Stars and trails and rejects late callbacks.
 - The Hub task control, Star Return/Space, Escape and visible collapse control provide keyboard access. Passive hover preserves the coding application's focus; deliberate keyboard activation may focus detail.
-- Unknown model is explicit Unknown/未知; unknown numeric fields and quota are N/A, genuine zero remains zero and partial coverage is labeled. Task-local effort/context and provider capabilities are shown only when recorded. OpenCode recorded cost has no guessed currency. No unverified Queued, Reviewing or progress phases are added.
-- Production parking plans use one pure background computation and a latest immutable request. Pending results retain the exact visible frame and commit only after geometry, membership, pixel and lifecycle fences pass. Measured Windows/Python worker scheduling yields keep native callbacks responsive; planning may hold the frame for about two seconds under load without blocking controls.
+- Unknown model is explicit Unknown/未知; unknown numeric fields and quota are N/A, genuine zero remains zero and partial coverage is labeled. Task-local effort/context appear only when recorded. No unverified Queued, Reviewing or progress phases are added.
+- Current default motion uses one analytic fitted tilted ellipse and shared active phase. Its rear layer and smaller/dimmer rear Stars sit behind the approved character; the brighter front layer crosses in front. Two compact input-transparent layers share the existing manager timer; no path worker or restart timer is needed. Trails have at most80 samples per task/layer and2.8 seconds of history.
+- Intentional drag, keyboard movement and preview position commands transport the attached composition with the pet, preserving phase, slot offsets and identity while clearing travel streaks. This deliberate scene translation is distinct from autonomous motion: orbit, membership, toggles and observed geometry glides preserve the16logical-pixel/40ms budget. OFF retains the current compact composition, finishes pose/slot changes and fade, then idles.
+- Historical exterior-route utilities are tested with an explicit internal fixture option, never offered in current product controls. The reference image influenced composition only; no artwork was copied or replaced. Drawing reuses existing QPainter gradients/paths; Qt QWidget and Microsoft SetWindowPos documentation informed stacking/no-activation review, with no external implementation or dependency added.
+
+Native stacking references: https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html and https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos. Windows owned layers are inserted relative to the pet existing global Z position without activation; idle topmost flag recreation restacks immediately.

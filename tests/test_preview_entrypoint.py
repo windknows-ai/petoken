@@ -7,7 +7,8 @@ import widget
 
 class PreviewEntrypointTests(unittest.TestCase):
     def test_dispatch_before_live_startup(self):
-        arguments = ['--count', '2', '--language', 'zh_CN', '--expand', '1']
+        arguments = ['--count', '2', '--provider', 'codex', '--language', 'zh_CN',
+                     '--anchor', 'bottom-right', '--expand', '1']
         with patch('widget.sys.argv', ['petoken', '--preview-v1-3', *arguments]), \
                 patch('tools.preview_v1_3.main', return_value=7) as preview, \
                 patch('widget.QApplication', side_effect=AssertionError('Live Qt startup')), \

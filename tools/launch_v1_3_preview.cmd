@@ -5,4 +5,4 @@ if not exist "%~dp0petoken.exe" (
     pause
     exit /b 1
 )
-start "" "%~dp0petoken.exe" --preview-v1-3 --count 3 --provider mixed --language en
+start "" "%~dp0petoken.exe" --preview-v1-3 --count 3 --language en

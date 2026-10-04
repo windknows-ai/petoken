@@ -1,10 +1,8 @@
 """Actual Expanded Star boundaries, task truth and native Qt lifecycle."""
-from threading import Event
 import unittest
 from unittest.mock import patch
 
-from PySide6.QtCore import Qt, QEvent, QPoint, QTimer
-from PySide6.QtGui import QKeyEvent
+from PySide6.QtCore import Qt, QPoint, QTimer
 from PySide6.QtTest import QTest
 
 import pet_geometry
@@ -14,7 +12,14 @@ from tests import test_ui as ui
 
 class ExpandedStarTests(unittest.TestCase):
     setUpClass = classmethod(ui.TaskPanelManagerTests.setUpClass.__func__)
-    setUp = ui.TaskPanelManagerTests.setUp
+    def setUp(self):
+        ui.TaskPanelManagerTests.setUp(self)
+        self.manager.shutdown()
+        from widget import TaskPanelManager
+        self.manager = TaskPanelManager(self.panel)
+        self.panel.task_manager = self.manager
+        self.assertFalse(self.manager.legacy_exterior_motion)
+
     tearDown = ui.TaskPanelManagerTests.tearDown
 
     def apply(self, tasks, generation=None, preference='auto', pet=ui._CENTER_PET_RECT,
@@ -77,21 +82,21 @@ class ExpandedStarTests(unittest.TestCase):
         self.assertEqual((self.manager.slot_for(key),self.manager.label_number_for(key)),(slot,number))
         self.assert_first_resume(before,stamp)
 
-    def test_one_card_same_star_toggle_other_provider_task_local(self):
+    def test_one_card_same_star_toggle_other_codex_task_local(self):
         a=ui._codex_entry('private-id-A',total=111,project='Alpha')
-        b=ui._opencode_entry('private-id-B',total=222,model='Other model')
+        b=ui._secondary_codex_entry('private-id-B',total=222,model='Other model')
         self.apply([a,b])
         with patch.object(self.panel.provider_poller,'poll',side_effect=AssertionError('Read')), \
              patch.object(self.panel,'persist',side_effect=AssertionError('Persist')):
             self.manager.orb_activated(('codex','private-id-A'))
             self.assertEqual(self.manager.detail_window._rows['total'][1].full_text,'111 Tokens')
-            self.manager.orb_activated(('opencode','private-id-B'))
+            self.manager.orb_activated(('codex','private-id-B'))
             card=self.manager.detail_window
-            self.assertEqual(card.provider_id,'opencode')
-            self.assertEqual(card._rows['total'][1].full_text,'222')
+            self.assertEqual(card.provider_id,'codex')
+            self.assertEqual(card._rows['total'][1].full_text,'222 Tokens')
             self.assertNotIn('private-id',card.panel_text())
             self.assertNotIn('111',card.panel_text())
-            self.manager.orb_activated(('opencode','private-id-B'))
+            self.manager.orb_activated(('codex','private-id-B'))
             self.assertIsNone(self.manager.expanded_identity)
             self.assertFalse(card.isVisible())
 
@@ -110,43 +115,45 @@ class ExpandedStarTests(unittest.TestCase):
         self.assert_frame(before)
         self.assert_first_resume(before,stamp)
 
-    def test_arc_and_active_parking_freeze_and_resume(self):
+    def test_edge_halo_motion_off_freezes_phase_and_resumes_exact_pixels(self):
         pet=ui._PET_RECT
         tasks,stamp=self.warm(pet=pet)
         self.panel.prefs['pet_motion']=False
         self.apply(tasks,pet=pet)
         self.tick(stamp+.04,pet)
-        self.tick(stamp+.08,pet)
         before=self.positions()
+        phase,pose,offsets=self.manager._ring_t,self.manager._halo_pose,dict(self.manager._halo_offsets)
         self.manager.orb_activated(('codex','0'))
-        self.assertIsNotNone(self.manager._park_blend)
-        elapsed=self.manager._park_blend['t']
         self.tick(stamp+100,pet)
         self.assert_frame(before,pet)
-        self.assertEqual((self.manager._park_blend or {}).get('t'),elapsed)
+        self.assertEqual(self.manager._ring_t,phase)
+        self.assertEqual(self.manager._halo_pose,pose)
+        self.assertEqual(self.manager._halo_offsets,offsets)
+        self.assertIsNone(self.manager._park_blend)
         self.manager.collapse_detail()
         self.assert_frame(before,pet)
         self.assert_first_resume(before,stamp,pet)
+
 
     def test_newcomer_and_other_retire_defer_geometry(self):
         tasks,stamp=self.warm()
         before=self.positions()
         self.manager.orb_activated(('codex','0'))
-        changed=[tasks[0],tasks[1],ui._opencode_entry('new')]
+        changed=[tasks[0],tasks[1],ui._secondary_codex_entry('new')]
         self.apply(changed,generation=2)
         self.assert_frame(before)
         self.assertEqual(self.manager.expanded_identity,('codex','0'))
-        self.assertIn(('opencode','new'),self.manager._ring_staged)
-        self.assertFalse(self.manager.window_for(('opencode','new')).isVisible())
+        self.assertIn(('codex','new'),self.manager._ring_staged)
+        self.assertFalse(self.manager.window_for(('codex','new')).isVisible())
         before=self.positions()
         self.manager.collapse_detail()
         self.assert_frame(before)
         self.assert_first_resume(before,stamp)
 
-    def test_filter_retire_and_stale_close_before_star(self):
-        for reason in ('filter','retire','stale'):
+    def test_retire_stale_and_foreign_replacement_close_before_star(self):
+        for reason in ('foreign_replacement','retire','stale'):
             with self.subTest(reason=reason):
-                tasks=[ui._codex_entry('a'),ui._opencode_entry('b')]
+                tasks=[ui._codex_entry('a'),ui._secondary_codex_entry('b')]
                 self.apply(tasks)
                 key=('codex','a')
                 self.manager.orb_activated(key)
@@ -158,8 +165,8 @@ class ExpandedStarTests(unittest.TestCase):
                     self.assertFalse(card.isVisible())
                     return original_close()
                 with patch.object(orb,'close',side_effect=close):
-                    if reason=='filter':
-                        self.apply([tasks[1]],preference='opencode')
+                    if reason=='foreign_replacement':
+                        self.apply([dict(tasks[0],provider_id='opencode'),tasks[1]])
                     else:
                         self.apply([] if reason=='stale' else [tasks[1]])
                 self.assertIsNone(self.manager.expanded_identity)
@@ -198,35 +205,21 @@ class ExpandedStarTests(unittest.TestCase):
         self.manager.orb_activated(('codex','0'))
         self.assertEqual(self.manager.window_count(),0)
 
-    def test_pending_worker_cannot_commit_while_expanded(self):
+    def test_default_halo_expansion_has_no_worker_and_resumes_from_actual_pixels(self):
         tasks,stamp=self.warm(pet=ui._PET_RECT)
-        gate,started=Event(),Event()
-        def plan(inputs):
-            started.set()
-            gate.wait(3)
-            return None
-        self.manager._live_armed=lambda:True
-        try:
-            with patch('widget._plan_parking_routes',side_effect=plan):
-                self.panel.prefs['pet_motion']=False
-                self.apply(tasks,pet=ui._PET_RECT)
-                self.assertTrue(started.wait(1))
-                self.manager.motion_timer.stop()
-                before=self.positions()
-                self.manager.orb_activated(('codex','0'))
-                gate.set()
-                self.assertTrue(self.manager._park_plan_job[2].wait(1))
-                self.tick(stamp+500,ui._PET_RECT)
-                self.assert_frame(before,ui._PET_RECT)
-                self.assertIsNone(self.manager._park_plan_request)
-                self.assertFalse(self.manager._poll_park_plan(ui._PET_RECT,ui._SCREEN_RECT))
-                self.manager.collapse_detail()
-                self.assert_frame(before,ui._PET_RECT)
-                self.assert_first_resume(before,stamp,ui._PET_RECT)
-        finally:
-            gate.set()
-            self.manager.motion_timer.stop()
-            self.manager._live_armed=lambda:False
+        with patch('widget._plan_parking_routes',side_effect=AssertionError('legacy planner')):
+            self.panel.prefs['pet_motion']=False
+            self.apply(tasks,pet=ui._PET_RECT)
+            before=self.positions()
+            self.manager.orb_activated(('codex','0'))
+            self.tick(stamp+500,ui._PET_RECT)
+            self.assert_frame(before,ui._PET_RECT)
+            self.assertIsNone(self.manager._park_plan_job)
+            self.assertIsNone(self.manager._park_plan_request)
+            self.manager.collapse_detail()
+            self.assert_frame(before,ui._PET_RECT)
+            self.assert_first_resume(before,stamp,ui._PET_RECT)
+
 
     def test_geometry_change_explicitly_collapses_and_replans(self):
         tasks,stamp=self.warm()
@@ -259,45 +252,62 @@ class ExpandedStarTests(unittest.TestCase):
         task=ui._codex_entry('a')
         self.panel.prefs['language']='en'
         self.panel.render(dict(provider_id='codex',available=False,scope='global',
-                               generation=1,preference='auto',active_tasks=[task]))
+                               generation=1,preference='codex',active_tasks=[task]))
         self.panel.show()
-        self.app.processEvents()
+        self.panel.activateWindow()
+        self.panel.tasks_button.setFocus()
+        self.assertTrue(QTest.qWaitForWindowActive(self.panel,1000))
         self.assertEqual(self.panel.tasks_button.text(),'Active tasks · 1 ▾')
         self.assertIn('Codex',self.panel.task_provenance.full_text)
-        self.panel.refresh_task_menu()
-        action=self.panel.task_menu.actions()[0]
-        action.trigger()
-        self.assertEqual(self.manager.expanded_identity,('codex','a'))
-        self.assertTrue(self.manager.detail_window.collapse_button.hasFocus())
-        QTest.keyClick(self.manager.detail_window.collapse_button,Qt.Key_Escape)
+        def choose():
+            menu=self.panel.task_menu
+            QTest.keyClick(menu,Qt.Key_Down)
+            QTest.keyClick(menu,Qt.Key_Return)
+        QTimer.singleShot(0,choose)
+        QTest.keyClick(self.panel.tasks_button,Qt.Key_Space)
         self.app.processEvents()
+        self.assertEqual(self.manager.expanded_identity,('codex','a'))
+        card=self.manager.detail_window
+        self.assertIs(card.focusWidget(),card.collapse_button)
+        self.assertTrue(QTest.qWaitForWindowActive(card,1000))
+        self.assertTrue(card.collapse_button.hasFocus())
+        QTest.keyClick(card.collapse_button,Qt.Key_Escape)
         self.assertIsNone(self.manager.expanded_identity)
         orb=self.manager.window_for(('codex','a'))
         self.assertEqual(orb.focusPolicy(),Qt.StrongFocus)
         self.assertIn('Active task',orb.accessibleName())
-        event=QKeyEvent(QEvent.KeyPress,Qt.Key_Return,Qt.NoModifier)
-        orb.keyPressEvent(event)
-        self.assertEqual(self.manager.expanded_identity,('codex','a'))
+        for key in (Qt.Key_Return,Qt.Key_Space):
+            orb.activateWindow()
+            orb.setFocus()
+            self.assertTrue(QTest.qWaitForWindowActive(orb,1000))
+            QTest.keyClick(orb,key)
+            self.assertEqual(self.manager.expanded_identity,('codex','a'))
+            self.assertTrue(QTest.qWaitForWindowActive(card,1000))
+            self.assertTrue(card.collapse_button.hasFocus())
+            QTest.keyClick(card.collapse_button,Qt.Key_Escape)
+            self.assertIsNone(self.manager.expanded_identity)
 
-    def test_unknown_zero_partial_source_notes_and_opencode_variant(self):
-        task=ui._opencode_entry('secret',total=0,tokens=(0,0,0,0,0),cost=0,model=None)
-        task['presentation'].update(effort='recorded-variant',partial=True,source_available=False,
+    def test_codex_unknown_zero_partial_source_notes_and_actual_effort(self):
+        task=ui._secondary_codex_entry('secret',total=0,tokens=(0,0,0,0,0),model=None)
+        task['presentation'].update(effort='medium',partial=True,source_available=False,
                                     notes=['note_initial_carry','private_untranslated_note'])
         self.apply([task])
-        self.manager.orb_activated(('opencode','secret'))
+        self.manager.orb_activated(('codex','secret'))
         card=self.manager.detail_window
-        self.assertEqual(card._rows['total'][1].full_text,'0')
-        self.assertEqual(card._rows['cost'][1].full_text,'0.00')
+        self.assertEqual(card._rows['total'][1].full_text,'0 Tokens')
+        self.assertNotIn('cost',card._rows)
         self.assertEqual(card._rows['model'][1].full_text,'Unknown')
-        self.assertEqual(card._rows['effort'][0].text(),'Model variant')
-        self.assertNotIn('context',card._rows)
-        self.assertIn('Partial'.lower(),card.panel_text().lower())
+        self.assertEqual(card._rows['effort'][0].text(),text('task_panel_effort','en'))
+        self.assertEqual(card._rows['effort'][1].full_text,'medium')
+        self.assertEqual(card._rows['context'][1].full_text,'N/A')
+        self.assertIn('partial',card.panel_text().lower())
         self.assertIn('source unavailable',card.warning.text())
         self.assertNotIn('private_untranslated_note',card.panel_text())
         self.assertNotIn('note_initial_carry',card.panel_text())
         task['presentation']['version']=None
         self.apply([task])
         self.assertEqual(card.provider_label.toolTip(),'')
+
 
     def test_long_plain_text_and_short_screen_clamp(self):
         task=ui._codex_entry('secret',project='<b>project</b>'*30,model='<i>model</i>'*30)
@@ -331,37 +341,41 @@ class ExpandedStarTests(unittest.TestCase):
         self.assert_frame(before)
         self.assert_first_resume(before,stamp)
 
-    def test_active_blend_pause_keeps_elapsed_and_first_resume(self):
+    def test_deferred_halo_composition_pause_keeps_phase_pose_and_offsets(self):
         tasks,stamp=self.warm()
         self.apply(tasks+[ui._codex_entry('new')])
-        self.assertTrue(self.manager._ring_blend or self.manager._park_blend)
+        self.assertTrue(self.manager._halo_pending())
         before=self.positions()
-        blend=self.manager._ring_blend or self.manager._park_blend
-        elapsed=blend['t']
+        phase,pose,offsets=self.manager._ring_t,self.manager._halo_pose,dict(self.manager._halo_offsets)
         self.manager.orb_activated(('codex','0'))
         self.tick(stamp+100)
         self.assert_frame(before)
-        self.assertEqual(blend['t'],elapsed)
+        self.assertEqual(self.manager._ring_t,phase)
+        self.assertEqual(self.manager._halo_pose,pose)
+        self.assertEqual(self.manager._halo_offsets,offsets)
         self.manager.collapse_detail()
         self.assert_frame(before)
         self.assert_first_resume(before,stamp)
 
-    def test_hub_mixed_count_and_opencode_motion_are_provider_independent(self):
+
+    def test_hub_codex_count_and_scope_provenance_match_current_halo(self):
         self.manager._live_armed=lambda:True
         self.panel.prefs['language']='en'
         try:
-            self.panel.render(dict(provider_id='opencode',available=False,scope='project',
-                                   generation=1,preference='auto',
-                                   active_tasks=[ui._codex_entry('a'),ui._opencode_entry('b')]))
+            self.panel.render(dict(provider_id='codex',available=False,scope='project',
+                                   generation=1,preference='codex',
+                                   active_tasks=[ui._codex_entry('a'),ui._secondary_codex_entry('b')]))
             self.assertTrue(self.manager.motion_timer.isActive())
             self.assertEqual(self.panel.tasks_button.text(),'Active tasks · 2 ▾')
-            self.assertIn('OpenCode',self.panel.task_provenance.full_text)
+            self.assertIn('Codex',self.panel.task_provenance.full_text)
+            self.assertNotIn('OpenCode',self.panel.task_provenance.full_text)
             self.assertIn('Project',self.panel.task_provenance.full_text)
             self.panel.refresh_task_menu()
             self.assertEqual(len(self.panel.task_menu.actions()),2)
         finally:
             self.manager.motion_timer.stop()
             self.manager._live_armed=lambda:False
+
 
     def test_motion_off_pet_move_immediately_invalidates_detail(self):
         self.panel.pet.move(500,300)
@@ -424,39 +438,36 @@ class ExpandedStarTests(unittest.TestCase):
         self.assertGreater(glyph_pixels,4,(key,value.text(),background.name()))
         return contrast
 
-    def test_native_card_render_contrast_both_languages_providers_cases(self):
+    def test_native_codex_card_render_contrast_both_languages_task_variants(self):
         from pathlib import Path
-        captures=Path(r'D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-resume')
+        captures=Path(r'D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-visual-refinement')
         for language in ('en','zh_CN'):
-            for provider in ('codex','opencode'):
+            for variant in ('primary','secondary'):
                 for case in ('known','zero','unknown','partial'):
-                    with self.subTest(language=language,provider=provider,case=case):
-                        if provider=='codex':
-                            task=ui._codex_entry('render-proof',total=0 if case=='zero' else 12345)
-                        else:
-                            task=ui._opencode_entry('render-proof',total=0 if case=='zero' else 12345,
-                                                    cost=0 if case=='zero' else .125)
-                        task['presentation']['effort']='high' if provider=='codex' else 'recorded-variant'
+                    with self.subTest(language=language,variant=variant,case=case):
+                        total=12345 if variant=='primary' else 67890
+                        task=(ui._codex_entry('render-proof',total=total,model='gpt-6-sol')
+                              if variant=='primary' else ui._secondary_codex_entry(
+                                  'render-proof',total=total,model='different-task-model'))
                         if case=='zero':
-                            task['presentation']['tokens']={k:0 for k in task['presentation']['tokens']}
+                            task['presentation']['tokens']={key:0 for key in task['presentation']['tokens']}
                         if case=='unknown':
                             task['presentation']['model']=None
-                            task['presentation']['tokens']={k:None for k in task['presentation']['tokens']}
+                            task['presentation']['tokens']={key:None for key in task['presentation']['tokens']}
                             task['presentation']['effort']=None
-                            task['presentation'].update(context=None,cost_amount=None,available=False)
+                            task['presentation'].update(context=None,available=False)
                         if case=='partial':
                             task['presentation'].update(partial=True,source_available=False)
                         self.apply([task],language=language)
-                        self.manager.orb_activated((provider,'render-proof'))
+                        self.manager.orb_activated(('codex','render-proof'))
                         card=self.manager.detail_window
                         self.app.processEvents()
-                        name=f'8-card-{language}-{provider}-{case}.png'
+                        name=f'8-halo-card-{language}-{variant}-{case}.png'
                         self.assertTrue(card.grab().save(str(captures/name)))
-                        for key in ('total','model','effort'):
+                        for key in ('total','model','effort','context'):
                             self.assert_native_value_render(card,key)
-                        if provider=='opencode':
-                            self.assert_native_value_render(card,'cost')
                         self.manager.collapse_detail()
+
 
     def test_rapid_native_hub_menu_escape_collapses_without_hiding_scene(self):
         task=ui._codex_entry('native-menu-proof')
@@ -472,6 +483,7 @@ class ExpandedStarTests(unittest.TestCase):
         orb=self.manager.window_for(key)
         before=self.positions()
         chosen=[]
+        immediate=[]
         def choose():
             menu=self.panel.task_menu
             menu_visible=menu.isVisible()
@@ -479,13 +491,17 @@ class ExpandedStarTests(unittest.TestCase):
             QTest.keyClick(menu,Qt.Key_Return)
             card=self.manager.detail_window
             chosen.append((menu_visible,self.manager.expanded_identity,
-                           card.collapse_button.hasFocus()))
+                           card.focusWidget() is card.collapse_button))
             # Deliver the next real key before another Qt/OS activation turn.
             QTest.keyClick(card.collapse_button,Qt.Key_Escape)
+            immediate.append((self.manager.expanded_identity,self.panel.isVisible(),
+                              self.manager._visible,orb.isVisible(),self.positions()))
         QTimer.singleShot(0,choose)
         self.panel.tasks_button.setFocus()
         QTest.keyClick(self.panel.tasks_button,Qt.Key_Space)
         self.app.processEvents()
+        # Return -> Escape has no activation wait; callback records the same-event state.
+        self.assertEqual(immediate,[(None,True,True,True,before)])
         self.assertEqual(chosen,[(True,key,True)])
         self.assertIsNone(self.manager.expanded_identity)
         self.assertTrue(self.panel.isVisible())

@@ -21,10 +21,10 @@ from analytics import aggregate,normalize_usage
 from localization import STRINGS, normalize_language, text
 import pet_geometry as pet_geometry
 from provider_poller import ProviderPoller
-from tests.test_opencode_provider import (BASE_MS, make_message, make_part,
-                                          make_session, write_store)
 from tests.test_providers import write_home
 from usage import CodexStore
+
+NOW_S = datetime(2026, 9, 19, 12, 1, 40, tzinfo=timezone.utc).timestamp()
 
 
 class UiTests(unittest.TestCase):
@@ -473,13 +473,16 @@ class UiTests(unittest.TestCase):
         self.assertEqual(self.panel.pet.tr_text('analytics_button'),text('analytics_button','zh_CN'))
 
 
-NOW_S = BASE_MS / 1000 + 100
+NOW_S = datetime(2026, 9, 19, 12, 1, 40, tzinfo=timezone.utc).timestamp()
 
 
 class ProviderUiTests(unittest.TestCase):
+    """Current Codex-only Hub/source/scope tests; no historical adapter startup."""
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+
+
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -491,6 +494,8 @@ class ProviderUiTests(unittest.TestCase):
         self.work = Path(self.temp.name) / 'stores'
         self.work.mkdir()
 
+
+
     def tearDown(self):
         self.panel.provider_poller.drain(timeout=10)
         self.panel.provider_poller.close()
@@ -500,25 +505,15 @@ class ProviderUiTests(unittest.TestCase):
         self.panel.deleteLater(); self.app.processEvents()
         self.pref_patch.stop(); self.temp.cleanup()
 
+
+
     def _home(self, name, threads):
         home = self.work / name
         home.mkdir(exist_ok=True)
         write_home(str(home), threads)
         return CodexStore(home)
 
-    def _db(self, name, sessions, messages=(), parts=()):
-        path = self.work / name
-        write_store(path, sessions, messages, parts)
-        return path
 
-    def _attach(self, threads, sessions, messages=(), parts=()):
-        self.panel.provider_poller.drain(timeout=10)
-        self.panel.provider_poller.close()
-        home = self._home(f'codex-{len(list(self.work.iterdir()))}', threads)
-        db = self._db(f'open-{len(list(self.work.iterdir()))}.db', sessions,
-                      messages, parts)
-        self.panel.provider_poller = ProviderPoller(home, db)
-        return self.panel.provider_poller
 
     def _poll_render(self, prefs=None, now=None, **kw):
         # Three rounds guarantee one full fresh round-trip even when a
@@ -534,179 +529,38 @@ class ProviderUiTests(unittest.TestCase):
         self.app.processEvents()
         return out
 
-    def _apply_render(self, prefs_update, mark=None):
+
+
+    def _apply_render(self, prefs_update, mark=None, now=None):
         """Production settings path: persist, apply, synchronous emit."""
         self.panel.prefs.update(prefs_update)
         out = self.panel.provider_poller.apply_settings(
-            dict(self.panel.prefs), mark_provider=mark)
+            dict(self.panel.prefs), mark_provider=mark, now=now)
         self.panel.render(out['result'])
         self.app.processEvents()
         return out
 
-    def test_settings_tracking_defaults_options_and_labels(self):
-        settings = Settings(self.panel)
-        self.assertEqual([settings.tracking.itemData(i)
-                          for i in range(settings.tracking.count())],
-                         ['auto', 'codex', 'opencode'])
-        self.assertEqual(settings.tracking.currentData(), 'auto')
-        self.assertEqual(settings.tracking_label.text(),
-                         text('tracking_provider', 'zh_CN'))
-        settings.language.setCurrentIndex(
-            settings.language.findData('en'))
-        settings.apply_language()
-        self.assertEqual(
-            [settings.tracking.itemText(i)
-             for i in range(settings.tracking.count())],
-            [text('tracking_auto', 'en'), text('tracking_codex', 'en'),
-             text('tracking_opencode', 'en')])
-        settings.reject()
 
-    def test_settings_tracking_save_cancel_reset(self):
-        import json
-        import widget as widget_module
-        poller = self._attach([{'id': 't1'}], [make_session('ses_1')])
-        settings = Settings(self.panel)
-        settings.tracking.setCurrentIndex(settings.tracking.findData('opencode'))
-        before_generation = poller.generation
-        settings.save()
-        self.assertEqual(self.panel.prefs['tracking_provider'], 'opencode')
-        prefs_file = widget_module.PREF_DIR / 'settings.json'
-        loaded = json.loads(prefs_file.read_text(encoding='utf-8'))
-        self.assertEqual(loaded.get('tracking_provider'), 'opencode')
-        self.assertIn('opencode', poller.selection.last_use)
-        self.assertGreater(poller.generation, before_generation)
-        # Cancel discards: change the form, reject, prefs keep opencode.
-        settings = Settings(self.panel)
-        settings.tracking.setCurrentIndex(settings.tracking.findData('codex'))
-        settings.reject()
-        self.assertEqual(self.panel.prefs['tracking_provider'], 'opencode')
-        # Reset returns to Auto (two-click confirm), then persists.
-        settings = Settings(self.panel)
-        settings.reset_to_defaults(); settings.reset_to_defaults()
-        self.assertEqual(settings.tracking.currentData(), 'auto')
-        settings.save()
-        self.assertEqual(self.panel.prefs['tracking_provider'], 'auto')
-
-    def test_codex_opencode_codex_switch_stays_coherent(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        codex = self._poll_render(active_title='t1', detection_valid=True)
-        self.assertIn('Codex', self.panel.connection.text())
-        codex_total = self.panel.total.text()
-        self.assertNotEqual(codex_total, 'N/A')
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        opencode = self._poll_render({'scope': 'conversation',
-                                      'pinned': 'ses_1',
-                                      'tracking_provider': 'opencode'},
-                                     now=NOW_S)
-        self.assertIn('OpenCode', self.panel.connection.text())
-        self.assertEqual(self.panel.total.text(), 'N/A')
-        self.assertEqual(self.panel.model.text(), 'test-model')
-        self.assertNotIn('gpt-6-astra', self.panel.model.text())
-        self.assertNotIn('gpt-6-astra', self.panel.title.toolTip())
-        self.panel.prefs['tracking_provider'] = 'codex'
-        self.panel.provider_poller.mark_used('codex')
-        self.panel.provider_poller.bump_generation()
-        back = self._poll_render({'tracking_provider': 'codex'},
-                                 active_title='t1', detection_valid=True)
-        self.assertIn('Codex', self.panel.connection.text())
-        self.assertEqual(self.panel.total.text(), codex_total)
-        self.assertNotIn('test-model', self.panel.model.text())
-
-    def test_both_working_both_idle_and_manual_unavailable(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        both = self._poll_render(active_title='t1', detection_valid=True,
-                                 now=NOW_S)
-        self.assertTrue(both['selection']['live'])
-        self.assertEqual(self.panel.status_text.text(),
-                         text('working', self.panel.language))
-        # Both idle: Daily, historical, no live bubble arming.
-        idle = self._poll_render(
-            {'scope': 'global'}, detection_valid=False, now=NOW_S + 10000)
-        self.assertFalse(idle['selection']['live'])
-        self.assertEqual(self.panel.app_mode.pending, None)
-        self.assertEqual(self.panel.app_mode.mode, 'daily')
-        self.assertEqual(self.panel.status_text.text(),
-                         text('idle', self.panel.language))
-        # Manual to a down provider: unavailable, never the other side.
-        # Same poller keeps generations monotonic so the render lands.
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        from opencode_provider import OpenCodeProvider as OcProvider
-        self.panel.provider_poller.opencode.close()
-        self.panel.provider_poller.opencode = OcProvider(
-            self.work / 'absent.db')
-        snap = self._poll_render({'tracking_provider': 'opencode'},
-                                 now=NOW_S + 10000)
-        self.assertIsNone(snap['selection']['selected'])
-        self.assertFalse(snap['selection']['live'])
-        self.assertIn('OpenCode', self.panel.connection.text())
 
     def test_working_session_separate_from_pinned_scope(self):
-        self._attach(
-            [{'id': 't1', 'working': True}, {'id': 't2'}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
+        self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
         # Codex: analytics inspects t2, bubble follows working t1.
         self._poll_render({'scope': 'conversation', 'pinned': 't2'},
                           active_title='t1', detection_valid=True)
         self.assertIn('t1', self.panel.pet.toolTip())
-        # OpenCode: analytics inspects ses_a, bubble follows ses_b.
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        self._poll_render({'scope': 'conversation', 'pinned': 'ses_a',
-                           'tracking_provider': 'opencode'}, now=NOW_S)
-        self.assertIn('OpenCode', self.panel.pet.toolTip())
-        self.assertIn('beta', self.panel.pet.toolTip())
-        self.assertNotIn('alpha', self.panel.pet.toolTip())
-        self.assertIn(text('active_session', self.panel.language),
-                      self.panel.pet.toolTip())
-        self.assertNotIn('ses_b', self.panel.pet.toolTip())
-        self.assertEqual(self.panel.title.text(),
-                         text('active_session', self.panel.language))
-        self.assertNotIn('ses_a', self.panel.title.toolTip())
 
     def test_missing_scope_with_valid_working_codex(self):
-        self._attach([{'id': 't1', 'working': True}, {'id': 't2'}], [])
+        self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
         out = self._poll_render({'scope': 'conversation', 'pinned': 'ghost'},
                                 active_title='t1', detection_valid=True)
         self.assertTrue(out['selection']['live'])
         self.assertIn('t1', self.panel.pet.toolTip())
         self.assertIn('Codex', self.panel.connection.text())
 
-    def test_valid_history_with_unknown_activity_opencode(self):
-        path = self.work / 'noparts.db'
-        write_store(path, [make_session('ses_1', tokens=(100, 20, 5, 400, 0))],
-                    with_part_table=False)
-        home = self._home('codex-idle', [{'id': 't1'}])
-        self.panel.provider_poller.drain(timeout=10)
-        self.panel.provider_poller.close()
-        self.panel.provider_poller = ProviderPoller(home, path)
-        out = self._poll_render({'tracking_provider': 'opencode'})
-        self.assertFalse(out['selection']['live'])
-        self.assertEqual(self.panel.status_text.text(),
-                         text('unknown', self.panel.language))
-        # History still renders: scope sum visible without a live claim.
-        self.assertIn('100', self.panel.io_line.text())
+
 
     def test_source_failure_clears_live_keeps_history_honest(self):
-        poller = self._attach([{'id': 't1', 'working': True}],
-                              [make_session('ses_1', updated=BASE_MS)])
+        poller = self._attach([{'id': 't1', 'working': True}])
         live = self._poll_render(active_title='t1', detection_valid=True,
                                  now=NOW_S)
         self.assertTrue(live['selection']['live'])
@@ -715,20 +569,22 @@ class ProviderUiTests(unittest.TestCase):
         with patch.object(CodexProvider, 'read',
                           side_effect=RuntimeError('boom')):
             failed = self._poll_render(now=NOW_S)
-        # Live is removed at once; the surviving provider's own scope
-        # data renders (N/A total, no Codex numbers lingering).
+        # Failed Codex source revokes Live and cannot reuse cached totals.
         self.assertFalse(failed['selection']['live'])
         self.assertIsNone(failed['result'].get('working_context'))
         self.assertNotIn('gpt-6-astra', self.panel.model.text())
-        self.assertIn('OpenCode', self.panel.connection.text())
-        self.assertEqual(self.panel.total.text(), 'N/A')
+        self.assertIn('Codex', self.panel.connection.text())
+        # Unavailable Hub state uses an em dash beside explicit source failure.
+        self.assertEqual(self.panel.total.text(), '—')
+        self.assertFalse(failed['selection']['source_available'])
+        self.assertFalse(failed['result']['available'])
+        self.assertEqual(failed['codex']['reason'], 'status_read_failed')
+        self.assertIn(text('no_reliable_record', self.panel.language), self.panel.connection.text())
+
+
 
     def test_late_generation_quota_and_scope_ignored(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
+        self._attach([{'id': 't1', 'working': True}])
         first = self._poll_render(active_title='t1', detection_valid=True,
                                   now=NOW_S)
         first_total = self.panel.total.text()
@@ -738,233 +594,16 @@ class ProviderUiTests(unittest.TestCase):
         self.panel.render(stale)
         self.app.processEvents()
         self.assertEqual(self.panel.total.text(), first_total)
-        # Late Codex quota under OpenCode selection renders N/A.
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        self._poll_render({'tracking_provider': 'opencode'}, now=NOW_S)
         self.panel.receive_limits(dict(provider_id='codex', sampled=time.time(),
                                        limits={'primary': {'usedPercent': 30,
                                                            'windowDurationMins': 300,
                                                            'resetsAt': time.time() + 1800}}))
         self.app.processEvents()
-        self.assertEqual(self.panel.five.value.text(), 'N/A')
-        self.assertFalse(self.panel.five.reset.isVisible())
-
-    def test_opencode_na_boundaries_and_real_zero(self):
-        self._attach(
-            [{'id': 't1'}],
-            [make_session('ses_zero', tokens=(0, 0, 0, 0, 0), cost=0.0,
-                          updated=BASE_MS)],
-            [make_message('m1', 'ses_zero')],
-            [make_part('p1', 'ses_zero', created=BASE_MS - 100000)])
-        out = self._poll_render({'scope': 'conversation',
-                                 'pinned': 'ses_zero',
-                                 'tracking_provider': 'opencode'}, now=NOW_S)
-        self.assertTrue(out['selection']['live'])
-        self.assertEqual(self.panel.total.text(), 'N/A')
-        self.assertEqual(self.panel.cost.text(), '—')
-        self.assertIn('0.0000', self.panel.cost.toolTip())
-        self.assertEqual(self.panel.context.value.text(), 'N/A')
-        # Real zeros render as 0, missing values as N/A.
-        self.assertIn(' 0 ', f" {self.panel.io_line.text()} ")
-        self.assertEqual(self.panel.five.value.text(), 'N/A')
-        self.assertFalse(self.panel.five.reset.isVisible())
-        self.assertNotIn('$', self.panel.cost.text())
-        self.assertNotIn('CA$', self.panel.cost.toolTip())
-
-    def test_long_names_keep_layout_usable(self):
-        long_name = 'x' * 200
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', project='p', directory='/synthetic/' + long_name,
-                          updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        width_before = self.panel.width()
-        self._poll_render({'scope': 'conversation', 'pinned': 'ses_1',
-                           'tracking_provider': 'opencode'}, now=NOW_S)
-        self.app.processEvents()
-        self.assertEqual(self.panel.width(), width_before)
-        self.assertLessEqual(len(self.panel.project.text()), 200)
-        self.assertIn(long_name.upper(), self.panel.project.toolTip())
-        self.panel.show(); self.app.processEvents()
-
-    def test_provider_switch_preserves_pet_and_chrome(self):
-        poller = self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        self._poll_render(active_title='t1', detection_valid=True, now=NOW_S)
-        pet_pos = self.panel.pet.pos()
-        pet_size = self.panel.pet.size()
-        pin_before = self.panel.is_pinned()
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        poller.mark_used('opencode')
-        poller.bump_generation()
-        self._poll_render({'tracking_provider': 'opencode'}, now=NOW_S)
-        self.panel.prefs['tracking_provider'] = 'auto'
-        poller.bump_generation()
-        self._poll_render(now=NOW_S)
-        self.assertEqual(self.panel.pet.pos(), pet_pos)
-        self.assertEqual(self.panel.pet.size(), pet_size)
-        self.assertEqual(self.panel.is_pinned(), pin_before)
-        self.panel.show(); self.app.processEvents()
-        self.panel.toggle_compact(); self.app.processEvents()
-        from widget import COMPACT_HEIGHT
-        self.assertEqual(self.panel.height(), COMPACT_HEIGHT)
-        self.panel.toggle_compact(); self.app.processEvents()
-        self.assertTrue(self.panel.body_scroll.isVisible())
-
-    def test_synthetic_bilingual_panel_matrix_screenshots(self):
-        import os
-        from opencode_provider import OpenCodeProvider
-        shots = os.path.join(os.path.dirname(
-            os.path.dirname(os.path.abspath(__file__))), '.private',
-            'ui-slice5')
-        os.makedirs(shots, exist_ok=True)
-
-        def build():
-            return self._attach(
-                [{'id': 't1', 'working': True}],
-                [make_session('ses_1', updated=BASE_MS)],
-                [make_message('m1', 'ses_1')],
-                [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-
-        self.panel.resize(560, 500)
-        for language in ('zh_CN', 'en'):
-            poller = build()
-            self.panel.prefs['language'] = language
-            self.panel.prefs['tracking_provider'] = 'auto'
-            self.panel.apply_language()
-            codex = self._poll_render(active_title='t1',
-                                      detection_valid=True)
-            self._shot(shots, f'{language}-codex-live', language,
-                       codex['result'])
-            self.panel.prefs['tracking_provider'] = 'opencode'
-            poller.mark_used('opencode')
-            poller.bump_generation()
-            opencode = self._poll_render(
-                {'scope': 'conversation', 'pinned': 'ses_1',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
-            self._shot(shots, f'{language}-opencode-live', language,
-                       opencode['result'])
-            self.panel.provider_poller.opencode.close()
-            self.panel.provider_poller.opencode = OpenCodeProvider(
-                os.path.join(self.temp.name, 'absent.db'))
-            missing = self._poll_render({'tracking_provider': 'opencode'},
-                                        now=NOW_S)
-            self._shot(shots, f'{language}-opencode-unavailable', language,
-                       missing['result'])
-
-    def _shot(self, shots, name, language, result):
-        import os
-        self.panel.prefs['language'] = language
-        self.panel.apply_language()
-        self.panel.render(result)
-        self.app.processEvents()
-        path = os.path.join(shots, f'{name}.png')
-        self.assertTrue(self.panel.grab().save(path, 'PNG'), name)
-        self.assertGreater(os.path.getsize(path), 10000, name)
-
-    def test_settings_save_applies_immediately_without_poll(self):
-        self._attach([{'id': 't1', 'working': True}],
-                     [make_session('ses_1', updated=BASE_MS)],
-                     [make_message('m1', 'ses_1')],
-                     [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        self._poll_render(active_title='t1', detection_valid=True)
-        self.assertIn('Codex', self.panel.connection.text())
-        settings = Settings(self.panel)
-        settings.tracking.setCurrentIndex(
-            settings.tracking.findData('opencode'))
-        settings.save()
-        # No manual poll or render invoked: save published synchronously.
-        self.assertIn('OpenCode', self.panel.connection.text())
-        self.assertIn('opencode',
-                      self.panel.provider_poller.selection.last_use)
-        settings = Settings(self.panel)
-        settings.tracking.setCurrentIndex(
-            settings.tracking.findData('codex'))
-        settings.save()
-        self.assertIn('Codex', self.panel.connection.text())
-
-    def test_token_mode_switch_retires_pet_context(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        self._poll_render(active_title='t1', detection_valid=True)
-        tick = time.monotonic()
-        self.panel.app_mode.update(True, True, now=tick)
-        self.panel.app_mode.update(True, True, now=tick + 0.5)
-        self.assertTrue(self.panel.pet.token_bubble_visible())
-        self.assertEqual(self.panel.pet.working_context['thread'], 't1')
-        # Switch to available-but-idle OpenCode while Token Mode is
-        # still inside its deactivation delay.
-        self._apply_render({'tracking_provider': 'opencode'},
-                           mark='opencode')
-        self.assertTrue(self.panel.pet.token_bubble_visible())
-        self.assertIsNone(self.panel.pet.working_context)
-        self.assertNotIn('t1', self.panel.pet.toolTip())
-        # Scope data stays provider-labeled; t1 is gone, not relabeled.
-        self.assertIn('OpenCode', self.panel.pet.toolTip())
-
-    def test_missing_working_row_clears_bubble(self):
-        import sqlite3
-        from contextlib import closing
-        path = self._db('orphan.db',
-                        [make_session('ses_x', project='proj-x',
-                                      directory='/synthetic/xray',
-                                      updated=BASE_MS)],
-                        [make_message('m1', 'ses_x')],
-                        [make_part('p1', 'ses_x', created=BASE_MS - 100000)])
-        home = self._home('codex-missing-row', [{'id': 't1'}])
-        from provider_poller import ProviderPoller as Poller
-        self.panel.provider_poller.drain(timeout=10)
-        self.panel.provider_poller.close()
-        self.panel.provider_poller = Poller(home, path)
-        with closing(sqlite3.connect(path, timeout=5)) as db:
-            db.execute("DELETE FROM session WHERE id='ses_x'")
-            db.commit()
-        out = self._poll_render({'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        self.assertIsNone(out['result'].get('working_context'))
-        self.assertIn('N/A', self.panel.pet.toolTip())
-
-    def test_quota_clears_atomically_on_unavailable_switch(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        self._poll_render(active_title='t1', detection_valid=True)
-        self.panel.receive_limits(dict(
-            sampled=time.time(),
-            limits={'primary': {'usedPercent': 30, 'windowDurationMins': 300,
-                                'resetsAt': time.time() + 18000}}))
-        self.app.processEvents()
-        self.panel.show(); self.app.processEvents()
         self.assertIn('70%', self.panel.five.value.text())
-        self.assertTrue(self.panel.five.reset.isVisible())
-        from opencode_provider import OpenCodeProvider as OcProvider
-        self.panel.provider_poller.opencode.close()
-        self.panel.provider_poller.opencode = OcProvider(
-            self.work / 'absent.db')
-        self._apply_render({'tracking_provider': 'opencode'},
-                           mark='opencode')
-        # Same-transaction clearing: no timer tick or quota callback
-        # runs between render and these assertions.
-        self.assertEqual(self.panel.five.value.text(), 'N/A')
-        self.assertFalse(self.panel.five.reset.isVisible())
-        self.assertEqual(self.panel.cost.text(), '—')
-        self.assertEqual(self.panel.context.value.text(), 'N/A')
-        self.assertIn('OpenCode', self.panel.connection.text())
+
 
     def test_codex_unavailable_preserves_quota(self):
-        self._attach([{'id': 't1', 'working': True}],
-                     [make_session('ses_1')])
+        self._attach([{'id': 't1', 'working': True}])
         self._poll_render(active_title='t1', detection_valid=True)
         self.panel.show(); self.app.processEvents()
         self.panel.receive_limits(dict(
@@ -986,12 +625,12 @@ class ProviderUiTests(unittest.TestCase):
         self.assertIn('70%', self.panel.five.value.text())
         self.assertTrue(self.panel.five.reset.isVisible())
 
+
+
     def test_change_scope_mid_read_via_control(self):
         import threading
         from providers import CodexProvider
-        poller = self._attach(
-            [{'id': 't1', 'working': True}, {'id': 't2'}],
-            [make_session('ses_1')])
+        poller = self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
         self._poll_render({'scope': 'conversation', 'pinned': 't2'},
                           active_title='t1', detection_valid=True)
         # Settle the render's trailing submit first: _poll_render leaves
@@ -1026,6 +665,8 @@ class ProviderUiTests(unittest.TestCase):
         finally:
             release.set()
 
+
+
     def _hold(self, target):
         import threading
         entered, release = threading.Event(), threading.Event()
@@ -1038,6 +679,8 @@ class ProviderUiTests(unittest.TestCase):
         self.addCleanup(setattr, target, 'read', orig)
         return entered, release
 
+
+
     def _poll_thread(self, prefs, **kw):
         outcome = {}
         thread = threading.Thread(
@@ -1047,467 +690,54 @@ class ProviderUiTests(unittest.TestCase):
         thread.start()
         return thread, outcome
 
+
+
     def test_bubble_binds_activity_session_not_scope_title(self):
-        self._attach(
-            [{'id': 't1', 'working': True}, {'id': 't2'}],
-            [make_session('ses_a', project='proj-a',
-                          directory='/synthetic/alpha',
-                          tokens=(10, 1, 1, 1, 0)),
-             make_session('ses_b', project='proj-b',
-                          directory='/synthetic/beta',
-                          tokens=(20, 2, 2, 2, 0), updated=BASE_MS)],
-            [make_message('m1', 'ses_b')],
-            [make_part('p1', 'ses_b', created=BASE_MS - 100000)])
+        self._attach([{'id': 't1', 'working': True}, {'id': 't2'}])
         # Codex side first: scope title t2, bubble follows working t1.
         self._poll_render({'scope': 'conversation', 'pinned': 't2'},
                           active_title='t1', detection_valid=True)
         self.assertIn('t2', self.panel.title.text())
         self.assertIn('t1', self.panel.pet.toolTip())
-        # OpenCode side: differing projects/tokens prove the binding.
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        out = self._poll_render({'scope': 'conversation', 'pinned': 'ses_a',
-                                 'tracking_provider': 'opencode'}, now=NOW_S)
-        context = out['result']['working_context']
-        self.assertEqual((context['thread'], context['project'],
-                          context['tokens']['input']), ('ses_b', 'beta', 20))
-        self.assertIn('beta', self.panel.pet.toolTip())
-        self.assertNotIn('alpha', self.panel.pet.toolTip())
 
-    def _live_work(self, sessions=None, messages=None, parts=None):
-        if sessions is None:
-            sessions = [make_session(
-                'ses_work', project='proj-w',
-                directory='/synthetic/work', tokens=(100, 20, 5, 400, 7),
-                cost=0.05, updated=BASE_MS)]
-        if messages is None:
-            messages = [make_message('m1', 'ses_work')]
-        if parts is None:
-            parts = [make_part('p1', 'ses_work',
-                               created=BASE_MS - 100000)]
-        return self._attach([{'id': 't1'}], sessions, messages, parts)
-
-    def _assert_active_panel(self):
-        self.assertIn(text('active_session', self.panel.language),
-                      self.panel.connection.text())
-        # Prominent surfaces never show raw session IDs; the exact ID
-        # stays in selection, attribution, and analytics instead.
-        self.assertEqual(self.panel.title.text(),
-                         text('active_session', self.panel.language))
-        self.assertIn(text('active_session', self.panel.language),
-                      self.panel.title.toolTip())
-        self.assertNotIn('ses_work', self.panel.title.toolTip())
-        self.assertEqual(self.panel.model.text(), 'test-model')
-        self.assertIn('100', self.panel.io_line.text())
-        self.assertEqual(self.panel.total.text(), 'N/A')
-        self.assertEqual(self.panel.status_text.text(),
-                         text('working', self.panel.language))
-
-    def test_live_opencode_without_pin_shows_active_session(self):
-        self._live_work()
-        out = self._poll_render({'scope': 'conversation',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        self.assertTrue(out['selection']['live'])
-        self.assertEqual(out['result'].get('presentation'),
-                         'active_session')
-        self._assert_active_panel()
-        # Auto with the same saved Conversation/no-pin preferences.
-        self.panel.prefs['tracking_provider'] = 'auto'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        auto = self._poll_render({'scope': 'conversation'}, now=NOW_S)
-        self.assertEqual(auto['selection']['selected'], 'opencode')
-        self.assertTrue(auto['selection']['live'])
-        self.assertEqual(auto['result'].get('presentation'),
-                         'active_session')
-        self._assert_active_panel()
-
-    def test_codex_pin_does_not_hide_live_opencode(self):
-        self._live_work()
-        out = self._poll_render({'scope': 'conversation', 'pinned': 't1',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        self.assertTrue(out['selection']['live'])
-        self._assert_active_panel()
-        self.assertEqual(out['result']['session_id'],
-                         'opencode:ses_work')
-        self.assertEqual(out['result']['tokens']['input'], 100)
-
-    def test_matching_pin_keeps_scoped_view(self):
-        self._live_work()
-        out = self._poll_render({'scope': 'conversation',
-                                 'pinned': 'ses_work',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        result = out['result']
-        self.assertTrue(result['available'])
-        self.assertIsNone(result.get('presentation'))
-        self.assertEqual(result['scope_identity']['scope_type'],
-                         'conversation')
-        self.assertNotIn(text('active_session', self.panel.language),
-                         self.panel.connection.text())
-        self.assertEqual(self.panel.title.text(),
-                         text('active_session', self.panel.language))
-        # The pinned session's exact ID stays in selection/attribution,
-        # never in the prominent title.
-        self.assertNotIn('ses_work', self.panel.title.toolTip())
-        self.assertEqual(out['result']['session_id'],
-                         'opencode:ses_work')
-
-    def test_other_pin_shows_scope_with_live_bubble(self):
-        self._live_work(
-            [make_session('ses_work', project='proj-w',
-                          directory='/synthetic/work',
-                          tokens=(100, 20, 5, 400, 7), cost=0.05,
-                          updated=BASE_MS),
-             make_session('ses_idle', project='proj-i',
-                          directory='/synthetic/idle',
-                          tokens=(10, 1, 1, 1, 0), cost=0.01)],
-            [make_message('m1', 'ses_work')],
-            [make_part('p1', 'ses_work', created=BASE_MS - 100000)])
-        out = self._poll_render({'scope': 'conversation',
-                                 'pinned': 'ses_idle',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        result = out['result']
-        self.assertTrue(result['available'])
-        self.assertIsNone(result.get('presentation'))
-        # Panel shows the pinned scope's own values, never the live row;
-        # the prominent title stays neutral while the exact pinned ID
-        # remains in selection and analytics.
-        self.assertEqual(self.panel.title.text(),
-                         text('active_session', self.panel.language))
-        self.assertNotIn('ses_idle', self.panel.title.toolTip())
-        self.assertNotIn('ses_work', self.panel.title.toolTip())
-        self.assertEqual(result['session_id'], 'opencode:ses_idle')
-        self.assertIn('10', self.panel.io_line.text())
-        # The bubble follows the live working session instead.
-        self.assertEqual(result['working_context']['thread'], 'ses_work')
-        self.assertIn('work', self.panel.pet.toolTip())
-        self.assertIn(text('active_session', self.panel.language),
-                      self.panel.pet.toolTip())
-        self.assertNotIn('ses_work', self.panel.pet.toolTip())
-
-    def test_opencode_hides_quota_context_everywhere(self):
-        self._live_work()
-        self.panel.show()
-        self.app.processEvents()
-        quotas = dict(
-            sampled=time.time(),
-            limits={'primary': {'usedPercent': 30,
-                                'windowDurationMins': 300,
-                                'resetsAt': time.time() + 18000}})
-        self.panel.receive_limits(quotas)
-        self.app.processEvents()
-        out = self._poll_render({'scope': 'conversation',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        self.assertTrue(out['result']['available'])
-        for language in ('zh_CN', 'en'):
-            self.panel.prefs['language'] = language
-            self.panel.apply_language()
-            self.panel.render(out['result'])
-            self.app.processEvents()
-            self.assertFalse(self.panel.context.isVisible())
-            self.assertFalse(self.panel.five.isVisible())
-            self.assertFalse(self.panel.week.isVisible())
-            self.assertFalse(self.panel.quota_divider.isVisible())
-            self.assertFalse(self.panel.status.isVisible())
-            # Metrics body ends at Token Analytics; recorded cost stays.
-            self.assertTrue(self.panel.cost.isVisible())
-            self.assertTrue(self.panel.details_button.isVisible())
-        # Late quota updates while in OpenCode repaint hidden text only.
-        self.panel.receive_limits(quotas)
-        self.app.processEvents()
-        self.assertFalse(self.panel.five.isVisible())
-        self.assertFalse(self.panel.status.isVisible())
-        # Stale OpenCode (source older than the freshness gate) keeps
-        # the area hidden instead of a waiting refresh status.
-        from opencode_provider import OpenCodeProvider
-        self.assertTrue(
-            self.panel.provider_poller.drain(timeout=10))
-        entered, release = self._hold(OpenCodeProvider)
-        try:
-            thread, _ = self._poll_thread(
-                {'scope': 'conversation',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
-            self.assertTrue(entered.wait(timeout=10))
-            thread.join(timeout=10)
-            self.assertFalse(thread.is_alive())
-            poller = self.panel.provider_poller
-            stale = poller.poll(
-                {'scope': 'conversation',
-                 'tracking_provider': 'opencode'}, now=NOW_S + 10)
-            self.panel.render(stale['result'])
-            self.app.processEvents()
-            self.assertFalse(stale['selection']['live'])
-            self.assertTrue(stale['selection']['stale'])
-            self.assertFalse(self.panel.context.isVisible())
-            self.assertFalse(self.panel.five.isVisible())
-            self.assertFalse(self.panel.week.isVisible())
-            self.assertFalse(self.panel.status.isVisible())
-        finally:
-            release.set()
-            self.assertTrue(
-                self.panel.provider_poller.drain(timeout=10))
-        # Compact layout: twins carry cost/total, quota stays hidden.
-        self.panel.toggle_compact()
-        self.app.processEvents()
-        self.assertTrue(self.panel.compact_box.isVisible())
-        self.assertFalse(self.panel.five.isVisible())
-        self.assertFalse(self.panel.status.isVisible())
-        self.panel.toggle_compact()
-        self.app.processEvents()
-        self.assertFalse(self.panel.context.isVisible())
-        self.assertFalse(self.panel.five.isVisible())
-        # Unavailable OpenCode keeps the area hidden, never N/A meters.
-        from opencode_provider import OpenCodeProvider as OcProvider
-        self.panel.provider_poller.opencode.close()
-        self.panel.provider_poller.opencode = OcProvider(
-            self.work / 'absent.db')
-        gone = self._poll_render({'tracking_provider': 'opencode'},
-                                 now=NOW_S)
-        self.assertFalse(gone['result']['available'])
-        self.assertFalse(self.panel.context.isVisible())
-        self.assertFalse(self.panel.five.isVisible())
-        self.assertFalse(self.panel.week.isVisible())
-        self.assertFalse(self.panel.status.isVisible())
-        # Switching back to Codex restores quota/context immediately.
-        # A re-attached poller is a fresh producer: like an app
-        # relaunch it restarts the render-generation guard, while its
-        # own generations stay monotonic afterward.
-        self._attach([{'id': 't1', 'working': True}],
-                     [make_session('ses_1')])
-        self.panel.provider_poller.mark_used('codex')
-        self.panel._render_generation = None
-        self.panel.receive_limits(quotas)
-        self.app.processEvents()
-        codex = self._poll_render({'tracking_provider': 'codex'},
-                                  active_title='t1', detection_valid=True)
-        self.assertTrue(codex['selection']['live'])
-        self.assertTrue(self.panel.context.isVisible())
-        self.assertTrue(self.panel.five.isVisible())
-        self.assertTrue(self.panel.week.isVisible())
-        self.assertTrue(self.panel.quota_divider.isVisible())
-        self.assertTrue(self.panel.status.isVisible())
-        self.assertIn('70%', self.panel.five.value.text())
-
-    def test_verified_live_total_shows_recorded_sum(self):
-        self._live_work(
-            [make_session('ses_big', project='proj-w',
-                          directory='/synthetic/work',
-                          version='1.18.31',
-                          tokens=(1000, 200, 30, 4000, 70), cost=0.05,
-                          updated=BASE_MS)],
-            [make_message('m1', 'ses_big')],
-            [make_part('p1', 'ses_big', created=BASE_MS - 100000)])
-        out = self._poll_render({'scope': 'conversation',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        result = out['result']
-        self.assertTrue(result['available'])
-        self.assertEqual(result['presentation'], 'active_session')
-        self.assertEqual(result['tokens']['total'], 5300)
-        self.assertEqual(self.panel.total.text(), '5.30K')
-        self.assertIn('1.00K', self.panel.total.toolTip())
-        self.assertIn(text('total_unavailable_note', self.panel.language),
-                      self.panel.total.toolTip())
-        # Splits stay raw and separate beside the recorded total.
-        self.assertIn('1.00K', self.panel.io_line.text())
-        # Pet tooltip carries the recorded total under a neutral title.
-        self.assertIn('5.30K', self.panel.pet.toolTip())
-        self.assertIn(text('active_session', self.panel.language),
-                      self.panel.pet.toolTip())
-        self.assertNotIn('ses_big', self.panel.pet.toolTip())
-        # Recorded cost preserved; quota/context hidden.
-        self.assertEqual(result['cost']['amount'], 0.05)
-        self.assertFalse(self.panel.context.isVisible())
-        self.assertFalse(self.panel.five.isVisible())
-        self.assertFalse(self.panel.status.isVisible())
-
-    def test_idle_unknown_and_missing_stay_honest(self):
-        self._attach([{'id': 't1'}],
-                     [make_session('ses_idle', updated=BASE_MS)])
-        idle = self._poll_render({'scope': 'conversation',
-                                  'tracking_provider': 'opencode'},
-                                 now=NOW_S)
-        # Idle with no live lane: honest unavailable, never a fabricated
-        # scope view (transient store contention under load may surface
-        # the preference-bound pending shape instead of the scope miss).
-        self.assertFalse(idle['result']['available'])
-        self.assertIn(self.panel.connection.text(),
-                      [f"OpenCode · {text('waiting_available_task', self.panel.language)}",
-                       f"OpenCode · {text('no_reliable_record', self.panel.language)}"])
-        self.assertEqual(self.panel.total.text(), '—')
-        self.assertFalse(self.panel.status_dot.isVisible())
-        self.assertIsNone(idle['result'].get('working_context'))
-        # Unknown activity with a matching scope stays unknown, never
-        # working: scoped values render without a live claim.
-        path = self.work / 'noparts.db'
-        write_store(path, [make_session('ses_1', tokens=(100, 20, 5, 400, 0))],
-                    with_part_table=False)
-        home = self._home('codex-idle', [{'id': 't1'}])
+    def _attach(self, threads):
         self.panel.provider_poller.drain(timeout=10)
         self.panel.provider_poller.close()
-        self.panel.provider_poller = ProviderPoller(home, path)
-        unknown = self._poll_render({'scope': 'conversation',
-                                     'pinned': 'ses_1',
-                                     'tracking_provider': 'opencode'},
-                                    now=NOW_S)
-        self.assertFalse(unknown['selection']['live'])
-        self.assertEqual(self.panel.status_text.text(),
-                         text('unknown', self.panel.language))
-        # A deleted session row clears the live panel, never a stale one.
-        self._live_work()
-        live = self._poll_render({'scope': 'conversation',
-                                  'tracking_provider': 'opencode'},
-                                 now=NOW_S)
-        self.assertTrue(live['result']['available'])
-        import sqlite3
-        from contextlib import closing
-        db = self.panel.provider_poller.opencode.db_path
-        with closing(sqlite3.connect(db)) as connection:
-            connection.execute("DELETE FROM session WHERE id='ses_work'")
-            connection.commit()
-        gone = self._poll_render({'scope': 'conversation',
-                                  'tracking_provider': 'opencode'},
-                                 now=NOW_S)
-        self.assertFalse(gone['result']['available'])
-        self.assertIsNone(gone['result'].get('presentation'))
-        self.assertIsNone(gone['result'].get('working_context'))
-        self.assertIn(text('waiting_available_task',
-                           self.panel.language),
-                      self.panel.connection.text())
+        home = self._home(f'codex-{len(list(self.work.iterdir()))}', threads)
+        self.panel.provider_poller = ProviderPoller(home)
+        return self.panel.provider_poller
 
-    def test_read_failure_stays_honest(self):
-        self._live_work()
-        from opencode_provider import OpenCodeProvider
-        with patch.object(OpenCodeProvider, 'read',
-                          side_effect=RuntimeError('boom')):
-            failed = self._poll_render(
-                {'scope': 'conversation',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
-        self.assertFalse(failed['result']['available'])
-        self.assertIsNone(failed['result'].get('working_context'))
-        self.assertIn(text('no_reliable_record',
-                           self.panel.language),
-                      self.panel.connection.text())
-
-    def test_stale_scope_miss_never_shows_active(self):
-        from opencode_provider import OpenCodeProvider
-        self._live_work()
-        live = self._poll_render({'scope': 'conversation',
-                                  'tracking_provider': 'opencode'},
-                                 now=NOW_S)
-        self.assertEqual(live['result'].get('presentation'),
-                         'active_session')
-        # Same trailing-submit settle as above: the held poll must find
-        # a free slot so worker entry is deterministic, not load-raced.
-        self.assertTrue(
-            self.panel.provider_poller.drain(timeout=10))
-        entered, release = self._hold(OpenCodeProvider)
-        try:
-            thread, _ = self._poll_thread(
-                {'scope': 'conversation',
-                 'tracking_provider': 'opencode'}, now=NOW_S)
-            self.assertTrue(entered.wait(timeout=10))
-            thread.join(timeout=10)
-            self.assertFalse(thread.is_alive())
-            # No drain while the worker is held: poll is non-blocking
-            # and the advanced clock expires Live into honest stale.
-            poller = self.panel.provider_poller
-            out = poller.poll({'scope': 'conversation',
-                               'tracking_provider': 'opencode'},
-                              now=NOW_S + 10)
-            self.panel.render(out['result'])
-            self.app.processEvents()
-            self.assertFalse(out['selection']['live'])
-            self.assertTrue(out['selection']['stale'])
-            self.assertIsNone(out['result'].get('presentation'))
-            self.assertIn(self.panel.connection.text(),
-                          [f"OpenCode · {text('waiting_available_task', self.panel.language)}",
-                           f"OpenCode · {text('no_reliable_record', self.panel.language)}"])
-        finally:
-            release.set()
-            self.assertTrue(
-                self.panel.provider_poller.drain(timeout=10))
-
-    def test_late_active_result_rejected(self):
-        self._live_work()
-        old = self._poll_render({'scope': 'conversation',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        self.assertEqual(old['result'].get('presentation'),
-                         'active_session')
-        self.panel.provider_poller.bump_generation()
-        new = self._poll_render({'scope': 'global',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        self.assertGreater(new['generation'], old['generation'])
-        self.panel.render(old['result'])
+    def test_settings_exposes_no_visible_provider_selector(self):
+        settings = Settings(self.panel)
+        settings.show()
         self.app.processEvents()
-        # The late active payload cannot repaint the newer panel.
-        self.assertNotIn(text('active_session', self.panel.language),
-                         self.panel.connection.text())
+        tracking = getattr(settings, 'tracking', None)
+        self.assertTrue(tracking is None or not tracking.isVisible())
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'codex')
+        settings.close()
 
-    def test_switch_to_codex_clears_active(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_work', project='proj-w',
-                          directory='/synthetic/work',
-                          tokens=(100, 20, 5, 400, 7), cost=0.05,
-                          updated=BASE_MS)],
-            [make_message('m1', 'ses_work')],
-            [make_part('p1', 'ses_work', created=BASE_MS - 100000)])
-        codex = self._poll_render({'tracking_provider': 'codex'},
-                                  active_title='t1', detection_valid=True)
-        codex_total = self.panel.total.text()
-        self.assertNotEqual(codex_total, 'N/A')
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        active = self._poll_render({'scope': 'conversation',
-                                    'tracking_provider': 'opencode'},
-                                   now=NOW_S)
-        self.assertEqual(active['result'].get('presentation'),
-                         'active_session')
-        self.panel.prefs['tracking_provider'] = 'codex'
-        self.panel.provider_poller.mark_used('codex')
-        self.panel.provider_poller.bump_generation()
-        back = self._poll_render({'tracking_provider': 'codex'},
-                                 active_title='t1', detection_valid=True)
-        self.assertIn('Codex', self.panel.connection.text())
-        self.assertEqual(self.panel.total.text(), codex_total)
-        self.assertNotIn('test-model', self.panel.model.text())
-        self.assertNotIn('ses_work', self.panel.title.toolTip())
+    def test_legacy_preference_does_not_switch_provider_or_context(self):
+        self._attach([{'id': 't1', 'working': True}])
+        before = self._poll_render(active_title='t1', detection_valid=True, now=NOW_S)
+        for legacy in ('auto', 'opencode', 'unknown'):
+            after = self._apply_render({'scope': 'global', 'tracking_provider': legacy}, now=NOW_S)
+            self.assertEqual(after['preference'], 'codex')
+            self.assertEqual(after['result']['provider_id'], 'codex')
+            self.assertEqual(after['result']['tokens'], before['result']['tokens'])
+            self.assertNotIn('OpenCode', self.panel.connection.text())
 
-    def test_analytics_keeps_scope_view_for_active_session(self):
-        self._live_work()
+    def test_long_codex_project_and_model_keep_layout_usable(self):
+        self._attach([{'id': 't1'}])
+        data = dict(self._poll_render(now=NOW_S)['result'])
+        data.update(provider_id='codex', model='MODEL ' + 'x' * 400,
+                    project='PROJECT ' + 'y' * 400)
+        self.panel.render(data)
         self.panel.show()
-        self.panel.open_analytics()
         self.app.processEvents()
-        out = self._poll_render({'scope': 'conversation',
-                                 'tracking_provider': 'opencode'},
-                                now=NOW_S)
-        result = out['result']
-        self.assertEqual(result.get('presentation'), 'active_session')
-        # Scope-mismatch proof at the data level: the live values are
-        # tagged active_session, never relabeled as scoped aggregates.
-        self.assertEqual(result['scope_identity']['scope_type'],
-                         'active_session')
-        self.assertEqual(result['scope_identity']['requested_scope'],
-                         'conversation')
-        window = self.panel.analytics_window
-        self.assertEqual(window.subtitle.text(),
-                         text('waiting_available_task',
-                              self.panel.language))
-        self.assertEqual(window.metrics.rowCount(), 0)
-        self.assertIn('active_session', window.raw.toPlainText())
-        self.assertEqual(window.history_note.text(),
-                         text('waiting_available_task',
-                              self.panel.language))
+        self.assertLessEqual(self.panel.width(), 480)
+        self.assertGreater(self.panel.model.width(), 0)
+        self.assertGreater(self.panel.project.width(), 0)
+
 
 
 def _codex_entry(key, project='PROJ', total=110, input_=100, output=10,
@@ -1525,16 +755,21 @@ def _codex_entry(key, project='PROJ', total=110, input_=100, output=10,
                 'available': True}}
 
 
-def _opencode_entry(key, project='alpha', tokens=(505, 507, 0, 991600, 0),
-                    total=992612, cost=5.46, model='mock', version='9.9.9',
-                    activity_at=200.0):
-    names = ('input', 'output', 'reasoning', 'cache_read', 'cache_write')
-    return {'provider_id': 'opencode', 'task_key': key, 'working': True,
+def _secondary_codex_entry(key, project='alpha', tokens=None,
+                           total=1012, model='gpt-6-sol', activity_at=None):
+    if tokens is None:
+        input_ = total * 3 // 4 if total is not None else None
+        output = total - input_ if total is not None else None
+        tokens = (input_, output, 0 if total is not None else None,
+                  input_ // 2 if input_ is not None else None, 0 if total is not None else None)
+    names = ('input_tokens', 'output_tokens', 'reasoning_output_tokens',
+             'cached_input_tokens', 'cache_write_input_tokens')
+    return {'provider_id': 'codex', 'task_key': key, 'working': True,
             'activity_valid': True, 'activity_at': activity_at,
             'display': {'project': project},
-            'presentation': {'tokens': dict(zip(names, tokens), total=total),
-                             'cost_amount': cost, 'model': model,
-                             'version': version}}
+            'presentation': {'tokens': dict(zip(names, tokens), total_tokens=total),
+                             'model': model, 'effort': 'medium',
+                             'context': None, 'available': True}}
 
 
 _PET_RECT = (100, 100, 272, 330)
@@ -1570,6 +805,10 @@ def _assert_finite_task_parking(test, manager, pet_rect, screen_rect):
 
 
 class TaskPanelManagerTests(unittest.TestCase):
+    """Historical exterior-route regressions with current Codex task fixtures.
+
+    Compact-halo integration is covered by current Expanded/MultiTask tests.
+    """
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
@@ -1581,7 +820,9 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.panel = Panel(live=False)
         self.panel.pet = DesktopPet(self.panel)
         self.panel.pet.activity_timer.stop()
-        self.manager = self.panel.task_manager
+        self.panel.task_manager.shutdown()
+        self.manager = TaskPanelManager(self.panel, legacy_exterior_motion=True)
+        self.panel.task_manager = self.manager
 
     def tearDown(self):
         self.manager.shutdown()
@@ -1643,18 +884,18 @@ class TaskPanelManagerTests(unittest.TestCase):
 
     def test_two_tasks_get_two_orbs_and_reuse(self):
         first = _codex_entry('t1')
-        second = _opencode_entry('opencode:s1')
+        second = _secondary_codex_entry('z-secondary:s1')
         keys = self._apply([first, second])
         self.assertEqual(len(keys), 2)
-        orb = self.manager.window_for(('opencode', 'opencode:s1'))
+        orb = self.manager.window_for(('codex', 'z-secondary:s1'))
         keys = self._apply([first, second])
         self.assertEqual(len(keys), 2)
-        self.assertIs(self.manager.window_for(('opencode', 'opencode:s1')),
+        self.assertIs(self.manager.window_for(('codex', 'z-secondary:s1')),
                       orb)
 
     def test_five_tasks_get_five_orbs(self):
         tasks = ([_codex_entry(f't{i}') for i in range(2)]
-                 + [_opencode_entry(f'opencode:s{i}') for i in range(3)])
+                 + [_secondary_codex_entry(f'z-secondary:s{i}') for i in range(3)])
         keys = self._apply(tasks)
         self.assertEqual(len(keys), 5)
         self.assertEqual(self.manager.window_count(), 5)
@@ -1662,7 +903,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertEqual(len(set(positions)), 5)
 
     def test_eight_tasks_have_no_silent_cap(self):
-        tasks = [_opencode_entry(f'opencode:ses_{i}', activity_at=float(i))
+        tasks = [_secondary_codex_entry(f'z-secondary:ses_{i}', activity_at=float(i))
                  for i in range(8)]
         keys = self._apply(tasks)
         self.assertEqual(len(keys), 8)
@@ -1726,28 +967,26 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertNotEqual(self.manager.slot_for(('codex', 'd')),
                             self.manager.slot_for(('codex', 'a')))
 
-    def test_manual_filter_immediate_and_state_survives(self):
-        codex = [_codex_entry('a'), _codex_entry('b')]
-        oc = [_opencode_entry('opencode:c'), _opencode_entry('opencode:d'),
-              _opencode_entry('opencode:e')]
-        keys = self._apply(codex + oc)
-        self.assertEqual(len(keys), 5)
-        keys = self._apply(codex + oc, preference='codex')
-        self.assertEqual(len(keys), 2)
-        keys = self._apply(codex + oc, preference='opencode')
-        self.assertEqual(len(keys), 3)
-        keys = self._apply(codex + oc)
-        self.assertEqual(len(keys), 5)
+    def test_legacy_preferences_preserve_all_codex_tasks(self):
+        tasks = [_codex_entry('a'), _codex_entry('b')] + [
+            _secondary_codex_entry(f'z-secondary:{key}') for key in 'cde']
+        self._apply(tasks)
+        before = {key: self.manager.window_for(key) for key in self.manager.window_identities()}
+        for preference in ('codex', 'auto', 'opencode', 'unknown'):
+            self.assertEqual(set(self._apply(tasks, preference=preference)), set(before))
+            for key, orb in before.items():
+                self.assertIs(self.manager.window_for(key), orb)
 
-    def test_both_providers_always_surfaced(self):
+
+    def test_all_codex_task_variants_always_surfaced(self):
         codex = _codex_entry('a')
-        first = _opencode_entry('opencode:b')
-        second = _opencode_entry('opencode:c')
+        first = _secondary_codex_entry('z-secondary:b')
+        second = _secondary_codex_entry('z-secondary:c')
         keys = self._apply([codex, first, second])
         self.assertEqual(len(keys), 3)
         self.assertIn(('codex', 'a'), keys)
-        self.assertIn(('opencode', 'opencode:b'), keys)
-        self.assertIn(('opencode', 'opencode:c'), keys)
+        self.assertIn(('codex', 'z-secondary:b'), keys)
+        self.assertIn(('codex', 'z-secondary:c'), keys)
 
     def test_late_generation_never_resurrects(self):
         alpha = _codex_entry('a')
@@ -1761,67 +1000,45 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertIsNone(self.manager.window_for(('codex', 'a')))
         self.assertIsNotNone(self.manager.window_for(('codex', 'b')))
 
-    def test_filter_hide_retains_universe_assignments(self):
-        codex = [_codex_entry('a'), _codex_entry('b')]
-        oc = [_opencode_entry('opencode:c'), _opencode_entry('opencode:d'),
-              _opencode_entry('opencode:e')]
-        self._apply(codex + oc, generation=1)
-        before = {k: (self.manager.label_number_for(k),
-                      self.manager.slot_for(k))
-                  for k in (('codex', 'a'), ('codex', 'b'),
-                            ('opencode', 'opencode:c'),
-                            ('opencode', 'opencode:d'),
-                            ('opencode', 'opencode:e'))}
-        self.assertTrue(all(v[0] is not None for v in before.values()))
-        keys = self._apply(codex + oc, preference='codex', generation=2)
-        self.assertEqual(len(keys), 2)
-        hidden = {k: (self.manager.label_number_for(k),
-                      self.manager.slot_for(k))
-                  for k in (('opencode', 'opencode:c'),
-                            ('opencode', 'opencode:d'),
-                            ('opencode', 'opencode:e'))}
-        self.assertEqual(
-            {k: before[k] for k in hidden}, hidden)
-        keys = self._apply(codex + oc, generation=3)
-        self.assertEqual(len(keys), 5)
-        after = {k: (self.manager.label_number_for(k),
-                     self.manager.slot_for(k))
-                 for k in before}
-        self.assertEqual(before, after)
+    def test_scene_hide_retains_universe_assignments(self):
+        tasks = [_codex_entry('a'), _secondary_codex_entry('z-secondary:b')]
+        self._apply(tasks, generation=1)
+        before = {key: (self.manager.label_number_for(key), self.manager.slot_for(key))
+                  for key in self.manager.window_identities()}
+        self.manager.set_visible(False)
+        self.assertTrue(all(not self.manager.window_for(key).isVisible() for key in before))
+        self._apply(tasks, generation=2)
+        self.manager.set_visible(True)
+        self.assertEqual(before, {key: (self.manager.label_number_for(key),
+                                       self.manager.slot_for(key)) for key in before})
 
-    def test_hidden_task_keeps_lifetime_state(self):
-        codex = [_codex_entry('a')]
-        oc = [_opencode_entry('opencode:c')]
-        self._apply(codex + oc, generation=1)
-        key = ('opencode', 'opencode:c')
-        home = self._orb_pos(key)
-        number = self.manager.label_number_for(key)
-        slot = self.manager.slot_for(key)
-        self._apply(codex + oc, generation=2)
-        self.assertEqual(self._orb_pos(key), home)
-        self._apply(codex + oc, preference='codex', generation=3)
-        self.assertIsNone(self.manager.window_for(key))
-        self.assertEqual(self.manager.label_number_for(key), number)
-        self.assertEqual(self.manager.slot_for(key), slot)
-        self._apply(codex + oc, generation=4)
-        self.assertIsNotNone(self.manager.window_for(key))
-        self.assertEqual(self.manager.label_number_for(key), number)
-        self.assertEqual(self.manager.slot_for(key), slot)
 
-    def test_manual_filter_retires_only_its_own_lane(self):
-        codex = [_codex_entry('a'), _codex_entry('b')]
-        oc = [_opencode_entry('opencode:c')]
-        self._apply(codex + oc, generation=1)
-        # Under Manual Codex the envelope carries only Codex tasks, yet
-        # the hidden OpenCode assignment must survive; a genuinely
-        # retired Codex task releases its assignment.
-        self._apply([codex[0]], preference='codex', generation=2)
+    def test_hidden_scene_keeps_lifetime_state(self):
+        tasks = [_codex_entry('a'), _secondary_codex_entry('z-secondary:c')]
+        self._apply(tasks, generation=1)
+        key = ('codex', 'z-secondary:c')
+        orb = self.manager.window_for(key)
+        number, slot = self.manager.label_number_for(key), self.manager.slot_for(key)
+        self.manager.set_visible(False)
+        self._apply(tasks, generation=2)
+        self.manager.set_visible(True)
+        self.assertIs(self.manager.window_for(key), orb)
+        self.assertEqual((self.manager.label_number_for(key), self.manager.slot_for(key)),
+                         (number, slot))
+
+
+    def test_composition_retires_only_removed_codex_task(self):
+        tasks = [_codex_entry('a'), _codex_entry('b'), _secondary_codex_entry('z-secondary:c')]
+        self._apply(tasks, generation=1)
+        key = ('codex', 'z-secondary:c')
+        survivor = self.manager.window_for(key)
+        number, slot = self.manager.label_number_for(key), self.manager.slot_for(key)
+        self._apply([tasks[0], tasks[2]], generation=2)
         self.assertIsNone(self.manager.label_number_for(('codex', 'b')))
-        self.assertIsNotNone(
-            self.manager.label_number_for(('opencode', 'opencode:c')))
-        self._apply(codex + oc, generation=3)
-        self.assertIsNotNone(
-            self.manager.window_for(('opencode', 'opencode:c')))
+        self.assertIs(self.manager.window_for(key), survivor)
+        self.assertEqual((self.manager.label_number_for(key), self.manager.slot_for(key)),
+                         (number, slot))
+
 
     def test_completion_retires_only_finished_orb(self):
         self.panel.prefs['pet_motion'] = False
@@ -1848,7 +1065,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         codex['title'] = 'PRIVATE REVIEW NOTES'
         codex['prompt'] = 'prompt secret'
         codex['response'] = 'response secret'
-        oc = _opencode_entry('opencode:ses_SECRET_9', project='path')
+        oc = _secondary_codex_entry('z-secondary:ses_SECRET_9', project='path')
         oc['session_title'] = 'My Secret Project'
         oc['directory'] = 'C:\\private\\client\\matter'
         keys = self._apply([codex, oc])
@@ -1862,13 +1079,13 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertIn(text('task_panel_label', 'en', n=1), visible)
         self.assertIn('Working', visible)
         self.assertIn('Codex', visible)
-        self.assertIn('OpenCode', visible)
+        self.assertNotIn('OpenCode', visible)
 
     def test_optional_context_fields_are_absent(self):
-        task = _opencode_entry('opencode:s1')
+        task = _secondary_codex_entry('z-secondary:s1')
         self._apply([task])
         visible = self.manager.window_for(
-            ('opencode', 'opencode:s1')).panel_text()
+            ('codex', 'z-secondary:s1')).panel_text()
         for word in ('Context Limit', 'Messages', 'Created', 'Tool Calls'):
             self.assertNotIn(word, visible)
 
@@ -1903,7 +1120,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertFalse(QApplication.instance().closingDown())
 
     def test_shutdown_closes_all_orbs(self):
-        tasks = [_codex_entry('a'), _opencode_entry('opencode:b')]
+        tasks = [_codex_entry('a'), _secondary_codex_entry('z-secondary:b')]
         self._apply(tasks)
         self.assertEqual(self.manager.window_count(), 2)
         self.manager.shutdown()
@@ -1927,26 +1144,18 @@ class TaskPanelManagerTests(unittest.TestCase):
             self.assertEqual(self.manager.window_count(), 0)
         self.assertEqual(self.manager.window_identities(), [])
 
-    def test_task_panel_window_preserved_for_d2_card(self):
-        # D2 foundation: the rich card renderer survives intact and reads
-        # the same shared metrics; D1 simply never instantiates it via
-        # the manager.
-        window = TaskPanelWindow(provider_id='opencode')
+    def test_task_panel_window_preserved_for_codex_detail(self):
+        window = TaskPanelWindow(provider_id='codex')
         try:
-            window.set_task(
-                {'provider_id': 'opencode', 'task_key': 'opencode:s1',
-                 'display': {'project': 'alpha'},
-                 'presentation': {
-                     'tokens': {'input': 100, 'output': 20,
-                                'reasoning': 5, 'cache_read': 400,
-                                'cache_write': 7, 'total': 532},
-                     'cost_amount': 0.05, 'model': 'mock',
-                     'version': '1.18.31'}},
-                'Active task 1', 'en')
-            rows = {k: v[1].text() for k, v in window._rows.items()}
-            self.assertIn('532', rows['total'])
-            self.assertIn('400', rows['cache_read'])
-            self.assertIn('0.05', rows['cost'])
+            window.set_task(_secondary_codex_entry('secondary', total=120,
+                tokens=(100, 20, 5, 80, 0), model='mock-model'), 'Active task 1', 'en')
+            rows = {key: value[1].text() for key, value in window._rows.items()}
+            self.assertIn('120', rows['total'])
+            self.assertIn('100', rows['input'])
+            self.assertIn('20', rows['output'])
+            self.assertEqual(rows['model'], 'mock-model')
+            for unsupported in ('cost', 'cache_read', 'cache_write', 'reasoning'):
+                self.assertNotIn(unsupported, rows)
         finally:
             window.close()
             window.deleteLater()
@@ -2162,7 +1371,7 @@ class TaskPanelManagerTests(unittest.TestCase):
 
     def test_tick_advances_orbit_deterministically(self):
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         homes = self._orb_positions()
         self.assertEqual(self.manager._orbit_mode[0], 'arc')
         self.assertGreater(self.manager._orbit_mode[1], 0.0)
@@ -2191,7 +1400,9 @@ class TaskPanelManagerTests(unittest.TestCase):
         panel2.pet = DesktopPet(panel2)
         panel2.pet.activity_timer.stop()
         try:
-            manager2 = panel2.task_manager
+            panel2.task_manager.shutdown()
+            manager2 = TaskPanelManager(panel2, legacy_exterior_motion=True)
+            panel2.task_manager = manager2
             manager2.apply_snapshot(
                 [_codex_entry('a'), _codex_entry('b')], language='en',
                 pet_rect=_PET_RECT, screen_rect=_SCREEN_RECT)
@@ -2218,7 +1429,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # integer-quantization slack. A runaway clock fails this.
         import math
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         self._tick(1000.0)
         mode = self.manager._orbit_mode
         self.assertEqual(mode[0], 'arc')
@@ -2243,7 +1454,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # widest valid one-sided arc. Pinned exactly: retuning the
         # selector must update this deliberately.
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         self.assertEqual(self.manager._orbit_mode, ('arc', 12.0, 14.0))
 
     def test_orbit_mode_selection_arc25_smaller(self):
@@ -2260,7 +1471,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # perpendicular-axis case.
         import math
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         mode = self.manager._orbit_mode
         self.assertEqual(mode[0], 'arc')
         amplitude, period = mode[1], mode[2]
@@ -2301,7 +1512,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # deterministically regardless of axis choice.
         import math
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         homes = self._orb_positions()
         period = int(self.manager._orbit_mode[2])
         stamp = 1000.0
@@ -2329,7 +1540,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # The orbital system as a whole must move in X and Y over a
         # full arc cycle (union over stars), not along one line.
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         period = int(self.manager._orbit_mode[2])
         stamp = 1000.0
         self._tick(stamp)
@@ -2349,7 +1560,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # same final footprint rules as static placement: pet
         # exclusion plus pairwise non-overlap.
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         period = int(self.manager._orbit_mode[2])
         stamp = 1000.0
         self._tick(stamp)
@@ -2369,30 +1580,30 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertEqual(self.manager._ring_offsets,
                          {('codex', 'a'): 0.0})
         self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         self.assertEqual(self.manager._orbit_mode, expected)
         self.assertEqual(self.manager._ring_offsets,
                          {('codex', 'a'): 0.0, ('codex', 'b'): 120.0,
-                          ('opencode', 'opencode:c'): 240.0})
+                          ('codex', 'z-secondary:c'): 240.0})
         self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                        _opencode_entry('opencode:c'),
-                        _opencode_entry('opencode:s0'),
-                        _opencode_entry('opencode:s1')],
+                        _secondary_codex_entry('z-secondary:c'),
+                        _secondary_codex_entry('z-secondary:s0'),
+                        _secondary_codex_entry('z-secondary:s1')],
                        _CENTER_PET_RECT)
         self.assertEqual(self.manager._orbit_mode, expected)
         self.assertEqual(self.manager._ring_offsets,
                          {('codex', 'a'): 0.0, ('codex', 'b'): 72.0,
-                          ('opencode', 'opencode:c'): 144.0,
-                          ('opencode', 'opencode:s0'): 216.0,
-                          ('opencode', 'opencode:s1'): 288.0})
+                          ('codex', 'z-secondary:c'): 144.0,
+                          ('codex', 'z-secondary:s0'): 216.0,
+                          ('codex', 'z-secondary:s1'): 288.0})
 
     def test_ring_full_360_coverage(self):
         # One revolution: continuous phase, all four quadrants,
         # start/end coincide, mid-cycle on multiple sides of the hub.
         # A 12-40 deg arc fails every assertion here.
         self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         mode = self.manager._orbit_mode
         self.assertEqual(mode[0], 'ring')
@@ -2452,11 +1663,11 @@ class TaskPanelManagerTests(unittest.TestCase):
         # spacing (120 deg / 72 deg), no per-star reversal or swap.
         for tasks, spacing in (
                 ([_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c')], 120.0),
+                  _secondary_codex_entry('z-secondary:c')], 120.0),
                 ([_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c'),
-                  _opencode_entry('opencode:s0'),
-                  _opencode_entry('opencode:s1')], 72.0)):
+                  _secondary_codex_entry('z-secondary:c'),
+                  _secondary_codex_entry('z-secondary:s0'),
+                  _secondary_codex_entry('z-secondary:s1')], 72.0)):
             self._apply_at(tasks, _CENTER_PET_RECT)
             mode = self.manager._orbit_mode
             self.assertEqual(mode[0], 'ring')
@@ -2495,15 +1706,15 @@ class TaskPanelManagerTests(unittest.TestCase):
         cases = [
             (_CENTER_PET_RECT,
              [_codex_entry('a'), _codex_entry('b'),
-              _opencode_entry('opencode:c')],
+              _secondary_codex_entry('z-secondary:c')],
              'ring'),
             (_EDGE_PET_RECT,
              [_codex_entry('a'), _codex_entry('b'),
-              _opencode_entry('opencode:c')],
+              _secondary_codex_entry('z-secondary:c')],
              'arc'),
             (_LOWERRIGHT_PET_RECT,
              [_codex_entry('a'), _codex_entry('b'),
-              _opencode_entry('opencode:c')],
+              _secondary_codex_entry('z-secondary:c')],
              'arc'),
         ]
         for pet_rect, tasks, kind in cases:
@@ -2524,7 +1735,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Corner fixture: full-ring candidates rejected, arc fallback
         # selected, every frame valid through the arc period.
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         mode = self.manager._orbit_mode
         self.assertEqual(mode, ('arc', 12.0, 14.0))
         self.assertEqual(self.manager._ring_offsets, {})
@@ -2542,7 +1753,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # quantization slack. A runaway clock fails this.
         import math
         self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         mode = self.manager._orbit_mode
         self.assertEqual(mode[0], 'ring')
@@ -2587,7 +1798,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Stationary hub, full ring: motion accumulates trail history
         # and raises a visible overlay without any pet dragging.
         self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         self.assertEqual(self.manager._orbit_mode[0], 'ring')
         key = ('codex', 'a')
@@ -2607,7 +1818,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # peer (never a collision, never a catch-up); leave resumes
         # from the same shared phase with a normal-frame step.
         self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         self.assertEqual(self.manager._orbit_mode[0], 'ring')
         key = ('codex', 'a')
@@ -2653,13 +1864,13 @@ class TaskPanelManagerTests(unittest.TestCase):
         for tasks, offsets in (
                 ([_codex_entry('a')], {('codex', 'a'): 0.0}),
                 ([_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c'),
-                  _opencode_entry('opencode:s0'),
-                  _opencode_entry('opencode:s1')],
+                  _secondary_codex_entry('z-secondary:c'),
+                  _secondary_codex_entry('z-secondary:s0'),
+                  _secondary_codex_entry('z-secondary:s1')],
                  {('codex', 'a'): 0.0, ('codex', 'b'): 72.0,
-                  ('opencode', 'opencode:c'): 144.0,
-                  ('opencode', 'opencode:s0'): 216.0,
-                  ('opencode', 'opencode:s1'): 288.0})):
+                  ('codex', 'z-secondary:c'): 144.0,
+                  ('codex', 'z-secondary:s0'): 216.0,
+                  ('codex', 'z-secondary:s1'): 288.0})):
             self._apply_at(tasks, _CENTER_PET_RECT)
             self.assertEqual(self.manager._orbit_mode[0], 'ring')
             first = self._orb_positions()
@@ -2687,7 +1898,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Blocker A guard for placement: an ordinary unchanged
         # refresh must not snap orbital stars back to D2A homes.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 21000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -2709,9 +1920,9 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Blocker B: hovering A freezes every peer too, so no peer
         # can ever approach the hovered star and trip the guard.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c'),
-                 _opencode_entry('opencode:s0'),
-                 _opencode_entry('opencode:s1')]
+                 _secondary_codex_entry('z-secondary:c'),
+                 _secondary_codex_entry('z-secondary:s0'),
+                 _secondary_codex_entry('z-secondary:s1')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 22000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -2736,9 +1947,9 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Blocker B resume: after a long pause, one frame moves a
         # normal-frame distance with spacing intact — no 229 px jump.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c'),
-                 _opencode_entry('opencode:s0'),
-                 _opencode_entry('opencode:s1')]
+                 _secondary_codex_entry('z-secondary:c'),
+                 _secondary_codex_entry('z-secondary:s0'),
+                 _secondary_codex_entry('z-secondary:s1')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         keys = list(self.manager.window_identities())
         stamp = 23000.0
@@ -2771,7 +1982,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # General guard rule: rejected frame holds positions AND the
         # shared phase; the next valid frame is adjacent, not ahead.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 24000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -2802,17 +2013,17 @@ class TaskPanelManagerTests(unittest.TestCase):
         # new spacing over an adaptive glide — a 79 px snap frame
         # fails the 16 px cap; every frame stays valid.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 25000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
         stamp += 3.0
         self._tick_at(stamp, _CENTER_PET_RECT)
         before = self._orb_positions()
-        survivors = [('codex', 'a'), ('opencode', 'opencode:c')]
+        survivors = [('codex', 'a'), ('codex', 'z-secondary:c')]
         windows = {k: self.manager.window_for(k) for k in survivors}
         self._apply_at([_codex_entry('a'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         for key in survivors:
             self.assertIs(self.manager.window_for(key), windows[key])
@@ -2861,9 +2072,9 @@ class TaskPanelManagerTests(unittest.TestCase):
         self._tick_at(stamp, _CENTER_PET_RECT)
         before = self._orb_positions()
         self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
-        key = ('opencode', 'opencode:c')
+        key = ('codex', 'z-secondary:c')
         orb = self.manager.window_for(key)
         self.assertIsNotNone(orb)
         self.assertTrue(orb.isVisible())
@@ -2904,10 +2115,10 @@ class TaskPanelManagerTests(unittest.TestCase):
         # no newcomers blocking slots. Identities preserved, all
         # frames valid and capped, transition completes exactly.
         pair = [_codex_entry('a'), _codex_entry('b')]
-        five = pair + [_opencode_entry('opencode:c'),
-                       _opencode_entry('opencode:s0'),
-                       _opencode_entry('opencode:s1')]
-        trio = pair + [_opencode_entry('opencode:c')]
+        five = pair + [_secondary_codex_entry('z-secondary:c'),
+                       _secondary_codex_entry('z-secondary:s0'),
+                       _secondary_codex_entry('z-secondary:s1')]
+        trio = pair + [_secondary_codex_entry('z-secondary:c')]
         self._apply_at(five, _CENTER_PET_RECT)
         stamp = 27000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -2916,7 +2127,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         windows = {k: self.manager.window_for(k)
                    for k in self.manager.window_identities()}
         survivors = [('codex', 'a'), ('codex', 'b'),
-                     ('opencode', 'opencode:c')]
+                     ('codex', 'z-secondary:c')]
         self._apply_at(trio, _CENTER_PET_RECT)
         for key in survivors:
             self.assertIs(self.manager.window_for(key), windows[key])
@@ -2946,9 +2157,9 @@ class TaskPanelManagerTests(unittest.TestCase):
         # completes through only transient squeezes — never a freeze,
         # never a snap. The forced-abort path is covered separately.
         pair = [_codex_entry('a'), _codex_entry('b')]
-        five = pair + [_opencode_entry('opencode:c'),
-                       _opencode_entry('opencode:s0'),
-                       _opencode_entry('opencode:s1')]
+        five = pair + [_secondary_codex_entry('z-secondary:c'),
+                       _secondary_codex_entry('z-secondary:s0'),
+                       _secondary_codex_entry('z-secondary:s1')]
         self._apply_at(pair, _CENTER_PET_RECT)
         stamp = 27500.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -3012,7 +2223,7 @@ class TaskPanelManagerTests(unittest.TestCase):
                        _CENTER_PET_RECT)
         key_a = ('codex', 'a')
         key_b = ('codex', 'b')
-        key_c = ('opencode', 'opencode:z')
+        key_c = ('codex', 'z-secondary:z')
         mode = self.manager._orbit_mode
         self.assertEqual(mode[0], 'ring')
         hub = (_CENTER_PET_RECT[0] + _CENTER_PET_RECT[2] / 2.0,
@@ -3025,7 +2236,7 @@ class TaskPanelManagerTests(unittest.TestCase):
             orb = self.manager.window_for(key)
             orb.move(*pos)
             self.manager._placed[key] = pos
-        orb_c = TaskOrbWindow(key_c, provider_id='opencode',
+        orb_c = TaskOrbWindow(key_c, provider_id='codex',
                               manager=self.manager)
         self.manager._windows[key_c] = orb_c
         self.manager._ring_offsets = {key_a: 0.0, key_b: 0.0,
@@ -3060,19 +2271,19 @@ class TaskPanelManagerTests(unittest.TestCase):
         # validated final slots, circulation resumes. No snap, no
         # freeze, no identity loss.
         pair = [_codex_entry('a'), _codex_entry('b')]
-        eight = pair + [_opencode_entry('opencode:c'),
-                        _opencode_entry('opencode:s0'),
-                        _opencode_entry('opencode:s1'),
-                        _opencode_entry('opencode:s2'),
-                        _opencode_entry('opencode:s3'),
-                        _opencode_entry('opencode:s4')]
+        eight = pair + [_secondary_codex_entry('z-secondary:c'),
+                        _secondary_codex_entry('z-secondary:s0'),
+                        _secondary_codex_entry('z-secondary:s1'),
+                        _secondary_codex_entry('z-secondary:s2'),
+                        _secondary_codex_entry('z-secondary:s3'),
+                        _secondary_codex_entry('z-secondary:s4')]
         keys = [('codex', 'a'), ('codex', 'b'),
-                ('opencode', 'opencode:c'),
-                ('opencode', 'opencode:s0'),
-                ('opencode', 'opencode:s1'),
-                ('opencode', 'opencode:s2'),
-                ('opencode', 'opencode:s3'),
-                ('opencode', 'opencode:s4')]
+                ('codex', 'z-secondary:c'),
+                ('codex', 'z-secondary:s0'),
+                ('codex', 'z-secondary:s1'),
+                ('codex', 'z-secondary:s2'),
+                ('codex', 'z-secondary:s3'),
+                ('codex', 'z-secondary:s4')]
         pair_keys = [('codex', 'a'), ('codex', 'b')]
         newcomers = [k for k in keys if k not in pair_keys]
         eighths = {key: 45.0 * rank for rank, key in enumerate(keys)}
@@ -3187,12 +2398,12 @@ class TaskPanelManagerTests(unittest.TestCase):
         # restart the plan from frame zero: positions, staged set,
         # and the active blend continue untouched, with no snap.
         pair = [_codex_entry('a'), _codex_entry('b')]
-        eight = pair + [_opencode_entry('opencode:c'),
-                        _opencode_entry('opencode:s0'),
-                        _opencode_entry('opencode:s1'),
-                        _opencode_entry('opencode:s2'),
-                        _opencode_entry('opencode:s3'),
-                        _opencode_entry('opencode:s4')]
+        eight = pair + [_secondary_codex_entry('z-secondary:c'),
+                        _secondary_codex_entry('z-secondary:s0'),
+                        _secondary_codex_entry('z-secondary:s1'),
+                        _secondary_codex_entry('z-secondary:s2'),
+                        _secondary_codex_entry('z-secondary:s3'),
+                        _secondary_codex_entry('z-secondary:s4')]
         self._apply_at(pair, _CENTER_PET_RECT)
         stamp = 35000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -3232,16 +2443,16 @@ class TaskPanelManagerTests(unittest.TestCase):
         # of the rest preserved.
         import math
         pair = [_codex_entry('a'), _codex_entry('b')]
-        eight = pair + [_opencode_entry('opencode:c'),
-                        _opencode_entry('opencode:s0'),
-                        _opencode_entry('opencode:s1'),
-                        _opencode_entry('opencode:s2'),
-                        _opencode_entry('opencode:s3'),
-                        _opencode_entry('opencode:s4')]
+        eight = pair + [_secondary_codex_entry('z-secondary:c'),
+                        _secondary_codex_entry('z-secondary:s0'),
+                        _secondary_codex_entry('z-secondary:s1'),
+                        _secondary_codex_entry('z-secondary:s2'),
+                        _secondary_codex_entry('z-secondary:s3'),
+                        _secondary_codex_entry('z-secondary:s4')]
         seven = [t for t in eight
-                 if not (t.get('provider_id') == 'opencode'
-                         and t.get('task_key') == 'opencode:s4')]
-        dropped = ('opencode', 'opencode:s4')
+                 if not (t.get('provider_id') == 'codex'
+                         and t.get('task_key') == 'z-secondary:s4')]
+        dropped = ('codex', 'z-secondary:s4')
         self._apply_at(pair, _CENTER_PET_RECT)
         stamp = 36000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -3306,11 +2517,11 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertEqual(set(self.manager._ring_staged), set())
         self.assertLessEqual(peak, 16)
         remaining = [('codex', 'a'), ('codex', 'b'),
-                     ('opencode', 'opencode:c'),
-                     ('opencode', 'opencode:s0'),
-                     ('opencode', 'opencode:s1'),
-                     ('opencode', 'opencode:s2'),
-                     ('opencode', 'opencode:s3')]
+                     ('codex', 'z-secondary:c'),
+                     ('codex', 'z-secondary:s0'),
+                     ('codex', 'z-secondary:s1'),
+                     ('codex', 'z-secondary:s2'),
+                     ('codex', 'z-secondary:s3')]
         for ident in remaining:
             self.assertTrue(
                 self.manager.window_for(ident).isVisible(), ident)
@@ -3353,12 +2564,12 @@ class TaskPanelManagerTests(unittest.TestCase):
         """Drive canonical 2->8 bulk until newcomers stage; return
         (stamp, eight_tasks). Asserts staging really engaged."""
         pair = [_codex_entry('a'), _codex_entry('b')]
-        eight = pair + [_opencode_entry('opencode:c'),
-                        _opencode_entry('opencode:s0'),
-                        _opencode_entry('opencode:s1'),
-                        _opencode_entry('opencode:s2'),
-                        _opencode_entry('opencode:s3'),
-                        _opencode_entry('opencode:s4')]
+        eight = pair + [_secondary_codex_entry('z-secondary:c'),
+                        _secondary_codex_entry('z-secondary:s0'),
+                        _secondary_codex_entry('z-secondary:s1'),
+                        _secondary_codex_entry('z-secondary:s2'),
+                        _secondary_codex_entry('z-secondary:s3'),
+                        _secondary_codex_entry('z-secondary:s4')]
         self._apply_at(pair, _CENTER_PET_RECT)
         self._tick_at(stamp, _CENTER_PET_RECT)
         stamp += 2.0
@@ -3560,7 +2771,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # first trail segment.
         import math
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         self.assertEqual(self.manager._orbit_mode[0], 'ring')
         stamp = 1000.0
@@ -3594,7 +2805,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Reviewer P1: a 250 ms gap during an ON->OFF parking glide
         # advances a single nominal frame, not six frames at once.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 2000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -3651,9 +2862,9 @@ class TaskPanelManagerTests(unittest.TestCase):
         screen = (0, 0, 3839, 2159)
         pet_rect = (1784, 915, 272, 330)
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c'),
-                 _opencode_entry('opencode:s0'),
-                 _opencode_entry('opencode:s1')]
+                 _secondary_codex_entry('z-secondary:c'),
+                 _secondary_codex_entry('z-secondary:s0'),
+                 _secondary_codex_entry('z-secondary:s1')]
         self.manager.apply_snapshot(
             tasks, pet_rect=pet_rect, screen_rect=screen)
         stamp = 3000.0
@@ -3708,11 +2919,11 @@ class TaskPanelManagerTests(unittest.TestCase):
         # circulating, identities stable.
         cases = ([_codex_entry('a')],
                  [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c')],
+                  _secondary_codex_entry('z-secondary:c')],
                  [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c'),
-                  _opencode_entry('opencode:s0'),
-                  _opencode_entry('opencode:s1')])
+                  _secondary_codex_entry('z-secondary:c'),
+                  _secondary_codex_entry('z-secondary:s0'),
+                  _secondary_codex_entry('z-secondary:s1')])
         stamp = 39000.0
         self.panel.prefs['pet_motion'] = False
         try:
@@ -3748,7 +2959,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Hover-pause plus manager hide: holds clear on hide, show
         # fabricates none, motion resumes afterwards.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 40000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -3778,7 +2989,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # ON->OFF->ON->OFF->ON: no phase error, no stale staged or
         # blend state, no trail streak, labels/slots stable.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 41000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -3868,7 +3079,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # via ticks alone; re-enabling plans a ring blend from the
         # parked homes via ticks alone. No boundary ever teleports.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 43000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -3934,7 +3145,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # glide. Each restart resets t=0/_last_tick and stalls landing;
         # idempotent refreshes let the glide complete within budget.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 50000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4020,11 +3231,11 @@ class TaskPanelManagerTests(unittest.TestCase):
         # and valid until the ring circulates again.
         cases = ([_codex_entry('a')],
                  [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c')],
+                  _secondary_codex_entry('z-secondary:c')],
                  [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c'),
-                  _opencode_entry('opencode:s0'),
-                  _opencode_entry('opencode:s1')])
+                  _secondary_codex_entry('z-secondary:c'),
+                  _secondary_codex_entry('z-secondary:s0'),
+                  _secondary_codex_entry('z-secondary:s1')])
         stamp = 44000.0
         self.panel.prefs['pet_motion'] = False
         try:
@@ -4085,11 +3296,11 @@ class TaskPanelManagerTests(unittest.TestCase):
         # (identities/labels/slots intact, no trail artifact).
         cases = ([_codex_entry('a')],
                  [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c')],
+                  _secondary_codex_entry('z-secondary:c')],
                  [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c'),
-                  _opencode_entry('opencode:s0'),
-                  _opencode_entry('opencode:s1')])
+                  _secondary_codex_entry('z-secondary:c'),
+                  _secondary_codex_entry('z-secondary:s0'),
+                  _secondary_codex_entry('z-secondary:s1')])
         stamp = 45000.0
         for tasks in cases:
             self._apply_at(tasks, _CENTER_PET_RECT)
@@ -4157,7 +3368,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # ring blend from exact current pixels and parks home
         # boundedly; toggling back on resumes circulation.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self.panel.prefs['pet_motion'] = False
         try:
             self._apply_at(tasks, _CENTER_PET_RECT)
@@ -4211,11 +3422,11 @@ class TaskPanelManagerTests(unittest.TestCase):
         # home boundedly across successive rounds without hiding
         # survivors or leaking staged stars.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
-        bulk = (tasks + [_opencode_entry('opencode:s0'),
-                         _opencode_entry('opencode:s1'),
+                 _secondary_codex_entry('z-secondary:c')]
+        bulk = (tasks + [_secondary_codex_entry('z-secondary:s0'),
+                         _secondary_codex_entry('z-secondary:s1'),
                          _codex_entry('d'), _codex_entry('e'),
-                         _opencode_entry('opencode:s2')])
+                         _secondary_codex_entry('z-secondary:s2')])
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 46500.0
         for _ in range(30):
@@ -4268,7 +3479,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # changed), then the transition settles boundedly onto valid
         # geometry with identities intact.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         moved = (840, 380, 272, 330)
         self.panel.prefs['pet_motion'] = False
         try:
@@ -4315,7 +3526,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # transition bookkeeping (holds are visibility-local), parking
         # still completes, and release plus re-enable resumes.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 47000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4371,7 +3582,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # resumed ring. Unlike the hover-around test above, nothing
         # releases the holds before re-enabling.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c')]
+                  _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 47100.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4422,7 +3633,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # apply): stale holds die on the transition and ticks plan
         # continuity from exact pixels instead of freezing.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                  _opencode_entry('opencode:c')]
+                  _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 47150.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4520,7 +3731,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # apply moves nothing while hidden, showing resumes the park
         # glide, and re-enable circulates.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 48000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4571,7 +3782,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Poll refreshes must not run recomposition machinery: same
         # snapshot -> no blend state, no movement, same mode.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 28000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4586,10 +3797,10 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.assertEqual(self._orb_positions(), placed)
 
     def test_ring_hide_hovered_task_resumes(self):
-        # Blocker B: hovering x pauses the ring; filtering x away
-        # must drop its hold so B/C resume; restoring x adds no hold.
+        # Blocker B: hovering x pauses the ring; retiring x
+        # must drop its hold so B/C resume; readding x adds no hold.
         tasks = [_codex_entry('b'), _codex_entry('c'),
-                 _opencode_entry('opencode:x')]
+                 _secondary_codex_entry('z-secondary:x')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         labels = {k: self.manager.window_for(k).number_label.text()
                   for k in self.manager.window_identities()}
@@ -4597,13 +3808,13 @@ class TaskPanelManagerTests(unittest.TestCase):
         self._tick_at(stamp, _CENTER_PET_RECT)
         stamp += 1.0
         self._tick_at(stamp, _CENTER_PET_RECT)
-        key = ('opencode', 'opencode:x')
+        key = ('codex', 'z-secondary:x')
         self.manager.set_hovered(key)
         frozen = self._orb_positions()
         stamp += 0.5
         self._tick_at(stamp, _CENTER_PET_RECT)
         self.assertEqual(self._orb_positions(), frozen)
-        self._apply_at(tasks, _CENTER_PET_RECT, preference='codex')
+        self._apply_at(tasks[:2], _CENTER_PET_RECT, preference='codex')
         self.assertNotIn(key, self.manager._hover_holds)
         self.assertNotIn(key, self.manager.window_identities())
         self.assertEqual(self.manager.trail_for(key), 0)
@@ -4613,6 +3824,8 @@ class TaskPanelManagerTests(unittest.TestCase):
         self._apply_at(tasks, _CENTER_PET_RECT, preference='auto')
         self.assertNotIn(key, self.manager._hover_holds)
         for k, number in labels.items():
+            if k == key:
+                continue
             self.assertEqual(
                 self.manager.window_for(k).number_label.text(), number)
         moving = self._orb_positions()
@@ -4626,13 +3839,13 @@ class TaskPanelManagerTests(unittest.TestCase):
         from PySide6.QtCore import QEvent, QPointF, Qt
         from PySide6.QtGui import QMouseEvent
         tasks = [_codex_entry('b'), _codex_entry('c'),
-                 _opencode_entry('opencode:x')]
+                 _secondary_codex_entry('z-secondary:x')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 30000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
         stamp += 1.0
         self._tick_at(stamp, _CENTER_PET_RECT)
-        key = ('opencode', 'opencode:x')
+        key = ('codex', 'z-secondary:x')
         orb = self.manager.window_for(key)
         center = orb.rect().center()
         root = orb.mapToGlobal(center)
@@ -4645,7 +3858,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         stamp += 0.5
         self._tick_at(stamp, _CENTER_PET_RECT)
         self.assertEqual(self._orb_positions(), frozen)
-        self._apply_at(tasks, _CENTER_PET_RECT, preference='codex')
+        self._apply_at(tasks[:2], _CENTER_PET_RECT, preference='codex')
         self.assertNotIn(key, self.manager._press_holds)
         stamp += 1.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4660,10 +3873,10 @@ class TaskPanelManagerTests(unittest.TestCase):
     def test_ring_multiple_hold_cleanup_semantics(self):
         # A hovered + B pressed: hiding A keeps B's hold (paused);
         # hiding B too resumes. Set cleanup must be exact.
-        a = _opencode_entry('opencode:x')
+        a = _secondary_codex_entry('z-secondary:x')
         b = _codex_entry('b')
         c = _codex_entry('c')
-        key_a = ('opencode', 'opencode:x')
+        key_a = ('codex', 'z-secondary:x')
         key_b = ('codex', 'b')
         self._apply_at([b, c, a], _CENTER_PET_RECT)
         stamp = 31000.0
@@ -4672,15 +3885,14 @@ class TaskPanelManagerTests(unittest.TestCase):
         self._tick_at(stamp, _CENTER_PET_RECT)
         self.manager.add_hover_hold(key_a)
         self.manager.add_press_hold(key_b)
-        self._apply_at([b, c, a], _CENTER_PET_RECT, preference='codex')
+        self._apply_at([b, c], _CENTER_PET_RECT, preference='codex')
         self.assertNotIn(key_a, self.manager._hover_holds)
         self.assertIn(key_b, self.manager._press_holds)
         frozen = self._orb_positions()
         stamp += 1.0
         self._tick_at(stamp, _CENTER_PET_RECT)
         self.assertEqual(self._orb_positions(), frozen)
-        self._apply_at([b, c, a], _CENTER_PET_RECT,
-                       preference='opencode')
+        self._apply_at([c], _CENTER_PET_RECT, preference='codex')
         self.assertNotIn(key_b, self.manager._press_holds)
         self.assertEqual(self.manager._hover_holds, set())
         moving = self._orb_positions()
@@ -4688,55 +3900,29 @@ class TaskPanelManagerTests(unittest.TestCase):
         self._tick_at(stamp, _CENTER_PET_RECT)
         self.assertNotEqual(self._orb_positions(), moving)
 
-    def test_ring_filter_round_trip_no_stale_state(self):
-        # Auto -> Codex -> OpenCode -> Auto with a hovered task:
-        # hidden stages leave no holds/trails, identity survives.
-        tasks = [_codex_entry('b'), _opencode_entry('opencode:x')]
+    def test_ring_hide_restore_clears_stale_holds_and_retains_identity(self):
+        tasks = [_codex_entry('b'), _secondary_codex_entry('z-secondary:x')]
         self._apply_at(tasks, _CENTER_PET_RECT)
-        slots = {k: self.manager.slot_for(k)
-                 for k in self.manager.window_identities()}
-        labels = {k: self.manager.window_for(k).number_label.text()
-                  for k in self.manager.window_identities()}
-        stamp = 32000.0
-        self._tick_at(stamp, _CENTER_PET_RECT)
-        stamp += 1.0
-        self._tick_at(stamp, _CENTER_PET_RECT)
-        key = ('opencode', 'opencode:x')
+        before = {key: (self.manager.window_for(key), self.manager.slot_for(key),
+                        self.manager.label_number_for(key)) for key in self.manager.window_identities()}
+        key = ('codex', 'z-secondary:x')
         self.manager.set_hovered(key)
-        stamp += 0.5
-        self._tick_at(stamp, _CENTER_PET_RECT)
-        for preference, visible in (
-                ('codex', [('codex', 'b')]),
-                ('opencode', [key]),
-                ('auto', [('codex', 'b'), key])):
-            self._apply_at(tasks, _CENTER_PET_RECT,
-                           preference=preference)
-            for held in (self.manager._hover_holds
-                         | self.manager._press_holds):
-                self.assertIn(held,
-                              self.manager.window_identities())
-            self.assertEqual(sorted(self.manager.window_identities()),
-                             sorted(visible))
-            if key not in visible:
-                self.assertEqual(self.manager.trail_for(key), 0)
-            moving = self._orb_positions()
-            stamp += 1.0
-            self._tick_at(stamp, _CENTER_PET_RECT)
-            # No live holds remain at any hidden stage, so every
-            # visible stage keeps advancing.
-            self.assertFalse(self.manager._hover_holds)
-            self.assertNotEqual(self._orb_positions(), moving)
-        for k, slot in slots.items():
-            self.assertEqual(self.manager.slot_for(k), slot)
-        for k, number in labels.items():
-            self.assertEqual(
-                self.manager.window_for(k).number_label.text(), number)
+        self.manager.set_visible(False)
+        self.assertFalse(self.manager._hover_holds)
+        self.assertFalse(self.manager._press_holds)
+        self.assertEqual(self.manager.trail_for(key), 0)
+        self.manager.set_visible(True)
+        for identity, (orb, slot, number) in before.items():
+            self.assertIs(self.manager.window_for(identity), orb)
+            self.assertEqual((self.manager.slot_for(identity), self.manager.label_number_for(identity)),
+                             (slot, number))
+
 
     def test_ring_retire_hovered_task_cleans_hold(self):
         # Retirement with an active hover: dead key leaves no hold,
         # survivors resume immediately.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         stamp = 33000.0
         self._tick_at(stamp, _CENTER_PET_RECT)
@@ -4747,7 +3933,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         stamp += 0.5
         self._tick_at(stamp, _CENTER_PET_RECT)
         self._apply_at([_codex_entry('b'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         self.assertNotIn(key, self.manager._hover_holds)
         self.assertIsNone(self.manager._hovered)
@@ -4765,7 +3951,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.panel.prefs['pet_motion'] = False
         try:
             self._apply_at([_codex_entry('a'), _codex_entry('b'),
-                            _opencode_entry('opencode:c')],
+                            _secondary_codex_entry('z-secondary:c')],
                            _CENTER_PET_RECT)
             homes = self._orb_positions()
             self.assertFalse(self.manager.motion_timer.isActive())
@@ -4790,16 +3976,16 @@ class TaskPanelManagerTests(unittest.TestCase):
         # B retires: A/C keep windows, labels, and slots while the
         # spacing recomposes from thirds to halves.
         tasks = [_codex_entry('a'), _codex_entry('b'),
-                 _opencode_entry('opencode:c')]
+                 _secondary_codex_entry('z-secondary:c')]
         self._apply_at(tasks, _CENTER_PET_RECT)
         self.assertEqual(self.manager._orbit_mode[0], 'ring')
-        survivors = [('codex', 'a'), ('opencode', 'opencode:c')]
+        survivors = [('codex', 'a'), ('codex', 'z-secondary:c')]
         windows = {k: self.manager.window_for(k) for k in survivors}
         labels = {k: self.manager.window_for(k).number_label.text()
                   for k in survivors}
         slots = {k: self.manager.slot_for(k) for k in survivors}
         self._apply_at([_codex_entry('a'),
-                        _opencode_entry('opencode:c')],
+                        _secondary_codex_entry('z-secondary:c')],
                        _CENTER_PET_RECT)
         self.assertEqual(self.manager._orbit_mode[0], 'ring')
         for key in survivors:
@@ -4841,7 +4027,7 @@ class TaskPanelManagerTests(unittest.TestCase):
 
     def test_breathing_bounds_and_phase_offsets(self):
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         seen = {}
         stamp = 2000.0
         for _ in range(41):
@@ -4949,7 +4135,7 @@ class TaskPanelManagerTests(unittest.TestCase):
 
     def test_motion_lifecycle_retire_and_shutdown(self):
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         self._tick(7000.0)
         self._tick(7001.0)
         self.manager.start_motion()
@@ -4968,21 +4154,20 @@ class TaskPanelManagerTests(unittest.TestCase):
         self.manager.shutdown()
         self.assertFalse(self.manager.trail_overlay.isVisible())
 
-    def test_filter_hide_drops_trails(self):
+    def test_retirement_drops_trails_before_readding(self):
         self._apply([_codex_entry('a'),
-                     _opencode_entry('opencode:b')])
+                     _secondary_codex_entry('z-secondary:b')])
         self._tick(8000.0)
         self._tick(8001.0)
-        key = ('opencode', 'opencode:b')
+        key = ('codex', 'z-secondary:b')
         self.assertIsNotNone(self.manager.window_for(key))
-        self._apply([_codex_entry('a'), _opencode_entry('opencode:b')],
-                    preference='codex')
+        self._apply([_codex_entry('a')], preference='codex')
         self.assertIsNone(self.manager.window_for(key))
         self.assertEqual(self.manager.trail_for(key), 0)
-        self._apply([_codex_entry('a'), _opencode_entry('opencode:b')])
+        self._apply([_codex_entry('a'), _secondary_codex_entry('z-secondary:b')])
         orb = self.manager.window_for(key)
         self.assertIsNotNone(orb)
-        self.assertEqual(orb.number_label.text(), '2')
+        self.assertTrue(orb.number_label.text().isdigit())
 
     def _probe_overlay(self):
         """Swap in a paint-counting overlay; caller owns no cleanup."""
@@ -5006,7 +4191,7 @@ class TaskPanelManagerTests(unittest.TestCase):
         # Astra probe: first show paints once; subsequent motion
         # updates must schedule more paints, or ribbons freeze.
         self._apply([_codex_entry('a'), _codex_entry('b'),
-                     _opencode_entry('opencode:c')])
+                     _secondary_codex_entry('z-secondary:c')])
         probe = self._probe_overlay()
         stamp = 10000.0
         # One nominal frame per tick: 2 s of real frames per block.
@@ -5097,16 +4282,11 @@ class TaskPanelManagerTests(unittest.TestCase):
 
 
 class MultiTaskIntegrationTests(unittest.TestCase):
-    """Slice C end-to-end on synthetic stores through the production path.
-
-    Polls run on the real ProviderPoller and publish through
-    Panel.publish_snapshot (the read-loop/Settings emission path), so
-    filter switches and failure propagation are exercised, not stubbed.
-    """
-
+    """Current Codex-only synthetic stores through the actual poll/publication path."""
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -5119,6 +4299,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.work.mkdir()
         self.manager = self.panel.task_manager
 
+
     def tearDown(self):
         self.manager.shutdown()
         self.panel.provider_poller.drain(timeout=10)
@@ -5129,17 +4310,6 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.panel.deleteLater(); self.app.processEvents()
         self.pref_patch.stop(); self.temp.cleanup()
 
-    def _attach_multi(self, threads, sessions, messages=(), parts=()):
-        self.panel.provider_poller.drain(timeout=10)
-        self.panel.provider_poller.close()
-        tag = len(list(self.work.iterdir()))
-        home = self.work / f'codex-{tag}'
-        home.mkdir(exist_ok=True)
-        write_home(str(home), threads)
-        db = self.work / f'open-{tag}.db'
-        write_store(db, sessions, messages, parts)
-        self.panel.provider_poller = ProviderPoller(CodexStore(home), db)
-        return home, db
 
     def _publish_render(self, prefs=None, now=None, **kw):
         # Fake clock advances across rounds so the legacy 1-second
@@ -5159,6 +4329,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.app.processEvents()
         return out
 
+
     def _apply_publish(self, prefs_update, mark=None, now=None):
         self.panel.prefs.update(prefs_update)
         if now is None:
@@ -5169,46 +4340,11 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.app.processEvents()
         return out
 
-    def _idle_stores(self):
-        return self._attach_multi([{'id': 't1'}], [make_session('ses_idle')])
-
-    def _working_session(self, sid, tokens=(100, 20, 5, 400, 7), cost=0.05,
-                         version=None, age_ms=60000, project='proj-w',
-                         directory='/synthetic/work'):
-        session = make_session(sid, project=project, directory=directory,
-                               tokens=tokens, cost=cost, version=version)
-        message = make_message(f'm-{sid}', sid)
-        part = make_part(f'p-{sid}', sid, created=BASE_MS - age_ms)
-        return session, message, part
-
-    def _insert_opencode_triple(self, db, session, message, part):
-        """Add one session without replacing the file: the live poller may
-        hold the store open, and Windows forbids unlinking open files."""
-        import sqlite3
-        from contextlib import closing
-        with closing(sqlite3.connect(db)) as connection:
-            connection.execute(
-                'INSERT INTO session VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                tuple(session[key] for key in (
-                    'id', 'project_id', 'parent_id', 'directory',
-                    'agent', 'model', 'version', 'tokens_input',
-                    'tokens_output', 'tokens_reasoning',
-                    'tokens_cache_read', 'tokens_cache_write',
-                    'cost', 'time_created', 'time_updated')))
-            connection.execute(
-                'INSERT INTO message VALUES (?,?,?,?,?)',
-                (message['id'], message['session_id'],
-                 message['time_created'], message['time_updated'],
-                 message['data']))
-            connection.execute(
-                'INSERT INTO part VALUES (?,?,?,?,?,?)',
-                (part['id'], part['message_id'], part['session_id'],
-                 part['time_created'], part['time_updated'], part['data']))
-            connection.commit()
 
     def _orb_labels(self):
         return {k: self.manager.window_for(k).number_label.text()
                 for k in self.manager.window_identities()}
+
 
     def _assert_exact_coverage(self, out):
         """Every visible task has exactly one orb; main is never counted."""
@@ -5218,6 +4354,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
                          sorted(keys))
         self.assertEqual(self.manager.window_count(), len(keys))
         return keys
+
 
     def test_a_zero_tasks_exactly_one_default_panel(self):
         self._idle_stores()
@@ -5229,10 +4366,10 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.assertNotEqual(self.panel.status_text.text(),
                             text('working', self.panel.language))
 
+
     def test_b_single_codex_task_gets_one_orb(self):
         self._attach_multi([{'id': 't1', 'working': True,
-                             'name': 'PRIVATE REVIEW NOTES'}],
-                           [make_session('ses_idle')])
+                             'name': 'PRIVATE REVIEW NOTES'}])
         out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S,
                                    active_title='t1', detection_valid=True)
         tasks = out.get('active_tasks') or []
@@ -5246,10 +4383,10 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         # Main stays a legacy hub: provider context, no task identity.
         self.assertIn('Codex', self.panel.connection.text())
 
+
     def test_c_two_codex_tasks_get_two_orbs(self):
         self._attach_multi([{'id': 't1', 'working': True},
-                            {'id': 't2', 'working': True}],
-                           [make_session('ses_idle')])
+                            {'id': 't2', 'working': True}])
         out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S,
                                    active_title='t1', detection_valid=True)
         self.assertEqual(len(out.get('active_tasks') or []), 2)
@@ -5258,33 +4395,13 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         numbers = sorted(self._orb_labels().values())
         self.assertEqual(len(set(numbers)), 2)
 
-    def test_d_single_opencode_task_gets_one_orb(self):
-        session, message, part = self._working_session(
-            'ses_work', tokens=(100, 20, 5, 400, 7), cost=0.05,
-            version='1.18.31')
-        self._attach_multi([{'id': 't1'}], [session], [message], [part])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        tasks = out.get('active_tasks') or []
-        self.assertEqual(len(tasks), 1)
-        keys = self._assert_exact_coverage(out)
-        self.assertEqual(keys, [('opencode', 'opencode:ses_work')])
-        orb = self.manager.window_for(('opencode', 'opencode:ses_work'))
-        self.assertEqual(orb.number_label.text(), '1')
-        self.assertIn('OpenCode', orb.toolTip())
-        self.assertNotIn('ses_work', orb.panel_text())
-        # Main stays a neutral companion hub: provider/scope framing,
-        # never the task identity.
-        self.assertIn('OpenCode', self.panel.title.text())
-        self.assertNotIn('ses_work', self.panel.title.text())
-        self.assertNotIn('ses_work', self.panel.title.toolTip())
 
     def test_hub_neutral_with_one_sensitive_codex_task(self):
         # D1 blocker regression: one verified Codex task with a
         # sensitive raw title. The orb is neutral AND the main hub
         # must not expose the raw title or claim a task identity.
         self._attach_multi([{'id': 't1', 'working': True,
-                             'name': 'PRIVATE REVIEW NOTES'}],
-                           [make_session('ses_idle')])
+                             'name': 'PRIVATE REVIEW NOTES'}])
         out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S,
                                    active_title='t1', detection_valid=True)
         tasks = out.get('active_tasks') or []
@@ -5308,284 +4425,24 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.assertIn('Codex', self.panel.title.text())
         self.assertIn('Codex', self.panel.connection.text())
 
-    def test_hub_neutral_with_codex_and_opencode_tasks(self):
-        # D1 blocker multi-task regression: Codex A + OpenCode B give
-        # exactly 2 orbs; main shows neutral hub framing with no raw
-        # title from either provider, regardless of selection winner.
-        session, message, part = self._working_session('ses_work')
-        self._attach_multi([{'id': 't1', 'working': True,
-                             'name': 'PRIVATE REVIEW NOTES'}],
-                           [session], [message], [part])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S,
-                                   active_title='t1', detection_valid=True)
-        self.assertEqual(len(out.get('active_tasks') or []), 2)
-        keys = self._assert_exact_coverage(out)
-        self.assertEqual(len(keys), 2)
-        self.assertEqual(self.manager.window_count(), 2)
-        main_text = '\n'.join((
-            self.panel.title.text(), self.panel.title.toolTip(),
-            self.panel.project.text(),
-            self.panel.project.toolTip() or ''))
-        for secret in ('PRIVATE REVIEW NOTES', 'ses_work'):
-            self.assertNotIn(secret, main_text)
-        for language in ('zh_CN', 'en'):
-            for n in (1, 2):
-                self.assertNotIn(text('task_panel_label', language, n=n),
-                                 self.panel.title.text())
 
     def test_zero_orbs_preserves_legacy_title(self):
         # Compatibility: with zero active orbs the legacy main title
         # behavior is fully preserved (pinned scope title passes
         # through unchanged).
-        self._attach_multi([{'id': 't1'}, {'id': 't2'}],
-                           [make_session('ses_idle')])
+        self._attach_multi([{'id': 't1'}, {'id': 't2'}])
         out = self._publish_render({'scope': 'conversation', 'pinned': 't2',
                                     'tracking_provider': 'auto'}, now=NOW_S)
         self.assertEqual(out.get('active_tasks'), [])
         self.assertEqual(self.manager.window_count(), 0)
         self.assertIn('t2', self.panel.title.text())
 
-    def test_e_three_opencode_tasks_exactly_three_panels(self):
-        triples = [self._working_session(f'ses_{i}', age_ms=60000 * (i + 1))
-                   for i in range(3)]
-        sessions = [t[0] for t in triples]
-        messages = [t[1] for t in triples]
-        parts = [t[2] for t in triples]
-        self._attach_multi([{'id': 't1'}], sessions, messages, parts)
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 3)
-        self._assert_exact_coverage(out)
-        self.assertEqual(self.manager.window_count(), 3)
-
-    def test_f_one_codex_one_opencode_gets_two_orbs(self):
-        session, message, part = self._working_session('ses_work')
-        self._attach_multi([{'id': 't1', 'working': True}],
-                           [session], [message], [part])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 2)
-        keys = self._assert_exact_coverage(out)
-        self.assertEqual(len(keys), 2)
-        providers = {k[0] for k in self.manager.window_identities()}
-        self.assertEqual(providers, {'codex', 'opencode'})
-
-    def test_g_two_codex_three_opencode_get_five_orbs(self):
-        triples = [self._working_session(f'ses_{i}', age_ms=60000 * (i + 1))
-                   for i in range(3)]
-        self._attach_multi([{'id': 't1', 'working': True},
-                            {'id': 't2', 'working': True}],
-                           [t[0] for t in triples],
-                           [t[1] for t in triples],
-                           [t[2] for t in triples])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 5)
-        self._assert_exact_coverage(out)
-        self.assertEqual(self.manager.window_count(), 5)
-
-    def test_h_eight_tasks_have_no_silent_cap(self):
-        triples = [self._working_session(f'ses_{i}', age_ms=10000 * (i + 1))
-                   for i in range(8)]
-        self._attach_multi([{'id': 't1'}],
-                           [t[0] for t in triples],
-                           [t[1] for t in triples],
-                           [t[2] for t in triples])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 8)
-        self._assert_exact_coverage(out)
-        self.assertEqual(self.manager.window_count(), 8)
-
-    def test_lifecycle_complete_add_and_return_to_default(self):
-        import json
-        self.panel.prefs['pet_motion'] = False
-        first = self._working_session('ses_a', age_ms=60000)
-        second = self._working_session('ses_b', age_ms=120000)
-        home, db = self._attach_multi(
-            [{'id': 't1', 'working': True}],
-            [first[0], second[0]],
-            [first[1], second[1]], [first[2], second[2]])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 3)
-        self._assert_exact_coverage(out)
-        survivor = self.manager.window_for(('opencode', 'opencode:ses_b'))
-        self.assertIsNotNone(survivor)
-        survivor_number = survivor.number_label.text()
-        survivor_slot = self.manager.slot_for(('opencode', 'opencode:ses_b'))
-        survivor_position = (survivor.x(), survivor.y())
-        # Complete the Codex thread in place: same files, same poller.
-        rollout = home / 't1.jsonl'
-        with rollout.open('a', encoding='utf-8') as handle:
-            handle.write(json.dumps(dict(
-                type='event_msg', timestamp='2026-09-19T12:00:09Z',
-                payload=dict(type='task_complete'))) + '\n')
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        remaining = [task_identity(t) for t in out.get('active_tasks') or []]
-        self.assertNotIn(('codex', 't1'), remaining)
-        self.assertEqual(len(remaining), 2)
-        self._assert_exact_coverage(out)
-        self.assertIs(self.manager.window_for(('opencode', 'opencode:ses_b')),
-                      survivor)
-        self.assertEqual(survivor.number_label.text(), survivor_number)
-        self.assertEqual(self.manager.slot_for(('opencode', 'opencode:ses_b')),
-                         survivor_slot)
-        pet_rect, screen_rect = self.manager._anchor()
-        self.assertEqual((survivor.x(), survivor.y()), survivor_position)
-        _assert_finite_task_parking(self, self.manager, pet_rect, screen_rect)
-        # A new task appears without disturbing survivors.
-        third = self._working_session('ses_c', age_ms=1000)
-        self._insert_opencode_triple(db, third[0], third[1], third[2])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 3)
-        self._assert_exact_coverage(out)
-        self.assertIs(self.manager.window_for(('opencode', 'opencode:ses_b')),
-                      survivor)
-        self.assertEqual(survivor.number_label.text(), survivor_number)
-        # Retire everything: exactly one default panel (the main panel).
-        import sqlite3
-        from contextlib import closing
-        with closing(sqlite3.connect(db)) as connection:
-            connection.execute('DELETE FROM session')
-            connection.commit()
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(out.get('active_tasks'), [])
-        self.assertEqual(self.manager.window_count(), 0)
-
-    def test_filter_switches_are_immediate_and_nondestructive(self):
-        triples = [self._working_session(f'ses_{i}', age_ms=60000 * (i + 1))
-                   for i in range(3)]
-        self._attach_multi([{'id': 't1', 'working': True},
-                            {'id': 't2', 'working': True}],
-                           [t[0] for t in triples],
-                           [t[1] for t in triples],
-                           [t[2] for t in triples])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 5)
-        # Manual Codex applies synchronously with no provider re-read.
-        out = self._apply_publish({'tracking_provider': 'codex'})
-        codex_tasks = out.get('active_tasks') or []
-        self.assertEqual(len(codex_tasks), 2)
-        self.assertTrue(all(t['provider_id'] == 'codex' for t in codex_tasks))
-        self._assert_exact_coverage(out)
-        out = self._apply_publish({'tracking_provider': 'opencode'})
-        oc_tasks = out.get('active_tasks') or []
-        self.assertEqual(len(oc_tasks), 3)
-        self._assert_exact_coverage(out)
-        # Back to Auto restores all five without rediscovery: no drain,
-        # no poll, just the synchronous settings path.
-        out = self._apply_publish({'tracking_provider': 'auto'})
-        self.assertEqual(len(out.get('active_tasks') or []), 5)
-        self._assert_exact_coverage(out)
-
-    def test_primary_change_never_hides_other_provider(self):
-        session, message, part = self._working_session('ses_work')
-        self._attach_multi([{'id': 't1', 'working': True}],
-                           [session], [message], [part])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        keys = self._assert_exact_coverage(out)
-        self.assertEqual(len(keys), 2)
-        self.assertIn(('codex', 't1'), keys)
-        self.assertIn(('opencode', 'opencode:ses_work'), keys)
-
-    def test_provider_failure_retires_only_failed_orbs(self):
-        import shutil
-        session, message, part = self._working_session('ses_work')
-        home, db = self._attach_multi([{'id': 't1', 'working': True}],
-                                      [session], [message], [part])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 2)
-        shutil.rmtree(home)
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        remaining = [task_identity(t) for t in out.get('active_tasks') or []]
-        self.assertNotIn(('codex', 't1'), remaining)
-        self.assertIn(('opencode', 'opencode:ses_work'), remaining)
-        self._assert_exact_coverage(out)
-        # Break the OpenCode source itself (schema gone, file kept): the
-        # lane fails while the healthy Codex lane would stay operational.
-        import sqlite3
-        from contextlib import closing
-        with closing(sqlite3.connect(db)) as connection:
-            connection.execute('DROP TABLE session')
-            connection.commit()
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(out.get('active_tasks'), [])
-        self.assertEqual(self.manager.window_count(), 0)
-
-    def test_provider_mode_labels_both_languages(self):
-        self._idle_stores()
-        self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(self.panel.provider_mode.text(),
-                         text('provider_mode_auto', 'zh_CN'))
-        self._apply_publish({'tracking_provider': 'codex'})
-        self.assertEqual(self.panel.provider_mode.text(),
-                         text('provider_mode_manual', 'zh_CN',
-                              provider='Codex'))
-        # Task context stays on its own surface: the mode label never
-        # doubles as the task/session presentation.
-        self.assertNotEqual(self.panel.provider_mode.text(),
-                            self.panel.connection.text())
-        self.panel.prefs['language'] = 'en'
-        self.panel.apply_language()
-        self.app.processEvents()
-        self.assertEqual(self.panel.provider_mode.text(),
-                         text('provider_mode_manual', 'en',
-                              provider='Codex'))
-        self._apply_publish({'tracking_provider': 'auto'})
-        self.assertEqual(self.panel.provider_mode.text(),
-                         text('provider_mode_auto', 'en'))
-
-    def test_orb_privacy_on_real_stores(self):
-        session = make_session('ses_secret_9', project='proj-s',
-                               directory='/private/secret/path',
-                               tokens=(100, 20, 5, 400, 7), cost=0.05)
-        message = make_message('m-secret', 'ses_secret_9')
-        part = make_part('p-secret', 'ses_secret_9',
-                         created=BASE_MS - 60000)
-        self._attach_multi(
-            [{'id': 't1', 'working': True, 'name': 'PRIVATE REVIEW NOTES'}],
-            [session], [message], [part])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 2)
-        visible = '\n'.join(
-            self.manager.window_for(k).panel_text()
-            for k in self.manager.window_identities())
-        self.assertTrue(visible)
-        for secret in ('ses_secret_9', '/private/secret/path',
-                       'PRIVATE REVIEW NOTES'):
-            self.assertNotIn(secret, visible)
-
-    def test_orb_identity_on_real_stores(self):
-        first = self._working_session(
-            'ses_a', tokens=(100, 20, 5, 900, 1), cost=0.10,
-            version='1.18.31', age_ms=1000)
-        second = self._working_session(
-            'ses_b', tokens=(700, 100, 0, 5000, 0), cost=0.75,
-            version='9.9.9', age_ms=2000)
-        third = self._working_session(
-            'ses_c', tokens=(10, 1, 1, 1, 0), cost=0.01,
-            version='1.18.32', age_ms=3000)
-        triples = (first, second, third)
-        self._attach_multi([{'id': 't1'}],
-                           [t[0] for t in triples],
-                           [t[1] for t in triples],
-                           [t[2] for t in triples])
-        out = self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 3)
-        keys = self._assert_exact_coverage(out)
-        self.assertEqual(len(keys), 3)
-        # One orb per task, distinct neutral numbers, no raw session IDs.
-        numbers = [self.manager.window_for(k).number_label.text()
-                   for k in keys]
-        self.assertEqual(len(set(numbers)), 3)
-        visible = '\n'.join(
-            self.manager.window_for(k).panel_text() for k in keys)
-        for sid in ('ses_a', 'ses_b', 'ses_c'):
-            self.assertNotIn(sid, visible)
-        self.assertIn('OpenCode', self.panel.connection.text())
 
     def test_global_codex_hub_stays_legacy_orb_surfaced(self):
         # One working thread under global scope: the hub keeps its
         # legacy aggregate view while the task gets exactly one orb.
         # Nothing is consumed into main and nothing is suppressed.
-        self._attach_multi([{'id': 't1', 'working': True}, {'id': 't2'}],
-                           [make_session('ses_idle')])
+        self._attach_multi([{'id': 't1', 'working': True}, {'id': 't2'}])
         out = self._publish_render({'scope': 'global',
                                     'tracking_provider': 'auto'}, now=NOW_S,
                                    active_title='t1', detection_valid=True)
@@ -5597,36 +4454,13 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.assertEqual(orb.number_label.text(), '1')
         self.assertIn('Codex', self.panel.connection.text())
 
-    def test_global_opencode_aggregate_tasks_all_surfaced(self):
-        first = self._working_session(
-            'ses_a', tokens=(100, 20, 5, 400, 7), cost=0.05,
-            version='1.18.31', age_ms=60000)
-        second = self._working_session(
-            'ses_b', tokens=(10, 1, 1, 1, 0), cost=0.01,
-            version='1.18.32', age_ms=120000)
-        triples = (first, second)
-        self._attach_multi([{'id': 't1'}],
-                           [t[0] for t in triples],
-                           [t[1] for t in triples],
-                           [t[2] for t in triples])
-        out = self._publish_render({'scope': 'global',
-                                    'tracking_provider': 'auto'}, now=NOW_S)
-        self.assertEqual(len(out.get('active_tasks') or []), 2)
-        # Global scope shows the provider aggregate on the hub: BOTH
-        # tasks still get their own orb -- no false hub counting.
-        keys = self._assert_exact_coverage(out)
-        self.assertEqual(len(keys), 2)
-        numbers = sorted(self._orb_labels().values())
-        self.assertEqual(len(set(numbers)), 2)
-        self.assertIn('OpenCode', self.panel.connection.text())
 
     def test_scope_switch_preserves_task_envelope(self):
         # Real clock throughout: change_scope() stamps real time, so the
         # accepted sets must be real-fresh for the envelope assertion to
         # be about preservation rather than expiration.
         self._attach_multi([{'id': 't1', 'working': True},
-                            {'id': 't2', 'working': True}],
-                           [make_session('ses_idle')])
+                            {'id': 't2', 'working': True}])
         out = self._publish_render({'tracking_provider': 'auto'},
                                    now=time.time(),
                                    active_title='t1', detection_valid=True)
@@ -5645,7 +4479,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.app.processEvents()
         snapshot = self.panel.snapshot
         self.assertEqual(len(snapshot.get('active_tasks') or []), 2)
-        self.assertEqual(snapshot.get('preference'), 'auto')
+        self.assertEqual(snapshot.get('preference'), 'codex')
         self._assert_exact_coverage(snapshot)
         self.assertEqual(
             {k: self.manager.label_number_for(k)
@@ -5666,34 +4500,147 @@ class MultiTaskIntegrationTests(unittest.TestCase):
              for k in (('codex', 't1'), ('codex', 't2'))},
             labels_before)
 
-    def test_filter_restore_keeps_labels_and_slots(self):
-        triples = [self._working_session(f'ses_{i}', age_ms=60000 * (i + 1))
-                   for i in range(3)]
-        self._attach_multi([{'id': 't1', 'working': True},
-                            {'id': 't2', 'working': True}],
-                           [t[0] for t in triples],
-                           [t[1] for t in triples],
-                           [t[2] for t in triples])
-        self._publish_render({'tracking_provider': 'auto'}, now=NOW_S)
-        oc_keys = [('opencode', f'opencode:ses_{i}') for i in range(3)]
-        before_labels = {
-            k: self.manager.window_for(k).number_label.text()
-            for k in oc_keys}
-        before_positions = {
-            k: (self.manager.window_for(k).x(),
-                self.manager.window_for(k).y()) for k in oc_keys}
-        before_slots = {
-            k: self.manager.slot_for(k) for k in oc_keys}
-        self._apply_publish({'tracking_provider': 'codex'})
-        for key in oc_keys:
-            self.assertIsNone(self.manager.window_for(key))
-        self._apply_publish({'tracking_provider': 'auto'})
-        for key in oc_keys:
-            orb = self.manager.window_for(key)
-            self.assertIsNotNone(orb)
-            self.assertEqual(orb.number_label.text(), before_labels[key])
-            self.assertEqual((orb.x(), orb.y()), before_positions[key])
-            self.assertEqual(self.manager.slot_for(key), before_slots[key])
+
+    def _attach_multi(self, threads):
+        import json
+        from contextlib import closing
+        import sqlite3
+        self.panel.provider_poller.drain(timeout=10)
+        self.panel.provider_poller.close()
+        home = self.work / f'codex-{len(list(self.work.iterdir()))}'
+        home.mkdir()
+        write_home(str(home), threads)
+        for spec in threads:
+            path = home / f"{spec['id']}.jsonl"
+            events = [json.loads(line) for line in path.read_text(encoding='utf-8').splitlines()]
+            for event in events:
+                if event['type'] == 'turn_context':
+                    event['payload']['model'] = spec.get('model', 'gpt-6-sol')
+                info = event.get('payload', {}).get('info')
+                if info:
+                    for usage in ('total_token_usage', 'last_token_usage'):
+                        info[usage].update(spec.get('tokens', {}))
+            path.write_text(''.join(json.dumps(event) + '\n' for event in events), encoding='utf-8')
+            with closing(sqlite3.connect(home / 'state_1.sqlite')) as db:
+                db.execute('UPDATE threads SET model=? WHERE id=?',
+                           (spec.get('model', 'gpt-6-sol'), spec['id']))
+                db.commit()
+        self.panel.provider_poller = ProviderPoller(CodexStore(home))
+        return home
+
+    def _idle_stores(self):
+        return self._attach_multi([{'id': 't1'}])
+
+    def _complete(self, home, key):
+        import json
+        with (home / f'{key}.jsonl').open('a', encoding='utf-8') as stream:
+            stream.write(json.dumps(dict(type='event_msg',
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                payload=dict(type='task_complete'))) + '\n')
+
+    def test_current_codex_counts_and_distinct_task_local_metrics(self):
+        for count in (1, 3, 5, 8):
+            with self.subTest(count=count):
+                self._attach_multi([dict(id=f't{i}', working=True, model=f'model-{i}',
+                                         tokens={'input_tokens': 100 + i,
+                                                 'output_tokens': 20 + i,
+                                                 'total_tokens': 120 + 2 * i})
+                                    for i in range(count)])
+                out = self._publish_render(now=NOW_S)
+                keys = self._assert_exact_coverage(out)
+                self.assertEqual(len(keys), count)
+                self.assertEqual({task['provider_id'] for task in out['active_tasks']}, {'codex'})
+                by_key = {task['task_key']: task for task in out['active_tasks']}
+                for i in range(count):
+                    presentation = by_key[f't{i}']['presentation']
+                    self.assertEqual(presentation['model'], f'model-{i}')
+                    self.assertEqual(presentation['tokens']['total_tokens'], 120 + 2 * i)
+                numbers = [self.manager.window_for(key).number_label.text() for key in keys]
+                self.assertEqual(len(set(numbers)), count)
+
+    def test_lifecycle_completion_add_and_return_to_default(self):
+        home = self._attach_multi([{'id': 't1', 'working': True},
+                                   {'id': 't2', 'working': True},
+                                   {'id': 't3'}])
+        out = self._publish_render(now=NOW_S)
+        self.assertEqual(len(self._assert_exact_coverage(out)), 2)
+        key = ('codex', 't2')
+        survivor = self.manager.window_for(key)
+        number, slot = self.manager.label_number_for(key), self.manager.slot_for(key)
+        self._complete(home, 't1')
+        out = self._publish_render(now=NOW_S)
+        self.assertEqual(self._assert_exact_coverage(out), [key])
+        self.assertIs(self.manager.window_for(key), survivor)
+        self.assertEqual((self.manager.label_number_for(key), self.manager.slot_for(key)),
+                         (number, slot))
+        import json
+        with (home / 't3.jsonl').open('a', encoding='utf-8') as stream:
+            stream.write(json.dumps(dict(type='event_msg',
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                payload=dict(type='task_started'))) + '\n')
+        out = self._publish_render(now=NOW_S)
+        self.assertEqual(set(self._assert_exact_coverage(out)), {key, ('codex', 't3')})
+        self.assertIs(self.manager.window_for(key), survivor)
+        self._complete(home, 't2')
+        self._complete(home, 't3')
+        out = self._publish_render(now=NOW_S)
+        self.assertEqual(self._assert_exact_coverage(out), [])
+        self.assertNotEqual(self.panel.status_text.text(), text('working', self.panel.language))
+
+    def test_legacy_choices_preserve_all_codex_objects_labels_and_slots(self):
+        self._attach_multi([{'id': f't{i}', 'working': True} for i in range(5)])
+        self._publish_render(now=NOW_S)
+        before = {key: (self.manager.window_for(key), self.manager.label_number_for(key),
+                        self.manager.slot_for(key)) for key in self.manager.window_identities()}
+        for preference in ('auto', 'opencode', 'codex', 'unknown'):
+            out = self._apply_publish({'tracking_provider': preference})
+            self.assertEqual(out['preference'], 'codex')
+            self.assertEqual(set(self._assert_exact_coverage(out)), set(before))
+            for key, (orb, number, slot) in before.items():
+                self.assertIs(self.manager.window_for(key), orb)
+                self.assertEqual((self.manager.label_number_for(key), self.manager.slot_for(key)),
+                                 (number, slot))
+
+    def test_source_failure_retires_all_codex_orbs_and_live_context(self):
+        self._attach_multi([{'id': f't{i}', 'working': True} for i in range(3)])
+        self.assertEqual(len(self._assert_exact_coverage(self._publish_render(now=NOW_S))), 3)
+        from providers import CodexProvider
+        self.assertTrue(self.panel.provider_poller.drain())
+        with patch.object(CodexProvider, 'read', side_effect=RuntimeError('read failed')):
+            out = self._publish_render(now=NOW_S)
+        self.assertEqual(self._assert_exact_coverage(out), [])
+        self.assertFalse(out['selection']['live'])
+        self.assertIsNone(out['result'].get('working_context'))
+
+    def test_codex_provenance_and_task_privacy_both_languages(self):
+        self._attach_multi([{'id': f'private-thread-{i}', 'working': True,
+                             'name': 'PRIVATE REVIEW NOTES'} for i in range(3)])
+        for language in ('zh_CN', 'en'):
+            self.panel.prefs['language']=language
+            self.panel.apply_language()
+            out = self._publish_render(now=NOW_S)
+            keys = self._assert_exact_coverage(out)
+            visible = '\n'.join(self.manager.window_for(key).panel_text() for key in keys)
+            self.assertNotIn('PRIVATE REVIEW NOTES', visible)
+            self.assertNotIn('private-thread-', visible)
+            self.assertIn('Codex', self.panel.connection.text())
+            self.assertNotIn('OpenCode', self.panel.connection.text())
+            self.assertNotIn('PRIVATE REVIEW NOTES', self.panel.title.text())
+            self.assertNotIn('private-thread-', self.panel.title.text())
+
+    def test_shutdown_and_late_generation_never_resurrect_scene(self):
+        self._attach_multi([{'id': 't1', 'working': True}])
+        out = self._publish_render(now=NOW_S)
+        self.assertEqual(len(self._assert_exact_coverage(out)), 1)
+        stale = dict(out, generation=out['generation'] - 1, active_tasks=[],
+                     result=dict(out['result'], generation=out['generation'] - 1))
+        self.panel.publish_snapshot(stale)
+        self.assertEqual(self.manager.window_count(), 1)
+        self.panel.shutdown()
+        self.panel.publish_snapshot(out)
+        self.app.processEvents()
+        self.assertEqual(self.manager.window_count(), 0)
+
 
 
 class TaskPanelLogicTests(unittest.TestCase):
@@ -5705,15 +4652,12 @@ class TaskPanelLogicTests(unittest.TestCase):
         self.assertEqual(task_identity(codex), ('codex', '123'))
         self.assertNotEqual(task_identity(codex), task_identity(opencode))
 
-    def test_order_is_registry_then_activity_then_key(self):
-        late_oc = {'provider_id': 'opencode', 'task_key': 'b', 'activity_at': 300.0}
-        early_oc = {'provider_id': 'opencode', 'task_key': 'a', 'activity_at': 100.0}
-        old_codex = {'provider_id': 'codex', 'task_key': 't', 'activity_at': 1.0}
-        unknown = {'provider_id': 'opencode', 'task_key': 'c', 'activity_at': None}
-        ordered = [task_identity(t) for t in order_tasks(
-            [late_oc, unknown, old_codex, early_oc])]
-        self.assertEqual(ordered, [('codex', 't'), ('opencode', 'b'),
-                                  ('opencode', 'a'), ('opencode', 'c')])
+    def test_current_codex_order_is_activity_then_stable_key(self):
+        tasks = [dict(provider_id='codex', task_key=key, activity_at=instant)
+                 for key, instant in (('b', 300.0), ('a', 100.0), ('t', 1.0), ('c', None))]
+        ordered = [task_identity(task) for task in order_tasks(tasks)]
+        self.assertEqual(ordered, [('codex', 'b'), ('codex', 'a'), ('codex', 't'), ('codex', 'c')])
+
 
     def test_order_tie_breaks_on_stable_key(self):
         first = {'provider_id': 'codex', 'task_key': 't2', 'activity_at': 50.0}
@@ -5721,17 +4665,12 @@ class TaskPanelLogicTests(unittest.TestCase):
         ordered = [task_identity(t) for t in order_tasks([first, second])]
         self.assertEqual(ordered, [('codex', 't1'), ('codex', 't2')])
 
-    def test_filter_auto_union_and_manual_subsets(self):
+    def test_current_filter_rejects_foreign_tasks_for_legacy_preferences(self):
         codex = {'provider_id': 'codex', 'task_key': 't1'}
-        oc = {'provider_id': 'opencode', 'task_key': 'opencode:s'}
-        self.assertEqual(filter_tasks_for_preference([codex, oc], 'auto'),
-                         [codex, oc])
-        self.assertEqual(filter_tasks_for_preference([codex, oc], 'codex'),
-                         [codex])
-        self.assertEqual(filter_tasks_for_preference([codex, oc], 'opencode'),
-                         [oc])
-        self.assertEqual(filter_tasks_for_preference([codex, oc], 'bogus'),
-                         [codex, oc])
+        foreign = {'provider_id': 'opencode', 'task_key': 'foreign'}
+        for preference in ('codex', 'auto', 'opencode', 'bogus', None):
+            self.assertEqual(filter_tasks_for_preference([codex, foreign], preference), [codex])
+
 
     def test_filter_never_mutates_input(self):
         tasks = [{'provider_id': 'codex', 'task_key': 't1'}]
@@ -5980,7 +4919,7 @@ class TaskPanelLogicTests(unittest.TestCase):
             self.assertLessEqual(y + size[1], 1080)
 
     def test_geometry_overflow_uses_second_column(self):
-        # Astra repro shape: pet near center, 8 OpenCode windows on a
+        # Historical exterior repro: pet near center, 8 Codex windows on a
         # 1920x1080 work area. The right side alone cannot hold them, so
         # the algorithm must spill left -- never clamp-stack.
         size = pet_geometry.TASK_WINDOW_OPENCODE
@@ -6020,6 +4959,7 @@ class TaskPanelLogicTests(unittest.TestCase):
             self.assertLessEqual(x + codex[0], 1920)
 
     def test_format_recorded_cost_precision(self):
+        # Historical pure formatter; no recorded-cost claim enters Codex UI.
         self.assertEqual(format_recorded_cost(None), 'N/A')
         self.assertEqual(format_recorded_cost(True), 'N/A')
         self.assertEqual(format_recorded_cost('x'), 'N/A')
@@ -6035,34 +4975,22 @@ class TaskPanelLogicTests(unittest.TestCase):
             self.assertNotIn('USD', rendered)
         self.assertNotEqual(format_recorded_cost(0.001), '0.00')
 
-    def test_format_task_metrics_shared_semantics(self):
-        oc = format_task_metrics(
-            'opencode',
-            {'tokens': {'input': 100, 'output': 20, 'reasoning': 5,
-                        'cache_read': 400, 'cache_write': 7, 'total': 532},
-             'cost_amount': 0.05, 'model': 'mock'}, 'en')
-        self.assertIn('100', oc['input'][0])
-        self.assertIn('400', oc['cache_read'][0])
-        self.assertIn('532', oc['total'][0])
-        self.assertIn('0.05', oc['cost'][0])
-        self.assertIn('mock', oc['model'][0])
-        unknown = format_task_metrics(
-            'opencode',
-            {'tokens': {'input': None, 'output': None, 'reasoning': None,
-                        'cache_read': None, 'cache_write': None,
-                        'total': None},
-             'cost_amount': None, 'model': None}, 'en')
-        for row in ('total', 'input', 'output', 'reasoning', 'cache_read',
-                    'cache_write', 'cost'):
-            self.assertEqual(unknown[row][0], 'N/A', row)
-        self.assertEqual(unknown['model'][0], 'Unknown')
-        codex = format_task_metrics(
-            'codex',
-            {'tokens': {'total_tokens': 110, 'input_tokens': 100,
-                        'output_tokens': 10},
-             'model': 'gpt-6-astra'}, 'en')
-        self.assertIn('110', codex['total'][0])
-        self.assertIn('gpt-6-astra', codex['model'][0])
+    def test_current_codex_metrics_preserve_known_unknown_and_zero(self):
+        for value, rendered in ((0, '0'), (None, 'N/A'), (532, '532')):
+            metrics = format_task_metrics('codex', {'tokens': {
+                'total_tokens': value, 'input_tokens': value, 'output_tokens': value,
+                'cached_input_tokens': value, 'cache_write_input_tokens': value,
+                'reasoning_output_tokens': value}, 'model': None}, 'en')
+            for row in ('total', 'input', 'output'):
+                self.assertIn(rendered, metrics[row][0])
+            self.assertEqual(metrics['model'][0], 'Unknown')
+            for unsupported in ('cost', 'reasoning', 'cache_read', 'cache_write'):
+                self.assertNotIn(unsupported, metrics)
+        known = format_task_metrics('codex', {'tokens': {'total_tokens': 110},
+                                             'model': 'gpt-6-sol'}, 'en')
+        self.assertIn('110', known['total'][0])
+        self.assertEqual(known['model'][0], 'gpt-6-sol')
+
 
     def test_geometry_deterministic_for_same_slot(self):
         size = pet_geometry.TASK_WINDOW_CODEX
@@ -6071,25 +4999,17 @@ class TaskPanelLogicTests(unittest.TestCase):
         self.assertEqual(pet_geometry.task_window_position(2, size, pet, screen),
                          pet_geometry.task_window_position(2, size, pet, screen))
 
-    def test_slice_c_localization_keys_both_languages(self):
+    def test_current_task_localization_keys_both_languages(self):
         for language in ('zh_CN', 'en'):
-            auto = text('provider_mode_auto', language)
-            self.assertTrue(auto)
-            self.assertNotEqual(auto, 'provider_mode_auto')
-            manual = text('provider_mode_manual', language, provider='Codex')
-            self.assertIn('Codex', manual)
             label = text('task_panel_label', language, n=3)
             self.assertIn('3', label)
-            for key in ('task_panel_total', 'task_panel_input',
-                        'task_panel_output', 'task_panel_reasoning',
-                        'task_panel_cache_read', 'task_panel_cache_write',
-                        'task_panel_model', 'task_panel_cost'):
-                value = text(key, language)
-                self.assertNotEqual(value, key)
-        self.assertNotEqual(text('provider_mode_auto', 'zh_CN'),
-                            text('provider_mode_auto', 'en'))
+            for key in ('task_panel_total', 'task_panel_input', 'task_panel_output',
+                        'task_panel_reasoning', 'task_panel_cache_read', 'task_panel_cache_write',
+                        'task_panel_model', 'task_panel_cost', 'unknown'):
+                self.assertNotEqual(text(key, language), key)
         self.assertNotEqual(text('task_panel_label', 'zh_CN', n=1),
                             text('task_panel_label', 'en', n=1))
+
 
 
 if __name__=='__main__':unittest.main()

@@ -1,8 +1,8 @@
-"""V1.2 Slice 6: provider-local analytics and cost provenance.
+"""Current Codex analytics parity plus explicitly isolated historical shaping.
 
-Traverses the real provider result -> poller/render -> analytics window
-path. Codex behavior is parity-checked; OpenCode shows verified raw
-categories only, with honest N/A, coverage, recorded cost and history.
+Historical OpenCode accounting is exercised directly through its adapter and
+inert renderer, never registered with a current Panel/ProviderPoller. These
+cases preserve parsing/history evidence; they are not current product support.
 """
 import json
 import tempfile
@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from provider_poller import ProviderPoller
 from providers import CodexProvider
-from opencode_provider import OpenCodeProvider
+from opencode_provider import OpenCodeProvider, opencode_display
 from tests.test_opencode_provider import (BASE_MS, make_message, make_part,
                                           make_session, write_store)
 from tests.test_providers import write_home
@@ -50,6 +50,9 @@ class AnalyticsFixture:
         self.panel.apply_language()
         self.work = Path(self.temp.name) / 'stores'
         self.work.mkdir()
+        self.historical_adapter = None
+        self.historical_payload = None
+        self.historical_window = None
 
     def tearDown(self):
         try:
@@ -57,6 +60,11 @@ class AnalyticsFixture:
         except Exception:
             pass
         self.panel.provider_poller.close()
+        if self.historical_adapter is not None:
+            self.historical_adapter.close()
+        if self.historical_window is not None:
+            self.historical_window.close()
+        self.panel.task_manager.shutdown()
         self.panel.pet.close()
         self.panel.tray.hide()
         if self.panel.analytics_window:
@@ -85,11 +93,21 @@ class AnalyticsFixture:
         tag = len(list(self.work.iterdir()))
         home = self._home(f'codex-{tag}', threads)
         db = self._db(f'open-{tag}.db', sessions, messages, parts)
-        self.panel.provider_poller = ProviderPoller(home, db)
+        self.panel.provider_poller = ProviderPoller(home)
+        if self.historical_adapter is not None:
+            self.historical_adapter.close()
+        self.historical_adapter = OpenCodeProvider(db)
+        self.historical_payload = None
         return self.panel.provider_poller
 
     def _poll_render(self, prefs=None, now=None, history=False, **kw):
         prefs = dict({'scope': 'global'}, **(prefs or {}))
+        if prefs.get('tracking_provider') == 'opencode':
+            # Test-only historical shaping, separate from current product IO.
+            self.historical_payload = opencode_display(self.historical_adapter.read(
+                pinned=prefs.get('pinned', ''), scope=prefs['scope'], include_history=history))
+            return dict(provider_id='opencode', result=self.historical_payload)
+        self.historical_payload = None
         poller = self.panel.provider_poller
         poller.poll(prefs, now=now, want_history=history, **kw)
         self.assertTrue(poller.drain(), 'reads did not finish')
@@ -101,6 +119,15 @@ class AnalyticsFixture:
         return out
 
     def _open_window(self):
+        if self.historical_payload is not None:
+            from analytics_view import AnalyticsWindow
+            if self.historical_window is None:
+                self.historical_window = AnalyticsWindow(self.panel)
+            self.historical_window.apply_language()
+            self.historical_window.update_opencode(self.historical_payload)
+            self.historical_window.show()
+            self.app.processEvents()
+            return self.historical_window
         self.panel.open_analytics()
         self.app.processEvents()
         return self.panel.analytics_window
@@ -220,8 +247,8 @@ class OpenCodeRawAnalyticsTests(AnalyticsFixture, unittest.TestCase):
         self.assertEqual(values['OpenCode raw · Input Tokens'], '0 Tokens')
         cost = values['OpenCode raw · Recorded Cost']
         self.assertIn('0', cost)
-        self.assertNotIn('$', self.panel.analytics_window.raw.toPlainText())
-        self.assertNotIn('USD', self.panel.analytics_window.raw.toPlainText())
+        self.assertNotIn('$', window.raw.toPlainText())
+        self.assertNotIn('USD', window.raw.toPlainText())
 
     def test_unknown_cost_and_category_stay_na(self):
         self._attach(
@@ -239,95 +266,58 @@ class OpenCodeRawAnalyticsTests(AnalyticsFixture, unittest.TestCase):
 
 
 class ProviderScopeIsolationTests(AnalyticsFixture, unittest.TestCase):
-    def test_same_raw_id_never_collides(self):
-        self._attach(
-            [{'id': 'shared', 'working': True, 'name': 'shared'}],
-            [make_session('shared', project='proj-x',
-                          directory='/synthetic/xray',
-                          tokens=(7, 7, 7, 7, 7), updated=BASE_MS)],
-            [make_message('m1', 'shared')],
-            [make_part('p1', 'shared', created=BASE_MS - 100000)])
-        codex = self._poll_render({'tracking_provider': 'codex'},
-                                  active_title='shared',
-                                  detection_valid=True, now=NOW_S)
-        window = self._open_window()
-        self.assertIn('gpt-6-astra', self._column(window.models, 0))
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        self._poll_render({'scope': 'conversation', 'pinned': 'shared',
-                           'tracking_provider': 'opencode'}, now=NOW_S,
-                          history=True)
-        window = self._open_window()
-        sessions = self._column(window.sessions, 0)
-        self.assertIn('opencode:shared', sessions)
-        self.assertNotIn('gpt-6-astra', self._column(window.models, 0))
-        self.assertNotIn('gpt-6-astra', window.raw.toPlainText())
+    """Actual current Panel boundaries; historical helper never drives these."""
 
-    def test_switch_replaces_analytics_atomically(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        self._poll_render(active_title='t1', detection_valid=True,
-                          history=True)
-        window = self._open_window()
-        self.assertIn('gpt-6-astra', self._column(window.models, 0))
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
-        self.panel.provider_poller.bump_generation()
-        self._poll_render({'scope': 'conversation', 'pinned': 'ses_1',
-                           'tracking_provider': 'opencode'}, now=NOW_S,
-                          history=True)
-        window = self._open_window()
-        self.assertIn('OpenCode', window.heading.text())
-        self.assertNotIn('gpt-6-astra', self._column(window.models, 0))
-        self.assertNotIn('gpt-6-astra', window.raw.toPlainText())
+    def prepare_codex(self):
+        self._attach([{'id': 'shared', 'working': True}, {'id': 'other'}], [])
+        return self._poll_render({'tracking_provider': 'codex'},
+                                 active_title='shared', detection_valid=True,
+                                 now=NOW_S, history=True)
 
-    def test_late_analytics_cannot_restore(self):
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        codex = self._poll_render(active_title='t1', detection_valid=True,
-                                  history=True)
+    def test_foreign_provider_cannot_replace_current_analytics(self):
+        self.prepare_codex()
         window = self._open_window()
-        self.panel.prefs['tracking_provider'] = 'opencode'
-        self.panel.provider_poller.mark_used('opencode')
+        before = (window.heading.text(), window.raw.toPlainText(), self.panel.snapshot)
+        foreign = {'provider_id': 'opencode', 'available': True,
+                   'scope': 'project', 'generation': 999999}
+        self.panel.render(foreign)
+        window.update_data(foreign)
+        self.assertEqual((window.heading.text(), window.raw.toPlainText(), self.panel.snapshot), before)
+        self.assertIn('Codex', window.heading.text())
+
+    def test_scope_change_replaces_analytics_atomically(self):
+        self.prepare_codex()
         self.panel.provider_poller.bump_generation()
-        newer = self._poll_render(
-            {'scope': 'conversation', 'pinned': 'ses_1',
-             'tracking_provider': 'opencode'}, now=NOW_S, history=True)
+        out = self._poll_render({'scope': 'conversation', 'pinned': 'shared',
+                                 'tracking_provider': 'codex'}, now=NOW_S, history=True)
         window = self._open_window()
-        self.assertIn('OpenCode', window.heading.text())
-        stale = dict(codex['result'])
-        stale['generation'] = newer['generation'] - 1
+        self.assertEqual(out['result']['scope'], 'conversation')
+        self.assertIn('Codex', window.heading.text())
+        self.assertIn('Conversation', window.heading.text())
+        self.assertEqual(window.sessions.rowCount(), 1)
+
+    def test_late_analytics_cannot_restore_old_scope(self):
+        old = self.prepare_codex()
+        self.panel.provider_poller.bump_generation()
+        newer = self._poll_render({'scope': 'conversation', 'pinned': 'shared'},
+                                  now=NOW_S, history=True)
+        window = self._open_window()
+        before = (window.heading.text(), window.raw.toPlainText())
+        stale = dict(old['result'], generation=newer['generation'] - 1)
         self.panel.render(stale)
-        self.app.processEvents()
-        self.assertIn('OpenCode', window.heading.text())
-        self.assertNotIn('gpt-6-astra', self._column(window.models, 0))
+        self.assertEqual((window.heading.text(), window.raw.toPlainText()), before)
+        self.assertEqual(self.panel.snapshot['scope'], 'conversation')
 
-    def test_unavailable_clears_tables(self):
-        from opencode_provider import OpenCodeProvider as OcProvider
-        self._attach(
-            [{'id': 't1', 'working': True}],
-            [make_session('ses_1', updated=BASE_MS)],
-            [make_message('m1', 'ses_1')],
-            [make_part('p1', 'ses_1', created=BASE_MS - 100000)])
-        self._poll_render({'scope': 'conversation', 'pinned': 'ses_1',
-                           'tracking_provider': 'opencode'}, now=NOW_S,
-                          history=True)
+    def test_unavailable_codex_clears_current_tables(self):
+        self.prepare_codex()
         window = self._open_window()
         self.assertGreater(window.sessions.rowCount(), 0)
-        self.panel.provider_poller.opencode.close()
-        self.panel.provider_poller.opencode = OcProvider(
-            self.work / 'absent.db')
-        self._poll_render({'tracking_provider': 'opencode'}, now=NOW_S)
+        self.panel.render(dict(provider_id='codex', available=False,
+                               status='no_reliable_record', scope='global',
+                               generation=self.panel._render_generation + 1))
         self.assertEqual(window.sessions.rowCount(), 0)
         self.assertEqual(window.models.rowCount(), 0)
-        self.assertIn('OpenCode', window.heading.text())
+        self.assertIn('Codex', window.heading.text())
 
 
 class BreakdownHistoryCostTests(AnalyticsFixture, unittest.TestCase):
@@ -406,10 +396,10 @@ class BreakdownHistoryCostTests(AnalyticsFixture, unittest.TestCase):
         self._poll_render({'tracking_provider': 'opencode'}, now=NOW_S,
                           history=True)
         self.assertEqual(window.history_note.text(), note_before)
-        scans = poller.opencode.history_scans
+        scans = self.historical_adapter.history_scans
         self._poll_render({'tracking_provider': 'opencode'}, now=NOW_S,
                           history=True)
-        self.assertEqual(poller.opencode.history_scans, scans)
+        self.assertEqual(self.historical_adapter.history_scans, scans)
 
     def test_skipped_rows_stay_partial(self):
         now_ms = int(time.time() * 1000)

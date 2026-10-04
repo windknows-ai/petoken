@@ -139,10 +139,9 @@ class AnalyticsWindow(QDialog):
             self.update_data(self.snapshot)
 
     def update_data(self, data):
-        self.snapshot = data
-        if (data.get('provider_id') or 'codex') == 'opencode':
-            self.update_opencode(data)
+        if (data.get('provider_id') or 'codex') != 'codex':
             return
+        self.snapshot = data
         analysis = data.get('analytics')
         if data.get('status') or not analysis or not data.get('available'):
             self.heading.setText(self.tr_text('analytics_heading_provider', provider='Codex', scope=scope_text(
@@ -316,7 +315,9 @@ class AnalyticsWindow(QDialog):
         return f'{text} · {word}', word
 
     def update_opencode(self, data):
-        """Render one OpenCode scoped snapshot: raw categories, the
+        """Historical isolated-test renderer; never reached by update_data.
+
+        Render one OpenCode scoped snapshot: raw categories, the
         recorded Total for verified versions (N/A otherwise), no
         derived ratios, recorded cost with unknown currency.
         Every value comes from this provider-tagged snapshot; switching

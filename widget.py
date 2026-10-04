@@ -22,6 +22,8 @@ from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
 from trail_overlay import TrailOverlay
+from halo_scene import HaloScene
+import halo_geometry
 import pet_assets as assets
 import pet_geometry as pet_geometry
 from app_config import APP_VERSION, load_preferences, save_preferences
@@ -341,19 +343,6 @@ def format_task_metrics(provider_id, presentation, language, token_style=None):
     """
     presentation = presentation or {}
     tokens = presentation.get('tokens') or {}
-    if (provider_id or 'codex') == 'opencode':
-        return dict(
-            total=(format_token_value(tokens.get('total'), token_style),
-                   text('total_unavailable_note', language)),
-            input=(format_tokens(tokens.get('input'), token_style), ''),
-            output=(format_tokens(tokens.get('output'), token_style), ''),
-            reasoning=(format_tokens(tokens.get('reasoning'), token_style), ''),
-            cache_read=(format_tokens(tokens.get('cache_read'), token_style), ''),
-            cache_write=(format_tokens(tokens.get('cache_write'), token_style), ''),
-            model=(presentation.get('model') or text('unknown', language), ''),
-            cost=(format_recorded_cost(presentation.get('cost_amount')),
-                  text('help_recorded_cost', language) + '\n'
-                  + text('help_unknown_currency', language)))
     return dict(
         total=(format_tokens(tokens.get('total_tokens'), token_style),
                text('help_total_tokens', language)),
@@ -372,7 +361,7 @@ class TaskPanelWindow(QWidget):
         self.provider_id = provider_id or 'codex'
         self.manager = manager
         self.setFocusPolicy(Qt.StrongFocus)
-        self.window_size = (252, 440 if self.provider_id == 'opencode' else 340)
+        self.window_size = (252, 340)
         self.setFixedSize(*self.window_size)
         self.setStyleSheet(STYLE)
         self.entry = None
@@ -447,9 +436,6 @@ class TaskPanelWindow(QWidget):
             super().keyPressEvent(event)
 
     def _row_keys(self):
-        if self.provider_id == 'opencode':
-            return ('total', 'input', 'output', 'reasoning', 'cache_read',
-                    'cache_write', 'model', 'effort', 'cost')
         return ('total', 'input', 'output', 'model', 'effort', 'context')
 
     def collapse(self):
@@ -490,8 +476,7 @@ class TaskPanelWindow(QWidget):
         context = presentation.get('context')
         metrics['context'] = ('N/A' if context is None else f'{context:.0f}%', '')
         for key in self._rows:
-            caption = ('task_panel_variant' if self.provider_id == 'opencode' and key == 'effort'
-                       else 'task_panel_' + key)
+            caption = 'task_panel_' + key
             self._set_row(key, text(caption, language), *metrics[key])
         warnings = []
         if presentation.get('partial'):
@@ -561,6 +546,8 @@ class TaskOrbWindow(QWidget):
         self.identity = identity
         self.provider_id = provider_id or 'codex'
         self.manager = manager
+        self.compact_halo = manager is not None and not manager.legacy_exterior_motion
+        self.depth = 1.0
         self.setFocusPolicy(Qt.StrongFocus)
         self.orb_size = pet_geometry.TASK_STAR_SIZE
         self.setFixedSize(*self.orb_size)
@@ -582,7 +569,15 @@ class TaskOrbWindow(QWidget):
         self.number_label.setStyleSheet('color:#E4E9FF;font-size:11px;')
         # Canonical clickable strip: same rect the geometry solver
         # validates, so hit-test and mask can never disagree.
-        self.number_label.setGeometry(*pet_geometry.STAR_LABEL_RECT)
+        if self.compact_halo:
+            cx, cy = pet_geometry.TASK_STAR_CENTER
+            self.number_label.setGeometry(cx - 9, cy + halo_geometry.LABEL_TOP, 18, 14)
+            self.number_label.setStyleSheet(
+                'color:#F4F2FF;background:rgba(33,30,57,215);'
+                'border:1px solid rgba(166,152,238,110);border-radius:5px;font-size:10px;')
+            self.star_scale = .7
+        else:
+            self.number_label.setGeometry(*pet_geometry.STAR_LABEL_RECT)
         self._apply_hit_mask()
 
     def _star_center(self):
@@ -615,23 +610,26 @@ class TaskOrbWindow(QWidget):
     def _apply_hit_mask(self):
         """OS-level clickable region: star/halo disc plus label only."""
         cx, cy = pet_geometry.TASK_STAR_CENTER
-        radius = pet_geometry.TASK_STAR_HIT_R
+        radius = halo_geometry.HIT_RADIUS if self.compact_halo else pet_geometry.TASK_STAR_HIT_R
         region = QRegion(QRect(cx - radius, cy - radius, radius * 2,
                                radius * 2), QRegion.Ellipse)
         region = region.united(
-            QRegion(*pet_geometry.STAR_LABEL_RECT))
+            QRegion(self.number_label.geometry()))
         self.setMask(region)
 
     def is_star_hit(self, local):
         """Whether a widget-local point is an intentional star click."""
         cx, cy = pet_geometry.TASK_STAR_CENTER
-        radius = pet_geometry.TASK_STAR_HIT_R
+        radius = halo_geometry.HIT_RADIUS if self.compact_halo else pet_geometry.TASK_STAR_HIT_R
         dx, dy = local.x() - cx, local.y() - cy
         if dx * dx + dy * dy <= radius * radius:
             return True
         return self.number_label.geometry().contains(local)
 
     def paintEvent(self, event):
+        if self.compact_halo:
+            self._paint_compact_star()
+            return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         center = self._star_center()
@@ -653,14 +651,15 @@ class TaskOrbWindow(QWidget):
         outer = QPolygonF(self._scaled_points())
         body = QLinearGradient(cx, cy - 30 * self.star_scale,
                                cx, cy + 30 * self.star_scale)
-        body.setColorAt(0.0, QColor(139, 123, 255,
+        body.setColorAt(0.0, QColor(208, 194, 255,
                                     self._alpha(235, self.facet_intensity)))
-        body.setColorAt(0.5, QColor(120, 200, 255,
+        body.setColorAt(0.5, QColor(245, 249, 255,
                                     self._alpha(235, self.facet_intensity)))
-        body.setColorAt(1.0, QColor(110, 150, 255,
+        body.setColorAt(1.0, QColor(137, 165, 255,
                                     self._alpha(235, self.facet_intensity)))
         painter.setBrush(body)
         painter.drawPolygon(outer)
+        painter.setPen(Qt.NoPen)
         # Inner facets: pale cyan/lavender, slightly inset.
         inner_pts = [QPointF(cx + (pt.x() - cx) * 0.58,
                              cy + (pt.y() - cy) * 0.58)
@@ -707,6 +706,38 @@ class TaskOrbWindow(QWidget):
                                      self._alpha(200 if index == 0 else 150,
                                                  self.facet_intensity)))
             painter.drawPolygon(diamond)
+
+    def _paint_compact_star(self):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setOpacity(.72 + .28 * (self.depth + 1) / 2)
+        cx, cy = pet_geometry.TASK_STAR_CENTER
+        glow = QRadialGradient(cx, cy, 22)
+        glow.setColorAt(0, QColor(214, 216, 255, 100))
+        glow.setColorAt(.45, QColor(169, 157, 255, 35))
+        glow.setColorAt(1, QColor(151, 132, 255, 0))
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(glow)
+        painter.drawEllipse(QPointF(cx, cy), 22, 22)
+        scale = self.star_scale / .7
+        points = [(0, -20), (4, -5), (14, 0), (4, 5),
+                  (0, 20), (-4, 5), (-14, 0), (-4, -5)]
+        polygon = QPolygonF([QPointF(cx + x * scale, cy + y * scale) for x, y in points])
+        fill = QLinearGradient(cx - 12, cy - 20, cx + 12, cy + 20)
+        fill.setColorAt(0, QColor('#cbc0ff'))
+        fill.setColorAt(.42, QColor('#ffffff'))
+        fill.setColorAt(.64, QColor('#e5f6ff'))
+        fill.setColorAt(1, QColor('#9d9afa'))
+        painter.setPen(QPen(QColor('#9686ed'), .9))
+        painter.setBrush(fill)
+        painter.drawPolygon(polygon)
+        # Opposed translucent facets give the crystal a cut surface.
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(146, 156, 248, 90))
+        painter.drawPolygon(QPolygonF([QPointF(cx, cy), polygon[2], polygon[3], polygon[4]]))
+        painter.setPen(QPen(QColor(255, 255, 255, 235), .85))
+        painter.drawLine(QPointF(cx, cy - 17 * scale), QPointF(cx, cy + 8 * scale))
+        painter.drawLine(QPointF(cx - 10 * scale, cy), QPointF(cx + 9 * scale, cy))
 
     def refresh(self, number_text, provider_name, language):
         """Update visible identity text. Values only, never raw sources."""
@@ -895,63 +926,20 @@ def _plan_parking_routes(inputs):
             'deferred': set()}
 
 
-class TaskPanelManager:
-    """Owns the (provider_id, task_key) -> orb mapping.
+class TaskPanelManager(HaloScene):
+    """Own stable task Stars, task-local detail and the compact halo scene.
 
-    Responsibilities: lifetime label/slot assignment for the
-    authoritative active-task universe, orb creation, per-key update,
-    single-task retirement, deterministic auto layout, user drag
-    overrides, Auto/manual filtering over accepted sets, and
-    generation-safe snapshots. Never reads providers, never detects
-    lifecycle, never computes accounting.
-
-    The authoritative universe (every accepted active task) is kept
-    separate from the visible filtered set: assignments belong to task
-    keys for their whole active lifetime, whether a task is currently
-    visible or temporarily hidden by a manual provider filter. Only
-    disappearance from the authoritative universe releases an
-    assignment — and under a manual filter, only the filtered lane's
-    absence counts (the other lane's sets are intact but simply not
-    delivered, so their assignments survive).
-
-    The main panel is NEVER a task surface: every visible task gets
-    exactly one star, and the companion hub is not counted.
-
-    Each task owns ONE effective anchor: the automatic ring home for
-    its lifetime slot (recomputed from the visible set, tracked
-    across pet moves). Collapsed stars are not user-draggable, so
-    there are no manual position overrides; D2C expands the panel
-    from the current star center and collapses back to the same
-    anchor.
-
-    Motion (D2B): one shared manager-owned visual timer drives the
-    star ring, breathing, and the decorative trail overlay. Ring
-    stars share one active-time phase plus fixed slot offsets;
-    hovering or pressing any star pauses the whole group without
-    teleporting on resume; breathing follows a shared broadcast
-    clock with per-slot phase offsets. Arc fallback keeps per-star
-    clocks with the hovered star frozen. All motion honors the
-    pet_motion preference and stops with zero stars.
-
-    Presentation-transition continuity: every already-visible star's
-    exact current on-screen position is frame zero for any
-    transition. OFF->ON glides survivors along a chase path toward
-    the live ring (never a radial snap, never a hub-cutting chord);
-    ON->OFF runs a finite steered parking glide from current
-    positions to static homes (never an instant park) that advances
-    on ticks even while motion reads off, then idles the timer.
-    Crowded order-mismatched sets that cannot glide together move
-    sequentially (parking, in successive rounds when no single order
-    validates) or via the validated staged reveal (ring
-    entry) rather than teleporting. Movers that cannot join the
-    current parking round hold visibly at their exact current pixels
-    (deferred) instead of hiding or snapping home; the next round
-    replans from those pixels once the first movers land. At most
-    one of _ring_blend / _park_blend is active at any time.
+    Current motion uses a fitted projected ellipse, shared phase and depth
+    layers. Autonomous pose/membership changes retain exact boundary pixels
+    and bounded steps; intentional pet movement transports the attached scene.
+    The exterior route implementation is retained only for explicit historical
+    regression fixtures, never for a product preference.
     """
 
-    def __init__(self, panel):
+    def __init__(self, panel, *, legacy_exterior_motion=False):
         self.panel = panel
+        # Only historical exterior-route fixtures opt in; no product setting.
+        self.legacy_exterior_motion = legacy_exterior_motion
         self._shutdown = False
         self._universe = {}
         self._labels = {}
@@ -994,6 +982,9 @@ class TaskPanelManager:
         self.motion_timer.setInterval(pet_geometry.MOTION_TICK_MS)
         self.motion_timer.timeout.connect(self._on_motion_timeout)
         self.trail_overlay = TrailOverlay()
+        if not self.legacy_exterior_motion:
+            self.trail_overlay.close()
+            self._init_halo()
 
     def window_identities(self):
         return sorted(self._windows)
@@ -1056,14 +1047,11 @@ class TaskPanelManager:
         previous_keys = set(self._windows)
         seen = {}
         for task in tasks or []:
-            seen[task_identity(task)] = task
+            if (task or {}).get('provider_id') == 'codex':
+                seen[task_identity(task)] = task
         for key, task in seen.items():
             self._universe[key] = task
-        if preference == 'auto':
-            retired = [k for k in self._universe if k not in seen]
-        else:
-            retired = [k for k in self._universe
-                       if k[0] == preference and k not in seen]
+        retired = [k for k in self._universe if k not in seen]
         for key in retired:
             self._universe.pop(key, None)
         for key in [k for k in self._labels if k not in self._universe]:
@@ -1148,6 +1136,9 @@ class TaskPanelManager:
                                       or self._motion_enabled() != self._last_motion_enabled)
             self._refresh_detail()
             return self.window_identities()
+        if not self.legacy_exterior_motion:
+            self._halo_apply(pet_rect, screen_rect)
+            return self.window_identities()
         self._compute_orbit_params(pet_rect, screen_rect)
         previous_motion = (self._orbit_mode, self._ring_offsets)
         self._orbit_mode = self._select_orbit_mode(pet_rect, screen_rect)
@@ -1180,15 +1171,15 @@ class TaskPanelManager:
         if (self._orbit_mode, self._ring_offsets) != previous_motion:
             # Recomposition (ring in/out, new radius, new spacing):
             # never paint a streak between the old path and the new.
-            self.trail_overlay.clear_all()
+            self._clear_trails()
         if motion_changed:
             # Motion OFF->ON/OFF toggles swap geometry spaces
             # (static homes vs animated ring): stale ribbons must not
             # bridge the two.
-            self.trail_overlay.clear_all()
+            self._clear_trails()
         if not self._windows:
             self.stop_motion()
-            self.trail_overlay.clear_all()
+            self._clear_trails()
             try:
                 if self.trail_overlay.isVisible():
                     self.trail_overlay.hide()
@@ -1257,6 +1248,10 @@ class TaskPanelManager:
         motion-disabled uses homes. Returns ({key: window},
         {key: float center}).
         """
+        if not self.legacy_exterior_motion:
+            centers, _ = self._halo_positions()
+            return ({k: pet_geometry.star_center_to_window_position(*v)
+                     for k, v in centers.items()}, centers)
         mode = self._orbit_mode
         kind = mode[0] if isinstance(mode, tuple) else 'static'
         pcx = pet_rect[0] + pet_rect[2] / 2.0
@@ -1691,7 +1686,7 @@ class TaskPanelManager:
             if self._park_blend is None:
                 self._reveal_parked_at_homes(pet_rect, screen_rect)
                 return False
-        self.trail_overlay.clear_all()
+        self._clear_trails()
         try:
             if self.trail_overlay.isVisible():
                 self.trail_overlay.hide()
@@ -2430,6 +2425,13 @@ class TaskPanelManager:
         current positions instead of snapping home."""
         if self._shutdown:
             return False
+        if not self.legacy_exterior_motion:
+            want = bool(self._windows) and self._visible and self.expanded_identity is None
+            need = want and (self._motion_enabled() or self._halo_pending()
+                             or self.trail_overlay.has_trails() or self.back_overlay.has_trails())
+            if self._live_armed():
+                self.start_motion() if need else self.stop_motion()
+            return bool(want and self._motion_enabled() and self._live_armed())
         if self.expanded_identity is not None:
             self._expansion_dirty |= self._motion_enabled() != self._last_motion_enabled
             return False
@@ -2474,7 +2476,7 @@ class TaskPanelManager:
             self.motion_timer.stop()
             self._last_tick = None
         if not timer_want:
-            self.trail_overlay.clear_all()
+            self._clear_trails()
             try:
                 if self.trail_overlay.isVisible():
                     self.trail_overlay.hide()
@@ -2601,7 +2603,7 @@ class TaskPanelManager:
         orb = self._windows[identity]
         self.expanded_anchor = (orb.x(), orb.y())
         self._last_tick = None
-        self.trail_overlay.clear_all()
+        self._clear_trails()
         self._refresh_detail()
         self.detail_window.show()
         self.detail_window.raise_()
@@ -2670,7 +2672,26 @@ class TaskPanelManager:
                                     self._last_pet_rect, self._last_screen_rect)
             self.sync_motion()
 
-    def anchor_changed(self):
+    def anchor_changed(self, *, transport=False):
+        if not self.legacy_exterior_motion:
+            if self._shutdown or getattr(self.panel, 'closing', False):
+                return
+            pet_rect, screen_rect = self._anchor()
+            if self.expanded_identity is not None:
+                self._expansion_dirty = True
+                self.collapse_detail(replan=False)
+            self._halo_target = halo_geometry.fit_pose(pet_rect, screen_rect)
+            if transport and self._windows and self._halo_pose is not None:
+                # Intentional pet movement transports the attached scene. The
+                # shared orbit phase/slot offsets do not jump or catch up.
+                self._halo_pose = self._halo_target
+                self._last_pet_rect, self._last_screen_rect = pet_rect, screen_rect
+                self._clear_trails()
+                self._clear_interaction_holds()
+                self._last_tick = None
+                self._halo_commit(0.0, record=False)
+            self.sync_motion()
+            return
         if (self._shutdown or getattr(self.panel, 'closing', False)
                 or self.expanded_identity is None):
             return
@@ -2916,6 +2937,10 @@ class TaskPanelManager:
 
     def _nominal_valid(self, windows, pet_rect, screen_rect):
         """Per-tick full-set check on integer windows (hold on fail)."""
+        if not self.legacy_exterior_motion:
+            cx, cy = pet_geometry.TASK_STAR_CENTER
+            return halo_geometry.frame_valid({k: (x + cx, y + cy)
+                                               for k, (x, y) in windows.items()}, screen_rect)
         left, top, right, bottom = screen_rect
         width, height = pet_geometry.TASK_STAR_SIZE
         for wx, wy in windows.values():
@@ -3035,6 +3060,9 @@ class TaskPanelManager:
             return
         self._last_pet_rect = pet_rect
         self._last_screen_rect = screen_rect
+        if not self.legacy_exterior_motion:
+            self._tick_halo(now, pet_rect, screen_rect)
+            return
         if self._poll_park_plan(pet_rect, screen_rect):
             self._last_tick = now
             return
@@ -3053,7 +3081,7 @@ class TaskPanelManager:
                 if (stray and self._max_home_distance(
                         stray, pet_rect, screen_rect) >= 1.0):
                     self._begin_park_glide(pet_rect, screen_rect)
-                    self.trail_overlay.clear_all()
+                    self._clear_trails()
                     last = self._last_tick
                     dt = self._clamped_dt(
                         0.0 if last is None else max(0.0, now - last))
@@ -3114,7 +3142,7 @@ class TaskPanelManager:
             if jump > 120.0:
                 # Pet teleported (not smooth-tracked): never paint a
                 # full-screen streak for the jump itself.
-                self.trail_overlay.clear_all()
+                self._clear_trails()
         last = self._last_tick
         dt = self._clamped_dt(
             0.0 if last is None else max(0.0, now - last))
@@ -3312,6 +3340,7 @@ class TaskPanelManager:
             return
         self._visible = bool(visible)
         if not self._visible:
+            self._clear_trails()
             self.collapse_detail(replan=False)
             self._cancel_park_planning()
         elif self._orbit_mode == ('expanded_resume',):
@@ -3332,6 +3361,10 @@ class TaskPanelManager:
             self._press_holds = set()
             self._hovered = None
         self.sync_motion()
+        if not self.legacy_exterior_motion:
+            self.back_overlay.setVisible(bool(self._visible and self._windows))
+            self.trail_overlay.setVisible(bool(self._visible and self._windows))
+            self._stack_halo(force=True)
         if not self._visible:
             try:
                 if self.trail_overlay.isVisible():
@@ -3341,6 +3374,12 @@ class TaskPanelManager:
 
     def apply_topmost(self, on_top):
         """Mirror the always-on-top preference onto task stars."""
+        if not self.legacy_exterior_motion:
+            layer = self.back_overlay
+            visible = layer.isVisible()
+            layer.setWindowFlag(Qt.WindowStaysOnTopHint, bool(on_top))
+            layer.setVisible(visible)
+            self._halo_stack = None
         for orb in list(self._windows.values()) + ([self.detail_window] if self.detail_window else []):
             try:
                 if bool(orb.windowFlags() & Qt.WindowStaysOnTopHint) != bool(on_top):
@@ -3360,6 +3399,10 @@ class TaskPanelManager:
                     overlay.show()
         except Exception:
             pass
+        if not self.legacy_exterior_motion:
+            # OFF/settled scenes have no timer to restore depth after HWND
+            # recreation, so the preference boundary owns the native order.
+            self._stack_halo(force=True)
 
     def shutdown(self):
         """Stop motion, close every task star and the trail layer."""
@@ -3373,12 +3416,15 @@ class TaskPanelManager:
             self.detail_window.deleteLater()
             self.detail_window = None
         self._cancel_park_planning()
+        if not self.legacy_exterior_motion:
+            self.back_overlay.clear_all()
+            self.back_overlay.close()
         try:
             self.stop_motion()
         except Exception:
             pass
         try:
-            self.trail_overlay.clear_all()
+            self._clear_trails()
             self.trail_overlay.close()
         except Exception:
             pass
@@ -3438,7 +3484,10 @@ class Settings(QDialog):
         self.tracking.setCurrentIndex(max(0, self.tracking.findData(
             normalize_tracking_provider(panel.prefs.get('tracking_provider')))))
         self.tracking_label = label()
-        self.form.addRow(self.tracking_label, self.tracking)
+        # A single source needs no provider chooser. Retain the hidden field
+        # only for old preference readers; normalized output is always Codex.
+        self.tracking.hide()
+        self.tracking_label.hide()
         self.language = QComboBox()
         initial_language = normalize_language(panel.prefs.get('language'))
         self.language.addItem(text('language_zh_CN', initial_language), 'zh_CN')
@@ -3580,7 +3629,7 @@ class Settings(QDialog):
         self.reset_armed = False
         self.task.setCurrentIndex(0)
         self.scope.setCurrentIndex(self.scope.findData('conversation'))
-        self.tracking.setCurrentIndex(self.tracking.findData('auto'))
+        self.tracking.setCurrentIndex(self.tracking.findData('codex'))
         self.language.setCurrentIndex(self.language.findData(DEFAULT_LANGUAGE))
         self.token_format.setCurrentIndex(
             self.token_format.findData(DEFAULT_TOKEN_NUMBER_FORMAT))
@@ -4051,7 +4100,7 @@ class Panel(QWidget):
     def receive_limits(self, data):
         self.quota.update(data)
         # Quota payloads are Codex-sidecar data; the provider tag keeps a
-        # late Codex payload from ever rendering under OpenCode.
+        # foreign or late mismatched payload from supplying current quota chrome.
         if isinstance(data, dict) and data.get('provider_id'):
             self.quota_provider = data['provider_id']
         self.refresh_status()
@@ -4060,6 +4109,8 @@ class Panel(QWidget):
         if self.closing:
             return
         data = data or {}
+        if (data.get('provider_id') or 'codex') != 'codex':
+            return
         generation = data.get('generation')
         # Legacy generation-less payloads (synthetic fixtures, old local
         # callers) still render below; the production provider loop can
@@ -4073,7 +4124,7 @@ class Panel(QWidget):
             self._render_generation = generation
         self.snapshot = data
         provider = data.get('provider_id') or 'codex'
-        provider_label = 'OpenCode' if provider == 'opencode' else 'Codex'
+        provider_label = 'Codex'
         self.apply_provider_chrome(provider)
         selection = data.get('selection')
         if selection is None:
@@ -4098,9 +4149,6 @@ class Panel(QWidget):
         # (if any) from the authoritative universe before legacy widgets
         # render, so the task-mode override below always sees fresh state.
         self.refresh_task_panels(data)
-        if provider == 'opencode':
-            self.render_opencode(data, selection or {}, provider_label)
-            return
         if data.get('status') or not data.get('available'):
             status = self.tr_text(data.get('status') or 'no_reliable_record')
             self.connection.setText(f'{provider_label} · {status}')
@@ -4210,18 +4258,9 @@ class Panel(QWidget):
         self.bridge.data.emit(out)
 
     def refresh_provider_mode(self, data):
-        """Show the tracking preference separately from task context."""
-        data = data or {}
-        selection = data.get('selection') or {}
-        preference = (selection.get('preference')
-                      or normalize_tracking_provider(self.prefs.get('tracking_provider')))
-        if preference == 'auto':
-            self.provider_mode.setText(self.tr_text('provider_mode_auto'))
-            self.provider_mode.setToolTip(self.tr_text('provider_mode_auto'))
-        else:
-            name = PROVIDER_NAMES.get(preference, preference)
-            self.provider_mode.setText(self.tr_text('provider_mode_manual', provider=name))
-            self.provider_mode.setToolTip(self.tr_text('provider_mode_manual', provider=name))
+        """Display the current sole source without obsolete selection modes."""
+        self.provider_mode.setText('Codex')
+        self.provider_mode.setToolTip('Codex')
 
     def refresh_task_panels(self, data):
         """Apply accepted active tasks to the orb manager.
@@ -4296,143 +4335,17 @@ class Panel(QWidget):
         self.project.setToolTip(hub_project)
 
     def analytics_payload(self, data, provider):
-        # Each analytics snapshot is provider-tagged: Codex payloads keep
-        # the Codex tables, OpenCode payloads render the raw-category
-        # view. The snapshot carries provider/scope/selection/generation,
-        # so switches replace the view atomically and late results are
-        # rejected by the render guard before reaching the window.
+        # Current Codex scope/selection/generation are guarded before dispatch.
         return data
 
     def apply_provider_chrome(self, provider):
-        """Show quota/context chrome only where a verified source exists.
-
-        OpenCode has no verified quota, context, reset, or refresh
-        source, so its Context meter, 5-hour/week meters, their
-        divider, and the quota-refresh status stay hidden in every
-        OpenCode view (available, unavailable, stale, Full, Compact) —
-        the metrics body ends at Token Analytics. Switching back to
-        Codex restores them at once. Recorded cost and neutral controls
-        are untouched. Late quota callbacks only repaint hidden text;
-        visibility is owned here on every render.
-        """
-        visible = (provider or 'codex') != 'opencode'
+        """The sole current source supplies Codex context and quota chrome."""
         for widget in (self.quota_divider, self.context, self.five,
                        self.week, self.status):
-            widget.setVisible(visible)
-
-    def render_opencode(self, data, selection, provider_label):
-        status = self.tr_text(data.get('status') or 'no_reliable_record')
-        if data.get('status') or not data.get('available'):
-            self.connection.setText(f'{provider_label} · {status}')
-            self.connection.setToolTip(status)
-            self.title.setFullText(self.tr_text('waiting_available_task'))
-            self.project.setText(provider_label.upper())
-            self.project.setToolTip(provider_label.upper())
-            for w in (self.total,self.model,self.effort,self.cost,self.compact_total,
-                        self.compact_cost):
-                w.setText('—')
-                w.setToolTip(status)
-            self.io_line.setText('—')
-            self.io_line.setToolTip(status)
-            self.insights.setText(self.tr_text('cache_hit_new_work', ratio='N/A', work='N/A'))
-            self.scope_button.setText(scope_text(data.get('scope', self.prefs.get('scope')), self.language)+' ▾')
-            self.status_dot.setVisible(False)
-            self.status_text.setVisible(False)
-            self.context.update_value(None, tip=status)
-            if self.analytics_window:
-                self.analytics_window.update_data(
-                    self.analytics_payload(data, 'opencode'))
-            self.refresh_cost()
-            self.refresh_status()
-            return
-        live = bool(selection.get('live'))
-        stale = bool(selection.get('stale'))
-        unknown = bool(selection.get('activity_unknown'))
-        scope = data.get('scope', self.prefs.get('scope'))
-        if data.get('presentation') == 'active_session':
-            # Verified live session shown while the requested scope names
-            # no session: label the live context as such; the scope
-            # button keeps the requested (independent) scope.
-            self.connection.setText(f'{provider_label} · {self.tr_text("active_session")}')
-            self.connection.setToolTip(f'{provider_label} · {self.tr_text("active_session")}')
-        else:
-            self.connection.setText(f'{provider_label} · {scope_text(scope, self.language)}')
-            self.connection.setToolTip(f'{provider_label} · {scope_text(scope, self.language)}')
-        self.project.setText(self.display_text(data.get('project'), 'waiting_codex').upper())
-        self.project.setToolTip(self.display_text(data.get('project'), 'waiting_codex').upper())
-        if data.get('session_id'):
-            # The adapter deliberately excludes session titles (user
-            # text), so no verified human-readable title exists: the
-            # prominent title shows the localized Active-session label
-            # instead of a raw session ID. The exact ID stays in
-            # selection, attribution, scoped analytics, and details.
-            self.title.setFullText(self.tr_text('active_session'))
-        else:
-            self.title.setFullText(self.display_text(data.get('title'), 'unnamed_task'))
-        self.model.setText(data.get('model') or self.tr_text('model_not_recorded'))
-        detail = data.get('model_detail') or {}
-        self.model.setToolTip(self.tr_text('model_tip')+'\n'+self.tr_text(
-            'opencode_model_tip', provider=detail.get('provider') or '—',
-            variant=detail.get('variant') or '—', agent=detail.get('agent') or '—'))
-        self.effort.setText(data.get('effort') or '—')
-        self.effort.setToolTip(self.tr_text('effort_tip'))
-        tokens = data.get('tokens') or {}
-        token_style = self.prefs.get('token_number_format')
-        # Raw categories plus the recorded Total (verified versions
-        # with complete data; N/A otherwise — never billed/context).
-        total_text = format_token_value(tokens.get('total'), token_style)
-        splits_tip = (f"{self.tr_text('header_input_tokens')}: {format_tokens(tokens.get('input'), token_style)}\n"
-                      f"{self.tr_text('header_output_tokens')}: {format_tokens(tokens.get('output'), token_style)}\n"
-                      f"{self.tr_text('header_reasoning_tokens')}: {format_tokens(tokens.get('reasoning'), token_style)}\n"
-                      f"{self.tr_text('header_cached_tokens')}: {format_tokens(tokens.get('cache_read'), token_style)}\n"
-                      f"{self.tr_text('header_write_tokens')}: {format_tokens(tokens.get('cache_write'), token_style)}\n"
-                      f"{self.tr_text('total_unavailable_note')}")
-        self.total.setText(total_text)
-        self.total.setToolTip(splits_tip)
-        self.compact_total.setText(total_text)
-        self.compact_total.setToolTip(splits_tip)
-        self.io_line.setText(f"{self.tr_text('input')} {format_tokens(tokens.get('input'), token_style)} · {self.tr_text('output')} {format_tokens(tokens.get('output'), token_style)}")
-        self.io_line.setToolTip(splits_tip)
-        self.scope_button.setText(scope_text(scope, self.language, recorded=scope == 'global')+' ▾')
-        self.status_dot.setVisible(True)
-        self.status_text.setVisible(True)
-        self.status_dot.setStyleSheet(f'color:{ICE if live else MUTED};')
-        if live:
-            state_key = 'working'
-        elif stale:
-            state_key = 'status_stale'
-        elif unknown:
-            state_key = 'unknown'
-        else:
-            state_key = 'idle'
-        self.status_text.setText(self.tr_text(state_key))
-        self.context.update_value(None, tip=self.tr_text('context_tip', used=None, window=None))
-        self.insights.setText(self.tr_text('cache_hit_new_work', ratio='N/A', work='N/A'))
-        self.insights.setToolTip(self.tr_text('total_unavailable_note'))
-        self.refresh_cost()
-        self.refresh_status()
-        if self.analytics_window and self.analytics_window.isVisible():
-            self.analytics_window.update_data(
-                self.analytics_payload(data, 'opencode'))
-        self.apply_hub_neutralization(provider_label, data)
+            widget.setVisible(True)
 
     def refresh_cost(self):
         d = self.snapshot
-        if (d.get('provider_id') or 'codex') == 'opencode':
-            # Currency is unstated: no symbol, no conversion. The
-            # recorded amount survives in the tooltip; Slice 6 owns
-            # cost-provenance display.
-            amount = (d.get('cost') or {}).get('amount')
-            tip = (self.tr_text('opencode_cost_tip', amount=f'{amount:,.4f}')
-                   if isinstance(amount, (int, float)) and not isinstance(amount, bool)
-                   else self.tr_text('no_reliable_record'))
-            for w in (self.cost, self.compact_cost):
-                w.setText('—')
-                w.setToolTip(tip)
-            for w in (self.cost_label, self.compact_cost_label):
-                w.setText('—')
-                w.setToolTip(tip)
-            return
         if not d.get('available'):
             self.cost.setText('—')
             self.compact_cost.setText('—')
@@ -4481,7 +4394,7 @@ class Panel(QWidget):
         quota = self.quota
         # Codex quota widgets blank unless the Codex provider is both
         # selected and the quota source: no Codex limits, countdowns or
-        # errors may linger under OpenCode (or a late mismatched payload).
+        # errors may linger from a foreign or late mismatched payload.
         quota_usable = ((self.snapshot.get('provider_id') or 'codex') == 'codex'
                         and (self.quota_provider or 'codex') == 'codex')
         limits = (quota.get('limits') or self.snapshot.get('limits')) if quota_usable else None
@@ -4508,22 +4421,6 @@ class Panel(QWidget):
                 widget.reset.setText(self.tr_text('awaiting_reset') if w['expired'] else self.tr_text('reset_in', duration=duration))
                 widget.reset.setVisible(True)
         self.status.setText(self.tr_text('quota_waiting') if stale else self.tr_text('syncing', time=time.strftime('%H:%M:%S')))
-        if (self.snapshot.get('provider_id') or 'codex') == 'opencode':
-            # Quota sync, token-event clock and sidecar errors are Codex
-            # concepts: the tooltip reports provider/scope/freshness from
-            # existing vocabulary instead of borrowing them.
-            selection = self.snapshot.get('selection') or {}
-            if selection.get('live'):
-                state_key = 'working'
-            elif selection.get('stale'):
-                state_key = 'status_stale'
-            elif selection.get('activity_unknown'):
-                state_key = 'unknown'
-            else:
-                state_key = 'idle'
-            self.status.setToolTip(
-                f"OpenCode · {scope_text(self.snapshot.get('scope', self.prefs.get('scope')), self.language)} · {self.tr_text(state_key)}")
-            return
         token_age = sample_age(self.snapshot.get('sample'))
         error = quota.get('error') if quota_usable else None
         if error in ('quota_error',):

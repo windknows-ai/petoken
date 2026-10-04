@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from PySide6.QtWidgets import QApplication
-from tools.preview_v1_3 import Preview, fixture_tasks, main
+from PySide6.QtWidgets import QApplication, QComboBox, QLabel
+from tools.preview_v1_3 import ANCHORS, Preview, fixture_tasks, main
 
 
 class PreviewTests(unittest.TestCase):
@@ -21,6 +21,7 @@ class PreviewTests(unittest.TestCase):
             tasks = fixture_tasks(count)
             self.assertEqual(len(tasks), count)
             self.assertEqual(len({(t['provider_id'], t['task_key']) for t in tasks}), count)
+            self.assertTrue(all(task['provider_id'] == 'codex' for task in tasks))
         for case in ('zero', 'unknown', 'partial'):
             for task in fixture_tasks(2, case=case):
                 projection = task['presentation']
@@ -37,6 +38,8 @@ class PreviewTests(unittest.TestCase):
         shared = fixture_tasks(3, case='same_project')
         self.assertEqual(len({t['display']['project'] for t in shared}), 1)
         self.assertEqual(len({t['task_key'] for t in shared}), 3)
+        self.assertEqual(len({t['presentation']['tokens']['total_tokens'] for t in shared}), 3)
+        self.assertTrue(all(t['presentation']['cost_amount'] is None for t in shared))
         long_labels = fixture_tasks(1, case='long_labels')[0]
         self.assertGreater(len(long_labels['display']['project']), 100)
         self.assertGreater(len(long_labels['presentation']['model']), 100)
@@ -45,19 +48,22 @@ class PreviewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
             stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
             reads = [stack.enter_context(patch(name, side_effect=AssertionError('Live source accessed')))
-                     for name in ('usage.CodexStore.read', 'opencode_provider.OpenCodeProvider.read',
+                     for name in ('usage.CodexStore.read',
                                   'desktop.ActiveTask.start', 'desktop.RateLimits.start',
-                                  'activity.ActivityMonitor.start')]
+                                  'activity.ActivityMonitor.start', 'provider_poller.ProviderPoller.loop_tick')]
             preview = Preview(count=3, language='zh_CN', case='partial')
             try:
                 self.assertFalse(preview.panel.live)
                 self.assertEqual(preview.panel.task_manager.window_count(), 3)
                 self.assertFalse(preview.pet.activity_timer.isActive())
-                preview.preference.setCurrentText('opencode')
-                self.assertEqual(preview.panel.task_manager.window_count(), 1)
-                self.assertEqual(preview.panel.snapshot['provider_id'], 'opencode')
-                preview.preference.setCurrentText('auto')
-                self.assertEqual(preview.panel.task_manager.window_count(), 3)
+                self.assertEqual(preview.panel.snapshot['provider_id'], 'codex')
+                self.assertEqual(preview.panel.prefs['tracking_provider'], 'codex')
+                labels = '\n'.join(label.text() for label in preview.findChildren(QLabel))
+                choices = [combo.itemText(index) for combo in preview.findChildren(QComboBox)
+                           for index in range(combo.count())]
+                self.assertNotIn('OpenCode', labels)
+                self.assertNotIn('opencode', choices)
+                self.assertNotIn('mixed', choices)
                 preview.source.setChecked(False)
                 self.assertEqual(preview.panel.task_manager.window_count(), 0)
                 preview.source.setChecked(True)
@@ -94,7 +100,7 @@ class PreviewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
             stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
             reads = [stack.enter_context(patch(name, side_effect=AssertionError('Live source accessed')))
-                     for name in ('usage.CodexStore.read', 'opencode_provider.OpenCodeProvider.read',
+                     for name in ('usage.CodexStore.read',
                                   'desktop.ActiveTask.start', 'desktop.RateLimits.start',
                                   'activity.ActivityMonitor.start', 'provider_poller.ProviderPoller.loop_tick')]
             preview = Preview(count=3, case='partial')
@@ -113,10 +119,16 @@ class PreviewTests(unittest.TestCase):
                 self.assertEqual(manager.expanded_identity, key)
                 self.assertIn('Unknown', manager.detail_window.panel_text())
                 output = Path(directory) / 'synthetic-detail.png'
-                preview.capture(output)
+                with patch.object(manager, 'capture_windows', wraps=manager.capture_windows) as layers, \
+                        patch.object(QApplication, 'topLevelWidgets',
+                                     side_effect=AssertionError('Arbitrary desktop/window scan')):
+                    preview.capture(output)
+                layers.assert_called_once_with()
                 self.assertTrue(output.is_file())
                 evidence = json.loads(output.with_suffix('.json').read_text(encoding='utf-8'))
                 self.assertEqual(evidence['kind'], 'SYNTHETIC_QA')
+                self.assertEqual(evidence['provider'], 'codex')
+                self.assertEqual(evidence['anchor'], 'center')
                 self.assertFalse(evidence['live_provider_polling'])
                 self.assertEqual(evidence['expanded_task_number'], 1)
                 self.assertTrue(evidence['detail_visible'])
@@ -135,10 +147,35 @@ class PreviewTests(unittest.TestCase):
                 self.app.processEvents()
             self.assertIsNone(manager.detail_window)
 
+    def test_anchor_controls_use_actual_clamped_pet_position(self):
+        with tempfile.TemporaryDirectory() as directory, patch('widget.PREF_DIR', Path(directory)):
+            preview = Preview(count=0)
+            try:
+                screen = preview.pet.screen().availableGeometry()
+                for anchor in ANCHORS:
+                    with self.subTest(anchor=anchor):
+                        preview.anchor.setCurrentText(anchor)
+                        rectangle = preview.pet.geometry()
+                        self.assertTrue(screen.contains(rectangle))
+                        if 'left' in anchor:
+                            self.assertEqual(rectangle.left(), screen.left())
+                        if 'right' in anchor:
+                            self.assertEqual(rectangle.right(), screen.right())
+                        if 'top' in anchor:
+                            self.assertEqual(rectangle.top(), screen.top())
+                        if 'bottom' in anchor:
+                            self.assertEqual(rectangle.bottom(), screen.bottom())
+            finally:
+                preview.cleanup()
+                preview.close()
+                preview.deleteLater()
+                self.app.processEvents()
+
     def test_capture_cli_rejects_unbounded_or_invalid_requests(self):
         for argv in (['--output', 'unused.png'], ['--smoke', '0'],
                      ['--smoke', 'nan'], ['--smoke', 'inf'], ['--smoke', '1e100'],
-                     ['--count', '0', '--expand', '1']):
+                     ['--count', '0', '--expand', '1'], ['--provider', 'opencode'],
+                     ['--provider', 'mixed'], ['--anchor', 'outside']):
             diagnostic = StringIO()
             with self.subTest(argv=argv), redirect_stderr(diagnostic), self.assertRaises(SystemExit) as result:
                 main(argv)

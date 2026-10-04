@@ -1,10 +1,10 @@
-"""Boundary and finite-landing regressions for V1.3 motion closeout."""
+"""Historical exterior-route boundaries with current Codex-only fixtures."""
 import unittest
 
 from tests import test_ui as ui_fixture
 
 from tests.test_ui import (
-    _codex_entry, _opencode_entry,
+    _codex_entry, _secondary_codex_entry,
     _CENTER_PET_RECT, _SCREEN_RECT,
 )
 
@@ -75,10 +75,10 @@ class MotionCloseoutTests(unittest.TestCase):
         self.arc_case([_codex_entry(str(i)) for i in range(4)],
                       [_codex_entry(str(i)) for i in range(5)])
 
-    def test_arc_filter_preserves_frame_zero(self):
+    def test_arc_composition_retire_preserves_frame_zero(self):
         tasks = ([_codex_entry(str(i)) for i in range(3)]
-                 + [_opencode_entry('opencode:x')])
-        self.arc_case(tasks, tasks, 'codex')
+                 + [_secondary_codex_entry('z-secondary:x')])
+        self.arc_case(tasks, tasks[:-1], 'codex')
 
     def test_eight_star_parking_finds_complete_schedule(self):
         self.pet_rect = _CENTER_PET_RECT
@@ -131,10 +131,10 @@ class MotionCloseoutTests(unittest.TestCase):
         self.assert_boundary(before)
         self.land(stamp)
 
-    def test_filter_during_parking_replans_visible_obstacles(self):
+    def test_composition_retire_during_parking_replans_visible_obstacles(self):
         self.pet_rect = _CENTER_PET_RECT
         tasks = ([_codex_entry(str(i)) for i in range(5)]
-                 + [_opencode_entry('opencode:x')])
+                 + [_secondary_codex_entry('z-secondary:x')])
         stamp = self.warm(tasks, self.pet_rect)
         self.panel.prefs['pet_motion'] = False
         self._apply_at(tasks, self.pet_rect)
@@ -143,7 +143,7 @@ class MotionCloseoutTests(unittest.TestCase):
             self._tick_at(stamp, self.pet_rect)
         old = self.manager._park_blend
         before = self.positions()
-        self._apply_at(tasks, self.pet_rect, preference='codex')
+        self._apply_at(tasks[:-1], self.pet_rect, preference='codex')
         self.assertIsNot(self.manager._park_blend, old)
         self.assert_boundary(before)
         self.land(stamp)

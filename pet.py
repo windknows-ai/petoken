@@ -161,11 +161,15 @@ class DesktopPet(QWidget):
             self.update()
 
     def update_data(self,data):
+        if (data or {}).get('provider_id', 'codex') != 'codex':
+            return
         self.snapshot=data
         # An explicitly absent working_context retires the previous
         # live context at once: hysteresis may preserve animation
         # timing, never a false Working label or stale token data.
         self.working_context=(data or {}).get('working_context') or None
+        if (self.working_context or {}).get('provider_id', 'codex') != 'codex':
+            self.working_context = None
         context=self.working_context or data
         t=context.get('tokens',{})
         style=self.panel.prefs.get('token_number_format')
@@ -173,28 +177,11 @@ class DesktopPet(QWidget):
         # context is always self-described, and a missing one never
         # inherits the new panel payload's provider.
         provider = (context or {}).get('provider_id')
-        if provider == 'opencode':
-            # Raw OpenCode categories under their own names; total is
-            # the recorded five-category sum for verified versions with
-            # complete data (N/A otherwise — never billed/context).
-            total_text=format_tokens(t.get('total'),style)
-            in_text=format_tokens(t.get('input'),style)
-            out_text=format_tokens(t.get('output'),style)
-            provider_line='OpenCode · '
-            if context.get('thread') or context.get('session_id'):
-                # No verified human-readable session title exists, so
-                # the prominent tooltip shows the localized
-                # Active-session label instead of a raw session ID.
-                # Exact IDs stay in analytics and details views.
-                title=self.tr_text('active_session')
-            else:
-                title=context.get('title') or self.tr_text('codex_working')
-        else:
-            total_text=format_tokens(t.get('total_tokens'),style)
-            in_text=format_tokens(t.get('input_tokens'),style)
-            out_text=format_tokens(t.get('output_tokens'),style)
-            provider_line='Codex · ' if provider == 'codex' else ''
-            title=context.get('title') or self.tr_text('codex_working')
+        total_text=format_tokens(t.get('total_tokens'),style)
+        in_text=format_tokens(t.get('input_tokens'),style)
+        out_text=format_tokens(t.get('output_tokens'),style)
+        provider_line='Codex · ' if provider == 'codex' else ''
+        title=context.get('title') or self.tr_text('codex_working')
         project=context.get('project') or self.tr_text('project_unavailable')
         self.setToolTip(provider_line+f"{project} · {title}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"+
                        self.tr_text('pet_tooltip_tokens',total=total_text,
@@ -245,9 +232,7 @@ class DesktopPet(QWidget):
             p.setPen(QColor(theme.MUTED))
             p.setFont(QFont('Segoe UI',self._px(8)))
             p.drawText(QRectF(bx+pad,self._px(7),width,self._px(20)),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
-            total=(format_tokens(tokens.get('total'),style)
-                   if context.get('provider_id') == 'opencode'
-                   else format_tokens(tokens.get('total_tokens'),style))
+            total=format_tokens(tokens.get('total_tokens'),style)
             p.setPen(QColor(theme.INK))
             p.setFont(QFont('Segoe UI',self._px(12),QFont.DemiBold))
             p.drawText(QRectF(bx+pad,self._px(30),width,self._px(22)),Qt.AlignLeft|Qt.AlignVCenter,
@@ -323,7 +308,7 @@ class DesktopPet(QWidget):
             self.panel.anchor_to_pet()
         manager = getattr(self.panel, 'task_manager', None)
         if manager is not None and getattr(self.panel, 'pet', None) is self:
-            manager.anchor_changed()
+            manager.anchor_changed(transport=getattr(self, '_anchor_transporting', False))
 
     def mousePressEvent(self,event):
         if event.button()==Qt.LeftButton:
@@ -388,4 +373,10 @@ class DesktopPet(QWidget):
         r=screen.availableGeometry()
         x,y=geometry.clamp_position(point.x(),point.y(),self.width(),self.height(),
                                     (r.left(),r.top(),r.right(),r.bottom()))
-        self.move(x,y)
+        # Explicit drag/keyboard/position commands carry the whole composition.
+        # A queued geometry observation still uses the manager's bounded glide.
+        self._anchor_transporting = True
+        try:
+            self.move(x,y)
+        finally:
+            self._anchor_transporting = False

@@ -1,49 +1,49 @@
 # Petoken
 
-> Local usage & cost intelligence for AI coding agents on Windows.
+> A Codex desktop companion with local usage and cost intelligence on Windows.
 
-*AI 结对编程的本机用量与成本桌宠：跟随你当前打开的任务，诚实显示 token 用量、额度与费用。*
+*专属于 Codex 的本机用量与成本桌宠：跟随你的任务，诚实显示 token 用量、额度与费用。*
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community** — the free, open-source edition of Petoken. This public repository contains the complete application source for the released version below.
+**Petoken Community** — the free, open-source edition of Petoken. The current V1.3 checkout is an unreleased Codex-only refinement; current source technical validation and independent native review pass; human visual acceptance of the compact dimensional star ring remains pending. The stable download below remains v1.2.0 and is unchanged.
 
 ## What it does
 
-Petoken is a small Windows desktop companion. It follows your active AI coding task and shows, on demand, that task's token usage and cost — per conversation, per project, or globally. An approved character idles on your desktop; hover or click it to reveal the usage panel.
+Petoken is a small Windows desktop companion for Codex. It follows verified Codex tasks and shows their token usage and available cost estimates — per conversation, per project, or globally. An approved character idles on your desktop; hover or click it to reveal the usage panel.
 
-- **Dual-provider tracking**: Codex and OpenCode, via Auto (working-first), Codex-only, or OpenCode-only tracking, switchable in Settings.
+- **Codex-only tracking**: the current application reads Codex metadata; no alternate provider or mixed-provider mode is selectable.
+- **Task Stars** (V1.3 refinement): one Star per verified task, a compact tilted ring around the pet, and task-local expanded details. Visual acceptance is pending.
 - **Task-level live usage**: input / output / reasoning / cache splits for the current task.
 - **Quotas and resets** (Codex): official 5-hour / weekly usage with reset countdowns.
-- **Cost**: Codex shows an API-equivalent estimate (USD / CAD / EUR / CNY); OpenCode shows its own recorded amount (currency unknown, never converted).
+- **Cost**: an API-equivalent estimate (USD / CAD / EUR / CNY) only when model pricing and token evidence support it; otherwise `N/A`.
 - **Token Analytics**: model / session / date grouping with local lifetime history.
-- **Honest unknowns**: anything unverified renders as `N/A` — never zero-filled, never invented, never summed across providers.
+- **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
 ## Latest stable release: v1.2.0
 
 Download the Windows x64 package from [GitHub Releases](https://github.com/windknows-ai/petoken/releases) (`Petoken-v1.2.0-Windows-x64.zip`). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
-## Supported providers
+## Current V1.3 source
 
 | Source | Status | What you get |
 | --- | --- | --- |
-| Codex desktop client | Available now | Official totals, 5-hour / weekly quotas with resets, API-equivalent cost, working/idle context |
-| OpenCode 1.18.31 / 1.18.32 | Available now | Five raw usage categories plus a recorded Total on verified complete data, recorded cost (currency unknown); no quotas or context — those UI areas stay hidden rather than fabricated |
+| Codex desktop client | Current development source | Verified usage totals, available 5-hour / weekly quotas with resets, supported API-equivalent cost, working/idle context |
 
-If a source is missing, its views honestly show unavailable without affecting the other provider.
+If the Codex source is missing or stale, its views show that limitation honestly. Historical v1.2.0 provider behavior is recorded in its release notes; it is not the current V1.3 product scope.
 
 ## Install and use
 
 1. Download `Petoken-v1.2.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases).
 2. Extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
-3. Keep the selected source running: the Codex desktop client for Codex tracking, or OpenCode for OpenCode tracking (live Working state needs an active task).
+3. For Codex tracking, keep the Codex desktop client running (live Working state needs a verified active task). These download steps install the historical stable release, not the unreleased V1.3 preview.
 
 Interact: hover about 0.35 s or click the character to open the panel, move away about 0.7 s to hide it; drag to move; right-click for the menu; `Alt + Arrow keys` moves the panel.
 
 ## Privacy / local-first
 
-- Reads local numeric usage metadata only: Codex task metadata and usage events, OpenCode session metadata through an allowlisted column set (no titles, message bodies, tool parameters, credentials, or share links), window task titles and activity state, and memory-only media metadata for the music display.
+- Current V1.3 reads local Codex task metadata and numeric usage events, window task titles and activity state, and memory-only media metadata for the music display. It does not read alternate-provider stores.
 - Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere.
 - Details: [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) and [`SECURITY.md`](SECURITY.md).
 
@@ -71,7 +71,7 @@ Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
 ## Documentation
 
 - Usage semantics (what is counted, what `N/A` means): [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md)
-- Provider architecture and verified capabilities: [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
+- Current Codex scope and historical provider records: [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
 - Token formulas and fields: [`docs/TOKEN_ACCOUNTING.md`](docs/TOKEN_ACCOUNTING.md)
 - Product roadmap: [`ROADMAP.md`](ROADMAP.md)
 - Interface design contract: [`DESIGN.md`](DESIGN.md)
@@ -84,4 +84,4 @@ Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
 
 ## Community and licensing
 
-Petoken Community is open source. The application source code is MIT-licensed (see [LICENSE](LICENSE)); character artwork is excluded from the MIT grant (see [docs/ARTWORK.md](docs/ARTWORK.md)). Bug reports and ideas are welcome via [GitHub Issues](https://github.com/windknows-ai/petoken/issues) — see [CONTRIBUTING.md](CONTRIBUTING.md). Petoken is an independent project with no affiliation with or endorsement by OpenAI, OpenCode, or any game publisher.
+Petoken Community is open source. The application source code is MIT-licensed (see [LICENSE](LICENSE)); character artwork is excluded from the MIT grant (see [docs/ARTWORK.md](docs/ARTWORK.md)). Bug reports and ideas are welcome via [GitHub Issues](https://github.com/windknows-ai/petoken/issues) — see [CONTRIBUTING.md](CONTRIBUTING.md). Petoken is an independent project with no affiliation with or endorsement by OpenAI or any game publisher.

@@ -1,4 +1,12 @@
-# OpenCode provider — Slice 1 discovery record
+# Current V1.3 source: Codex
+
+The current product is a Codex desktop companion. Runtime tracking, settings, task Stars and isolated QA previews are Codex-only. Legacy alternate-provider preferences migrate to Codex; no alternate-provider choice is exposed in the current application.
+
+Read only Codex numeric usage/task metadata. Unknown model remains Unknown, unavailable usage/quota/cost remains N/A, real zero remains zero, and partial coverage remains explicit. Model pricing must support any API-equivalent cost estimate. Working/Idle evidence does not establish finer task phases.
+
+The former OpenCode adapter and its low-level tests remain internal historical compatibility material while active runtime/UI/configuration paths are removed. They do not constitute a supported current provider, an active polling lane, or authorization to read its store. The records below are retained to preserve verified history and shared-infrastructure reasoning; they describe earlier slices and the released v1.2.0 product, not current V1.3 behavior.
+
+## Historical OpenCode discovery and implementation record
 
 > Astra review: **PASS WITH CONDITIONS for Slice 2 (Codex wrapper only)**.
 > Observations below are preserved, but these conclusions are NOT accepted:
