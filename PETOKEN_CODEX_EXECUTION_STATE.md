@@ -1,6 +1,6 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **V1.4 IN PROGRESS**.
+Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — V1.4**.
 
 ## V1.4 current engineering authority
 
@@ -10,7 +10,11 @@ Updated: 2026-10-04 (America/Toronto). Status: **V1.4 IN PROGRESS**.
 - Independent3repair-boundariesPASS, sourcehashesrecorded; additional native pagertransparent-surface blocker caught. Root reproducedQWidget/QFrame stylesheetalpha0 and adopted7-line explicit QPainter roundedsurface, exactnativealpha/color/cornerregressionPASS.
 - Affected141native gate139PASS/2superseded expectations; narrowHubEscape/settledcapturefixturemigration then44relatednativePASS12.899s. Priorfailtrace retained.
 - Full native914run200.497s:913PASS/oneobsoletecheckbox-count fixture; current31UItestsPASS6.165s afterfixture-onlymigration, runtime unchanged. Effective914coverage recorded honestly inroot-regression-acceptance.json; do not repeat completed913checks. Build/packageexit0(root-build.log).
-- IN PROGRESS: owned local source checkpoint, root9currentfrozen cases, independent final artifact/Codex-only/paint audit and human visual gate. baseline99bfb0f saved in2026-10-04-v1.4/baseline. No Astra/release/publish; agents strictly on demand.
+- Owned source27e3438 committed; root222fileZIPCRC/equality/licenses/README18linksmanifestPASS. EXE31d4364649d81d15d02847b4f7b365d3717b493da66bb6b741b1a5938a012741; ZIPd01922af3a32eabcba115a929523e15c7bb0ea604450124ce948b46d6c8313c9.
+- Root9currentfrozen casesPASSexit0 (0/1/3/8/9/24/64, allposes/offpageidentity/partialzeroUnknown; personalprefslockassetunchanged).
+- Independent#18 static artifactPASS:222files exactCRC/content,14compiledmodulescurrent/420frozenmodules/noOpenCodeadapter,14licenses/provenance,18READMElinks,bothlaunchers, artwork/dependencies/priorpackagebytes.
+- Final independent #18 PASS: actual frozen EXE 0/24/64 cases exit0; packaged-code native 50/75/100/150% opaque/readable pager, 12 layout cases, same-task reversal, terminal cancellation, workarea signal, keyboard focus and native HWND ordering. Final own dark/light 3/8-task paint viewed by reviewer and root. Report `18-v14-final-artifact-audit.md`; GUI released, no active work remains.
+- **WAITING_FOR_HUMAN_VISUAL_QA**. Launcher `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken\preview-v1.4.cmd`; ZIP `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken-Windows-x64.zip`; checklist `docs/V1_4_VISUAL_QA.md`. Source27e3438; final continuity-only commit follows, no rebuild required. Baseline99bfb0f/old artifacts preserved. Human appearance, perceived motion, real DPI/monitor behavior and physical activity detection remain unapproved. No Astra/release/publish; agents strictly on demand.
 
 ## Final celestial polish closeout — historical baseline
 
@@ -192,7 +196,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | V1.4 independent scene/interaction reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 source/native/visual gates | REVIEW | No source; external probes/report | V1.4 original3bugs independentlyrepairedPASS; newnativepagerpaintBLOCKED retained thenrootpixelrepair/staticreviewPASS;24/64/lifecycle/focus/perfgatesretained; finalfrozen/nativepaintpendingrootnextassignment |
+| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | V1.4 package222files/sourcecode/Codexonly/finalpaint | REVIEW | No source; externalaudit/captures | V1.4 final independent artifact/native/frozen PASS;222 exact ZIP files/420 modules/no OpenCode/14 compiled source equality; real EXE0/24/64; packaged-code pager50/75/100/150% opaque/readable/12 layouts; continuous reversal/terminal cancellation/workarea/focus/HWND PASS; GUI released. 18-v14-final-artifact-audit.md |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -339,9 +343,9 @@ Completed: 2026-10-04
 
 Agents: #20, #8, #22, #18
 Peak concurrency: 3
-Status: Running
+Status: Complete: V1.4 source/regression/frozen package independently accepted; waiting human visual QA
 Started: 2026-10-04
-Completed: Pending
+Completed: 2026-10-04
 
 ## Consolidated closeout plan (historical prior baseline)
 

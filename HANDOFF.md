@@ -1,13 +1,16 @@
 # Current Progress
-- **V1.4 engineering in progress. No release/publication/Astra.** User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
+- **WAITING_FOR_HUMAN_VISUAL_QA — V1.4 technical closeout complete. No release/publication/Astra.** User screenshots authorize persistent centered star ring, correct front-plane layering/resize, smooth detail transitions, >8-task handling, original microphone/music/typing/working poses and brighter reference-inspired effects.
 - Preserved baseline99bfb0f and prior packages; targeted immutable files/hashes in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\baseline`. Unrelated.autopilot remains untracked/untouched. Root instructions synced without changing unrelated AGENTS content.
 - Implemented joint pet/ring clamping and explicit resize/no-move notifications; current-screen workarea signal/cached-screen invalidation; native HWND order validation after pet raises; Settings ring enable independently of Hub/source count; truthful zeroStars with retained decoration; stable-number pages<=8Stars and all-task menu/24-64fixtures.
 - Implemented220ms Star-origin anisotropic unfold/fade, reverse close with continuous same-task reversal, focus/nonactivation and terminal cancel on retirement/disable/move/shutdown. Brighter violet/pearl/champagne hoop, dotted arcs/crystal beads and96sample3.6strails reuse existing Qt/clock/assets. All original approved activity poses/typing frames remain byte-identical; QA now exposes all poses.
-- Root reported-scene regressions red→green; independent#18 found3integration defects, all repaired. Its reacceptance found transparent pager background; native isolated QSS alpha0 reproduced, explicit7-line native painter fixed opaque surface/transparent corners. Old BLOCKED reports retained. Static final paint reviewPASS; independent final native/frozen paint audit still pending.
+- Root reported-scene regressions red→green; independent#18 found3integration defects, all repaired. Its reacceptance found transparent pager background; native isolated QSS alpha0 reproduced, explicit7-line native painter fixed opaque surface/transparent corners. Old BLOCKED reports retained. Final independent packaged-code native/frozen paint audit PASS; no concrete technical blocker in the tested scope.
 - Affected141native gate139PASS/2superseded old expectations58.764s; narrowHubEscape/settledcapturefixturemigration then44relatednativePASS12.899s. Geometry22purePASS; activityQA26nativePASS/sixCLI renders; detail16modulePASS/16actual125%DPIframes; root40boundary/settings/modulePASS then12scene inclpaint; retained evidence external, no repeated baseline reconnaissance.
 - Complete: full914native run200.497s has913PASS/one obsolete Settings one-checkbox assertion; current31UItestsPASS6.165s after fixture-only migration, runtime code unchanged. All914 effective current cases accepted with honest segmented evidence inroot-regression-acceptance.json. No unnecessary repeat of913completed tests.
-- Complete: fresh isolated Windows build/package exit0, source still frozen. IN PROGRESS: local owned source checkpoint, root current frozen9cases, independent final artifact/Codex-only/paint audit, final hashes and WAITING_FOR_HUMAN_VISUAL_QA. No release or stable overwrite.
+- Complete: fresh isolated Windows build/package exit0, source still frozen. Source unit27e3438 committed; root222file ZIPCRC/equality/license/README manifestPASS. EXE31d4364649d81d15d02847b4f7b365d3717b493da66bb6b741b1a5938a012741; ZIPd01922af3a32eabcba115a929523e15c7bb0ea604450124ce948b46d6c8313c9. Root9current frozen scenariosPASSexit0 (0/1/3/8/9/24/64, off-page details, mic/music/typing/working, zero/Unknown/Partial, personalprefs/lock/artworkunchanged). Independent#18 static artifactPASS:222files exactCRC/content,14compiledmodulescurrent/420frozenmodules/noOpenCodeadapter,14licenses/provenance,18READMElinks, allartwork/dependencies/priorpackagebytes. Independent final actual EXE 0/24/64 scenarios PASS; packaged-code native 50/75/100/150% pager opacity/readability, 12 layout cases, exact same-task reversal, terminal cancellation, workarea signal, keyboard focus and HWND ordering PASS. GUI released, all review processes closed. No release or stable overwrite.
 
+
+- Final independent report: `18-v14-final-artifact-audit.md` under `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4`. Root viewed final three100-dark and eight75-light captures; appearance/subjective motion still needs human approval.
+- Human launcher: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken\preview-v1.4.cmd`; ZIP: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4\package-dev\petoken-Windows-x64.zip`; checklist: `docs/V1_4_VISUAL_QA.md`. Source checkpoint `27e3438`; final continuity-only commit follows without a rebuild.
 
 # Decisions
 - Agents only on demand; reused#18 for independent current artifact audit, no new spawn for packaging. Historical total22 is actual lifetime history, never a target. GPT-6 Astra prohibited for every role and never used in this refinement.
@@ -18,9 +21,9 @@
 - Explicit Git allowlists, local commits only. No push/tag/version promotion/stable installation overwrite. APP_VERSION stays1.2.0 pending separately authorized release.
 
 # Next Steps
-- [ ] Finish/inspect current full regression and isolated build; fix only actual failures, preserve all valid completed gates.
-- [ ] Commit verified V1.4 owned unit with explicit allowlist; validate current frozen executable/files/Codex-only/isolation and final pager dark/light paint independently.
-- [ ] Record refreshed isolated preview-v1.4.cmd/ZIP/checklist, exact hashes and all reports; return to WAITING_FOR_HUMAN_VISUAL_QA.
+- [x] Full914effective current regression/31UIrecheck and isolated Windows build completed; source27e3438 committed and root9frozen casesPASS.
+- [x] Independent #18 current frozen executable/files/Codex-only/isolation and final pager dark/light native paint review completed PASS.
+- [x] Refreshed isolated package and final reports recorded; returned to WAITING_FOR_HUMAN_VISUAL_QA.
 - [ ] Human tests docs/V1_4_VISUAL_QA.md on real desktops/DPI/monitors. Release/publication remains separately unauthorized.
 
 # Open Issues
@@ -31,4 +34,4 @@
 # Project Conventions
 - Python/PySide6: Codex Hub overview, stable task-local Star, one manager-owned detail; Unknown/N/A/zero/Partial distinct. Preserve provider/scope/generation truth and privacy boundaries.
 - HANDOFF is concise continuity; PETOKEN_CODEX_EXECUTION_STATE.md retains permanent ledger/waves and historical evidence. Reports/logs/captures/package stay external under takeover backups.
-- Owned captures prove paint/content; actual HWND order/focus is measured separately. Never use ordinary live --smoke for isolated QA; use --preview-v1-3. Human visual approval is separate from technical acceptance.
+- Owned captures prove paint/content; actual HWND order/focus is measured separately. Never use ordinary live --smoke for isolated QA; use --preview-v1-4 (old --preview-v1-3 remains compatible). Human visual approval is separate from technical acceptance.
