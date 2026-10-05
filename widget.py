@@ -225,7 +225,9 @@ class TokenTotalLabel(QLabel):
         width = QFontMetrics(font).horizontalAdvance(self.text())
         size = max(12, min(self._base_size,
                            int(self._base_size * max(1, self.contentsRect().width()-2) / max(1, width))))
-        style = f'font-size:{size}px;'
+        # Scoped to this label: an unscoped rule would also reach the
+        # tooltip Qt creates for it and paint that tooltip at number size.
+        style = f'QLabel#{self.objectName()} {{ font-size:{size}px; }}'
         if self.styleSheet() != style:
             self.setStyleSheet(style)
 
@@ -356,6 +358,11 @@ def format_recorded_cost(amount):
     return trimmed if trimmed not in ('0', '-0', '') else repr(amount)
 
 
+def total_help_key(provider_id):
+    """How the total is formed differs by provider; name the right rule."""
+    return 'help_total_tokens_claude' if provider_id == 'claude' else 'help_total_tokens'
+
+
 def format_task_metrics(provider_id, presentation, language, token_style=None):
     """Shared task-local display strings for one Slice B task entry.
 
@@ -368,7 +375,7 @@ def format_task_metrics(provider_id, presentation, language, token_style=None):
     tokens = presentation.get('tokens') or {}
     return dict(
         total=(format_tokens(tokens.get('total_tokens'), token_style),
-               text('help_total_tokens', language)),
+               text(total_help_key(provider_id), language)),
         input=(format_tokens(tokens.get('input_tokens'), token_style), ''),
         output=(format_tokens(tokens.get('output_tokens'), token_style), ''),
         model=(presentation.get('model') or text('unknown', language), ''))
@@ -3948,7 +3955,10 @@ class Panel(QWidget):
         self.project = label('', 'muted')
         layout.addWidget(self.project)
         self.title = ElidedLabel('')
-        self.title.setStyleSheet('font-size:17px; font-weight:600;')
+        # Per-widget styles are scoped by object name so the tooltips Qt
+        # builds for these widgets keep the normal tooltip font and colour.
+        self.title.setObjectName('hubTitle')
+        self.title.setStyleSheet('QLabel#hubTitle { font-size:17px; font-weight:600; }')
         layout.addWidget(self.title)
         self.tasks_button = button('', '', lambda: None)
         self.task_menu = QMenu(self.tasks_button)
@@ -3962,11 +3972,13 @@ class Panel(QWidget):
         model_row = QHBoxLayout()
         model_row.setSpacing(8)
         self.model = ElidedLabel('—')
-        self.model.setStyleSheet(f'color:{ICE}; font-size:13px;')
-        model_row.addWidget(self.model)
+        self.model.setObjectName('hubModel')
+        self.model.setStyleSheet(f'QLabel#hubModel {{ color:{ICE}; font-size:13px; }}')
+        # The model name takes the free width: an elided label sized from its
+        # own elided text would otherwise stay collapsed to an ellipsis.
+        model_row.addWidget(self.model, 1)
         self.effort = label('—', 'badge')
         model_row.addWidget(self.effort)
-        model_row.addStretch()
         layout.addLayout(model_row)
         # Intentional compact composition (A3): one metrics row (cost hero +
         # token hero sharing the width) plus one control strip. The expanded
@@ -4016,7 +4028,9 @@ class Panel(QWidget):
         token_header.addWidget(self.total_header)
         token_header.addStretch()
         self.scope_button = button('', '', self.scope_menu)
-        self.scope_button.setStyleSheet(f'color:{MUTED};font-size:11px;padding:0px 3px;min-height:24px;')
+        self.scope_button.setObjectName('scopeButton')
+        self.scope_button.setStyleSheet(
+            f'QPushButton#scopeButton {{ color:{MUTED}; font-size:11px; padding:0px 3px; min-height:24px; }}')
         token_header.addWidget(self.scope_button)
         body.addLayout(token_header)
         self.total = TokenTotalLabel()
@@ -4433,7 +4447,7 @@ class Panel(QWidget):
         total_text = format_token_value(total, token_style) if data.get('available') else '—'
         total_tip = ((format_tokens(total, 'full') if data.get('available')
                       else self.tr_text('no_reliable_record'))
-                     + '\n' + help_text('total_tokens', self.language))
+                     + '\n' + self.tr_text(total_help_key(provider)))
         self.total.setText(total_text)
         self.total.setToolTip(total_tip)
         self.compact_total.setText(total_text)

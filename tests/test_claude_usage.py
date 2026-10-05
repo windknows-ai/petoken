@@ -453,7 +453,8 @@ class HubProviderPresentationTests(unittest.TestCase):
         data = dict(provider_id=provider_id, title='Task', project='Project',
                     model='m', mode='follow', scope='global', available=True,
                     tokens=map_usage(usage()), usd=1.0, notes=[], unknown=[],
-                    partial=False, count=1, **extra)
+                    partial=False, count=1)
+        data.update(extra)
         self.panel.render(data)
         self.app.processEvents()
         return self.panel.connection
@@ -486,6 +487,31 @@ class HubProviderPresentationTests(unittest.TestCase):
         self.assertGreater(window.models.rowCount(), 0)
         self.assertIn('Claude Code JSONL', window.raw.toPlainText())
         window.close()
+
+    def test_total_tooltip_keeps_normal_size_and_names_the_provider_rule(self):
+        from PySide6.QtWidgets import QApplication, QToolTip
+        self.render('claude')
+        total = self.panel.total
+        self.assertTrue(total.styleSheet().startswith('QLabel#number'))
+        self.assertIn('Claude Code', total.toolTip())
+        self.assertNotIn('OpenAI', total.toolTip())
+        self.panel.show()
+        QToolTip.showText(total.mapToGlobal(total.rect().center()), total.toolTip(), total)
+        self.app.processEvents()
+        # The tooltip label inherits the number's style sheet when one is
+        # unscoped; the old 'font-size:30px;' made it 30px (verified).
+        tips = [w for w in QApplication.topLevelWidgets() if w.objectName() == 'qtooltip_label']
+        self.assertTrue(tips)
+        self.assertLess(tips[0].fontInfo().pixelSize(), 20)
+        QToolTip.hideText()
+        self.render('codex')
+        self.assertIn('OpenAI', self.panel.total.toolTip())
+
+    def test_hub_model_name_is_not_collapsed_to_an_ellipsis(self):
+        self.panel.show()
+        self.render('claude', model='claude-opus-5-5', effort='high')
+        self.app.processEvents()
+        self.assertEqual(self.panel.model.text(), 'claude-opus-5-5')
 
     def test_claude_hub_names_provider_and_states_missing_limits(self):
         label = self.render('claude')
