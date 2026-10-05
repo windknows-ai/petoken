@@ -208,6 +208,13 @@ class OverlayRowTests(unittest.TestCase):
         self.assertEqual(overlay.format_duration(40 * 60), '40m')
         self.assertEqual(overlay.format_duration(2 * 3600 + 13 * 60), '2h 13m')
         self.assertEqual(overlay.format_duration(3 * 86400 + 4 * 3600), '3d 4h')
+        self.assertEqual(overlay.format_duration(4 * 3600 + 5 * 60), '4h 5m')
+
+    def test_card_stays_legible_on_a_small_character(self):
+        self.assertEqual(overlay.overlay_scale(50), overlay.MIN_SCALE / 100)
+        self.assertEqual(overlay.overlay_scale(120), 1.2)
+        for base, floor, _family in overlay.FONTS.values():
+            self.assertGreaterEqual(max(floor, round(base * overlay.overlay_scale(50))), 10)
         self.assertEqual(overlay.context_color(0).name(), '#ffffff')
         self.assertEqual(overlay.context_color(100).name(), '#231e56')
         self.assertLess(overlay.context_color(70).lightness(), overlay.context_color(20).lightness())
@@ -271,7 +278,7 @@ class PanelOverlayTests(unittest.TestCase):
             self.panel, _Presence(frozenset({'codex', 'claude'})))
         self.assertEqual((codex['project'], codex['rows'][0]['remaining']), ('alpha', 60))
         self.assertEqual([r['kind'] for r in codex['rows']], ['context', 'week'])
-        self.assertEqual(claude['note'], 'Turn on Sync Claude usage in Settings to see limits')
+        self.assertEqual(claude['note'], 'Turn on Sync Claude usage in Settings')
 
     def test_overlay_shows_only_in_token_mode_and_paints(self):
         pet = self.panel.pet
