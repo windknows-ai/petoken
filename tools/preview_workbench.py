@@ -91,7 +91,7 @@ def main(argv=None):
         window.resize(min(args.width, screen.width()), min(args.height, screen.height()))
         window.move(screen.center().x() - window.width() // 2,
                     screen.center().y() - window.height() // 2)
-        preview.panel.hide()
+        preview.visible.setChecked(False)
         preview.anchor.setCurrentText('bottom-right')
         preview.move(screen.topLeft())
         app.aboutToQuit.connect(preview.cleanup)

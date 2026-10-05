@@ -247,7 +247,7 @@ class Preview(QWidget):
         self.detail_status.clear()
 
     def set_scene_visible(self, visible):
-        self.panel.setVisible(visible)
+        self.panel.set_panel_pinned(visible)
 
     def set_ring_visible(self, visible):
         self.panel.prefs['star_ring_enabled'] = bool(visible)

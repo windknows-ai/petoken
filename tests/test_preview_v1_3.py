@@ -63,6 +63,24 @@ class PreviewFixtureTests(unittest.TestCase):
 
 
 class PreviewTests(unittest.TestCase):
+    def test_show_hub_control_matches_real_context_pin_and_visibility(self):
+        with tempfile.TemporaryDirectory() as directory, patch('widget.PREF_DIR', Path(directory)):
+            preview = Preview(count=3)
+            try:
+                for visible in (False, True, False):
+                    preview.visible.setChecked(visible)
+                    self.app.processEvents()
+                    self.assertEqual(preview.panel.isVisible(), visible)
+                    self.assertEqual(preview.panel.is_pinned(), visible)
+                    menu = preview.pet.context_menu()
+                    self.assertEqual(menu.actions()[0].isChecked(), visible)
+                    menu.deleteLater()
+            finally:
+                preview.cleanup()
+                preview.close()
+                preview.deleteLater()
+                self.app.processEvents()
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
