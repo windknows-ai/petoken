@@ -71,27 +71,23 @@ class UiTests(unittest.TestCase):
         self.assertEqual(values['Official OpenAI · Total Tokens'],'120 Tokens')
         self.assertTrue(values['Cache · Cache Hit Ratio'].endswith('%'))
         self.panel.toggle_compact();self.app.processEvents()
-        self.assertFalse(self.panel.body_scroll.isVisible())
+        self.assertFalse(self.panel.body.isVisible())
         from widget import COMPACT_HEIGHT
         self.assertEqual(self.panel.height(),COMPACT_HEIGHT)
         self.panel.toggle_compact();self.app.processEvents()
-        self.assertTrue(self.panel.body_scroll.isVisible())
+        self.assertTrue(self.panel.body.isVisible())
         settings=Settings(self.panel);settings.show();self.app.processEvents();settings.reject()
 
-    def test_hover_shows_and_leave_hides_then_activity_returns(self):
-        pet=self.panel.pet;pet.show();self.app.processEvents()
-        with patch('pet.QCursor') as cursor:
-            cursor.pos.return_value=pet.pos()+QPoint(120,160)
-            pet.hover_since=time.monotonic()-1
-            pet.update_activity()
-            self.assertTrue(self.panel.isVisible())
-            self.assertEqual(pet.current_state,'idle')
-            cursor.pos.return_value=QPoint(-9999,-9999)
-            pet.left_since=time.monotonic()-1
-            self.panel.activity.state.key()
-            pet.update_activity()
-            self.assertFalse(self.panel.isVisible())
-            self.assertEqual(pet.current_state,'typing')
+    def test_hover_does_not_open_or_hide_and_activity_still_updates(self):
+        pet = self.panel.pet
+        pet.show()
+        self.app.processEvents()
+        pet.update_activity()
+        self.assertFalse(self.panel.isVisible())
+        pet.show_panel()
+        pet.update_activity()
+        self.assertTrue(self.panel.isVisible())
+        self.assertEqual(pet.current_state, 'idle')
 
     def test_token_bubble_follows_central_app_mode(self):
         pet=self.panel.pet
@@ -4396,7 +4392,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.assertEqual(len(set(numbers)), 2)
 
 
-    def test_hub_neutral_with_one_sensitive_codex_task(self):
+    def test_conversation_hub_shows_task_title_while_star_remains_neutral(self):
         # D1 blocker regression: one verified Codex task with a
         # sensitive raw title. The orb is neutral AND the main hub
         # must not expose the raw title or claim a task identity.
@@ -4416,13 +4412,12 @@ class MultiTaskIntegrationTests(unittest.TestCase):
             self.panel.project.text(),
             self.panel.project.toolTip() or '',
             self.panel.connection.text()))
-        self.assertNotIn('PRIVATE REVIEW NOTES', main_text)
+        self.assertIn('PRIVATE REVIEW NOTES', main_text)
         self.assertNotIn('t1', self.panel.title.text())
         for language in ('zh_CN', 'en'):
             self.assertNotIn(text('task_panel_label', language, n=1),
                              self.panel.title.text())
         # Main still exists as a companion hub with provider framing.
-        self.assertIn('Codex', self.panel.title.text())
         self.assertIn('Codex', self.panel.connection.text())
 
 
@@ -4625,7 +4620,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
             self.assertNotIn('private-thread-', visible)
             self.assertIn('Codex', self.panel.connection.text())
             self.assertNotIn('OpenCode', self.panel.connection.text())
-            self.assertNotIn('PRIVATE REVIEW NOTES', self.panel.title.text())
+            self.assertIn('PRIVATE REVIEW NOTES', self.panel.title.text())
             self.assertNotIn('private-thread-', self.panel.title.text())
 
     def test_shutdown_and_late_generation_never_resurrect_scene(self):

@@ -81,9 +81,13 @@ Sample records are marked **QA**. Empty-state testing is also available:
 .\petoken.exe --preview-workbench --tab notes --width 680 --height 460
 ```
 
-The former `preview-v1.4.cmd` is the historical star-ring preview developed
-before the user chose to release those changes as v1.3.0. Use
-**preview-workbench.cmd** for this new milestone.
+Use **preview-v1.4.cmd** to start with the synthetic pet, ring and current
+usage overview; **preview-workbench.cmd** starts with the workbench instead.
+Both belong to this disposable development package. For scoped Hub inspection:
+
+```powershell
+.\petoken.exe --preview-v1-4 --count 9 --inspect 2 --scope conversation --language zh_CN
+```
 
 ## Acceptance
 
@@ -92,3 +96,25 @@ judgment of appearance, desktop fit and daily usability remains required.
 After technical validation the candidate waits at
 **WAITING_FOR_HUMAN_VISUAL_QA**. It is not published or installed over a stable
 copy automatically.
+
+## Fixed usage overview and explicit opening
+
+This development preview retains the large overview. Click the pet to open it;
+hovering or moving the pointer away must not change its visibility. In the pet's
+right-click menu, check **Usage panel / 用量面板** to keep it open and on top.
+Uncheck that action to close it. Pet **Always on top / 始终置顶** remains independent.
+The checked panel restores on restart in a normal installation; this disposable
+preview still discards its settings when closed.
+
+The overview uses fixed 440 × 720 logical pixels, with a fixed compact state.
+There must be no central scrollbar, resizing edge or grip. Full numbers,
+context, 5-hour and weekly countdowns, estimates, Settings and Analytics should
+remain readable. The shared silver-lavender/indigo palette comes from the pet's
+hair and clothing. Review both the overview and Workbench for visual harmony.
+
+Choose a task in the top menu to inspect its conversation in the overview.
+The right-side Global / Project / Conversation menu changes the usage scope.
+Choosing an overview task must not open or switch a Star detail, and choosing
+a Star must not switch the overview task. Automatic following remains available
+when no active tasks exist. Synthetic preview values are demonstration data;
+targeted synthetic-home provider tests validate real scope/routing behavior.

@@ -29,6 +29,13 @@ Download [Petoken-v1.3.0-Windows-x64.zip](https://github.com/windknows-ai/petoke
 
 ### In development — V1.4 workbench
 
+The current development preview also has a fixed-size silver-lavender/indigo
+usage overview. Click the pet to open it; hovering and cursor leave do not
+change visibility. Check **Usage panel** in the pet's context menu to keep it
+open and independently on top; uncheck to close. The top task menu inspects a
+conversation without opening its Star detail. These changes are unreleased;
+the stable v1.3.0 download below retains its original interaction behavior.
+
 The development branch adds a native Home / Projects / Todos / Notes workbench,
 opened from the Hub, character menu or tray. Personal records stay on this device
 in `%LOCALAPPDATA%\CodexWisp\workbench.sqlite3`; notes use explicit Save / Ctrl+S

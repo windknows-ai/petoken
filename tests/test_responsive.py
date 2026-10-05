@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from PySide6.QtWidgets import QApplication
 
-from widget import PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, valid_panel_size
+from widget import HUB_SIZE, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, valid_panel_size
 
 
 class ResponsiveTests(unittest.TestCase):
@@ -56,17 +56,17 @@ class ResponsiveTests(unittest.TestCase):
 
     def test_saved_size_restores_and_survives_restart(self):
         first = self.make_panel({'panel_size': [520, 560]})
-        self.assertEqual((first.width(), first.height()), (520, 560))
+        self.assertEqual((first.width(), first.height()), HUB_SIZE)
         first.persist()
         second = self.make_panel()
-        self.assertEqual((second.width(), second.height()), (520, 560))
+        self.assertEqual((second.width(), second.height()), HUB_SIZE)
 
     def test_missing_or_invalid_saved_size_recovers_safely(self):
-        self.assertEqual((self.make_panel().width(), self.make_panel().height())[0], 420)
+        self.assertEqual((self.make_panel().width(), self.make_panel().height())[0], HUB_SIZE[0])
         self.assertEqual((self.make_panel({'panel_size': [1, 99999]}).width(),
-                          self.make_panel({'panel_size': [1, 99999]}).height()), (420, 800))
+                          self.make_panel({'panel_size': [1, 99999]}).height()), HUB_SIZE)
         self.assertEqual((self.make_panel({'panel_size': ['wide', 'tall']}).width(),
-                          self.make_panel({'panel_size': ['wide', 'tall']}).height()), (420, 500))
+                          self.make_panel({'panel_size': ['wide', 'tall']}).height()), HUB_SIZE)
 
     def test_compact_mode_preserves_saved_expanded_size(self):
         from widget import COMPACT_HEIGHT
@@ -76,7 +76,7 @@ class ResponsiveTests(unittest.TestCase):
         self.assertEqual(panel.prefs['panel_size'], [520, 560])
         self.assertEqual(panel.height(), COMPACT_HEIGHT)
         panel.toggle_compact()
-        self.assertEqual((panel.width(), panel.height()), (520, 560))
+        self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
         self.assertEqual(panel.prefs['panel_size'], [520, 560])
 
     def test_minimum_width_renders_all_scopes_languages_formats_currencies(self):
@@ -108,28 +108,19 @@ class ResponsiveTests(unittest.TestCase):
                             raw_total=tokens, raw_last=tokens, notes=[], unknown=[],
                             partial=False, count=1, session_names={'s': 'S'}))
                         self.app.processEvents()
-                        self.assertEqual(panel.width(), PANEL_MIN[0])
+                        self.assertEqual(panel.width(), HUB_SIZE[0])
                         self.assertFalse(panel.grab().toImage().isNull(),
                                          (scope, language, style, currency))
         self.assertTrue(panel.details_button.isVisible())
         self.assertTrue(panel.settings_button.isVisible())
 
-    def test_grip_resize_updates_size_within_bounds(self):
-        from PySide6.QtCore import QPoint, QEvent
-        from PySide6.QtGui import QMouseEvent
-        from PySide6.QtCore import Qt
+    def test_fixed_hub_has_no_resize_grip(self):
         panel = self.make_panel()
         panel.show()
-        panel.resize(340, 640)
-        grip = panel.size_grip.mapToGlobal(QPoint(2, 2))
-        panel.begin_resize(QMouseEvent(QEvent.MouseButtonPress, QPoint(2, 2), grip,
-                                       Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
-        panel.do_resize(QMouseEvent(QEvent.MouseMove, QPoint(402, 402), grip + QPoint(400, 400),
-                                    Qt.NoButton, Qt.LeftButton, Qt.NoModifier))
-        self.assertEqual((panel.width(), panel.height()), PANEL_MAX)
-        self.assertEqual(panel.prefs['panel_size'], list(PANEL_MAX))
-        panel.end_resize(QMouseEvent(QEvent.MouseButtonRelease, QPoint(0, 0), grip,
-                                     Qt.LeftButton, Qt.NoButton, Qt.NoModifier))
+        panel.resize(900, 900)
+        self.assertEqual(panel.size().toTuple(), HUB_SIZE)
+        self.assertFalse(hasattr(panel, 'size_grip'))
+        self.assertFalse(hasattr(panel, 'begin_resize'))
 
 
 if __name__ == '__main__':

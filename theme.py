@@ -1,48 +1,49 @@
 """Central visual tokens for the petoken desktop companion.
 
-Muted paper, dusty lavender and blue pencil accents give the native companion
-the feel of a small desktop toy. Outlined controls and notebook tabs share these
-tokens across the workbench, usage cards, settings and activity bubbles.
+Silver-lavender hair and indigo clothing from the original artwork guide the
+native companion palette. Large surfaces use dimmed silver to avoid glare;
+outlined controls and notebook tabs retain the desktop toy treatment.
 """
 from __future__ import annotations
 
 # Core roles.
-INK = '#40374A'
-MUTED = '#514959'
-ICE = '#36546C'
-VIOLET = '#58436C'
-BG = '#C9C5CF'
+INK = '#231E56'
+MUTED = '#484365'
+ICE = '#324873'
+VIOLET = '#483F86'
+BG = '#BBB7CF'
 
-# Surfaces: dusk paper and a warm desk, without large white fields.
-SURFACE_TOP = '#D8CFDF'
-SURFACE_BOTTOM = '#CFCFDC'
-CARD = '#D9D2C7'
-TABLE_BG = '#E2DDD5'
-TABLE_ALT = '#DAD3DF'
-TABLE_HEADER = '#C8BDD1'
-BADGE_BG = '#CBBAD8'
-CONTROL_BG = '#E2DDD5'
-PRIMARY_BG = '#C5B2D5'
-CHECK_BG = '#B9C7D4'
+# Original sampled hair #EEEBF6, clothing #231E56 and #483F86. Muted
+# silver surfaces share that hue rather than introducing warm beige panels.
+SURFACE_TOP = '#CFCBE2'
+SURFACE_BOTTOM = '#C8C4DF'
+CARD = '#D0CCE4'
+TABLE_BG = '#D9D5EA'
+TABLE_ALT = '#CDC9E1'
+TABLE_HEADER = '#BCB5D5'
+BADGE_BG = '#BCB2D8'
+CONTROL_BG = '#D0CCE4'
+PRIMARY_BG = '#BAB2DA'
+CHECK_BG = '#B2BCDA'
 
 # Borders and separators.
-BORDER = '#918498'
-BORDER_SOFT = '#A69BAA'
-BORDER_CONTROL = '#918498'
-TRACK = '#B4A8BD'
-DIVIDER = '#B5ABBD'
-GRID = '#BCB2C3'
+BORDER = '#81779F'
+BORDER_SOFT = '#A098BC'
+BORDER_CONTROL = '#81779F'
+TRACK = '#ABA5C8'
+DIVIDER = '#AAA3C5'
+GRID = '#B5ADCE'
 
 # Interaction.
-TAB_PANE_BORDER = '#918498'
-TAB_SELECTED_BG = '#B9C7D4'
-HOVER_BG = '#D1C4DC'
-HOVER_BORDER = '#70617F'
-CHECKED_BG = '#C5B2D5'
-MENU_BG = '#DED8CE'
-MENU_SELECTED = '#B9C7D4'
-TOOLTIP_BG = '#E2DDD5'
-TOOLTIP_BORDER = '#918498'
+TAB_PANE_BORDER = '#81779F'
+TAB_SELECTED_BG = '#B2BCDA'
+HOVER_BG = '#C4BDDE'
+HOVER_BORDER = '#5E528B'
+CHECKED_BG = '#BAB2DA'
+MENU_BG = '#D0CCE4'
+MENU_SELECTED = '#B2BCDA'
+TOOLTIP_BG = '#D9D5EA'
+TOOLTIP_BORDER = '#81779F'
 SCROLL_BG = BG
 
 # Corner radii: one consistent set, rounder for the companion feel.

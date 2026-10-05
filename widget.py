@@ -47,6 +47,11 @@ STYLE = f'''
 QWidget {{ color:{theme.INK}; font-family:{theme.FONT_UI}; font-size:12px; }}
 QAbstractItemView,QLineEdit,QTextEdit,QPlainTextEdit {{ selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK}; }}
 QWidget#surface {{ background:{theme.SURFACE_TOP}; border:2px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
+QWidget#hubSurface {{ background:{theme.SURFACE_TOP}; border:2px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
+QWidget#hubSurface QPushButton {{ background:{theme.SURFACE_BOTTOM}; }}
+QWidget#hubSurface QPushButton:hover,QWidget#hubSurface QPushButton:pressed {{ background:{theme.HOVER_BG}; }}
+QWidget#hubSurface QPushButton:checked {{ background:{theme.CHECKED_BG}; }}
+QWidget#hubHeader QPushButton {{ min-height:0; padding:0; }}
 QLabel {{ background:transparent; border:none; }}
 QLabel#muted {{ color:{theme.MUTED}; font-size:11px; }}
 QLabel#brand {{ color:{theme.INK}; font-family:{theme.FONT_DISPLAY}; font-size:14px; font-weight:600; }}
@@ -111,6 +116,9 @@ def divider():
 PANEL_MIN = (420, 400)
 PANEL_MAX = (650, 800)
 PANEL_DEFAULT = (420, 500)
+# Fixed overview footprint; legacy saved sizes remain readable but no longer
+# control this window. Compact mode has the same width and its own height.
+HUB_SIZE = (440, 720)
 # Intentional compact footprint: identity + task + one metrics row + one
 # control strip. Tuned from real renders, not from the expanded stack.
 COMPACT_HEIGHT = 316
@@ -3886,27 +3894,26 @@ class Panel(QWidget):
         self.bridge.data.connect(self.render)
         self.bridge.limits.connect(self.receive_limits)
         self.bridge.fx.connect(self.receive_fx)
-        # V1.3 Slice C: one pet owns N task windows. The manager only
-        # consumes accepted active-task sets; the main panel keeps its
-        # legacy single-winner rendering (default/idle or primary task).
+        # One pet owns the accepted task Stars; Hub inspection has its own
+        # pinned conversation and scope without changing Star selection.
         self.task_manager = TaskPanelManager(self)
         self.setWindowTitle('petoken')
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setMinimumSize(PANEL_MIN[0], 250)
-        self.setMaximumSize(600, 640)
+        self.setFixedSize(*HUB_SIZE)
         self.setStyleSheet(STYLE)
         # The character remains in its own anchored window; this is its satellite.
         outer = QVBoxLayout(self)
         outer.setContentsMargins(8, 8, 8, 8)
         self.surface = QWidget()
-        self.surface.setObjectName('surface')
+        self.surface.setObjectName('hubSurface')
         outer.addWidget(self.surface)
         layout = QVBoxLayout(self.surface)
         layout.setContentsMargins(20, 14, 20, 14)
-        layout.setSpacing(10)
+        layout.setSpacing(8)
         self.header = QWidget()
+        self.header.setObjectName('hubHeader')
         self.header.setCursor(Qt.SizeAllCursor)
         head = QHBoxLayout(self.header)
         head.setContentsMargins(0,0,0,0)
@@ -3918,8 +3925,8 @@ class Panel(QWidget):
         brand.addWidget(self.connection)
         head.addLayout(brand)
         head.addStretch()
-        controls = QVBoxLayout()
-        controls.setSpacing(0)
+        controls = QHBoxLayout()
+        controls.setSpacing(6)
         self.collapse_button = button('−', '', self.toggle_compact)
         self.collapse_button.setFixedSize(30, 28)
         controls.addWidget(self.collapse_button)
@@ -3939,11 +3946,12 @@ class Panel(QWidget):
         self.task_menu.aboutToShow.connect(self.refresh_task_menu)
         layout.addWidget(self.tasks_button)
         self.task_provenance = ElidedLabel()
+        self.task_provenance.setFixedHeight(18)
         self.task_provenance.setObjectName('muted')
         layout.addWidget(self.task_provenance)
         model_row = QHBoxLayout()
         model_row.setSpacing(8)
-        self.model = label('—')
+        self.model = ElidedLabel('—')
         self.model.setStyleSheet(f'color:{ICE}; font-size:13px;')
         model_row.addWidget(self.model)
         self.effort = label('—', 'badge')
@@ -3990,10 +3998,9 @@ class Panel(QWidget):
         self._compact_docked = False
         layout.addWidget(self.compact_box)
         self.body = QWidget()
-        self.body.setStyleSheet(f'background:{BG};')
         body = QVBoxLayout(self.body)
         body.setContentsMargins(0,0,0,0)
-        body.setSpacing(10)
+        body.setSpacing(6)
         token_header = QHBoxLayout()
         self.total_header = label('', 'muted')
         token_header.addWidget(self.total_header)
@@ -4036,13 +4043,9 @@ class Panel(QWidget):
         # Pin content to the top so tall windows keep one compact visual
         # group instead of spreading sections apart.
         body.addStretch(1)
-        self.body_scroll = QScrollArea()
-        self.body_scroll.viewport().setStyleSheet(f'background:{BG};')
-        self.body_scroll.setWidgetResizable(True)
-        self.body_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.body_scroll.setWidget(self.body)
-        layout.addWidget(self.body_scroll,1)
+        layout.addWidget(self.body, 1)
         cost_row = QHBoxLayout()
+        cost_row.setContentsMargins(0, 0, 0, 0)
         self.cost_row_layout = cost_row
         cost_left = QVBoxLayout()
         cost_left.setSpacing(4)
@@ -4052,15 +4055,11 @@ class Panel(QWidget):
         cost_left.addWidget(self.cost)
         cost_row.addLayout(cost_left)
         cost_row.addStretch()
-        self.pin = button('◇', '', self.toggle_pin)
-        self.pin.setCheckable(True)
-        self.pin.setChecked(bool(self.prefs.get('panel_pinned', False)))
-        self.pin.setFixedSize(34,34)
-        cost_row.addWidget(self.pin)
         self.cost_bar = QWidget()
         self.cost_bar.setLayout(cost_row)
         layout.addWidget(self.cost_bar)
         bottom = QHBoxLayout()
+        bottom.setContentsMargins(0, 0, 0, 0)
         self.bottom_layout = bottom
         self.status = label('', 'muted')
         bottom.addWidget(self.status)
@@ -4071,9 +4070,6 @@ class Panel(QWidget):
         bottom.addStretch()
         self.settings_button = button('⚙', '', self.open_settings)
         bottom.addWidget(self.settings_button)
-        self.size_grip = label('⋰', 'muted')
-        self.size_grip.setCursor(Qt.SizeFDiagCursor)
-        bottom.addWidget(self.size_grip)
         self.bottom_bar = QWidget()
         self.bottom_bar.setLayout(bottom)
         layout.addWidget(self.bottom_bar)
@@ -4109,16 +4105,8 @@ class Panel(QWidget):
         self.tray.activated.connect(lambda reason:self.toggle_visible() if reason == QSystemTrayIcon.DoubleClick else None)
         self.tray.show()
         self.tray_menu = menu
-        self.size_grip.mousePressEvent = self.begin_resize
-        self.size_grip.mouseMoveEvent = self.do_resize
-        self.size_grip.mouseReleaseEvent = self.end_resize
-        self.size_timer = QTimer(self)
-        self.size_timer.setSingleShot(True)
-        self.size_timer.timeout.connect(self.persist)
-        self._edge_resize = None
         self.compact = bool(self.prefs.get('compact', False))
         self.apply_language()
-        self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
         self.apply_compact()
         self.apply_topmost()
         if isinstance(self.prefs.get('position'), list) and len(self.prefs['position']) == 2:
@@ -4207,7 +4195,7 @@ class Panel(QWidget):
         self.week.set_title(t('weekly_limit'))
         self.cost_label.setText(t('estimated_cost')+f" · {normalize_currency(self.prefs.get('currency'))}")
         self.compact_cost_label.setText(self.cost_label.text())
-        self.update_pin_button()
+        self.update_panel_controls()
         self.status.setText(t('checking_wait'))
         self.refresh_provider_mode(self.snapshot or {})
         self.refresh_task_controls()
@@ -4346,7 +4334,8 @@ class Panel(QWidget):
             self.title.setFullText(self.tr_text('waiting_available_task'))
             self.project.setText(provider_label.upper())
             self.project.setToolTip(provider_label.upper())
-            for w in (self.total,self.model,self.effort,self.cost,self.compact_total,
+            self.model.setFullText('—')
+            for w in (self.total,self.effort,self.cost,self.compact_total,
                         self.compact_cost):
                 w.setText('—')
                 w.setToolTip(status)
@@ -4371,8 +4360,8 @@ class Panel(QWidget):
         self.project.setText(project_text)
         self.project.setToolTip(project_text)
         self.title.setFullText(self.display_text(data.get('title'), 'unnamed_task'))
-        self.model.setText(data.get('model') or self.tr_text('model_not_recorded'))
-        self.model.setToolTip(self.tr_text('model_tip'))
+        self.model.setFullText(data.get('model') or self.tr_text('model_not_recorded'))
+        self.model.setToolTip(self.model.full_text + '\n' + self.tr_text('model_tip'))
         self.effort.setText((data.get('effort') or '—')+(' · fast' if data.get('tier') in ('priority','fast') else ''))
         self.effort.setToolTip(self.tr_text('effort_tip'))
         tokens = data.get('tokens', {})
@@ -4455,8 +4444,8 @@ class Panel(QWidget):
     def refresh_task_panels(self, data):
         """Apply accepted active tasks to the orb manager.
 
-        The main panel is a companion hub, never a task surface: every
-        visible task gets exactly one orb. Only the Slice C envelope
+        Every visible task gets exactly one orb independent of Hub
+        inspection. Only the Slice C envelope
         carries an authoritative task set: the Codex lane payload embeds
         its own raw per-lane set inside ``result`` for poller-internal
         use, which is deliberately ignored here (unfiltered,
@@ -4484,9 +4473,12 @@ class Panel(QWidget):
         data = self.snapshot if data is None else data
         count = self.task_manager.total_task_count()
         overview = self.tr_text('task_overview', count=count)
+        identity = ('codex', self.prefs.get('pinned'))
+        if identity in self.task_manager._universe:
+            overview = self.task_manager.label_text(identity, self.language) + ' · ' + overview
         self.tasks_button.setText(overview + ' ▾')
         self.tasks_button.setAccessibleName(overview)
-        self.tasks_button.setEnabled(bool(count))
+        self.tasks_button.setEnabled(True)
         provider = PROVIDER_NAMES.get(data.get('provider_id') or 'codex', 'Codex')
         provenance = self.tr_text('task_metric_scope', provider=provider,
                                   scope=scope_text(data.get('scope', self.prefs.get('scope')), self.language))
@@ -4498,26 +4490,41 @@ class Panel(QWidget):
     def refresh_task_menu(self):
         self.task_menu.clear()
         manager = self.task_manager
+        automatic = self.task_menu.addAction(self.tr_text('task_auto'))
+        automatic.setCheckable(True)
+        automatic.setChecked(not self.prefs.get('pinned'))
+        automatic.triggered.connect(lambda checked=False: self.select_hub_task(None))
+        self.task_menu.addSeparator()
         for identity in manager.task_identities():
             name = manager.label_text(identity, self.language)
             provider = PROVIDER_NAMES.get(identity[0], identity[0])
             action = self.task_menu.addAction(f'{name} · {provider}')
+            action.setCheckable(True)
+            action.setChecked(self.prefs.get('pinned') == identity[1])
             action.setEnabled(identity not in manager._ring_staged)
-            action.triggered.connect(lambda checked=False, key=identity: manager.activate_task(key, keyboard=True))
+            action.triggered.connect(lambda checked=False, key=identity: self.select_hub_task(key))
+
+    def select_hub_task(self, identity):
+        # Menu actions can outlive a task refresh; retired/staged tasks must
+        # never change the inspected identity. Stars keep their own details.
+        if self.closing:
+            return
+        if identity is not None:
+            if (identity[0] != 'codex' or identity not in self.task_manager._universe
+                    or identity in self.task_manager._ring_staged):
+                return
+            self.prefs.update(pinned=identity[1], scope='conversation')
+        else:
+            self.prefs['pinned'] = ''
+        self.persist()
+        self.publish_snapshot(self.provider_poller.apply_settings(dict(self.prefs)))
 
     def apply_hub_neutralization(self, provider_label, data):
-        """Neutralize task identity on the companion hub when orbs exist.
-
-        D1 blocker rule: with >=1 visible task orb, the main panel is a
-        companion/provider/scope hub — never a second surface for a
-        task. The legacy available-path rendering above binds the raw
-        task title/project, so replace both with neutral
-        provider-plus-scope framing (existing safe concepts only, no
-        new keys). With zero orbs this is a no-op and legacy titles
-        are fully preserved.
-        """
+        """Frame automatic aggregate views by scope; preserve actual titles
+        when inspecting a conversation or an explicitly selected task."""
         manager = getattr(self, 'task_manager', None)
-        if manager is None or manager.window_count() < 1:
+        if (manager is None or manager.window_count() < 1
+                or data.get('scope') in ('task', 'conversation') or self.prefs.get('pinned')):
             return
         scope = (data or {}).get('scope', self.prefs.get('scope'))
         neutral = f'{provider_label} · {scope_text(scope, self.language)}'
@@ -4698,27 +4705,37 @@ class Panel(QWidget):
         """Whether the expanded panel stays open independent of hover."""
         return bool(self.prefs.get('panel_pinned', False))
 
-    def update_pin_button(self):
-        pinned = self.is_pinned()
-        self.pin.setChecked(pinned)
-        self.pin.setText('◆' if pinned else '◇')
-        tip = self.tr_text('panel_unpin' if pinned else 'panel_pin')
-        self.pin.setToolTip(tip)
-        self.pin.setAccessibleName(tip)
+    def update_panel_controls(self):
+        self.hide_button.setEnabled(not self.is_pinned())
+        tip = self.tr_text('panel_pinned_help' if self.is_pinned() else 'hide_to_tray')
+        self.hide_button.setToolTip(tip)
+        self.hide_button.setAccessibleName(tip)
+
+    def set_panel_pinned(self, enabled):
+        if self.closing:
+            return
+        self.prefs['panel_pinned'] = bool(enabled)
+        self.update_panel_controls()
+        self.apply_topmost()
+        if enabled:
+            self.showNormal()
+            self.raise_()
+        else:
+            self.hide()
+        self.persist()
 
     def toggle_pin(self):
-        self.prefs['panel_pinned'] = not self.is_pinned()
-        self.update_pin_button()
-        self.persist()
+        self.set_panel_pinned(not self.is_pinned())
 
     def apply_topmost(self):
         """Apply the persistent always-on-top preference to panel and pet."""
         on_top = bool(self.prefs.get('always_on_top', True))
         for window in (self, getattr(self, 'pet', None)):
-            if window is None or bool(window.windowFlags() & Qt.WindowStaysOnTopHint) == on_top:
+            target = on_top or (window is self and self.is_pinned())
+            if window is None or bool(window.windowFlags() & Qt.WindowStaysOnTopHint) == target:
                 continue
             visible, position = window.isVisible(), window.pos()
-            window.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
+            window.setWindowFlag(Qt.WindowStaysOnTopHint, target)
             if visible:
                 window.show()
             window.move(position)
@@ -4731,21 +4748,19 @@ class Panel(QWidget):
         self.persist()
 
     def apply_compact(self):
+        for widget in (self.project, self.task_provenance, self.model, self.effort):
+            widget.setVisible(not self.compact)
         self.body.setVisible(not self.compact)
-        self.body_scroll.setVisible(not self.compact)
-        self.size_grip.setVisible(not self.compact)
         self.cost_bar.setVisible(not self.compact)
         self.bottom_bar.setVisible(not self.compact)
         self.compact_box.setVisible(self.compact)
         self.collapse_button.setText('+' if self.compact else '−')
         if self.compact:
             self._dock_compact_widgets()
-            self.setFixedHeight(COMPACT_HEIGHT)
+            self.setFixedSize(HUB_SIZE[0], COMPACT_HEIGHT)
         else:
             self._restore_expanded_widgets()
-            self.setMinimumSize(*PANEL_MIN)
-            self.setMaximumSize(*PANEL_MAX)
-            self.resize(*(valid_panel_size(self.prefs.get('panel_size')) or PANEL_DEFAULT))
+            self.setFixedSize(*HUB_SIZE)
         QTimer.singleShot(0, lambda: self.anchor_to_pet() if self.isVisible() else None)
 
     def _dock_compact_widgets(self):
@@ -4754,14 +4769,12 @@ class Panel(QWidget):
         if self._compact_docked:
             return
         self.compact_foot.insertWidget(0, self.status)
-        self.compact_foot.addWidget(self.pin)
         self.compact_foot.addWidget(self.settings_button)
         self._compact_docked = True
 
     def _restore_expanded_widgets(self):
         if not self._compact_docked:
             return
-        self.cost_row_layout.addWidget(self.pin)
         self.bottom_layout.insertWidget(0, self.status)
         self.bottom_layout.insertWidget(2, self.settings_button)
         self._compact_docked = False
@@ -4771,11 +4784,6 @@ class Panel(QWidget):
         self.prefs['compact'] = self.compact
         self.apply_compact()
         self.persist()
-        pet = getattr(self, 'pet', None)
-        if pet is not None:
-            # The click counts as fresh presence: an expand-then-anchor jump
-            # must not immediately read as a cursor leave (auto-hide grace).
-            pet.left_since = None
 
     def begin_drag(self, event):
         if event.button() == Qt.LeftButton:
@@ -4788,94 +4796,6 @@ class Panel(QWidget):
     def end_drag(self, event):
         self.prefs['position'] = [self.x(), self.y()]
         self.persist()
-
-    def begin_resize(self, event):
-        if event.button() == Qt.LeftButton:
-            self.resize_start = (event.globalPosition().toPoint(), self.size())
-
-    def do_resize(self, event):
-        if event.buttons() & Qt.LeftButton and hasattr(self, 'resize_start'):
-            origin, size = self.resize_start
-            delta = event.globalPosition().toPoint() - origin
-            self.resize(max(PANEL_MIN[0], min(size.width() + delta.x(), PANEL_MAX[0])),
-                        max(PANEL_MIN[1], min(size.height() + delta.y(), PANEL_MAX[1])))
-            self.prefs['panel_size'] = [self.width(), self.height()]
-            self.size_timer.start(600)
-
-    def end_resize(self, event):
-        if hasattr(self, 'resize_start'):
-            del self.resize_start
-        self.persist()
-
-    RESIZE_MARGIN = 8
-
-    def _resize_hit(self, pos):
-        """Which window borders the point grabs: (dx, dy) in {-1, 0, 1}."""
-        w, h, m = self.width(), self.height(), self.RESIZE_MARGIN
-        dx = -1 if pos.x() < m else (1 if pos.x() > w - m else 0)
-        dy = -1 if pos.y() < m else (1 if pos.y() > h - m else 0)
-        return dx, dy
-
-    @staticmethod
-    def _resize_cursor(dx, dy):
-        if dx != 0 and dy != 0:
-            return Qt.SizeFDiagCursor if dx == dy else Qt.SizeBDiagCursor
-        if dx != 0:
-            return Qt.SizeHorCursor
-        if dy != 0:
-            return Qt.SizeVerCursor
-        return None
-
-    def mousePressEvent(self, event):
-        hit = (0, 0) if self.compact else self._resize_hit(event.position().toPoint())
-        if event.button() == Qt.LeftButton and hit != (0, 0):
-            self._edge_resize = (event.globalPosition().toPoint(), self.geometry(), hit)
-            event.accept()
-        else:
-            super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if self._edge_resize is not None and event.buttons() & Qt.LeftButton:
-            origin, geom, (dx, dy) = self._edge_resize
-            delta = event.globalPosition().toPoint() - origin
-            ww, hh = geom.width(), geom.height()
-            if dx == 1:
-                ww += delta.x()
-            elif dx == -1:
-                ww -= delta.x()
-            if dy == 1:
-                hh += delta.y()
-            elif dy == -1:
-                hh -= delta.y()
-            new_w = max(PANEL_MIN[0], min(ww, PANEL_MAX[0]))
-            new_h = max(PANEL_MIN[1], min(hh, PANEL_MAX[1]))
-            x, y = geom.x(), geom.y()
-            if dx == -1:
-                x = geom.right() - new_w + 1
-            if dy == -1:
-                y = geom.bottom() - new_h + 1
-            self.setGeometry(x, y, new_w, new_h)
-            self.prefs['panel_size'] = [new_w, new_h]
-            self.size_timer.start(600)
-            event.accept()
-        elif not self.compact and not (event.buttons() & Qt.LeftButton):
-            cursor = self._resize_cursor(*self._resize_hit(event.position().toPoint()))
-            self.setCursor(QCursor(cursor)) if cursor is not None else self.unsetCursor()
-        else:
-            super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        if self._edge_resize is not None and event.button() == Qt.LeftButton:
-            self._edge_resize = None
-            self.persist()
-            event.accept()
-        else:
-            super().mouseReleaseEvent(event)
-
-    def leaveEvent(self, event):
-        if self._edge_resize is None:
-            self.unsetCursor()
-        super().leaveEvent(event)
 
     def move_clamped(self, point):
         screen = QApplication.screenAt(point+QPoint(self.width()//2,30)) or QApplication.primaryScreen()
@@ -4902,6 +4822,8 @@ class Panel(QWidget):
             self.hide_to_tray()
 
     def hide_to_tray(self):
+        if self.is_pinned() and not self.closing:
+            return
         if QSystemTrayIcon.isSystemTrayAvailable():
             self.hide()
         else:

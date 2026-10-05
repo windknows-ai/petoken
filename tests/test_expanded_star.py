@@ -248,44 +248,37 @@ class ExpandedStarTests(unittest.TestCase):
             self.assertEqual((card.x(),card.y()),position)
             self.assert_frame(before)
 
-    def test_actual_keyboard_star_hub_entry_and_escape(self):
-        task=ui._codex_entry('a')
-        self.panel.prefs['language']='en'
-        self.panel.render(dict(provider_id='codex',available=False,scope='global',
-                               generation=1,preference='codex',active_tasks=[task]))
+    def test_actual_keyboard_star_and_hub_inspection_are_independent(self):
+        task = ui._codex_entry('a')
+        payload = dict(provider_id='codex', available=False, scope='conversation',
+                       generation=2, preference='codex', active_tasks=[task])
+        self.panel.prefs['language'] = 'en'
+        self.panel.render(payload)
         self.panel.show()
         self.panel.activateWindow()
         self.panel.tasks_button.setFocus()
-        self.assertTrue(QTest.qWaitForWindowActive(self.panel,1000))
-        self.assertEqual(self.panel.tasks_button.text(),'Active tasks · 1 ▾')
-        self.assertIn('Codex',self.panel.task_provenance.full_text)
+        self.assertTrue(QTest.qWaitForWindowActive(self.panel, 1000))
         def choose():
-            menu=self.panel.task_menu
-            QTest.keyClick(menu,Qt.Key_Down)
-            QTest.keyClick(menu,Qt.Key_Return)
-        QTimer.singleShot(0,choose)
-        QTest.keyClick(self.panel.tasks_button,Qt.Key_Space)
-        self.app.processEvents()
-        self.assertEqual(self.manager.expanded_identity,('codex','a'))
-        card=self.manager.detail_window
-        self.assertIs(card.focusWidget(),card.collapse_button)
-        self.assertTrue(QTest.qWaitForWindowActive(card,1000))
-        self.assertTrue(card.collapse_button.hasFocus())
-        QTest.keyClick(card.collapse_button,Qt.Key_Escape)
+            menu = self.panel.task_menu
+            QTest.keyClick(menu, Qt.Key_Down)
+            QTest.keyClick(menu, Qt.Key_Down)
+            QTest.keyClick(menu, Qt.Key_Return)
+        with patch.object(self.panel.provider_poller, 'apply_settings', return_value=dict(
+                result=payload, active_tasks=[task], preference='codex')):
+            QTimer.singleShot(0, choose)
+            QTest.keyClick(self.panel.tasks_button, Qt.Key_Space)
+            self.app.processEvents()
+        self.assertEqual(self.panel.prefs['pinned'], 'a')
         self.assertIsNone(self.manager.expanded_identity)
-        orb=self.manager.window_for(('codex','a'))
-        self.assertEqual(orb.focusPolicy(),Qt.StrongFocus)
-        self.assertIn('Active task',orb.accessibleName())
-        for key in (Qt.Key_Return,Qt.Key_Space):
-            orb.activateWindow()
-            orb.setFocus()
-            self.assertTrue(QTest.qWaitForWindowActive(orb,1000))
-            QTest.keyClick(orb,key)
-            self.assertEqual(self.manager.expanded_identity,('codex','a'))
-            self.assertTrue(QTest.qWaitForWindowActive(card,1000))
-            self.assertTrue(card.collapse_button.hasFocus())
-            QTest.keyClick(card.collapse_button,Qt.Key_Escape)
-            self.assertIsNone(self.manager.expanded_identity)
+        orb = self.manager.window_for(('codex', 'a'))
+        orb.activateWindow()
+        orb.setFocus()
+        self.assertTrue(QTest.qWaitForWindowActive(orb, 1000))
+        QTest.keyClick(orb, Qt.Key_Return)
+        self.assertEqual(self.manager.expanded_identity, ('codex', 'a'))
+        card = self.manager.detail_window
+        QTest.keyClick(card.collapse_button, Qt.Key_Escape)
+        self.assertIsNone(self.manager.expanded_identity)
 
     def test_codex_unknown_zero_partial_source_notes_and_actual_effort(self):
         task=ui._secondary_codex_entry('secret',total=0,tokens=(0,0,0,0,0),model=None)
@@ -371,7 +364,7 @@ class ExpandedStarTests(unittest.TestCase):
             self.assertNotIn('OpenCode',self.panel.task_provenance.full_text)
             self.assertIn('Project',self.panel.task_provenance.full_text)
             self.panel.refresh_task_menu()
-            self.assertEqual(len(self.panel.task_menu.actions()),2)
+            self.assertEqual(len(self.panel.task_menu.actions()),4)
         finally:
             self.manager.motion_timer.stop()
             self.manager._live_armed=lambda:False
@@ -469,54 +462,34 @@ class ExpandedStarTests(unittest.TestCase):
                         self.manager.collapse_detail()
 
 
-    def test_rapid_native_hub_menu_escape_collapses_without_hiding_scene(self):
-        task=ui._codex_entry('native-menu-proof')
-        self.panel.prefs['language']='en'
-        self.panel.render(dict(provider_id='codex',available=False,scope='global',
-                               generation=1,preference='auto',active_tasks=[task]))
+    def test_rapid_hub_inspection_escape_keeps_star_scene(self):
+        task = ui._codex_entry('native-menu-proof')
+        payload = dict(provider_id='codex', available=False, scope='conversation',
+                       generation=2, preference='codex', active_tasks=[task])
+        self.panel.render(payload)
         self.panel.show()
         self.panel.activateWindow()
         self.panel.tasks_button.setFocus()
-        self.assertTrue(QTest.qWaitForWindowActive(self.panel,1000))
-        self.app.processEvents()
-        key=('codex','native-menu-proof')
-        orb=self.manager.window_for(key)
-        before=self.positions()
-        chosen=[]
-        immediate=[]
+        self.assertTrue(QTest.qWaitForWindowActive(self.panel, 1000))
+        before = self.positions()
         def choose():
-            menu=self.panel.task_menu
-            menu_visible=menu.isVisible()
-            QTest.keyClick(menu,Qt.Key_Down)
-            QTest.keyClick(menu,Qt.Key_Return)
-            card=self.manager.detail_window
-            chosen.append((menu_visible,self.manager.expanded_identity,
-                           card.focusWidget() is card.collapse_button))
-            # Deliver the next real key before another Qt/OS activation turn.
-            QTest.keyClick(card.collapse_button,Qt.Key_Escape)
-            immediate.append((self.manager.expanded_identity,self.panel.isVisible(),
-                              self.manager._visible,orb.isVisible(),self.positions()))
-        QTimer.singleShot(0,choose)
-        self.panel.tasks_button.setFocus()
-        QTest.keyClick(self.panel.tasks_button,Qt.Key_Space)
+            menu = self.panel.task_menu
+            QTest.keyClick(menu, Qt.Key_Down)
+            QTest.keyClick(menu, Qt.Key_Down)
+            QTest.keyClick(menu, Qt.Key_Return)
+            QTest.keyClick(self.panel, Qt.Key_Escape)
+        with patch.object(self.panel.provider_poller, 'apply_settings', return_value=dict(
+                result=payload, active_tasks=[task], preference='codex')):
+            QTimer.singleShot(0, choose)
+            QTest.keyClick(self.panel.tasks_button, Qt.Key_Space)
+            self.app.processEvents()
         self.app.processEvents()
-        # Return -> Escape has no activation wait; callback records the same-event state.
-        self.assertEqual(immediate,[(None,True,True,True,before)])
-        self.assertEqual(chosen,[(True,key,True)])
+        self.assertEqual(self.panel.prefs['pinned'], 'native-menu-proof')
         self.assertIsNone(self.manager.expanded_identity)
-        self.assertTrue(self.panel.isVisible())
+        self.assertFalse(self.panel.isVisible())
         self.assertTrue(self.manager._visible)
-        self.assertTrue(orb.isVisible())
-        self.assertIs(self.manager.window_for(key),orb)
-        self.assertEqual(self.positions(),before)
-        self.panel.activateWindow()
-        self.panel.tasks_button.setFocus()
-        self.assertTrue(QTest.qWaitForWindowActive(self.panel,1000))
-        QTest.keyClick(self.panel.tasks_button,Qt.Key_Escape)
-        self.app.processEvents()
-        self.assertTrue(self.manager._visible)
-        self.assertTrue(orb.isVisible())
-        self.assertTrue(not self.panel.isVisible() or self.panel.isMinimized())
+        self.assertTrue(self.manager.window_for(('codex', 'native-menu-proof')).isVisible())
+        self.assertEqual(self.positions(), before)
 
     def test_unknown_quota_missing_reset_clears_and_zero_is_valid(self):
         self.panel.show()

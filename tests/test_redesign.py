@@ -177,35 +177,23 @@ class RedesignTests(unittest.TestCase):
             second.deleteLater()
             self.app.processEvents()
 
-    def test_resize_stays_within_minimums_and_persists(self):
-        self.assertEqual((self.panel.minimumWidth(), self.panel.minimumHeight()), (420, 400))
+    def test_expanded_panel_uses_fixed_layout(self):
+        from widget import HUB_SIZE
         self.panel.show()
-        self.app.processEvents()
-        self.panel.resize(520, 560)
-        self.assertEqual((self.panel.width(), self.panel.height()), (520, 560))
-        self.assertTrue(self.panel.body_scroll.isVisible())
-        grip = self.panel.size_grip.mapToGlobal(QPoint(2, 2))
-        press = QMouseEvent(QEvent.MouseButtonPress, QPoint(2, 2), grip,
-                            Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-        self.panel.begin_resize(press)
-        target = grip + QPoint(60, 60)
-        move = QMouseEvent(QEvent.MouseMove, QPoint(62, 62), target,
-                           Qt.NoButton, Qt.LeftButton, Qt.NoModifier)
-        before = self.panel.size()
-        self.panel.do_resize(move)
-        self.assertGreaterEqual(self.panel.width(), before.width())
-        self.assertIn('panel_size', self.panel.prefs)
-        self.panel.end_resize(move)
+        self.assertTrue(self.panel.body.isVisible())
+        self.panel.resize(900, 900)
+        self.assertEqual(self.panel.size().toTuple(), HUB_SIZE)
+        self.assertFalse(hasattr(self.panel, 'size_grip'))
 
     def test_compact_hides_body_and_stays_small(self):
         from widget import COMPACT_HEIGHT
         self.panel.show()
         self.panel.toggle_compact()
-        self.assertFalse(self.panel.body_scroll.isVisible())
+        self.assertFalse(self.panel.body.isVisible())
         self.assertEqual(self.panel.height(), COMPACT_HEIGHT)
-        self.assertFalse(self.panel.size_grip.isVisible())
+        self.assertFalse(hasattr(self.panel, 'size_grip'))
         self.panel.toggle_compact()
-        self.assertTrue(self.panel.body_scroll.isVisible())
+        self.assertTrue(self.panel.body.isVisible())
 
     def test_redesign_changes_no_data_semantics(self):
         tokens = fixture_tokens()

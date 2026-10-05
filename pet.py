@@ -1,8 +1,7 @@
 """Transparent character desktop pet; click to reveal the existing dashboard."""
 import math
-import time
 from PySide6.QtCore import Qt,QTimer,QPoint,QPointF,QRectF,QSize
-from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QFontMetrics,QPen,QKeySequence,QShortcut,QCursor
+from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QFontMetrics,QPen,QKeySequence,QShortcut
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
 import pet_assets as assets
@@ -42,9 +41,6 @@ class DesktopPet(QWidget):
         self._render_cache={}
         self._render_dpr=None
         self.current_state='idle'
-        self.hover_since=None
-        self.left_since=None
-        self.dismiss_until_leave=False
         self.preview_state=None
         self.activity_timer=QTimer(self)
         self.activity_timer.timeout.connect(self.update_activity)
@@ -148,23 +144,6 @@ class DesktopPet(QWidget):
         super().closeEvent(event)
 
     def update_activity(self):
-        now=time.monotonic()
-        cursor=QCursor.pos()
-        pet_hover=self.isVisible() and self.frameGeometry().contains(cursor)
-        panel_hover=self.panel.isVisible() and self.panel.frameGeometry().adjusted(-12,-12,12,12).contains(cursor)
-        # Brief dwell avoids opening while the cursor merely passes over the pet.
-        if not pet_hover and not panel_hover:
-            self.hover_since=None
-            self.dismiss_until_leave=False
-            self.left_since=self.left_since or now
-            if self.panel.isVisible() and now-self.left_since>.7 and not QApplication.activeModalWidget() \
-                    and not self.panel.is_pinned():
-                self.panel.hide()
-        else:
-            self.left_since=None
-            if pet_hover and self.pressed is None and not self.dismiss_until_leave:
-                self.hover_since=self.hover_since or now
-                if now-self.hover_since>.35 and not self.panel.isVisible():self.show_panel()
         monitor=getattr(self.panel,'activity',None)
         codex_working=getattr(self.panel,'app_mode',None)
         # Opening usage is an overlay, not a pose: keep the same live companion.
@@ -344,19 +323,29 @@ class DesktopPet(QWidget):
                 self.panel.persist()
 
     def toggle_panel(self):
-        if self.panel.isVisible():
-            self.panel.hide();self.dismiss_until_leave=True
+        if self.panel.isVisible() and not self.panel.is_pinned():
+            self.panel.hide_to_tray()
         else:self.show_panel()
 
     def show_panel(self):
         self.panel.anchor_to_pet()
         self.panel.show();self.panel.raise_()
-        self.left_since=None
 
     def contextMenuEvent(self,event):
+        menu=self.context_menu()
+        try:
+            menu.exec(event.globalPos())
+        finally:
+            menu.deleteLater()
+
+    def context_menu(self):
         menu=QMenu(self)
         menu.setStyleSheet(self.panel.styleSheet())
-        menu.addAction(self.tr_text('pet_toggle_panel'),self.toggle_panel)
+        usage=menu.addAction(self.tr_text('usage_panel'))
+        usage.setCheckable(True)
+        usage.setChecked(self.panel.is_pinned())
+        usage.setToolTip(self.tr_text('panel_pinned_help'))
+        usage.toggled.connect(self.panel.set_panel_pinned)
         menu.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
         menu.addAction(self.tr_text('workbench_open'),self.panel.open_workbench)
         menu.addAction(self.tr_text('wb_tutorial'),self.panel.open_workbench_tutorial)
@@ -368,7 +357,7 @@ class DesktopPet(QWidget):
         motion.triggered.connect(self.toggle_motion)
         menu.addAction(self.tr_text('hide_pet'),self.hide)
         menu.addSeparator();menu.addAction(self.tr_text('exit'),self.panel.shutdown)
-        menu.exec(event.globalPos())
+        return menu
 
     def toggle_topmost(self,enabled):
         self.panel.set_always_on_top(enabled)

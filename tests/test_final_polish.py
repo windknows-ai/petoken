@@ -11,7 +11,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from pet import DesktopPet
-from widget import PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Settings
+from widget import HUB_SIZE, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Settings
 
 ZH_ABOUT = [
     ("关于数据", None),
@@ -79,65 +79,58 @@ class FinalPolishTests(unittest.TestCase):
             panel.mapToGlobal(moved), Qt.LeftButton, Qt.NoButton, Qt.NoModifier))
         self.app.processEvents()
 
-    # -- P1: free resize ---------------------------------------------------------
+    # -- P1: fixed overview ---------------------------------------------------------
 
-    def test_hit_zones_cover_edges_and_corners(self):
+    def test_hub_does_not_install_edge_resize_handlers(self):
         panel = self.make_panel()
-        panel.resize(500, 500)
-        self.assertEqual(panel._resize_hit(QPoint(2, 250)), (-1, 0))
-        self.assertEqual(panel._resize_hit(QPoint(498, 250)), (1, 0))
-        self.assertEqual(panel._resize_hit(QPoint(250, 2)), (0, -1))
-        self.assertEqual(panel._resize_hit(QPoint(250, 498)), (0, 1))
-        self.assertEqual(panel._resize_hit(QPoint(2, 2)), (-1, -1))
-        self.assertEqual(panel._resize_hit(QPoint(498, 498)), (1, 1))
-        self.assertEqual(panel._resize_hit(QPoint(250, 250)), (0, 0))
-        self.assertEqual(Panel._resize_cursor(1, 1), Qt.SizeFDiagCursor)
-        self.assertEqual(Panel._resize_cursor(-1, 1), Qt.SizeBDiagCursor)
-        self.assertEqual(Panel._resize_cursor(1, 0), Qt.SizeHorCursor)
-        self.assertEqual(Panel._resize_cursor(0, -1), Qt.SizeVerCursor)
-        self.assertIsNone(Panel._resize_cursor(0, 0))
+        self.assertFalse(hasattr(panel, '_resize_hit'))
+        self.assertFalse(hasattr(panel, '_edge_resize'))
+        self.assertEqual(panel.minimumSize(), panel.maximumSize())
 
-    def test_width_resizes_both_directions(self):
+    def test_width_ignores_resize_both_directions(self):
         panel = self.make_panel({'panel_size': [500, 500]})
         panel.show()
-        self.edge_drag(panel, 'right', QPoint(60, 0))
-        self.assertEqual(panel.width(), 560)
-        self.edge_drag(panel, 'left', QPoint(-50, 0))
-        self.assertEqual(panel.width(), 610)
-        self.assertEqual(panel.prefs['panel_size'][0], 610)
+        for edge in ('left', 'right', 'top', 'bottom', 'topleft', 'bottomright'):
+            self.edge_drag(panel, edge, QPoint(120, 120))
+            self.assertEqual(panel.size().toTuple(), HUB_SIZE)
+        panel.persist()
+        self.assertEqual(self.make_panel().size().toTuple(), HUB_SIZE)
 
-    def test_height_resizes_both_directions(self):
+    def test_height_ignores_resize_both_directions(self):
         panel = self.make_panel({'panel_size': [500, 500]})
         panel.show()
-        self.edge_drag(panel, 'bottom', QPoint(0, 100))
-        self.assertEqual(panel.height(), 600)
-        self.edge_drag(panel, 'top', QPoint(0, -60))
-        self.assertEqual(panel.height(), 660)
+        for edge in ('left', 'right', 'top', 'bottom', 'topleft', 'bottomright'):
+            self.edge_drag(panel, edge, QPoint(120, 120))
+            self.assertEqual(panel.size().toTuple(), HUB_SIZE)
+        panel.persist()
+        self.assertEqual(self.make_panel().size().toTuple(), HUB_SIZE)
 
-    def test_minimum_size_clamps(self):
-        self.assertEqual(PANEL_MIN, (420, 400))
+    def test_minimum_size_stays_fixed(self):
         panel = self.make_panel({'panel_size': [500, 500]})
         panel.show()
-        self.edge_drag(panel, 'right', QPoint(-400, 0))
-        self.edge_drag(panel, 'bottom', QPoint(0, -400))
-        self.assertEqual((panel.width(), panel.height()), (420, 400))
+        for edge in ('left', 'right', 'top', 'bottom', 'topleft', 'bottomright'):
+            self.edge_drag(panel, edge, QPoint(120, 120))
+            self.assertEqual(panel.size().toTuple(), HUB_SIZE)
+        panel.persist()
+        self.assertEqual(self.make_panel().size().toTuple(), HUB_SIZE)
 
-    def test_maximum_size_clamps(self):
-        self.assertEqual(PANEL_MAX, (650, 800))
+    def test_maximum_size_stays_fixed(self):
         panel = self.make_panel({'panel_size': [500, 500]})
         panel.show()
-        self.edge_drag(panel, 'bottomright', QPoint(900, 900))
-        self.assertEqual((panel.width(), panel.height()), (650, 800))
+        for edge in ('left', 'right', 'top', 'bottom', 'topleft', 'bottomright'):
+            self.edge_drag(panel, edge, QPoint(120, 120))
+            self.assertEqual(panel.size().toTuple(), HUB_SIZE)
+        panel.persist()
+        self.assertEqual(self.make_panel().size().toTuple(), HUB_SIZE)
 
     def test_custom_size_persists_across_restart(self):
         panel = self.make_panel({'panel_size': [500, 500]})
         panel.show()
-        self.edge_drag(panel, 'right', QPoint(20, 0))
-        self.edge_drag(panel, 'bottom', QPoint(0, 200))
-        self.assertEqual((panel.width(), panel.height()), (520, 700))
+        for edge in ('left', 'right', 'top', 'bottom', 'topleft', 'bottomright'):
+            self.edge_drag(panel, edge, QPoint(120, 120))
+            self.assertEqual(panel.size().toTuple(), HUB_SIZE)
         panel.persist()
-        fresh = self.make_panel()
-        self.assertEqual((fresh.width(), fresh.height()), (520, 700))
+        self.assertEqual(self.make_panel().size().toTuple(), HUB_SIZE)
 
     def test_compact_expand_restores_both_dimensions(self):
         panel = self.make_panel({'panel_size': [520, 700]})
@@ -146,7 +139,7 @@ class FinalPolishTests(unittest.TestCase):
         panel.toggle_compact()
         panel.toggle_compact()
         self.app.processEvents()
-        self.assertEqual((panel.width(), panel.height()), (520, 700))
+        self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
 
     def test_repeated_cycles_preserve_size(self):
         panel = self.make_panel({'panel_size': [520, 700]})
@@ -155,7 +148,7 @@ class FinalPolishTests(unittest.TestCase):
             panel.toggle_compact()
             panel.toggle_compact()
             self.app.processEvents()
-            self.assertEqual((panel.width(), panel.height()), (520, 700))
+            self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
 
     def test_compact_ignores_edge_resize(self):
         panel = self.make_panel()
@@ -164,7 +157,7 @@ class FinalPolishTests(unittest.TestCase):
         before = (panel.width(), panel.height())
         self.edge_drag(panel, 'bottomright', QPoint(100, 100))
         self.assertEqual((panel.width(), panel.height()), before)
-        self.assertIsNone(panel._edge_resize)
+        self.assertFalse(hasattr(panel, '_edge_resize'))
 
     def test_resizing_panel_never_moves_pet(self):
         panel = self.make_panel({'panel_size': [500, 500]})

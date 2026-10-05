@@ -54,7 +54,6 @@ class SceneV14Tests(unittest.TestCase):
     def tearDown(self):
         self.manager.shutdown()
         self.panel.clock.stop()
-        self.panel.size_timer.stop()
         self.panel.closing = True
         self.panel.close()
         self.pet.close()

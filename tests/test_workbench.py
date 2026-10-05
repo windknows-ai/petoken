@@ -13,6 +13,32 @@ from workbench_store import WorkbenchError, WorkbenchStore
 
 
 class WorkbenchTests(unittest.TestCase):
+    def test_projects_have_separate_readable_rows_and_stable_ids_on_refresh(self):
+        projects = [self.store.create_project(name) for name in ('21额', '2314', '2134')]
+        self.window.refresh()
+        self.window.tabs.setCurrentIndex(3)
+        self.window.show()
+        self.app.processEvents()
+        tree = self.window.projects_table
+        rects = [tree.visualItemRect(tree.topLevelItem(i)) for i in range(3)]
+        for first, second in zip(rects, rects[1:]):
+            self.assertGreaterEqual(first.height(), 36)
+            self.assertLess(first.bottom(), second.top())
+        for language in ('zh_CN', 'en', 'zh_CN'):
+            self.panel.prefs['language'] = language
+            self.window.apply_language()
+            self.window.refresh()
+            self.window.refresh()
+            ids = [tree.topLevelItem(i).data(0, Qt.UserRole) for i in range(tree.topLevelItemCount())]
+            self.assertEqual(set(ids), {p['id'] for p in projects})
+            self.assertEqual(len(ids), len(set(ids)))
+            self.assertEqual(self.window.project_list.count(), len(projects) + 2)
+        tree.setCurrentItem(tree.topLevelItem(1))
+        self.assertTrue(self.window.project_edit_button.isVisible())
+        self.assertTrue(self.window.project_delete_button.isVisible())
+        tree.clearSelection()
+        self.assertFalse(self.window.project_edit_button.isVisible())
+
     def test_selected_lists_keep_readable_companion_colors(self):
         from PySide6.QtGui import QPalette
         import theme

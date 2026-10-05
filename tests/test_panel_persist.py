@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication
 
 from app_config import load_preferences
 from pet import DesktopPet
-from widget import PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Settings, valid_panel_size
+from widget import HUB_SIZE, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Settings, valid_panel_size
 
 
 class PanelPersistTests(unittest.TestCase):
@@ -126,21 +126,23 @@ class PanelPersistTests(unittest.TestCase):
 
     # -- pinned / persistent panel -------------------------------------------
 
-    def test_pin_button_reflects_state_in_both_languages(self):
+    def test_context_usage_check_reflects_state_in_both_languages(self):
         panel = self.make_panel({'language': 'en'})
-        self.assertFalse(panel.is_pinned())
-        self.assertFalse(panel.pin.isChecked())
-        self.assertEqual(panel.pin.text(), '◇')
-        self.assertEqual(panel.pin.toolTip(), 'Pin panel open')
-        panel.toggle_pin()
-        self.assertTrue(panel.is_pinned())
-        self.assertEqual(panel.pin.text(), '◆')
-        self.assertEqual(panel.pin.toolTip(), 'Unpin panel')
-        panel.prefs['language'] = 'zh_CN'
-        panel.apply_language()
-        self.assertEqual(panel.pin.toolTip(), '取消固定面板')
-        panel.toggle_pin()
-        self.assertEqual(panel.pin.toolTip(), '固定面板（保持展开）')
+        pet = self.attach_pet(panel)
+        for language, expected in [('en', 'Usage panel'), ('zh_CN', '用量面板')]:
+            panel.prefs['language'] = language
+            panel.apply_language()
+            menu = pet.context_menu()
+            action = menu.actions()[0]
+            self.assertEqual(action.text(), expected)
+            self.assertFalse(action.isChecked())
+            action.trigger()
+            self.assertTrue(action.isChecked())
+            self.assertTrue(panel.isVisible())
+            self.assertFalse(panel.hide_button.isEnabled())
+            action.trigger()
+            self.assertFalse(panel.isVisible())
+            menu.deleteLater()
 
     def test_pin_state_persists_across_restart(self):
         first = self.make_panel()
@@ -149,7 +151,7 @@ class PanelPersistTests(unittest.TestCase):
         first.persist()
         second = self.make_panel()
         self.assertTrue(second.is_pinned())
-        self.assertTrue(second.pin.isChecked())
+        self.assertFalse(second.hide_button.isEnabled())
 
     def test_pinned_panel_restores_visible_unpinned_stays_hidden(self):
         pinned = self.make_panel({'panel_pinned': True})
@@ -161,14 +163,13 @@ class PanelPersistTests(unittest.TestCase):
         self.assertFalse(plain.isVisible())
 
     def test_pinned_panel_ignores_cursor_leave_auto_hide(self):
-        for pinned_pref, expect_visible in ((False, False), (True, True)):
+        for pinned_pref, expect_visible in ((False, True), (True, True)):
             panel = self.make_panel({'panel_pinned': pinned_pref})
             pet = self.attach_pet(panel)
             panel.show()
             self.app.processEvents()
             pet.left_since = time.monotonic() - 1.0
-            with patch('pet.QCursor.pos', return_value=QPoint(-9999, -9999)):
-                pet.update_activity()
+            pet.update_activity()
             self.app.processEvents()
             self.assertEqual(panel.isVisible(), expect_visible, pinned_pref)
             panel.hide()
@@ -201,7 +202,7 @@ class PanelPersistTests(unittest.TestCase):
                 raw_total=tokens, raw_last=tokens, notes=[], unknown=[],
                 partial=False, count=1, session_names={'s': 'S'}))
             self.app.processEvents()
-            self.assertEqual((panel.width(), panel.height()), size)
+            self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
             self.assertFalse(panel.grab().toImage().isNull(), size)
             panel.hide()
 

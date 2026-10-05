@@ -90,6 +90,8 @@ class WorkbenchWindow(QWidget):
             QListWidget,QTreeWidget {{background:transparent; border:0; padding:4px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
             QPlainTextEdit,QLineEdit,QComboBox {{background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:10px; padding:6px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
             QListWidget::item {{padding:10px 7px; margin-bottom:3px; border-radius:7px;}}
+            QTreeWidget::item {{padding:10px 7px; border-bottom:1px solid {theme.DIVIDER};}}
+            QListWidget::item:hover,QTreeWidget::item:hover {{background:{theme.HOVER_BG};}}
             QListWidget::item:selected,QTreeWidget::item:selected {{background:{theme.TAB_SELECTED_BG};}}
             QPushButton {{background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-bottom:3px solid {theme.BORDER_CONTROL}; border-radius:10px; padding:7px 13px;}}
             QPushButton:pressed {{border-bottom-width:1px; padding-top:9px; background:{theme.HOVER_BG};}}
@@ -301,6 +303,8 @@ class WorkbenchWindow(QWidget):
         layout.addWidget(self.caption('wb_projects_intro', 'muted'))
         self.projects_table = QTreeWidget()
         self.projects_table.setRootIsDecorated(False)
+        self.projects_table.setUniformRowHeights(True)
+        self.projects_table.setWordWrap(False)
         self.projects_table.setColumnCount(2)
         self.projects_table.setColumnWidth(0, 180)
         self.projects_table.itemSelectionChanged.connect(self._update_actions)
@@ -367,6 +371,7 @@ class WorkbenchWindow(QWidget):
         for project in self._projects:
             item = QTreeWidgetItem([project['name'], project['directory']])
             item.setData(0, Qt.UserRole, project['id'])
+            item.setToolTip(0, project['name'])
             item.setToolTip(1, project['directory'])
             self.projects_table.addTopLevelItem(item)
         self.projects_empty.setVisible(not self._projects)

@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication
 
 import pet_assets as assets
 from pet import DesktopPet
-from widget import PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Settings
+from widget import HUB_SIZE, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Settings
 
 
 class CompanionTests(unittest.TestCase):
@@ -340,7 +340,7 @@ class CompanionTests(unittest.TestCase):
             self.app.processEvents()
             self.assertEqual(panel.total.text(), '1,580,246,791,357')
             self.assertLessEqual(panel.total.fontMetrics().horizontalAdvance(panel.total.text()), panel.total.width())
-            self.assertLessEqual(panel.body.width(), panel.body_scroll.viewport().width())
+            self.assertLessEqual(panel.body.width(), panel.surface.contentsRect().width())
             self.assertTrue(panel.io_line.wordWrap())
             self.assertLessEqual(panel.io_line.heightForWidth(panel.io_line.width()), panel.io_line.height())
 
@@ -422,23 +422,23 @@ class CompanionTests(unittest.TestCase):
         panel.show()
         panel.toggle_compact()
         self.app.processEvents()
-        self.assertFalse(panel.body_scroll.isVisible())
+        self.assertFalse(panel.body.isVisible())
         self.assertEqual(panel.height(), COMPACT_HEIGHT)
         self.assertTrue(panel.title.isVisible())
         panel.toggle_compact()
         self.app.processEvents()
-        self.assertTrue(panel.body_scroll.isVisible())
+        self.assertTrue(panel.body.isVisible())
 
     def test_minimum_size_keeps_identity_controls(self):
         panel = self.make_panel()
         panel.show()
         panel.resize(*PANEL_MIN)
         self.app.processEvents()
-        self.assertEqual((panel.width(), panel.height()), PANEL_MIN)
+        self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
         self.assertFalse(panel.grab().toImage().isNull())
         self.assertTrue(panel.details_button.isVisible())
         self.assertTrue(panel.settings_button.isVisible())
-        self.assertTrue(panel.pin.isVisible())
+        self.assertTrue(panel.hide_button.isVisible())
 
 
 if __name__ == '__main__':

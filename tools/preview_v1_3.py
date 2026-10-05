@@ -31,6 +31,19 @@ ANCHORS = ('center', 'left', 'right', 'top', 'bottom',
            'top-left', 'top-right', 'bottom-left', 'bottom-right')
 
 
+class SyntheticHubPoller:
+    """Preview-only settings routing; never opens a real provider store."""
+    def __init__(self, preview):
+        self.preview = preview
+
+    def apply_settings(self, prefs):
+        data = self.preview.hub_snapshot(prefs)
+        return dict(result=data, active_tasks=data['active_tasks'], preference='codex')
+
+    def close(self):
+        self.preview = None
+
+
 def fixture_tasks(count=3, case='known'):
     """Build explicitly synthetic, distinct Codex task-local projections."""
     tasks = []
@@ -65,7 +78,9 @@ class Preview(QWidget):
         self.closed = False
         self.generation = 0
         self.panel = Panel(live=False)
-        self.panel.prefs.update(language=language, panel_pinned=True, tracking_provider='codex')
+        self.panel.provider_poller.close()
+        self.panel.provider_poller = SyntheticHubPoller(self)
+        self.panel.prefs.update(language=language, panel_pinned=True, tracking_provider='codex', scope='global')
         self.panel.pet = self.pet = DesktopPet(self.panel)
         self.pet.activity_timer.stop()
         # Arm only the existing presentation timer; Panel remains live=False.
@@ -154,27 +169,52 @@ class Preview(QWidget):
     def refresh(self, *_):
         if self.closed:
             return
-        self.generation += 1
         self.panel.prefs.update(language=self.language.currentText(),
                                 tracking_provider='codex')
         self.panel.apply_language()
-        tasks = fixture_tasks(self.count.value(), self.case.currentText())
-        if not self.source.isChecked():
-            tasks = []
-        self.panel.render(dict(provider_id='codex', generation=self.generation,
-            preference='codex', active_tasks=tasks,
-            scope='global', available=False, tokens={}, partial=False,
-            selection=dict(selected='codex', source_available=self.source.isChecked(), live=bool(tasks),
-                           stale=False, activity_unknown=not self.source.isChecked()),
-            codex_activity=dict(active=bool(tasks), valid=self.source.isChecked())))
-        # Explicit fixture marking remains visible on the real Hub surface.
-        self.panel.title.setFullText('Synthetic QA overview / 合成预览总览')
+        self.panel.render(self.hub_snapshot())
         self.panel.connection.setText('SYNTHETIC QA — no provider connection / 无提供方连接')
         manager = self.panel.task_manager
         self.page.blockSignals(True)
         self.page.setRange(1, max(1, manager.page_count))
         self.page.setValue(manager.page_index + 1)
         self.page.blockSignals(False)
+
+    def hub_snapshot(self, prefs=None):
+        prefs = self.panel.prefs if prefs is None else prefs
+        self.generation = max(self.generation, self.panel._render_generation or 0) + 1
+        tasks = fixture_tasks(self.count.value(), self.case.currentText())
+        if not self.source.isChecked():
+            tasks = []
+        chosen = next((task for task in tasks if task['task_key'] == prefs.get('pinned')), None)
+        if not prefs.get('pinned'):
+            chosen = tasks[0] if tasks else None
+        scope = prefs.get('scope', 'global')
+        scoped = (tasks if scope == 'global' else
+                  [task for task in tasks if chosen and task['display'] == chosen['display']]
+                  if scope == 'project' else [chosen] if chosen else [])
+        tokens = {}
+        if scoped:
+            for key in scoped[0]['presentation']['tokens']:
+                values = [task['presentation']['tokens'][key] for task in scoped]
+                tokens[key] = sum(values) if all(value is not None for value in values) else None
+        projection = chosen['presentation'] if chosen else {}
+        available = bool(scoped) and all(task['presentation']['available'] for task in scoped)
+        title = ('Synthetic QA task / 合成任务 ' + chosen['task_key'].rsplit('-', 1)[-1]
+                 if chosen and scope == 'conversation' else 'Synthetic QA overview / 合成预览总览')
+        return dict(provider_id='codex', generation=self.generation,
+            preference='codex', active_tasks=tasks,
+            scope=scope, available=available, tokens=tokens, partial=True, usd=0,
+            title=title, project=(chosen or {}).get('display', {}).get('project', 'Synthetic QA'),
+            model=projection.get('model'), effort=projection.get('effort'),
+            mode='fixed' if prefs.get('pinned') else 'follow', context=projection.get('context'),
+            rows=[dict(id=task['task_key'], name='Synthetic QA task ' + str(i + 1))
+                  for i, task in enumerate(tasks)],
+            scope_activity=dict(valid=self.source.isChecked(), active=bool(chosen)),
+            notes=['synthetic_fixture_no_pricing'],
+            selection=dict(selected='codex', source_available=self.source.isChecked(), live=bool(tasks),
+                           stale=False, activity_unknown=not self.source.isChecked()),
+            codex_activity=dict(active=bool(tasks), valid=self.source.isChecked()))
 
     def move_anchor(self, *_):
         screen = (self.pet.screen() or QApplication.primaryScreen()).availableGeometry()
@@ -243,6 +283,8 @@ class Preview(QWidget):
         output.parent.mkdir(parents=True, exist_ok=True)
         if not canvas.save(str(output)):
             raise OSError(f'Could not save preview: {output}')
+        if self.panel.isVisible():
+            self.panel.grab().save(str(output.with_stem(output.stem + '-hub')))
         output.with_suffix('.json').write_text(json.dumps(dict(
             kind='SYNTHETIC_QA', language=self.panel.language,
             fixture=self.case.currentText(), provider='codex',
@@ -253,6 +295,9 @@ class Preview(QWidget):
             star_window_count=manager.window_count(),
             page_index=manager.page_index, page_count=manager.page_count,
             ring_enabled=self.ring.isChecked(), hub_visible=self.panel.isVisible(),
+            hub_size=self.panel.size().toTuple(), hub_scope=self.panel.snapshot.get('scope'),
+            hub_task=self.panel.prefs.get('pinned', ''), hub_pinned=self.panel.is_pinned(),
+            hub_tokens=self.panel.snapshot.get('tokens', {}),
             visible_star_count=sum(window.isVisible() for window in stars),
             expanded_task_number=manager._labels.get(manager.expanded_identity),
             detail_visible=bool(detail and detail.isVisible()),
@@ -267,7 +312,6 @@ class Preview(QWidget):
             return False
         self.closed = True
         self.panel.clock.stop()
-        self.panel.size_timer.stop()
         self.pet.activity_timer.stop()
         self.pet.timer.stop()
         if not self.panel.closing:
@@ -290,6 +334,8 @@ def parse_args(argv=None):
     parser.add_argument('--anchor', choices=ANCHORS, default='center')
     parser.add_argument('--case', choices=FIXTURE_CASES, default='known')
     parser.add_argument('--expand', type=int, choices=range(1, MAX_TASKS + 1), metavar='TASK_NUMBER')
+    parser.add_argument('--inspect', type=int, choices=range(1, MAX_TASKS + 1), metavar='TASK_NUMBER')
+    parser.add_argument('--scope', choices=('global', 'project', 'conversation'))
     parser.add_argument('--motion', choices=('on', 'off'), default='on')
     parser.add_argument('--pose', choices=PREVIEW_STATES, default='idle',
                         help='Synthetic artwork pose; usage aliases idle (no live detection)')
@@ -303,6 +349,8 @@ def parse_args(argv=None):
         parser.error('--output requires --smoke SECONDS')
     if args.expand is not None and args.expand > args.count:
         parser.error('--expand must name a task within --count')
+    if args.inspect is not None and args.inspect > args.count:
+        parser.error('--inspect must name a task within --count')
     return args
 
 
@@ -315,6 +363,10 @@ def main(argv=None):
         preview = Preview(args.count, args.language, args.case, args.anchor)
         preview.motion.setChecked(args.motion == 'on')
         preview.pose.setCurrentText(args.pose)
+        if args.inspect is not None:
+            preview.panel.select_hub_task(('codex', f'synthetic-qa-{args.inspect}'))
+        if args.scope:
+            preview.panel.change_scope(args.scope)
         if args.expand is not None:
             preview.detail_task.setValue(args.expand)
             QTimer.singleShot(0, preview.toggle_detail)

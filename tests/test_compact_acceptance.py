@@ -12,7 +12,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from analytics import aggregate, normalize_usage
-from widget import COMPACT_HEIGHT, Panel, Settings
+from widget import HUB_SIZE, COMPACT_HEIGHT, Panel, Settings
 
 
 def fixture_tokens(total=44570000):
@@ -121,7 +121,7 @@ class CompactAcceptanceTests(unittest.TestCase):
         self.app.processEvents()
         self.assertFalse(panel.compact)
         self.assertEqual(panel.collapse_button.text(), '−')
-        self.assertTrue(panel.body_scroll.isVisible())
+        self.assertTrue(panel.body.isVisible())
 
     def test_repeated_real_click_cycles_hold_size(self):
         panel = self.make_panel({'panel_size': [520, 520]})
@@ -135,21 +135,21 @@ class CompactAcceptanceTests(unittest.TestCase):
             self.click(panel.collapse_button)
             self.app.processEvents()
             self.assertFalse(panel.compact)
-            self.assertEqual((panel.width(), panel.height()), (520, 520))
+            self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
         self.assertTrue(panel.collapse_button.isVisible())
-        self.assertTrue(panel.pin.isVisible())
+        self.assertTrue(panel.hide_button.isVisible())
         self.assertTrue(panel.settings_button.isVisible())
 
-    def test_expand_restores_last_valid_size_not_default(self):
+    def test_expand_uses_fixed_size_instead_of_saved_size(self):
         panel = self.make_panel({'panel_size': [500, 460]})
         panel.show()
         self.app.processEvents()
-        self.assertEqual((panel.width(), panel.height()), (500, 460))
+        self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
         self.click(panel.collapse_button)
         self.app.processEvents()
         self.click(panel.collapse_button)
         self.app.processEvents()
-        self.assertEqual((panel.width(), panel.height()), (500, 460))
+        self.assertEqual((panel.width(), panel.height()), HUB_SIZE)
 
     def test_restart_in_compact_then_real_click_expands(self):
         first = self.make_panel()
@@ -165,9 +165,9 @@ class CompactAcceptanceTests(unittest.TestCase):
         self.click(second.collapse_button)
         self.app.processEvents()
         self.assertFalse(second.compact)
-        self.assertTrue(second.body_scroll.isVisible())
+        self.assertTrue(second.body.isVisible())
 
-    def test_compact_toggle_grants_autohide_grace(self):
+    def test_compact_toggle_does_not_auto_hide(self):
         from pet import DesktopPet
         panel = self.make_panel()
         pet = DesktopPet(panel)
@@ -175,12 +175,9 @@ class CompactAcceptanceTests(unittest.TestCase):
         pet.activity_timer.stop()
         pet.show()
         panel.show()
-        self.app.processEvents()
-        pet.show_panel()
-        self.app.processEvents()
-        pet.left_since = 1.0  # stale leave timestamp
         panel.toggle_compact()
-        self.assertIsNone(pet.left_since)
+        pet.update_activity()
+        self.assertTrue(panel.isVisible())
         panel.hide()
 
     # -- A3: intentional compact composition -------------------------------------
@@ -195,7 +192,7 @@ class CompactAcceptanceTests(unittest.TestCase):
         self.assertTrue(panel.compact_box.isVisible())
         self.assertFalse(panel.cost_bar.isVisible())
         self.assertFalse(panel.bottom_bar.isVisible())
-        self.assertTrue(panel.pin.isVisible())
+        self.assertTrue(panel.hide_button.isVisible())
         self.assertTrue(panel.settings_button.isVisible())
         self.assertIn('44.57M', panel.compact_total.text())
         self.assertEqual(panel.compact_total.text(), panel.total.text())
@@ -256,17 +253,17 @@ class CompactAcceptanceTests(unittest.TestCase):
         panel.toggle_compact()
         self.app.processEvents()
         self.assertTrue(panel.is_pinned())
-        self.assertTrue(panel.pin.isChecked())
-        self.assertEqual(panel.pin.text(), '◆')
+        self.assertFalse(panel.hide_button.isEnabled())
+        self.assertFalse(panel.hide_button.isEnabled())
         panel.toggle_compact()
         self.app.processEvents()
-        self.assertTrue(panel.pin.isChecked())
+        self.assertFalse(panel.hide_button.isEnabled())
         self.assertTrue(bool(panel.windowFlags() & Qt.WindowStaysOnTopHint))
         panel.set_always_on_top(False)
         panel.toggle_compact()
         panel.toggle_compact()
         self.app.processEvents()
-        self.assertFalse(bool(panel.windowFlags() & Qt.WindowStaysOnTopHint))
+        self.assertTrue(bool(panel.windowFlags() & Qt.WindowStaysOnTopHint))
 
     # -- A2: empty-subtitle honesty at the pet gate --------------------------------
 

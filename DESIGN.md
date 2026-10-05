@@ -7,7 +7,7 @@ The approved idle character and its default bubble are the immutable visual base
 - Silver `#EEF2FF`, ice `#91E4F2`, violet `#B9A7F8`, midnight `#171B32`, muted ink `#A7AEC8`, rose `#F3A7CB`.
 - Native Qt controls, Segoe UI labels, Cascadia Mono numbers and Microsoft YaHei UI fallback.
 - Transparent 272 × 330 logical-pixel pet window; compact two-line status card above the character in Token Mode only (Daily Mode shows the pet alone). All states share one aspect-preserving 256 × 256 sprite box around one feet/ground anchor.
-- The adjacent satellite panel (default 420 × 500, free four-edge/four-corner resize 420–650 × 400–800 with size persistence, compact fixed height 316 with size restoration) retains the companion palette and typography and scrolls on shorter screens. The real desktop pet is the sole character and is never replaced by a panel sprite. The detailed analytics window owns dense tables.
+- The adjacent overview has a fixed 440 × 720 logical-pixel footprint and a fixed 440 × 316 compact state. It has no resize grip, border resizing or central scroll container; legacy saved sizes do not control it. The real desktop pet is the sole character and is never replaced by a panel sprite. Detailed analytics owns dense tables and scrolling.
 - All windows scale with Windows DPI and clamp restored positions to a visible screen.
 
 ## Supported states
@@ -26,10 +26,10 @@ The order above is the state priority. Microphone/music require a stable signal 
 
 ## Usage reveal
 
-- Hover the pet for roughly 0.35 seconds or click it to open the panel: right side first with a 12 px gap, left if right does not fit, otherwise the roomier side with panel-only clamping to the pet screen. Neither opening nor closing moves or saves the pet. Dragging it persists position and re-anchors an open panel.
-- Leaving both pet and panel for roughly 0.7 seconds hides only the panel; the character keeps its live pose and position.
+- Click the pet to open the panel: right side first with a 12 px gap, left if right does not fit, otherwise the roomier side with panel-only clamping to the pet screen. Neither opening nor closing moves or saves the pet. Dragging it persists position and re-anchors an open panel. Hover and cursor leave never open or hide it.
+- The pet context menu has a checkable Usage panel action. Checking persists panel_pinned, opens the panel and gives it an independent topmost requirement; unchecking hides it and restores the general topmost policy. Pet/Star always-on-top remains independent. Checked panels ignore ordinary hide/close/Escape/click requests and restore visible on startup; explicit application exit still works.
 - The transparent pet does not activate itself when shown, so it does not steal typing focus.
-- Open settings/details keep the panel available. Closing it suppresses immediate hover reopen until the pointer leaves.
+- Unchecked manual panels can be closed by click, Escape or the close control. Checked panels explain their context-menu close action in the disabled close control's tooltip.
 
 ## Usage panel contract
 
@@ -49,12 +49,12 @@ The order above is the state priority. Microphone/music require a stable signal 
 
 The existing character, palette and DPI behavior remain the baseline. V1.3 has a Hub overview, one compact Star per verified active task, and one manager-owned Expanded Star. Technical integration and human visual acceptance are separate gates.
 
-- The Hub lists the current visible task set, including multiple tasks from the same project. Its usage values retain their selected provider and scope provenance; they are not totals across all providers or Stars.
+- The Hub lists all accepted active tasks, including tasks on other Star pages and multiple tasks from one project. Choosing a task inspects its Codex conversation via the existing pinned ID and settings-generation fence; automatic following is always available. The right-side Global/Project/Conversation scope menu remains available and scopes account totals independently. Incompatible cached values become unavailable while the new request completes. Conversation views show their actual task title; aggregate automatic views retain neutral scope framing.
 - Stars retain their neutral lifetime number, provider identity, window and slot. The native window remains112 ×112; current compact hit regions are a22px disc and18 ×14 number label, distinct and screen-contained.
 - Opening a task reuses its task-local metadata projection in one detail card. The retained Star's current integer position is the anchor; the card clamps independently and scrolls on short screens. Switching detail does not change provider selection or scope or read a provider.
 - While detail is expanded, projected phase, pose and slot recomposition pause. Metadata and lifecycle updates continue; newcomers requiring recomposition stay staged. Collapse resumes from the displayed pixels with a fresh clock and no elapsed-time catch-up.
 - Removing/filtering the expanded task or hiding the task surfaces closes detail. Restore does not reopen it. Shutdown closes the card, Stars and trails and rejects late callbacks.
-- The Hub task control, Star Return/Space, Escape and visible collapse control provide keyboard access. Passive hover preserves the coding application's focus; deliberate keyboard activation may focus detail.
+- The Hub task control provides keyboard inspection without opening or paging Star details. Star Return/Space, Escape and the detail collapse control remain independent. Passive hover preserves the coding application's focus; deliberate Star keyboard activation may focus detail.
 - Unknown model is explicit Unknown/未知; unknown numeric fields and quota are N/A, genuine zero remains zero and partial coverage is labeled. Task-local effort/context appear only when recorded. No unverified Queued, Reviewing or progress phases are added.
 - Current default motion uses one analytic fitted tilted ellipse and shared active phase. Its rear layer and smaller/dimmer rear Stars sit behind the approved character; the brighter front layer crosses in front. Two compact input-transparent layers share the existing manager timer; no path worker or restart timer is needed. Trails have at most96 samples per task/layer and3.6 seconds of history.
 - Intentional drag, keyboard movement and preview position commands transport the attached composition with the pet, preserving phase, slot offsets and identity while clearing travel streaks. This deliberate scene translation is distinct from autonomous motion: orbit, membership, toggles and observed geometry glides preserve the16logical-pixel/40ms budget. OFF retains the current compact composition, finishes pose/slot changes and fade, then idles.
@@ -94,3 +94,9 @@ Human feedback rejected the bright pearl default and explicitly corrected the re
 The Workbench header now has a head portrait in a small rounded sticker frame. Its original registered artwork stays byte-identical. A native QWidget caches a high-quality crop at the current physical DPR, recomputing on screen-scale change, avoiding both the old 68px raster enlargement and aliasing from direct large-to-small painter scaling. No animation timer, new dependency or raster asset is introduced. Actual native pixels and compact bilingual layouts remain acceptance requirements.
 
 Visual reference: https://store.steampowered.com/app/3419430/Bongo_Cat/ and its official screenshot https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3419430/ss_be4a3e8d6abdb03abde8075cf5b992faec2798e4.1920x1080.jpg . The reference informs playful outlined controls and companionship, not a copied layout, artwork, code or game feature. Four navigation SVGs are original simple geometric icons; existing Qt SVG support is reused.
+
+### V1.4 artwork-derived palette and fixed overview (2026-10-04)
+
+The user retained the comprehensive Hub alongside independent Star details and the Workbench. The new shared palette is sampled from original assets/v1_1/idle.png: the hair region has dominant #EEEBF6 (37,693 opaque hue-filtered samples); clothing #231E56 and violet shadow #483F86 (13,829 samples). INK and VIOLET use those clothing values. Large silver-lavender surfaces are dimmed derivatives (#CFCBE2 Hub, #BBB7CF surroundings, #D0CCE4 controls) to avoid bright white or beige blocks. Readable blue #324873 and subdued violet outlines provide hierarchy. No artwork was repainted or replaced. Original sampling report is external under 2026-10-04-v1.4-fixed-hub/palette_sample.json.
+
+The Hub body inherits the same surface rather than painting a different central block. Header controls share one row; nested footer margins are removed and metric spacing is measured with full numbers and both quota countdowns. Model and title elide within their actual width and keep complete tooltips. Fixed geometry is in logical pixels, so physical dimensions follow Windows DPI. A workarea smaller than the fixed footprint cannot promise complete containment; native fit and human appearance remain separate checks.
