@@ -125,15 +125,15 @@ class HubInteractionTests(unittest.TestCase):
         self.assertFalse(self.panel.windowFlags() & Qt.WindowStaysOnTopHint)
         menu.deleteLater()
 
-    def test_pin_restores_on_restart(self):
+    def test_pin_is_cleared_on_restart(self):
         self.panel.set_panel_pinned(True)
         other = Panel(live=False)
         other.pet = DesktopPet(other)
         other.pet.activity_timer.stop()
         try:
             other.restore_companion()
-            self.assertTrue(other.isVisible())
-            self.assertTrue(other.pet.context_menu().actions()[0].isChecked())
+            self.assertFalse(other.isVisible())
+            self.assertFalse(other.pet.context_menu().actions()[0].isChecked())
         finally:
             other.shutdown()
 

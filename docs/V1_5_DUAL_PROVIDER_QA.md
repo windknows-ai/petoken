@@ -36,6 +36,9 @@ your normal settings file. The first run upgrades the saved provider choice from
 of earlier builds to **Auto** (once); the released v1.3.0 still opens normally afterwards.
 
 - [ ] Settings → Tracking provider shows Auto / Codex / Claude Code (default Auto).
+- [ ] Petoken starts with the usage panel closed. Right-click the character: **用量面板（常驻显示）**
+      is unchecked; hovering it explains that checking keeps the panel always shown and on top.
+      After checking it and restarting Petoken, it is unchecked and closed again.
 - [ ] While a Claude Code session is running a reply, a gold star appears and the Hub follows it in Auto.
 - [ ] When the Claude reply ends, its star retires; Codex tasks keep their blue stars.
 - [ ] Choosing Codex (or Claude Code) in Settings hides the other provider's stars and Hub data.

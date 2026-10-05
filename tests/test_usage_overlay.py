@@ -182,6 +182,17 @@ class ProcessTests(unittest.TestCase):
         self.assertIsNone(classify_process('notepad.exe', ''))
 
 
+class PresenceTests(unittest.TestCase):
+    def test_nothing_shows_before_the_first_scan_and_failure_is_unknown(self):
+        presence = overlay.UsagePresence(scan=lambda: {'codex'})
+        self.assertEqual(presence.apps, frozenset())
+        presence.poll()
+        self.assertEqual(presence.apps, frozenset({'codex'}))
+        failing = overlay.UsagePresence(scan=lambda: None)
+        failing.poll()
+        self.assertIsNone(failing.apps)
+
+
 class OverlayRowTests(unittest.TestCase):
     def test_codex_pro_has_no_five_hour_row(self):
         pro = dict(secondary=dict(windowDurationMins=10080, usedPercent=40, resetsAt=NOW + 7200))

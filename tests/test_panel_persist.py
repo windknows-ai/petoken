@@ -129,7 +129,7 @@ class PanelPersistTests(unittest.TestCase):
     def test_context_usage_check_reflects_state_in_both_languages(self):
         panel = self.make_panel({'language': 'en'})
         pet = self.attach_pet(panel)
-        for language, expected in [('en', 'Usage panel'), ('zh_CN', '用量面板')]:
+        for language, expected in [('en', 'Usage panel (always shown)'), ('zh_CN', '用量面板（常驻显示）')]:
             panel.prefs['language'] = language
             panel.apply_language()
             menu = pet.context_menu()
@@ -144,30 +144,40 @@ class PanelPersistTests(unittest.TestCase):
             self.assertFalse(panel.isVisible())
             menu.deleteLater()
 
-    def test_pin_state_persists_across_restart(self):
+    def test_pin_is_cleared_at_the_next_start(self):
         first = self.make_panel()
         first.toggle_pin()
         self.assertTrue(first.prefs['panel_pinned'])
         first.persist()
         second = self.make_panel()
-        self.assertTrue(second.is_pinned())
-        self.assertTrue(second.hide_button.isEnabled())
-        # The X closes a pinned Hub and unpins it, durably.
-        second.show()
-        second.hide_button.click()
+        self.attach_pet(second)
+        second.restore_companion()
         self.assertFalse(second.is_pinned())
         self.assertFalse(second.isVisible())
         third = self.make_panel()
         self.assertFalse(third.is_pinned())
 
-    def test_pinned_panel_restores_visible_unpinned_stays_hidden(self):
-        pinned = self.make_panel({'panel_pinned': True})
-        self.attach_pet(pinned)
-        pinned.restore_companion()
-        self.assertTrue(pinned.isVisible())
-        self.assertTrue(pinned.pet.isVisible())
-        plain = self.make_panel({})
-        self.assertFalse(plain.isVisible())
+    def test_x_closes_and_unpins_a_pinned_panel(self):
+        panel = self.make_panel()
+        panel.toggle_pin()
+        self.assertTrue(panel.hide_button.isEnabled())
+        panel.hide_button.click()
+        self.assertFalse(panel.is_pinned())
+        self.assertFalse(panel.isVisible())
+
+    def test_startup_never_opens_the_panel(self):
+        for pref in (True, False):
+            panel = self.make_panel({'panel_pinned': pref})
+            self.attach_pet(panel)
+            panel.restore_companion()
+            self.assertFalse(panel.isVisible(), pref)
+            self.assertTrue(panel.pet.isVisible(), pref)
+            menu = panel.pet.context_menu()
+            usage = menu.actions()[0]
+            self.assertFalse(usage.isChecked(), pref)
+            self.assertTrue(menu.toolTipsVisible())
+            self.assertTrue(usage.toolTip())
+            menu.deleteLater()
 
     def test_pinned_panel_ignores_cursor_leave_auto_hide(self):
         for pinned_pref, expect_visible in ((False, True), (True, True)):

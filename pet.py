@@ -341,6 +341,7 @@ class DesktopPet(QWidget):
     def context_menu(self):
         menu=QMenu(self)
         menu.setStyleSheet(self.panel.styleSheet())
+        menu.setToolTipsVisible(True)
         usage=menu.addAction(self.tr_text('usage_panel'))
         usage.setCheckable(True)
         usage.setChecked(self.panel.is_pinned())

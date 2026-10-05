@@ -14,7 +14,7 @@ from __future__ import annotations
 import threading
 import time
 
-from PySide6.QtCore import QPoint, QPointF, QRectF, Qt, QTimer
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QWidget
 
@@ -180,7 +180,9 @@ class UsagePresence:
             scan = running_apps
         self._scan = scan
         self.interval = interval
-        self.apps = None
+        # Nothing is shown until the first scan has run; None afterwards
+        # means the scan itself failed (then running tasks decide).
+        self.apps = frozenset()
         self.claude_limits = None
         self.claude_sync = 'off'
         self._stop = threading.Event()
@@ -253,11 +255,17 @@ class UsageOverlay(QWidget):
         return font
 
     def set_sections(self, sections):
-        self.sections = list(sections)
-        self.scale = overlay_scale(self.pet.pet_scale)
-        count = len(self.sections)
+        sections = list(sections)
+        scale = overlay_scale(self.pet.pet_scale)
+        if sections == self.sections and scale == self.scale:
+            self.follow()
+            return  # Nothing changed this second: no relayout or repaint.
+        self.sections, self.scale = sections, scale
+        count = len(sections)
         height = 2 * PAD + count * SECTION_H + max(0, count - 1) * SECTION_GAP
-        self.setFixedSize(round(self._u(WIDTH)), round(self._u(height)))
+        size = QSize(round(self._u(WIDTH)), round(self._u(height)))
+        if self.size() != size:
+            self.setFixedSize(size)
         self.follow()
         self.update()
 
@@ -274,7 +282,11 @@ class UsageOverlay(QWidget):
             self.move(x, y)
 
     def refresh(self):
-        self.pet.sync_usage_overlay()
+        try:
+            self.pet.sync_usage_overlay()
+        except RuntimeError:  # The pet is already gone.
+            self.clock.stop()
+            self.hide()
 
     def showEvent(self, event):
         self.clock.start()

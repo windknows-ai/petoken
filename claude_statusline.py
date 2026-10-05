@@ -32,9 +32,10 @@ SNAPSHOT_MAX_AGE_S = 6 * 3600
 
 _SCRIPT = r'''# petoken-claude-statusline: written by Petoken. Keeps only usage numbers.
 $ErrorActionPreference = 'SilentlyContinue'
-[Console]::InputEncoding = [Text.Encoding]::UTF8
-[Console]::OutputEncoding = [Text.Encoding]::UTF8
-$raw = [Console]::In.ReadToEnd()
+# Read stdin as UTF-8 without touching the console's code pages, which
+# Claude Code's own terminal shares with this script.
+$reader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [Text.Encoding]::UTF8)
+$raw = $reader.ReadToEnd()
 $data = $raw | ConvertFrom-Json
 if ($null -eq $data) { exit 0 }
 $folder = Join-Path $env:LOCALAPPDATA 'CodexWisp\claude-status'

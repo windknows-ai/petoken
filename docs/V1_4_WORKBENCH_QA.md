@@ -103,8 +103,8 @@ This development preview retains the large overview. Click the pet to open it;
 hovering or moving the pointer away must not change its visibility. In the pet's
 right-click menu, check **Usage panel / 用量面板** to keep it open and on top.
 Uncheck that action to close it. Pet **Always on top / 始终置顶** remains independent.
-The checked panel restores on restart in a normal installation; this disposable
-preview still discards its settings when closed.
+Since V1.5 the panel always starts closed and unchecked: keeping it shown is a
+per-session choice, so a check from an earlier run is cleared at start.
 
 The overview uses fixed 440 × 720 logical pixels, with a fixed compact state.
 There must be no central scrollbar, resizing edge or grip. Full numbers,

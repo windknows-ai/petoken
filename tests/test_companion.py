@@ -198,6 +198,10 @@ class CompanionTests(unittest.TestCase):
         anchor = pet.pos()
         panel.restore_companion()
         self.app.processEvents()
+        # A saved pin is cleared at start; pinning again docks the panel.
+        self.assertFalse(panel.isVisible())
+        panel.set_panel_pinned(True)
+        self.app.processEvents()
         self.assertTrue(panel.isVisible())
         self.assertTrue(pet.isVisible())
         self.assertEqual(pet.pos(), anchor)

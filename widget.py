@@ -4216,11 +4216,19 @@ class Panel(QWidget):
         self.move(*point)
 
     def restore_companion(self):
-        """Called after both windows exist; pinned startup uses the same anchor."""
+        """Called once at app start, after both windows exist.
+
+        The usage panel never opens by itself at start: keeping it always
+        shown (and on top) is a per-session choice from the pet menu, so a
+        pin saved by an earlier run is cleared here.
+        """
         self.pet.show()
         self.task_manager.apply_snapshot(list(self.task_manager._universe.values()))
         if self.is_pinned():
-            self.pet.show_panel()
+            self.prefs['panel_pinned'] = False
+            self.update_panel_controls()
+            self.apply_topmost()
+            self.persist()
 
     def showEvent(self, event):
         super().showEvent(event)
