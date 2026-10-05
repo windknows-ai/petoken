@@ -22,8 +22,10 @@ cache_creation``, ``output = output`` (thinking included),
 ``reasoning_output = thinking`` when recorded, ``total = input + output``.
 Anything missing stays ``None``. Context use is the latest main-chain
 request's input against the model's official context window (a request
-larger than that window makes it unknown). Claude subscription quotas and
-reset times are not stored locally and stay unavailable.
+larger than that window makes it unknown). Claude Code keeps no quota on
+disk; 5-hour / 7-day windows and Claude Code's own context figure come from
+the opt-in status-line bridge (claude_statusline.py) when the user enables
+it, and stay unavailable otherwise.
 
 Synchronous by design: callers run it on the poller's background worker.
 """
@@ -37,6 +39,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import claude_statusline
 from analytics import aggregate, count, summarize
 from pricing import claude_price_model, estimate_claude_usd
 from providers import (CLAUDE_CAPABILITIES, PROVIDER_CLAUDE, active_task,
@@ -309,9 +312,17 @@ def read_registry(home, alive=_process_alive):
     return entries
 
 
+def _official_context(snapshot):
+    """Context used % and window size reported by Claude Code itself."""
+    if not snapshot or snapshot.get('context_used') is None:
+        return None, None
+    return max(0.0, min(100.0, snapshot['context_used'])), snapshot.get('context_window_size')
+
+
 class ClaudeStore:
-    def __init__(self, home=None):
+    def __init__(self, home=None, status_folder=None):
         self.home = Path(home) if home is not None else default_home()
+        self.status_folder = status_folder
         self.transcripts = {}
         self._discovered_at = None
         self._index = dict(signature=None, sessions={})
@@ -397,12 +408,17 @@ class ClaudeStore:
             presentation=dict(
                 tokens=summary['tokens'], model=(session or {}).get('model'),
                 effort=(session or {}).get('effort'),
-                context=context_percent((session or {}).get('last_input'),
-                                        (session or {}).get('model')),
+                context=self._context(entry['session_id'], session),
                 available=bool(records),
                 source_available=bool((session or {}).get('source_available', True)),
                 partial=bool((session or {}).get('partial')),
                 notes=tuple(sorted((session or {}).get('notes') or ()))))
+
+    def _context(self, session_id, session):
+        official, _size = _official_context(getattr(self, '_snapshots', {}).get(session_id))
+        if official is not None:
+            return official
+        return context_percent((session or {}).get('last_input'), (session or {}).get('model'))
 
     def read(self, active_title='', pinned='', scope='conversation',
              include_history=False, activity_detection_valid=False):
@@ -417,6 +433,13 @@ class ClaudeStore:
                         working_context=None, active_tasks=[])
         sessions = self._sessions()
         registry = read_registry(self.home)
+        # Opt-in status-line bridge: account 5h/7d windows and per-session
+        # context exactly as Claude Code reports them (Pro/Max only).
+        snapshots = claude_statusline.read_snapshots(self.status_folder, now)
+        self._snapshots = {}
+        for snapshot in snapshots:
+            self._snapshots.setdefault(snapshot['session_id'], snapshot)
+        limits, limits_sampled = claude_statusline.account_limits(snapshots)
         working = sorted((entry for entry in (registry or {}).values() if entry['busy']),
                          key=lambda e: (-(e['activity_at'] or 0), e['session_id']))
         primary = working[0] if working else None
@@ -441,8 +464,7 @@ class ClaudeStore:
                 status='working', tokens=self._summary(session)['tokens'],
                 available=bool((session or {}).get('records')),
                 model=(session or {}).get('model'), effort=(session or {}).get('effort'),
-                context=context_percent((session or {}).get('last_input'),
-                                        (session or {}).get('model')),
+                context=self._context(primary['session_id'], session),
                 sample=(session or {}).get('sample'), selection=None,
                 activity_reason='registry_busy')
 
@@ -455,7 +477,8 @@ class ClaudeStore:
             ranked = sorted(sessions.values(), key=lambda s: (s['last_at'] or 0, s['id']))
             chosen, mode = (ranked[-1] if ranked else None), 'recent'
         common = dict(rows=[], scope=scope, claude_activity=claude_activity,
-                      working_context=working_context, active_tasks=active_tasks)
+                      working_context=working_context, active_tasks=active_tasks,
+                      limits=limits, limits_sampled=limits_sampled)
         if scope != 'global' and chosen is None:
             identity = dict(scope_type=scope, unavailable=True)
             if scope == 'conversation':
@@ -518,13 +541,13 @@ class ClaudeStore:
             model=chosen['model'] if chosen else None,
             effort=chosen['effort'] if chosen else None,
             tier=None,
-            context=(context_percent(chosen['last_input'], chosen['model'])
-                     if chosen else None),
+            context=self._context(chosen['id'], chosen) if chosen else None,
             context_tokens=chosen['last_input'] if chosen else None,
-            context_window=context_window(chosen['model']) if chosen else None,
+            context_window=((_official_context(self._snapshots.get(chosen['id']))[1]
+                             or context_window(chosen['model'])) if chosen else None),
             usd=sum(r.get('usd') or 0 for r in records), unknown=unknown,
             partial=partial, excluded_forks=0, count=len(relevant),
-            sample=chosen['sample'] if chosen else None, limits=None,
+            sample=chosen['sample'] if chosen else None,
             analytics=analysis,
             history=dict(analysis, partial=partial) if include_history else None,
             session_names={scoped_session_id(s['id']): self._title(s, (registry or {}).get(s['id']))
@@ -563,7 +586,7 @@ class ClaudeProvider:
             tokens=data.get('tokens'),
             working_context=data.get('working_context'),
             scope_result=data.get('scope_result'),
-            quotas=None,
+            quotas=data.get('limits'),
             cost=data.get('usd'),
             capabilities=CLAUDE_CAPABILITIES,
             partial=bool(data.get('partial', False)),

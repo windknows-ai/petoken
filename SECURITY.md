@@ -4,6 +4,8 @@
 
 - The Codex and Claude Code integrations read **local task and numeric usage metadata**. They never export transcripts, credentials, prompts, responses, or tool contents, and never upload local usage anywhere.
 - Claude Code transcript lines are parsed in memory only to reach numeric usage and session metadata (model, session, start directory, branch, effort, time, title); message content is discarded immediately and never stored, displayed, logged or exported. Liveness comes from Claude Code's own session registry and a read-only process check.
+- Optional **Sync Claude usage** (off by default) adds a status-line command to Claude Code's `settings.json` after backing the file up. The command keeps only numbers (usage percentages, reset times, context size and use, model ID) under `%LOCALAPPDATA%\CodexWisp\claude-status`; it never stores conversation content, paths or credentials, and turning it off removes only Petoken's entry. A custom status line is never replaced.
+- The usage overlay checks which apps are open from process image names and paths only (Codex desktop / CLI, Claude desktop / CLI); it never reads window contents.
 - V1.5 reads exactly Codex and Claude Code; no OpenCode adapter is registered, imported, instantiated or polled. Isolated historical adapter tests retain the former allowlisted-column parsing evidence.
 - Media titles/artists/subtitle metadata are memory-only for the music display and are never stored.
 - The unreleased V1.4 workbench stores only user-entered project names/folder paths,

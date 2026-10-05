@@ -74,13 +74,18 @@ class RedesignTests(unittest.TestCase):
         pixel = self.panel.pet.grab().toImage().pixelColor(121, 30)
         self.assertEqual(pixel.alpha(), 0)
 
-    def test_token_mode_shows_compact_card(self):
+    def test_token_mode_uses_usage_overlay_not_pet_card(self):
+        from usage_overlay import build_sections
         data = fixture_data(fixture_tokens())
         self.panel.render(data)
         self.force_token_mode(data)
         self.assertTrue(self.panel.pet.token_bubble_visible())
+        # The old single-task card is gone; usage shows in the overlay.
         pixel = self.panel.pet.grab().toImage().pixelColor(121, 30)
-        self.assertGreater(pixel.alpha(), 0)
+        self.assertEqual(pixel.alpha(), 0)
+        self.panel.pet.presence.apps = frozenset({'codex'})
+        sections = build_sections(self.panel, self.panel.pet.presence)
+        self.assertEqual([s['provider'] for s in sections], ['codex'])
 
     def test_card_uses_same_working_context_project_and_tokens(self):
         data = fixture_data(fixture_tokens())

@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
     QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy)
 
+import claude_statusline
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
@@ -356,6 +357,19 @@ def format_recorded_cost(amount):
         return f'{amount:.2f}'
     trimmed = f'{amount:.6f}'.rstrip('0').rstrip('.')
     return trimmed if trimmed not in ('0', '-0', '') else repr(amount)
+
+
+def claude_quota_status(snapshot, language):
+    """Hub footer for Claude: when the bridge last reported, or how to
+    turn it on. Never implies a refresh that cannot arrive."""
+    sampled = snapshot.get('limits_sampled')
+    if snapshot.get('limits') and isinstance(sampled, (int, float)):
+        return text('claude_quota_updated', language,
+                    time=datetime.fromtimestamp(sampled).strftime('%H:%M'))
+    import claude_statusline
+    if claude_statusline.state() == 'on':
+        return text('claude_quota_waiting', language)
+    return text('claude_quota_off', language)
 
 
 def total_help_key(provider_id):
@@ -781,14 +795,13 @@ class TaskOrbWindow(QWidget):
         painter.setPen(QPen(QColor(218, 210, 249, 100), .5))
         painter.drawEllipse(QPointF(cx, badge_y), 6.5, 4.7)
 
-    def refresh(self, number_text, provider_name, language):
+    def refresh(self, number_text, provider_name, language, label=None):
         """Update visible identity text. Values only, never raw sources."""
         self._number = number_text
         self.number_label.setText(number_text)
-        tip = (f'{text("task_panel_label", language, n=number_text)} · '
-               f'{provider_name} · {text("working", language)}')
-        self.setToolTip(tip)
-        self.setWindowTitle(text('task_panel_label', language, n=number_text))
+        label = label or text('task_panel_label', language, n=number_text)
+        self.setToolTip(f'{label} · {provider_name} · {text("working", language)}')
+        self.setWindowTitle(label)
         self.setAccessibleName(text('task_accessible', language,
                                    label=self.windowTitle(), provider=provider_name))
         self.update()
@@ -1141,8 +1154,24 @@ class TaskPanelManager(HaloScene):
         self.page_controls.setVisible(position is not None and self._visible
                                       and self.total_task_count() > halo_geometry.MAX_SAFE_STARS)
 
+    def _project_name(self, identity):
+        display = (self._universe.get(identity) or {}).get('display') or {}
+        project = display.get('project')
+        return project.strip() if isinstance(project, str) else ''
+
     def label_text(self, identity, language):
-        return text('task_panel_label', language, n=self._labels.get(identity, 0))
+        """Stars are named after their project, like the Hub title. Tasks
+        sharing a project are told apart by star order (Project · 2); a task
+        without a known project keeps the numbered fallback."""
+        number = self._labels.get(identity, 0)
+        project = self._project_name(identity)
+        if not project:
+            return text('task_panel_label', language, n=number)
+        siblings = sorted(self._labels.get(key, 0) for key in self._universe
+                          if self._project_name(key) == project)
+        if len(siblings) < 2 or number not in siblings:
+            return project
+        return f'{project} · {siblings.index(number) + 1}'
 
     def _claim_number(self, taken):
         number = 1
@@ -1288,7 +1317,7 @@ class TaskPanelManager(HaloScene):
             orb.refresh(str(self._labels[key]),
                         PROVIDER_NAMES.get(task.get('provider_id'),
                                            task.get('provider_id')),
-                        language)
+                        language, self.label_text(key, language))
         if self.expanded_identity is not None:
             newcomers = set(wanted_keys) - previous_keys
             self._stage_keys(newcomers)
@@ -3507,7 +3536,7 @@ class TaskPanelManager(HaloScene):
                 orb.refresh(str(self._labels.get(key, 0)),
                             PROVIDER_NAMES.get(task.get('provider_id'),
                                                task.get('provider_id')),
-                            language)
+                            language, self.label_text(key, language))
             except Exception:
                 pass
         self._refresh_detail()
@@ -3709,6 +3738,15 @@ class Settings(QDialog):
         self.star_ring.setChecked(bool(panel.prefs.get('star_ring_enabled', True)))
         self.star_ring_label = label()
         self.form.addRow(self.star_ring_label, self.star_ring)
+        # Opt-in: lets Claude Code hand its 5h / 7d usage to Petoken through
+        # a status-line command. Changing it edits only the `statusLine` key
+        # of Claude Code's settings (backed up first) and only on Save.
+        self._claude_sync_state = claude_statusline.state()
+        self.claude_sync = QCheckBox()
+        self.claude_sync.setChecked(self._claude_sync_state == 'on')
+        self.claude_sync.setEnabled(self._claude_sync_state in ('on', 'off'))
+        self.claude_sync_label = label()
+        self.form.addRow(self.claude_sync_label, self.claude_sync)
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -3803,6 +3841,15 @@ class Settings(QDialog):
         self.topmost.setAccessibleName(t('always_on_top'))
         self.star_ring_label.setText(t('star_ring_enabled'))
         self.star_ring.setAccessibleName(t('star_ring_enabled'))
+        self.claude_sync_label.setText(t('claude_usage_sync'))
+        self.claude_sync.setAccessibleName(t('claude_usage_sync'))
+        sync_tip = t('claude_usage_sync_tip')
+        if self._claude_sync_state == 'foreign':
+            sync_tip += '\n' + t('claude_usage_sync_foreign')
+        elif self._claude_sync_state == 'unreadable':
+            sync_tip += '\n' + t('claude_usage_sync_unreadable')
+        self.claude_sync.setToolTip(sync_tip)
+        self.claude_sync_label.setToolTip(sync_tip)
         self.pet_scale_label.setText(t('character_size'))
         self.pet_scale.setToolTip(t('character_size'))
         self.pet_scale.setAccessibleName(t('character_size'))
@@ -3858,6 +3905,12 @@ class Settings(QDialog):
             self.error.setText(self.tr_text('settings_save_error'))
             return
         panel.prefs = prefs
+        wanted = self.claude_sync.isChecked()
+        if self.claude_sync.isEnabled() and wanted != (self._claude_sync_state == 'on'):
+            try:
+                (claude_statusline.enable if wanted else claude_statusline.disable)()
+            except (OSError, ValueError):
+                pass  # Claude Code's settings stay as they were.
         panel.task_manager.set_visible(prefs['star_ring_enabled'])
         # Every save retires outstanding requests for the previous
         # settings, even when only scope/pinned changed: the new epoch
@@ -4711,12 +4764,20 @@ class Panel(QWidget):
         # Codex quota widgets blank unless the Codex provider is both
         # selected and the quota source: no Codex limits, countdowns or
         # errors may linger from a foreign or late mismatched payload.
-        quota_usable = ((self.snapshot.get('provider_id') or 'codex') == 'codex'
+        hub_provider = self.snapshot.get('provider_id') or 'codex'
+        quota_usable = (hub_provider == 'codex'
                         and (self.quota_provider or 'codex') == 'codex')
-        limits = (quota.get('limits') or self.snapshot.get('limits')) if quota_usable else None
-        sampled = quota.get('sampled',0) if quota_usable else 0
-        age = time.time()-sampled
-        stale = age > 10 or bool(quota.get('error')) if quota_usable else True
+        if hub_provider == 'claude':
+            # Claude windows come from the opt-in status-line bridge. They
+            # update with Claude Code's replies, not on a clock, and stay
+            # valid until their own reset time, so age alone is not stale.
+            limits = self.snapshot.get('limits')
+            stale = False
+        else:
+            limits = (quota.get('limits') or self.snapshot.get('limits')) if quota_usable else None
+            sampled = quota.get('sampled',0) if quota_usable else 0
+            age = time.time()-sampled
+            stale = age > 10 or bool(quota.get('error')) if quota_usable else True
         for widget,minutes in ((self.five,300),(self.week,10080)):
             widget.reset.hide()
             widget.reset.setText('')
@@ -4736,9 +4797,9 @@ class Panel(QWidget):
                 duration=f"{'%dd ' % days if days else ''}{hours:02}:{minutes:02}:{seconds:02}"
                 widget.reset.setText(self.tr_text('awaiting_reset') if w['expired'] else self.tr_text('reset_in', duration=duration))
                 widget.reset.setVisible(True)
-        if (self.snapshot.get('provider_id') or 'codex') != 'codex':
-            # Claude Code keeps no readable quota locally: say so plainly
-            # instead of implying a refresh that will never arrive.
+        if hub_provider == 'claude':
+            self.status.setText(claude_quota_status(self.snapshot, self.language))
+        elif hub_provider != 'codex':
             self.status.setText(self.tr_text('quota_not_provided'))
         else:
             self.status.setText(self.tr_text('quota_waiting') if stale else self.tr_text('syncing', time=time.strftime('%H:%M:%S')))

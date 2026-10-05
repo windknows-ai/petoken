@@ -90,11 +90,11 @@ class ProviderRegistryTests(unittest.TestCase):
         self.assertEqual(tuple(PROVIDER_REGISTRY), KNOWN_PROVIDERS)
         self.assertEqual(TRACKING_CHOICES, ('auto', 'codex', 'claude'))
 
-    def test_claude_capabilities_exclude_quotas(self):
+    def test_claude_capabilities_quotas_via_bridge_only(self):
         from providers import CLAUDE_CAPABILITIES
         for capability in CLAUDE_CAPABILITIES:
             self.assertTrue(is_supported('claude', capability), capability)
-        self.assertFalse(is_supported('claude', 'quotas'))
+        self.assertTrue(is_supported('claude', 'quotas'))
         self.assertFalse(is_supported('claude', 'fork_accounting'))
 
     def test_display_names_unchanged(self):

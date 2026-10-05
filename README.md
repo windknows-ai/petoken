@@ -69,7 +69,7 @@ package, use `preview-workbench.cmd` and the
 | Source | Status | What you get |
 | --- | --- | --- |
 | Codex desktop client | Supported in v1.3.0 | Verified usage totals, available 5-hour / weekly quotas with resets, supported API-equivalent cost, working/idle context |
-| Claude Code (CLI / desktop Code tab) | In development (V1.5) | Deduplicated usage totals, API-equivalent cost from Anthropic list prices, working/idle from Claude Code's session registry; no local quotas (N/A) |
+| Claude Code (CLI / desktop Code tab) | In development (V1.5) | Deduplicated usage totals, API-equivalent cost from Anthropic list prices, working/idle from Claude Code's session registry; 5-hour / weekly limits after turning on **Settings → Sync Claude usage** (Pro/Max, via Claude Code's status line), otherwise N/A |
 
 If the Codex source is missing or stale, its views show that limitation honestly. Historical v1.2.0 provider behavior is recorded in its release notes; alternate-provider tracking is no longer part of the current product.
 
@@ -84,6 +84,7 @@ Interact: hover about 0.35 s or click the character to open the panel, move away
 ## Privacy / local-first
 
 - Petoken reads local Codex task metadata and numeric usage events, window task titles and activity state, and memory-only media metadata for the music display. The V1.5 development branch also reads Claude Code's local session transcripts — numeric usage and session metadata only; message content is discarded in memory — and its live-session registry. No other provider's data is read.
+- **Sync Claude usage** is opt-in: it adds a status-line command to Claude Code's settings (backed up first) that keeps only usage numbers. Turn it off in Settings to remove it.
 - Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere.
 - Details: [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) and [`SECURITY.md`](SECURITY.md).
 

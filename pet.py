@@ -10,13 +10,7 @@ import pet_geometry as geometry
 import halo_geometry
 import theme
 from token_format import format_tokens
-
-
-# Compact-card state marker: the status dot takes the live state's accent so
-# the small card reads as part of the companion, not a plain data pill.
-STATE_DOT = {'codex_working': theme.ICE, 'working': theme.ICE,
-             'typing': theme.VIOLET, 'microphone': theme.ICE,
-             'music': theme.VIOLET, 'idle': theme.MUTED, 'usage': theme.MUTED}
+from usage_overlay import UsageOverlay, UsagePresence, build_sections
 
 
 class DesktopPet(QWidget):
@@ -65,6 +59,13 @@ class DesktopPet(QWidget):
             QShortcut(QKeySequence('Alt+'+name),self,activated=lambda delta=d:self.move_clamped(self.pos()+QPoint(*delta)))
         QShortcut(QKeySequence('Return'),self,activated=self.toggle_panel)
         QShortcut(QKeySequence('Space'),self,activated=self.toggle_panel)
+        # While tasks run, a separate click-through card above the head
+        # shows what is left of context and quotas for each open app.
+        self.presence=UsagePresence()
+        if getattr(panel,'live',False):
+            self.presence.start()
+        # Created on first use: most pets never enter Token Mode.
+        self.usage_overlay=None
         self.apply_language()
 
     def tr_text(self,key,**values):
@@ -130,11 +131,41 @@ class DesktopPet(QWidget):
 
     def hideEvent(self,event):
         self.timer.stop()
+        if self.usage_overlay is not None:
+            self.usage_overlay.hide()
+
+    def usage_overlay_wanted(self):
+        return self.token_bubble_visible() and self.isVisible()
+
+    def usage_overlay_visible(self):
+        return self.usage_overlay is not None and self.usage_overlay.isVisible()
+
+    def sync_usage_overlay(self):
+        """Show, refresh or hide the usage card to match Token Mode."""
+        sections=build_sections(self.panel,self.presence) if self.usage_overlay_wanted() else []
+        if not sections:
+            if self.usage_overlay_visible():
+                self.usage_overlay.hide()
+            return
+        if self.usage_overlay is None:
+            self.usage_overlay=UsageOverlay(self)
+        overlay=self.usage_overlay
+        on_top=bool(self.panel.prefs.get('always_on_top',True))
+        if bool(overlay.windowFlags() & Qt.WindowStaysOnTopHint)!=on_top:
+            overlay.setWindowFlag(Qt.WindowStaysOnTopHint,on_top)
+        overlay.set_sections(sections)
+        if not overlay.isVisible():
+            overlay.show()
 
     def _workarea_changed(self, *_):
         self.move_clamped(self.pos())
 
     def closeEvent(self, event):
+        self.presence.stop()
+        if self.usage_overlay is not None:
+            self.usage_overlay.close()
+            self.usage_overlay.deleteLater()
+            self.usage_overlay=None
         screen = getattr(self, '_halo_screen', None)
         if screen is not None:
             try:
@@ -153,6 +184,8 @@ class DesktopPet(QWidget):
         if state!=self.current_state:
             self.current_state=state
             self.update()
+        if self.usage_overlay_wanted()!=self.usage_overlay_visible():
+            self.sync_usage_overlay()
 
     def update_data(self,data):
         if (data or {}).get('provider_id', 'codex') not in PROVIDER_REGISTRY:
@@ -195,44 +228,7 @@ class DesktopPet(QWidget):
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         bubble=QColor(theme.CARD)
         bubble.setAlpha(235)
-        if self.token_bubble_visible():
-            context=self.working_context or {}
-            tokens=context.get('tokens') or {}
-            style=self.panel.prefs.get('token_number_format')
-            p.setPen(QPen(QColor(theme.BORDER),1))
-            p.setBrush(bubble)
-            bx,by,bw,bh=geometry.scaled_bubble_rect(self.pet_scale)
-            p.drawRoundedRect(QRectF(bx,by,bw,bh),theme.RADIUS_CARD,theme.RADIUS_CARD)
-            width=geometry.scaled_bubble_text_width(self.pet_scale)
-            project=context.get('project') or self.tr_text('project_unavailable')
-            status=self.tr_text('working' if context else 'unknown')
-            used=context.get('context')
-            ctx_text=f"{self.tr_text('context_short')} {'—' if used is None else f'{used:.0f}%'}"
-            main_font=QFont('Microsoft YaHei UI',self._px(9),QFont.DemiBold)
-            p.setFont(main_font)
-            metrics=p.fontMetrics()
-            dot='● '
-            dot_w=metrics.horizontalAdvance(dot)
-            ctx_w=QFontMetrics(QFont('Segoe UI',self._px(8))).horizontalAdvance(ctx_text)
-            status_text=f' · {status}'
-            status_w=metrics.horizontalAdvance(status_text)
-            shown=metrics.elidedText(project,Qt.ElideRight,max(0,width-dot_w-status_w-ctx_w-self._px(8)))
-            pad=self._px(12)
-            x=bx+pad
-            p.setPen(QColor(STATE_DOT.get(self.current_state, theme.ICE)))
-            p.drawText(QRectF(x,self._px(7),width,self._px(20)),Qt.AlignLeft|Qt.AlignVCenter,dot)
-            x+=dot_w
-            p.setPen(QColor(theme.INK))
-            p.drawText(QRectF(x,self._px(7),width,self._px(20)),Qt.AlignLeft|Qt.AlignVCenter,shown+status_text)
-            p.setPen(QColor(theme.MUTED))
-            p.setFont(QFont('Segoe UI',self._px(8)))
-            p.drawText(QRectF(bx+pad,self._px(7),width,self._px(20)),Qt.AlignRight|Qt.AlignVCenter,ctx_text)
-            total=format_tokens(tokens.get('total_tokens'),style)
-            p.setPen(QColor(theme.INK))
-            p.setFont(QFont('Segoe UI',self._px(12),QFont.DemiBold))
-            p.drawText(QRectF(bx+pad,self._px(30),width,self._px(22)),Qt.AlignLeft|Qt.AlignVCenter,
-                       p.fontMetrics().elidedText(total,Qt.ElideRight,width))
-        elif (subtitle:=self.music_subtitle()) is not None:
+        if (subtitle:=self.music_subtitle()) is not None:
             # One small secondary pill in the idle card area. No text means no
             # box at all; Token Mode never reaches this branch.
             p.setFont(QFont('Segoe UI',self._px(8)))
@@ -299,6 +295,8 @@ class DesktopPet(QWidget):
 
     def moveEvent(self,event):
         super().moveEvent(event)
+        if self.usage_overlay_visible():
+            self.usage_overlay.follow()
         if self.panel.isVisible():
             self.panel.anchor_to_pet()
         manager = getattr(self.panel, 'task_manager', None)

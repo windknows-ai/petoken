@@ -44,6 +44,79 @@ def is_codex_window(pid):
         kernel.CloseHandle(handle)
 
 
+def _image_path(kernel, pid):
+    handle = kernel.OpenProcess(0x1000, False, pid)
+    if not handle:
+        return ''
+    try:
+        buffer = ctypes.create_unicode_buffer(32768)
+        size = ctypes.c_uint32(len(buffer))
+        if not kernel.QueryFullProcessImageNameW(handle, 0, buffer, ctypes.byref(size)):
+            return ''
+        return buffer.value.lower()
+    finally:
+        kernel.CloseHandle(handle)
+
+
+def classify_process(name, path=''):
+    """'codex', 'claude' or None for one process (image name, full path).
+
+    Codex: the desktop app (ChatGPT.exe inside the OpenAI.Codex package) or
+    a codex.exe CLI, but not the background app-server daemon, which can
+    outlive every window. Claude: the desktop app or the CLI (claude.exe).
+    """
+    name, path = (name or '').lower(), (path or '').lower()
+    if name == 'claude.exe':
+        return 'claude'
+    if name == 'codex.exe':
+        return None if '\\app-server-daemon\\' in path else 'codex'
+    if name == 'chatgpt.exe' and 'openai.codex' in path:
+        return 'codex'
+    return None
+
+
+class _ProcessEntry(ctypes.Structure):
+    _fields_ = [('dwSize', ctypes.c_uint32), ('cntUsage', ctypes.c_uint32),
+                ('th32ProcessID', ctypes.c_uint32), ('th32DefaultHeapID', ctypes.c_size_t),
+                ('th32ModuleID', ctypes.c_uint32), ('cntThreads', ctypes.c_uint32),
+                ('th32ParentProcessID', ctypes.c_uint32), ('pcPriClassBase', ctypes.c_long),
+                ('dwFlags', ctypes.c_uint32), ('szExeFile', ctypes.c_wchar * 260)]
+
+
+def running_apps():
+    """Which supported apps have a process running now: a set drawn from
+    {'codex', 'claude'}, or None when the process list cannot be read.
+    Only image names and paths are inspected, never window or task content."""
+    if os.name != 'nt':
+        return None
+    kernel = ctypes.windll.kernel32
+    kernel.CreateToolhelp32Snapshot.restype = ctypes.c_void_p
+    kernel.Process32FirstW.argtypes = [ctypes.c_void_p, ctypes.POINTER(_ProcessEntry)]
+    kernel.Process32NextW.argtypes = [ctypes.c_void_p, ctypes.POINTER(_ProcessEntry)]
+    kernel.OpenProcess.restype = ctypes.c_void_p
+    kernel.QueryFullProcessImageNameW.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_uint32)]
+    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+    snapshot = kernel.CreateToolhelp32Snapshot(0x2, 0)
+    if not snapshot or snapshot == ctypes.c_void_p(-1).value:
+        return None
+    found = set()
+    try:
+        entry = _ProcessEntry()
+        entry.dwSize = ctypes.sizeof(_ProcessEntry)
+        more = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
+        while more and len(found) < 2:
+            name = entry.szExeFile.lower()
+            if name in ('claude.exe', 'codex.exe', 'chatgpt.exe'):
+                path = '' if name == 'claude.exe' else _image_path(kernel, entry.th32ProcessID)
+                app = classify_process(name, path)
+                if app:
+                    found.add(app)
+            more = kernel.Process32NextW(snapshot, ctypes.byref(entry))
+    finally:
+        kernel.CloseHandle(snapshot)
+    return found
+
+
 class ActiveTask:
     def __init__(self):
         self.title = ''

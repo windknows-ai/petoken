@@ -28,14 +28,16 @@ CODEX_CAPABILITIES = frozenset({
     'fork_accounting',   # fork-deduplicated aggregation
     'nullable_fields',   # explicit unknown instead of zero-filled
 })
-# Claude Code capabilities proven by claude_usage.py. No quotas: Claude
-# subscription limits are not readable locally and stay unavailable.
+# Claude Code capabilities proven by claude_usage.py. Quotas come only from
+# the opt-in status-line bridge (claude_statusline.py, Pro/Max accounts);
+# without it they are reported as unavailable, never guessed.
 CLAUDE_CAPABILITIES = frozenset({
     'scopes',            # global / project (by cwd) / conversation (session)
     'working_context',   # session registry reports a busy, live process
     'cost_estimate',     # API-equivalent estimate from recorded usage
     'history',           # on-demand history detail
     'nullable_fields',   # explicit unknown instead of zero-filled
+    'quotas',            # 5h / 7d windows via the opt-in status-line bridge
 })
 
 

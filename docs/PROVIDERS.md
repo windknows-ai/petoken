@@ -41,10 +41,27 @@ Code tab share one data directory). Adapter: `claude_usage.py`.
   context window (1M for current Opus/Sonnet/Fable, 200K for Haiku 4.5).
   Local Opus 5.5 requests of 831K tokens confirm Claude Code uses the full
   window; unlisted models, or a request larger than the window, stay `N/A`.
-- **Not available locally**: subscription 5-hour/weekly limits, reset times
-  and billed amounts. Claude Code keeps no local record of them; reading them
-  would need the account's credentials and a network request, which Petoken
-  does not make. These stay `N/A`.
+- **Subscription limits (opt-in bridge)**: Claude Code keeps no local record
+  of the 5-hour / weekly limits. It hands them, with reset times and its own
+  context figure, only to a configured status-line command (claude.ai Pro/Max
+  accounts; each window may be absent). Settings → **Sync Claude usage**
+  (`claude_statusline.py`) installs `%LOCALAPPDATA%\CodexWisp\claude-statusline.ps1`
+  and sets `statusLine` in Claude Code's `settings.json` (backed up first; a
+  custom status line is never replaced; turning it off removes only
+  Petoken's entry). Each run writes
+  `%LOCALAPPDATA%\CodexWisp\claude-status\<session>.json` with numbers only:
+  used % and `resets_at` per window, context window size and used %, model
+  ID. Petoken reads the newest snapshot per window (expired windows and
+  snapshots older than 6 h are ignored) and maps them to the Codex quota
+  shape (300 / 10080 minutes). Updates arrive when Claude Code refreshes its
+  status line (after a reply); without the bridge, or on API-key accounts,
+  limits stay `N/A`. No credential or network request is ever used.
+  Verified on this machine: the PowerShell script runs in about 0.5 s and
+  writes only the fields above. The documented status line is a terminal
+  feature; the desktop app's Code tab did not run it during V1.5 QA (no
+  snapshot appeared), so desktop-only users may keep `N/A` until Claude Code
+  supports it there.
+- **Billed amounts** are not available locally and are never estimated as bills.
 - **Privacy**: transcript lines are parsed in memory only to reach numeric
   usage and the metadata above; message content, prompts, tool input and
   output are never stored, displayed, logged or exported.

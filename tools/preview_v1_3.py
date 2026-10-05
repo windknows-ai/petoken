@@ -93,9 +93,47 @@ def fixture_tasks(count=3, case='known', source='mixed'):
     return tasks
 
 
+PLANS = ('plus', 'pro')
+
+
+class SyntheticPresence:
+    """Stands in for the process scan and Claude bridge: the open apps follow
+    the synthetic source; quotas are fixed sample numbers."""
+
+    def __init__(self, preview):
+        self.preview = preview
+        self.claude_sync = 'on'
+
+    @property
+    def apps(self):
+        source = self.preview.provider.currentText()
+        return frozenset(('codex', 'claude') if source == 'mixed' else (source,))
+
+    @property
+    def claude_limits(self):
+        if self.preview.claude_sync.currentText() != 'on':
+            return None
+        now = time.time()
+        return dict(primary=dict(windowDurationMins=300, usedPercent=58, resetsAt=now + 2 * 3600 + 780),
+                    secondary=dict(windowDurationMins=10080, usedPercent=22, resetsAt=now + 5 * 86400))
+
+    def stop(self):
+        pass
+
+
+def synthetic_codex_quota(plan):
+    """Codex Plus has 5h and weekly windows; Pro only a weekly window."""
+    now = time.time()
+    limits = dict(secondary=dict(windowDurationMins=10080, usedPercent=37,
+                                 resetsAt=now + 3 * 86400 + 4 * 3600))
+    if plan == 'plus':
+        limits['primary'] = dict(windowDurationMins=300, usedPercent=64, resetsAt=now + 41 * 60)
+    return dict(limits=limits, sampled=now, provider_id='codex')
+
+
 class Preview(QWidget):
     def __init__(self, count=3, language='en', case='known', anchor='center',
-                 source='mixed'):
+                 source='mixed', codex_plan='plus'):
         super().__init__()
         self.closed = False
         self.generation = 0
@@ -106,6 +144,7 @@ class Preview(QWidget):
                                 tracking_provider=self.preference_for(source), scope='global')
         self.panel.pet = self.pet = DesktopPet(self.panel)
         self.pet.activity_timer.stop()
+        self.pet.presence = SyntheticPresence(self)
         # Arm only the existing presentation timer; Panel remains live=False.
         self.panel.task_manager._live_armed = lambda: True
         screen = QApplication.primaryScreen().availableGeometry()
@@ -122,6 +161,10 @@ class Preview(QWidget):
         layout.addRow('Source / 来源 (SYNTHETIC / 合成)', self.provider)
         self.case = self.combo(FIXTURE_CASES, case)
         layout.addRow('Usage fixture / 用量样例', self.case)
+        self.codex_plan = self.combo(PLANS, codex_plan)
+        layout.addRow('Codex plan / Codex 套餐 (pro: no 5h)', self.codex_plan)
+        self.claude_sync = self.combo(('on', 'off'), 'on')
+        layout.addRow('Claude usage sync / Claude 用量同步', self.claude_sync)
         self.language = self.combo(('en', 'zh_CN'), language)
         layout.addRow('Language / 语言', self.language)
         self.anchor = self.combo(ANCHORS, anchor)
@@ -171,7 +214,7 @@ class Preview(QWidget):
         quit_button = QPushButton('Exit preview / 退出预览')
         quit_button.clicked.connect(self.close)
         layout.addRow(quit_button)
-        for control in (self.count, self.case, self.language):
+        for control in (self.count, self.case, self.language, self.codex_plan, self.claude_sync):
             signal = control.valueChanged if isinstance(control, QSpinBox) else control.currentTextChanged
             signal.connect(self.refresh)
         # A new synthetic source resets the tracking choice to match it;
@@ -216,8 +259,17 @@ class Preview(QWidget):
             return
         self.panel.prefs.update(language=self.language.currentText())
         self.panel.apply_language()
+        self.panel.quota = synthetic_codex_quota(self.codex_plan.currentText())
+        self.panel.quota_provider = 'codex'
         self.panel.render(self.hub_snapshot())
         self.panel.connection.setText('SYNTHETIC QA — no provider connection / 无提供方连接')
+        if self.count.value() and self.source.isChecked():
+            # Token Mode as if tasks had been running past the debounce.
+            mode = self.panel.app_mode
+            mode.update(True, True)
+            if mode.pending_since is not None:
+                mode.update(True, True, now=mode.pending_since + 1)
+        self.pet.sync_usage_overlay()
         manager = self.panel.task_manager
         self.page.blockSignals(True)
         self.page.setRange(1, max(1, manager.page_count))
@@ -319,7 +371,8 @@ class Preview(QWidget):
         scene = [window for window in manager.capture_windows() if window not in (detail, overlay)]
         # The focused detail is raised by the real interaction. Preserve its
         # readability when the fixed Hub position overlaps an exported scene.
-        windows = [window for window in (*scene, self.panel, self, detail, overlay)
+        usage = self.pet.usage_overlay
+        windows = [window for window in (*scene, usage, self.panel, self, detail, overlay)
                    if window is not None
                    if window.isVisible()]
         bounds = windows[0].geometry()
@@ -358,6 +411,10 @@ class Preview(QWidget):
             detail_visible=bool(detail and detail.isVisible()),
             motion=bool(self.panel.prefs.get('pet_motion')),
             pose=self.pet.preview_state, source_available=self.source.isChecked(),
+            codex_plan=self.codex_plan.currentText(), claude_sync=self.claude_sync.currentText(),
+            usage_overlay_visible=self.pet.usage_overlay_visible(),
+            usage_overlay_rows={section['provider']: [row['kind'] for row in section['rows']]
+                                for section in (usage.sections if usage else ())},
         ), ensure_ascii=False, indent=2), encoding='utf-8')
 
     def cleanup(self):
@@ -389,6 +446,8 @@ def parse_args(argv=None):
                         help='Synthetic task source; mixed alternates Codex and Claude Code')
     parser.add_argument('--anchor', choices=ANCHORS, default='center')
     parser.add_argument('--case', choices=FIXTURE_CASES, default='known')
+    parser.add_argument('--codex-plan', choices=PLANS, default='plus',
+                        help='Synthetic Codex quota: plus has a 5h window, pro only weekly')
     parser.add_argument('--expand', type=int, choices=range(1, MAX_TASKS + 1), metavar='TASK_NUMBER')
     parser.add_argument('--inspect', type=int, choices=range(1, MAX_TASKS + 1), metavar='TASK_NUMBER')
     parser.add_argument('--scope', choices=('global', 'project', 'conversation'))
@@ -417,7 +476,7 @@ def main(argv=None):
         directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-synthetic-qa-'))
         stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
         preview = Preview(args.count, args.language, args.case, args.anchor,
-                          args.provider)
+                          args.provider, args.codex_plan)
         preview.motion.setChecked(args.motion == 'on')
         preview.pose.setCurrentText(args.pose)
         if args.inspect is not None:

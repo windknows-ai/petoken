@@ -516,7 +516,10 @@ class HubProviderPresentationTests(unittest.TestCase):
     def test_claude_hub_names_provider_and_states_missing_limits(self):
         label = self.render('claude')
         self.assertTrue(label.text().startswith('Claude Code · '))
-        self.assertEqual(self.panel.status.text(), 'No limits from this source')
+        # Without the opt-in bridge the Hub says how to turn it on.
+        self.assertEqual(self.panel.status.text(),
+                         'Claude usage not synced · turn it on in Settings')
+        self.assertEqual(self.panel.five.value.text(), 'N/A')
 
 
 if __name__ == '__main__':

@@ -253,7 +253,7 @@ class UiTests(unittest.TestCase):
         self.assertEqual(settings.currency_label.text(),'Currency')
         self.assertEqual(settings.findChildren(QDoubleSpinBox),[])
         boxes=settings.findChildren(QCheckBox)
-        self.assertEqual(set(boxes), {settings.topmost, settings.star_ring})
+        self.assertEqual(set(boxes), {settings.topmost, settings.star_ring, settings.claude_sync})
         self.assertIs(boxes[0],settings.topmost)
         self.assertEqual(settings.topmost_label.text(),'Always on Top')
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
@@ -1082,7 +1082,8 @@ class TaskPanelManagerTests(unittest.TestCase):
                        'PRIVATE REVIEW NOTES', 'My Secret Project',
                        'prompt secret', 'response secret'):
             self.assertNotIn(secret, visible)
-        self.assertIn(text('task_panel_label', 'en', n=1), visible)
+        # Stars are named after their (sanitized) project, like the Hub.
+        self.assertIn('safe-proj', visible)
         self.assertIn('Working', visible)
         self.assertIn('Codex', visible)
         self.assertNotIn('OpenCode', visible)
