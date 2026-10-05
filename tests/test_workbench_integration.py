@@ -147,5 +147,20 @@ class WorkbenchIntegrationTests(unittest.TestCase):
         window.close()
 
 
+    def test_home_summary_pill_shows_its_whole_text(self):
+        for language in ('zh_CN', 'en'):
+            self.panel.prefs['language'] = language
+            self.panel.open_workbench()
+            self.app.processEvents()
+            window = self.panel.workbench_window
+            window.tabs.setCurrentIndex(0)
+            window.apply_language()
+            window.refresh()
+            self.app.processEvents()
+            summary = window.summary
+            self.assertFalse(summary.wordWrap())
+            self.assertGreaterEqual(summary.width(), summary.sizeHint().width())
+            window.close()
+
 if __name__ == '__main__':
     unittest.main()

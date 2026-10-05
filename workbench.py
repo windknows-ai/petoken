@@ -247,7 +247,7 @@ class WorkbenchWindow(QWidget):
         layout = self.page()
         self.summary = QLabel()
         self.summary.setObjectName('summary')
-        self.summary.setWordWrap(True)
+        self.summary.setWordWrap(False)  # One line: the pill sizes to its text.
         layout.addWidget(self.summary, 0, Qt.AlignLeft)  # A compact pill, not a full-width bar.
         columns = QSplitter()
         for key, attr in [('wb_next', 'pending_list'), ('wb_codex_tasks', 'task_list')]:
