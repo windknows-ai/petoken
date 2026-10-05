@@ -1,0 +1,4 @@
+{"type": "session_meta", "payload": {"id": "fixture-cli", "cli_version": "0.156.1", "source": "cli", "timestamp": "2026-10-05T12:00:00Z"}}
+{"type": "turn_context", "payload": {"model": "gpt-6.1-sol", "effort": "high"}}
+{"type": "event_msg", "timestamp": "2026-10-05T12:00:01Z", "payload": {"type": "task_started", "turn_id": "fixture-turn", "root_turn_id": "fixture-turn", "started_at": 1791201601, "model_context_window": 258400, "collaboration_mode_kind": "default"}}
+{"type": "event_msg", "timestamp": "2026-10-05T12:00:02Z", "payload": {"type": "token_count", "info": {"total_token_usage": {"input_tokens": 29931, "cached_input_tokens": 3840, "cache_write_input_tokens": 0, "output_tokens": 140, "reasoning_output_tokens": 0, "total_tokens": 30071}, "last_token_usage": {"input_tokens": 29931, "cached_input_tokens": 3840, "cache_write_input_tokens": 0, "output_tokens": 140, "reasoning_output_tokens": 0, "total_tokens": 30071}, "model_context_window": 258400}}}
