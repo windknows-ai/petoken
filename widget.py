@@ -46,16 +46,17 @@ PREF_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home()/'.local/share')))
 STYLE = f'''
 QWidget {{ color:{theme.INK}; font-family:{theme.FONT_UI}; font-size:12px; }}
 QAbstractItemView,QLineEdit,QTextEdit,QPlainTextEdit {{ selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK}; }}
-QWidget#surface {{ background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 {theme.SURFACE_TOP},stop:1 {theme.SURFACE_BOTTOM}); border:1px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
+QWidget#surface {{ background:{theme.SURFACE_TOP}; border:2px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
 QLabel {{ background:transparent; border:none; }}
 QLabel#muted {{ color:{theme.MUTED}; font-size:11px; }}
-QLabel#brand {{ color:{theme.INK}; font-size:14px; font-weight:600; letter-spacing:2px; }}
+QLabel#brand {{ color:{theme.INK}; font-family:{theme.FONT_DISPLAY}; font-size:14px; font-weight:600; }}
 QLabel#number {{ font-family:{theme.FONT_NUM}; font-size:30px; font-weight:600; }}
 QLabel#smallnumber {{ font-family:{theme.FONT_NUM}; font-size:16px; }}
 QLabel#cost {{ color:{theme.ICE}; font-family:{theme.FONT_NUM}; font-size:22px; font-weight:600; }}
 QLabel#badge {{ color:{theme.VIOLET}; background:{theme.BADGE_BG}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_BADGE}px; padding:4px 10px; font-size:11px; }}
 QFrame#card {{ background:{theme.CARD}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_CARD}px; }}
-QPushButton {{ background:transparent; border:1px solid transparent; border-radius:{theme.RADIUS_BUTTON}px; padding:5px 8px; min-height:24px; }}
+QPushButton {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-bottom:2px solid {theme.BORDER_CONTROL}; border-radius:{theme.RADIUS_BUTTON}px; padding:5px 8px; min-height:24px; }}
+QPushButton:pressed {{ background:{theme.HOVER_BG}; border-bottom-width:1px; padding-top:6px; }}
 QPushButton:hover {{ background:{theme.HOVER_BG}; border-color:{theme.HOVER_BORDER}; }}
 QPushButton:focus {{ border-color:{theme.ICE}; }}
 QPushButton:checked {{ background:{theme.CHECKED_BG}; color:{theme.ICE}; border-color:{theme.BORDER_CONTROL}; }}
@@ -67,6 +68,7 @@ QMenu::item {{ padding:9px 18px; border-radius:8px; }}
 QMenu::item:selected {{ background:{theme.MENU_SELECTED}; }}
 QToolTip {{ background:{theme.TOOLTIP_BG}; color:{theme.INK}; border:1px solid {theme.TOOLTIP_BORDER}; padding:7px; }}
 QDialog {{ background:{theme.BG}; }}
+QLineEdit,QPlainTextEdit {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:5px; }}
 QComboBox {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:6px 30px 6px 10px; min-height:24px; }}
 QComboBox:focus {{ border-color:{theme.VIOLET}; }}
 QComboBox::drop-down {{ subcontrol-origin:padding; subcontrol-position:top right; width:26px; border:0; background:transparent; }}

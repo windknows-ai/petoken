@@ -24,11 +24,13 @@ version/package requires its own acceptance and publication decision.
 
 ## What to check
 
-- **Gentle palette:** pearl white, lavender and quiet blue should feel like a
-  companion space. Check Workbench, Hub, Settings, Analytics, tutorial and Star
-  details. The Unassigned combo and its popup should have no native black edge;
-  the draggable sidebar separator should blend into the background. Checked
-  controls, selected rows and the >8-task pager must remain easy to read.
+- **Toy/notebook style:** muted lavender paper, warm desk pages, outlined
+  controls and connected illustrated tabs should feel gentle without a large
+  bright white field. Inspect the sharp head portrait when moving between DPI
+  scales. Check Workbench, Hub, Settings, Analytics, tutorial and Star details.
+  The Unassigned combo/popup has no native black edge; the draggable separator
+  blends into the background. Checked controls, selected rows and the >8-task
+  pager remain readable. Buttons have a visible but small pressed ledge.
 
 - **Selection controls:** Todo/project Edit and Delete appear only after a valid
   row is selected; note Delete and task Details/Link follow their selected record.

@@ -1,8 +1,8 @@
 """Native personal workbench; user records are separate from Codex telemetry."""
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, QTimer
-from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QUrl, QTimer, QRectF, QSize
+from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut, QPainter, QPainterPath, QColor, QPen, QIcon
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
     QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
@@ -11,9 +11,50 @@ from PySide6.QtWidgets import (
 )
 
 from localization import text
-from pet_assets import sprite_for
+from pet_assets import sprite_for, ASSETS_DIR
 import theme
 from workbench_store import WorkbenchError
+
+
+class CompanionPortrait(QWidget):
+    """Paint the original portrait once at the target device resolution."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(92, 92)
+        self.setAccessibleName('Petoken')
+        self.source = sprite_for('idle')
+        self._portrait = None
+        self._portrait_dpr = None
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(theme.BORDER_SOFT))
+        painter.drawRoundedRect(QRectF(4, 7, 84, 82), 24, 24)
+        frame = QRectF(4, 3, 84, 82)
+        painter.setBrush(QColor(theme.CHECKED_BG))
+        painter.setPen(QPen(QColor(theme.BORDER_CONTROL), 1.5))
+        painter.drawRoundedRect(frame, 24, 24)
+        if self.source is not None:
+            target = QRectF(8, 7, 76, 76)
+            clip = QPainterPath()
+            clip.addRoundedRect(target, 20, 20)
+            painter.setClipPath(clip)
+            width, height = self.source.width(), self.source.height()
+            # A head portrait stays recognizable at this size; retain the full
+            # source so moving between DPI scales never enlarges a 68px thumbnail.
+            source = QRectF(width * .24, height * .23, width * .65, height * .65)
+            dpr = self.devicePixelRatioF()
+            if self._portrait_dpr != dpr:
+                # Qt's direct pixmap paint downsamples bilinearly. Smooth scaled
+                # thumbnails use area filtering, retaining fine lines without
+                # speckling; allocate physical pixels for this screen's DPI.
+                self._portrait = self.source.copy(source.toAlignedRect()).scaled(
+                    round(76 * dpr), round(76 * dpr), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+                self._portrait.setDevicePixelRatio(dpr)
+                self._portrait_dpr = dpr
+            painter.drawPixmap(target.topLeft(), self._portrait)
 
 
 class WorkbenchWindow(QWidget):
@@ -38,39 +79,43 @@ class WorkbenchWindow(QWidget):
             QWidget {{color:{theme.INK}; font-family:{theme.FONT_UI}; font-size:13px;}}
             QFrame#hero {{background:transparent; border:0;}}
             QLabel {{background:transparent;}}
-            QLabel#heading {{font-size:25px; font-weight:600;}}
+            QLabel#heading {{font-family:{theme.FONT_DISPLAY}; font-size:22px; font-weight:600;}}
             QLabel#muted {{color:{theme.MUTED};}}
-            QLabel#section {{font-size:15px; font-weight:500; color:{theme.VIOLET};}}
+            QLabel#section {{font-size:14px; font-weight:600; color:{theme.INK};}}
             QLabel#summary {{background:transparent; padding:4px 0px 12px 0px; color:{theme.VIOLET};}}
-            QTabWidget::pane {{background:{theme.CARD}; border:0; border-radius:16px;}}
-            QTabBar::tab {{background:transparent; border:0; padding:10px 18px; margin:0px 4px 8px 0px; border-radius:12px;}}
-            QTabBar::tab:selected {{background:{theme.TAB_SELECTED_BG}; color:{theme.VIOLET};}}
+            QTabWidget::pane {{background:{theme.CARD}; border:1px solid {theme.BORDER}; border-radius:12px;}}
+            QTabBar::tab {{background:{theme.TABLE_HEADER}; border:1px solid {theme.BORDER_CONTROL}; padding:8px 12px; margin:5px 5px 0px 0px; border-top-left-radius:10px; border-top-right-radius:10px;}}
+            QTabBar::tab:selected {{background:{theme.CARD}; color:{theme.INK}; margin-top:0px; padding-top:13px; border-bottom-color:{theme.CARD};}}
             QTabBar::tab:hover {{background:{theme.HOVER_BG};}}
-            QListWidget,QTreeWidget,QPlainTextEdit,QLineEdit,QComboBox {{background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:6px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
-            QListWidget::item {{padding:9px 5px; border-radius:5px;}}
+            QListWidget,QTreeWidget {{background:transparent; border:0; padding:4px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
+            QPlainTextEdit,QLineEdit,QComboBox {{background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:10px; padding:6px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
+            QListWidget::item {{padding:10px 7px; margin-bottom:3px; border-radius:7px;}}
             QListWidget::item:selected,QTreeWidget::item:selected {{background:{theme.TAB_SELECTED_BG};}}
-            QPushButton {{background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:8px 13px;}}
+            QPushButton {{background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-bottom:3px solid {theme.BORDER_CONTROL}; border-radius:10px; padding:7px 13px;}}
+            QPushButton:pressed {{border-bottom-width:1px; padding-top:9px; background:{theme.HOVER_BG};}}
             QPushButton:hover {{background:{theme.HOVER_BG}; border-color:{theme.VIOLET};}}
-            QPushButton:focus,QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus {{border:1px solid {theme.VIOLET};}}
+            QPushButton:focus {{border-color:{theme.VIOLET};}}
+            QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus {{border:1px solid {theme.VIOLET};}}
             QPushButton:disabled {{color:{theme.MUTED};}}
             QPushButton#primary {{background:{theme.PRIMARY_BG}; border-color:{theme.BORDER_CONTROL}; color:{theme.VIOLET};}}
             QCheckBox {{spacing:8px; padding:5px;}}
             QHeaderView::section {{background:{theme.TABLE_HEADER}; color:{theme.INK}; padding:9px; border:0;}}
-            QScrollBar:vertical {{background:{theme.BG}; width:12px;}}
+            QScrollBar:vertical {{background:transparent; width:9px;}}
             QScrollBar::handle:vertical {{background:{theme.BORDER}; min-height:24px; border-radius:5px;}}
             QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical {{height:0;}}
-            QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical {{background:{theme.TABLE_BG};}}
-            QScrollBar:horizontal {{background:{theme.TABLE_BG}; height:12px;}}
+            QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical {{background:transparent;}}
+            QScrollBar:horizontal {{background:transparent; height:9px;}}
             QScrollBar::handle:horizontal {{background:{theme.BORDER}; min-width:24px; border-radius:5px;}}
             QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal {{width:0;}}
-            QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal {{background:{theme.TABLE_BG};}}
-            QAbstractScrollArea::corner {{background:{theme.TABLE_BG};}}
+            QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal {{background:transparent;}}
+            QAbstractScrollArea::corner {{background:transparent;}}
             QSplitter::handle {{background:transparent;}}
             QComboBox {{padding:6px 30px 6px 10px;}}
+            QWidget#projectShelf {{background:{theme.SURFACE_TOP}; border:1px solid {theme.BORDER_SOFT}; border-radius:12px;}}
             QListWidget#projectSpaces {{background:transparent; border:0; padding:4px 0px;}}
-            QListWidget#projectSpaces::item {{padding:12px 10px; border-radius:12px;}}
+            QListWidget#projectSpaces::item {{padding:10px 7px; border-radius:7px;}}
             QListWidget#projectSpaces::item:hover {{background:{theme.HOVER_BG};}}
-            QListWidget#projectSpaces::item:selected {{background:{theme.TAB_SELECTED_BG}; color:{theme.VIOLET};}}
+            QListWidget#projectSpaces::item:selected {{background:{theme.TAB_SELECTED_BG}; color:{theme.INK};}}
         ''')
         root = QVBoxLayout(self)
         root.setContentsMargins(22, 16, 22, 12)
@@ -78,23 +123,25 @@ class WorkbenchWindow(QWidget):
         hero = QFrame()
         hero.setObjectName('hero')
         header = QHBoxLayout(hero)
-        header.setContentsMargins(20, 14, 20, 14)
-        avatar = QLabel()
-        pixmap = sprite_for('idle')
-        if pixmap is not None:
-            avatar.setPixmap(pixmap.scaled(68, 68, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        header.addWidget(avatar)
+        header.setContentsMargins(0, 4, 0, 8)
+        header.setSpacing(14)
+        self.avatar = CompanionPortrait()
+        header.addWidget(self.avatar)
         words = QVBoxLayout()
+        words.setSpacing(4)
+        words.addStretch()
         words.addWidget(self.caption('wb_heading', 'heading'))
         words.addWidget(self.caption('wb_subtitle', 'muted'))
+        words.addStretch()
         header.addLayout(words, 1)
         self.tutorial_button = self.button(header, 'wb_tutorial', self.open_tutorial)
         root.addWidget(hero)
         split = QSplitter()
         split.setHandleWidth(16)
         sidebar = QWidget()
+        sidebar.setObjectName('projectShelf')
         side = QVBoxLayout(sidebar)
-        side.setContentsMargins(0, 0, 8, 0)
+        side.setContentsMargins(10, 12, 10, 10)
         side.addWidget(self.caption('wb_spaces', 'section'))
         self.project_list = QListWidget()
         self.project_list.setObjectName('projectSpaces')
@@ -104,6 +151,7 @@ class WorkbenchWindow(QWidget):
         side.addWidget(self.caption('wb_local', 'muted'))
         split.addWidget(sidebar)
         self.tabs = QTabWidget()
+        self.tabs.setIconSize(QSize(16, 16))
         split.addWidget(self.tabs)
         split.setStretchFactor(1, 1)
         split.setSizes([185, 730])
@@ -112,6 +160,8 @@ class WorkbenchWindow(QWidget):
         self._build_todos()
         self._build_notes()
         self._build_projects()
+        for index, name in enumerate(('home', 'todos', 'notes', 'projects')):
+            self.tabs.setTabIcon(index, QIcon(str(ASSETS_DIR / f'workbench-{name}.svg')))
         self.status = QLabel('')
         self.status.setWordWrap(True)
         self.status.setObjectName('muted')

@@ -45,12 +45,31 @@ class CompanionThemeTests(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
 
-    def test_pearl_surfaces_and_readable_primary_secondary_accents(self):
-        self.assertGreater(QColor(theme.BG).lightness(), 230)
+    def test_muted_surfaces_and_readable_primary_secondary_accents(self):
+        self.assertGreater(QColor(theme.BG).lightness(), 170)
+        for surface in [theme.BG, theme.CARD, theme.TABLE_BG]:
+            self.assertLess(QColor(surface).lightness(), 230)
         for background in [theme.BG, theme.CARD, theme.TABLE_BG, theme.TAB_SELECTED_BG]:
             for foreground in [theme.INK, theme.MUTED, theme.ICE, theme.VIOLET]:
                 with self.subTest(background=background, foreground=foreground):
                     self.assertGreaterEqual(contrast(foreground, background), 4.5)
+
+    def test_portrait_retains_full_source_and_paints_at_native_dpr(self):
+        from workbench import CompanionPortrait
+        avatar = CompanionPortrait()
+        avatar.show()
+        self.app.processEvents()
+        try:
+            self.assertGreater(avatar.source.width(), 900)
+            self.assertGreater(avatar.source.height(), 900)
+            frame = avatar.grab()
+            self.assertEqual(avatar._portrait.devicePixelRatio(), avatar.devicePixelRatioF())
+            self.assertEqual(avatar._portrait.width(), round(76 * avatar.devicePixelRatioF()))
+            self.assertEqual(frame.width(), round(avatar.width() * frame.devicePixelRatio()))
+            self.assertGreater(frame.toImage().pixelColor(frame.width() // 2, frame.height() // 2).alpha(), 240)
+        finally:
+            avatar.close()
+            avatar.deleteLater()
 
     def test_native_combo_dropdown_has_no_black_frame(self):
         combo = QComboBox()
