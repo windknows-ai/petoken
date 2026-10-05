@@ -45,6 +45,7 @@ INK, MUTED, ICE, VIOLET, BG = theme.INK, theme.MUTED, theme.ICE, theme.VIOLET, t
 PREF_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home()/'.local/share')))/'CodexWisp'
 STYLE = f'''
 QWidget {{ color:{theme.INK}; font-family:{theme.FONT_UI}; font-size:12px; }}
+QAbstractItemView,QLineEdit,QTextEdit,QPlainTextEdit {{ selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK}; }}
 QWidget#surface {{ background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 {theme.SURFACE_TOP},stop:1 {theme.SURFACE_BOTTOM}); border:1px solid {theme.BORDER}; border-radius:{theme.RADIUS_SURFACE}px; }}
 QLabel {{ background:transparent; border:none; }}
 QLabel#muted {{ color:{theme.MUTED}; font-size:11px; }}
@@ -57,22 +58,24 @@ QFrame#card {{ background:{theme.CARD}; border:1px solid {theme.BORDER_SOFT}; bo
 QPushButton {{ background:transparent; border:1px solid transparent; border-radius:{theme.RADIUS_BUTTON}px; padding:5px 8px; min-height:24px; }}
 QPushButton:hover {{ background:{theme.HOVER_BG}; border-color:{theme.HOVER_BORDER}; }}
 QPushButton:focus {{ border-color:{theme.ICE}; }}
-QPushButton:checked {{ background:{theme.CHECKED_BG}; color:{theme.ICE}; border-color:#515777; }}
+QPushButton:checked {{ background:{theme.CHECKED_BG}; color:{theme.ICE}; border-color:{theme.BORDER_CONTROL}; }}
 QFrame#divider {{ background:{theme.DIVIDER}; max-height:1px; border:0; }}
 QProgressBar {{ background:{theme.TRACK}; border:0; border-radius:{theme.RADIUS_BAR}px; min-height:5px; max-height:5px; }}
 QProgressBar::chunk {{ background:{theme.ICE}; border-radius:{theme.RADIUS_BAR}px; }}
-QMenu {{ background:{theme.MENU_BG}; border:1px solid #515777; padding:6px; }}
+QMenu {{ background:{theme.MENU_BG}; border:1px solid {theme.BORDER_CONTROL}; padding:6px; }}
 QMenu::item {{ padding:9px 18px; border-radius:8px; }}
 QMenu::item:selected {{ background:{theme.MENU_SELECTED}; }}
 QToolTip {{ background:{theme.TOOLTIP_BG}; color:{theme.INK}; border:1px solid {theme.TOOLTIP_BORDER}; padding:7px; }}
 QDialog {{ background:{theme.BG}; }}
-QComboBox {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:6px; min-height:24px; }}
-QComboBox:focus {{ border-color:{theme.ICE}; }}
-QComboBox QAbstractItemView {{ background:{theme.CONTROL_BG}; selection-background-color:#4B527A; }}
+QComboBox {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:6px 30px 6px 10px; min-height:24px; }}
+QComboBox:focus {{ border-color:{theme.VIOLET}; }}
+QComboBox::drop-down {{ subcontrol-origin:padding; subcontrol-position:top right; width:26px; border:0; background:transparent; }}
+QComboBox::down-arrow {{ image:url("{assets.ASSETS_DIR.as_posix()}/chevron-down.svg"); }}
+QComboBox QAbstractItemView {{ background:{theme.CONTROL_BG}; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK}; }}
 QScrollArea {{ border:0; background:transparent; }}
 QCheckBox {{ spacing:8px; }}
 QCheckBox::indicator {{ width:16px; height:16px; border:1px solid {theme.BORDER_CONTROL}; border-radius:5px; background:{theme.CONTROL_BG}; }}
-QCheckBox::indicator:checked {{ background:{theme.ICE}; border-color:{theme.ICE}; image:url("{assets.ASSETS_DIR.as_posix()}/checkmark.svg"); }}
+QCheckBox::indicator:checked {{ background:{theme.CHECK_BG}; border-color:{theme.VIOLET}; image:url("{assets.ASSETS_DIR.as_posix()}/checkmark.svg"); }}
 QSlider::groove:horizontal {{ background:{theme.TRACK}; height:6px; border-radius:3px; }}
 QSlider::handle:horizontal {{ background:{theme.ICE}; width:16px; height:16px; margin:-5px 0; border-radius:8px; border:none; }}
 '''
@@ -949,8 +952,8 @@ class TaskPageControls(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(QColor('#24233C'))
-        painter.setPen(QPen(QColor('#8E84BD'), 1))
+        painter.setBrush(QColor(theme.SURFACE_TOP))
+        painter.setPen(QPen(QColor(theme.BORDER_CONTROL), 1))
         painter.drawRoundedRect(QRectF(self.rect()).adjusted(.5, .5, -.5, -.5), 14, 14)
 
 

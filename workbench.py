@@ -36,24 +36,24 @@ class WorkbenchWindow(QWidget):
             QWidget#workbench {{background:{theme.BG}; color:{theme.INK};}}
             QDialog {{background:{theme.BG};}}
             QWidget {{color:{theme.INK}; font-family:{theme.FONT_UI}; font-size:13px;}}
-            QFrame#hero {{background:{theme.SURFACE_TOP}; border:1px solid {theme.BORDER}; border-radius:20px;}}
+            QFrame#hero {{background:transparent; border:0;}}
             QLabel {{background:transparent;}}
             QLabel#heading {{font-size:25px; font-weight:600;}}
             QLabel#muted {{color:{theme.MUTED};}}
-            QLabel#section {{font-size:17px; font-weight:600; color:{theme.VIOLET};}}
-            QLabel#summary {{background:{theme.CARD}; border-radius:12px; padding:12px; color:{theme.VIOLET};}}
-            QTabWidget::pane {{background:{theme.SURFACE_BOTTOM}; border:1px solid {theme.BORDER}; border-radius:12px;}}
-            QTabBar::tab {{background:{theme.CONTROL_BG}; padding:11px 18px; margin-right:4px; border-top-left-radius:9px; border-top-right-radius:9px;}}
-            QTabBar::tab:selected {{background:{theme.TAB_SELECTED_BG}; color:{theme.INK};}}
+            QLabel#section {{font-size:15px; font-weight:500; color:{theme.VIOLET};}}
+            QLabel#summary {{background:transparent; padding:4px 0px 12px 0px; color:{theme.VIOLET};}}
+            QTabWidget::pane {{background:{theme.CARD}; border:0; border-radius:16px;}}
+            QTabBar::tab {{background:transparent; border:0; padding:10px 18px; margin:0px 4px 8px 0px; border-radius:12px;}}
+            QTabBar::tab:selected {{background:{theme.TAB_SELECTED_BG}; color:{theme.VIOLET};}}
             QTabBar::tab:hover {{background:{theme.HOVER_BG};}}
-            QListWidget,QTreeWidget,QPlainTextEdit,QLineEdit,QComboBox {{background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:6px; selection-background-color:{theme.TAB_SELECTED_BG};}}
+            QListWidget,QTreeWidget,QPlainTextEdit,QLineEdit,QComboBox {{background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:6px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
             QListWidget::item {{padding:9px 5px; border-radius:5px;}}
             QListWidget::item:selected,QTreeWidget::item:selected {{background:{theme.TAB_SELECTED_BG};}}
             QPushButton {{background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:8px; padding:8px 13px;}}
             QPushButton:hover {{background:{theme.HOVER_BG}; border-color:{theme.VIOLET};}}
             QPushButton:focus,QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus {{border:1px solid {theme.VIOLET};}}
             QPushButton:disabled {{color:{theme.MUTED};}}
-            QPushButton#primary {{background:#514674; border-color:{theme.VIOLET};}}
+            QPushButton#primary {{background:{theme.PRIMARY_BG}; border-color:{theme.BORDER_CONTROL}; color:{theme.VIOLET};}}
             QCheckBox {{spacing:8px; padding:5px;}}
             QHeaderView::section {{background:{theme.TABLE_HEADER}; color:{theme.INK}; padding:9px; border:0;}}
             QScrollBar:vertical {{background:{theme.BG}; width:12px;}}
@@ -65,7 +65,12 @@ class WorkbenchWindow(QWidget):
             QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal {{width:0;}}
             QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal {{background:{theme.TABLE_BG};}}
             QAbstractScrollArea::corner {{background:{theme.TABLE_BG};}}
-            QSplitter::handle {{background:{theme.DIVIDER};}}
+            QSplitter::handle {{background:transparent;}}
+            QComboBox {{padding:6px 30px 6px 10px;}}
+            QListWidget#projectSpaces {{background:transparent; border:0; padding:4px 0px;}}
+            QListWidget#projectSpaces::item {{padding:12px 10px; border-radius:12px;}}
+            QListWidget#projectSpaces::item:hover {{background:{theme.HOVER_BG};}}
+            QListWidget#projectSpaces::item:selected {{background:{theme.TAB_SELECTED_BG}; color:{theme.VIOLET};}}
         ''')
         root = QVBoxLayout(self)
         root.setContentsMargins(22, 16, 22, 12)
@@ -86,11 +91,13 @@ class WorkbenchWindow(QWidget):
         self.tutorial_button = self.button(header, 'wb_tutorial', self.open_tutorial)
         root.addWidget(hero)
         split = QSplitter()
+        split.setHandleWidth(16)
         sidebar = QWidget()
         side = QVBoxLayout(sidebar)
         side.setContentsMargins(0, 0, 8, 0)
         side.addWidget(self.caption('wb_spaces', 'section'))
         self.project_list = QListWidget()
+        self.project_list.setObjectName('projectSpaces')
         self.project_list.setMinimumWidth(155)
         self.project_list.currentItemChanged.connect(self._project_changed)
         side.addWidget(self.project_list, 1)

@@ -1,47 +1,48 @@
 """Central visual tokens for the petoken desktop companion.
 
-Soft companion direction (V1.1 polish slice): the same dark navy / violet /
-cyan family, but lifted, rounder, and calmer — a cute pet-companion surface
-instead of a dense enterprise dashboard. Components reference these names
-instead of scattering hex literals, so the visual language stays consistent.
+Pearl-white surfaces, lavender accents and quiet blue details connect everyday
+notes and work with the approved character. Shared tokens keep the workbench,
+usage cards, settings and activity bubbles in the same gentle visual language.
 """
 from __future__ import annotations
 
 # Core roles.
-INK = '#F0F3FF'        # primary text, near-white
-MUTED = '#B3B9D4'      # secondary text, soft lavender-gray
-ICE = '#91E4F2'        # live / positive accent, ice cyan
-VIOLET = '#C0AEFA'     # emphasis accent, light lavender
-BG = '#1C2140'         # main background, soft dark navy
+INK = '#39324F'
+MUTED = '#6B617F'
+ICE = '#436B8E'
+VIOLET = '#76569C'
+BG = '#FAF8FE'
 
-# Surfaces (lifted lavender-tinted navy cards/panels).
-SURFACE_TOP = '#2D3157'
-SURFACE_BOTTOM = '#272B4D'
-CARD = '#2B2F52'
-TABLE_BG = '#21263F'
-TABLE_ALT = '#292F52'
-TABLE_HEADER = '#363D66'
-BADGE_BG = '#3B3460'
-CONTROL_BG = '#2D3252'
+# Surfaces: mostly white, with lavender and sky-blue washes.
+SURFACE_TOP = '#F4EFFF'
+SURFACE_BOTTOM = '#EEF5FF'
+CARD = '#FFFFFF'
+TABLE_BG = '#FEFDFF'
+TABLE_ALT = '#F4F0FA'
+TABLE_HEADER = '#EEE8F8'
+BADGE_BG = '#ECE5F8'
+CONTROL_BG = '#FFFFFF'
+PRIMARY_BG = '#E8DDF7'
+CHECK_BG = '#DADDF7'
 
-# Borders (soft lavender, defined but never harsh).
-BORDER = '#5E628A'
-BORDER_SOFT = '#6B6594'
-BORDER_CONTROL = '#5F6690'
-TRACK = '#3A4063'      # progress-bar track
-DIVIDER = '#454B70'
-GRID = '#434A70'
+# Borders and separators.
+BORDER = '#D9CEEA'
+BORDER_SOFT = '#E5DBF0'
+BORDER_CONTROL = '#C8B9DF'
+TRACK = '#E6DFF1'
+DIVIDER = '#E8E0F2'
+GRID = '#E5DEEE'
 
 # Interaction.
-TAB_PANE_BORDER = '#555C82'
-TAB_SELECTED_BG = '#485074'
-HOVER_BG = '#3E4468'
-HOVER_BORDER = '#60668C'
-CHECKED_BG = '#3A3A5C'
-MENU_BG = '#2A2E50'
-MENU_SELECTED = '#454B74'
-TOOLTIP_BG = '#2B3052'
-TOOLTIP_BORDER = '#6E76A0'
+TAB_PANE_BORDER = '#E5DBF0'
+TAB_SELECTED_BG = '#EBE4F6'
+HOVER_BG = '#F0EAF9'
+HOVER_BORDER = '#BBA4D7'
+CHECKED_BG = '#E8E1F5'
+MENU_BG = '#FEFCFF'
+MENU_SELECTED = '#EEE6F8'
+TOOLTIP_BG = '#FFFDFE'
+TOOLTIP_BORDER = '#C8B9DF'
 SCROLL_BG = BG
 
 # Corner radii: one consistent set, rounder for the companion feel.

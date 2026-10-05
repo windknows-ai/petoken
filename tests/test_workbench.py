@@ -13,6 +13,26 @@ from workbench_store import WorkbenchError, WorkbenchStore
 
 
 class WorkbenchTests(unittest.TestCase):
+    def test_selected_lists_keep_readable_companion_colors(self):
+        from PySide6.QtGui import QPalette
+        import theme
+        from tests.test_companion_theme import contrast
+        self.store.create_todo('A small next step')
+        self.window.refresh()
+        self.window.show()
+        self.app.processEvents()
+        self.window.todo_list.setCurrentRow(0)
+        for view in [self.window.todo_list, self.window.pending_list,
+                     self.window.task_list, self.window.notes_list, self.window.projects_table]:
+            for group in [QPalette.Active, QPalette.Inactive]:
+                with self.subTest(view=view, group=group):
+                    palette = view.palette()
+                    foreground = palette.color(group, QPalette.HighlightedText).name()
+                    background = palette.color(group, QPalette.Highlight).name()
+                    self.assertEqual(foreground, theme.INK.lower())
+                    self.assertEqual(background, theme.TAB_SELECTED_BG.lower())
+                    self.assertGreaterEqual(contrast(foreground, background), 4.5)
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

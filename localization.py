@@ -367,7 +367,7 @@ EN = {
 
 ZH_CN.update({
     'workbench_open': '打开工作台',
-    'wb_heading': '你的工作台', 'wb_subtitle': '项目、待办和便签，都在这里。',
+    'wb_heading': '你的小天地', 'wb_subtitle': '记下生活的小事，也留好工作里的下一步。',
     'wb_spaces': '项目空间', 'wb_local': '保存在此设备',
     'wb_all': '全部项目', 'wb_inbox': '未分类',
     'wb_home': '首页', 'wb_todos': '待办', 'wb_notes': '便签', 'wb_projects': '项目',
@@ -397,7 +397,7 @@ ZH_CN.update({
 })
 EN.update({
     'workbench_open': 'Open workbench',
-    'wb_heading': 'Your workbench', 'wb_subtitle': 'A place for projects, next steps and small ideas.',
+    'wb_heading': 'Your little corner', 'wb_subtitle': 'Everyday notes and your next small step, together.',
     'wb_spaces': 'Project spaces', 'wb_local': 'Saved on this device',
     'wb_all': 'All projects', 'wb_inbox': 'Unassigned',
     'wb_home': 'Home', 'wb_todos': 'Todos', 'wb_notes': 'Notes', 'wb_projects': 'Projects',

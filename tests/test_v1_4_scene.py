@@ -9,6 +9,7 @@ from PySide6.QtCore import QPoint, QRect, QRectF
 from PySide6.QtWidgets import QApplication
 
 import halo_geometry
+import theme
 from pet import DesktopPet
 from tools.preview_v1_3 import fixture_tasks
 from widget import Panel
@@ -155,7 +156,9 @@ class SceneV14Tests(unittest.TestCase):
         dpr = image.devicePixelRatio()
         background = image.pixelColor(round(84 * dpr), round(6 * dpr))
         self.assertGreater(background.alpha(), 240)
-        self.assertEqual(background.name(), '#24233c')
+        self.assertEqual(background.name(), theme.SURFACE_TOP.lower())
+        from tests.test_companion_theme import contrast
+        self.assertGreaterEqual(contrast(theme.INK, background.name()), 4.5)
         self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
 
     def test_workarea_change_reclamps_cached_composition_while_motion_off(self):

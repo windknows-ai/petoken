@@ -102,7 +102,7 @@ class AnalyticsWindow(QDialog):
         self.tabs.addTab(history, '')
         self.raw = QPlainTextEdit()
         self.raw.setReadOnly(True)
-        self.raw.setStyleSheet(f'background:{theme.TABLE_BG};color:#DDE6FC;font-family:Consolas;font-size:12px;')
+        self.raw.setStyleSheet(f'background:{theme.TABLE_BG};color:{theme.INK};font-family:Consolas;font-size:12px;')
         self.tabs.addTab(self.raw, '')
         self.note = QLabel()
         self.note.setWordWrap(True)

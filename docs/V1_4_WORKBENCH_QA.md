@@ -24,6 +24,12 @@ version/package requires its own acceptance and publication decision.
 
 ## What to check
 
+- **Gentle palette:** pearl white, lavender and quiet blue should feel like a
+  companion space. Check Workbench, Hub, Settings, Analytics, tutorial and Star
+  details. The Unassigned combo and its popup should have no native black edge;
+  the draggable sidebar separator should blend into the background. Checked
+  controls, selected rows and the >8-task pager must remain easy to read.
+
 - **Selection controls:** Todo/project Edit and Delete appear only after a valid
   row is selected; note Delete and task Details/Link follow their selected record.
   Empty or deselected lists hide these controls. The completed-todo filter has a
