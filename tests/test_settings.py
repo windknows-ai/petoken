@@ -27,7 +27,7 @@ class SettingsTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_app_version_is_shared_with_codex_sidecar(self):
-        self.assertEqual(APP_VERSION, "1.3.0")
+        self.assertEqual(APP_VERSION, "1.4.0")
         self.assertEqual(desktop.APP_VERSION, APP_VERSION)
 
     def test_ring_visibility_defaults_and_atomic_persistence(self):

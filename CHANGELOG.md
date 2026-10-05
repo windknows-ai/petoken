@@ -2,6 +2,29 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V1.4.0 — 2026-10-05
+
+Codex + Claude Code companion with a usage card and a local workbench. Combines the work developed under the V1.4 (workbench) and V1.5 (dual provider) working names; human visual QA accepted on 2026-10-05.
+
+### Added
+- Claude Code as a second provider (CLI and desktop Code tab): deduplicated usage, API-equivalent cost from Anthropic list prices, official context windows, working/idle from Claude Code's session registry. Tracking choice Auto / Codex / Claude Code.
+- Gold Claude Code Stars beside blue Codex Stars; the ring, beads and trails take the colour of the nearest Stars.
+- Usage card above the character while tasks run: context, 5-hour and weekly amounts left with reset countdowns for each open app; readable at every character size.
+- Opt-in **Sync Claude usage** setting for Claude Pro/Max 5-hour / weekly windows via Claude Code's status line (backs up Claude Code's settings first; never replaces a custom status line).
+- Native workbench: Home / Projects / Todos / Notes, task-to-project links for both providers, first-use tutorial.
+- Codex compatibility notice when a Codex version's data is only partly understood.
+
+### Changed
+- Task Stars, details, the Hub task menu and the workbench name tasks after their project.
+- The usage panel opens on click and always starts closed; **Usage panel (always shown)** in the character menu keeps it open and on top for the session.
+- Codex Pro accounts show only the weekly window (5-hour reads N/A).
+- Settings upgrade once from the Codex-only provider choice to Auto; the workbench database upgrades once to schema 2 with a full backup.
+
+### Fixed
+- Settings changes not saving, the Hub close button, oversized tooltips, Hub overlapping an open Star detail, and Codex CLI sessions not being detected.
+
+See [release notes](docs/RELEASE_NOTES_v1.4.0.md).
+
 ## V1.3.0 — 2026-10-04
 
 Codex-only desktop companion. Includes the user-accepted visual/interaction refinements developed under the V1.4 working name; published as v1.3.0 by user request.

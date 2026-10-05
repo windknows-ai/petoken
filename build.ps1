@@ -59,7 +59,7 @@ foreach ($document in 'ROADMAP.md','DESIGN.md','SECURITY.md','CONTRIBUTING.md','
 }
 $documentation = Join-Path $app 'docs'
 New-Item -ItemType Directory -Path $documentation -Force | Out-Null
-foreach ($document in 'USAGE_MODEL.md','PROVIDERS.md','TOKEN_ACCOUNTING.md','ARTWORK.md','RELEASE_NOTES_v1.2.0.md','RELEASE_NOTES_v1.3.0.md','V1_3_VISUAL_QA.md','V1_4_VISUAL_QA.md','V1_4_WORKBENCH_QA.md') {
+foreach ($document in 'USAGE_MODEL.md','PROVIDERS.md','TOKEN_ACCOUNTING.md','ARTWORK.md','RELEASE_NOTES_v1.2.0.md','RELEASE_NOTES_v1.3.0.md','RELEASE_NOTES_v1.4.0.md','V1_3_VISUAL_QA.md','V1_4_VISUAL_QA.md','V1_4_WORKBENCH_QA.md','V1_5_DUAL_PROVIDER_QA.md') {
     Copy-Item -LiteralPath (Join-Path $repo "docs\$document") -Destination $documentation -Force
 }
 Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_3_VISUAL_QA.md') -Destination $app -Force

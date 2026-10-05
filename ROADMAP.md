@@ -21,12 +21,12 @@ Directions only — no schedule promises. `Available now` always matches [Releas
 
 The compact Codex-only implementation and rebuilt package passed technical and independent review; human visual QA was accepted on 2026-10-04. The refinements developed under the V1.4 working name are included in v1.3.0 by user request.
 
-## In development — v1.4 workbench foundation
+## Released — v1.4.0 (2026-10-05)
 
-- Native workbench home with current Codex tasks and personal pending items
-- Basic project spaces with optional folder links
-- Local todos and plain-text notes, with explicit saving and draft protection
-- Optional task-to-project links, independent of the accepted companion ring
+- Claude Code as a second provider beside Codex, with gold Stars and project-named tasks
+- Usage card above the character: context, 5-hour and weekly amounts left per open app
+- Opt-in Claude Pro/Max quota sync through Claude Code's status line
+- Native workbench: projects, todos, plain-text notes and task-to-project links
 
 ## Proposed later phases
 

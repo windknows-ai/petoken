@@ -1,89 +1,84 @@
 # Petoken
 
-> A Codex desktop companion with local usage and cost intelligence on Windows.
+> A Codex and Claude Code desktop companion with local usage and cost intelligence on Windows.
 
-*专属于 Codex 的本机用量与成本桌宠：跟随你的任务，诚实显示 token 用量、额度与费用。*
+*Codex 与 Claude Code 的本机用量与成本桌宠：跟随你的任务，诚实显示 token 用量、额度与费用。*
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community** — the free, open-source edition of Petoken. v1.3.0 is a Codex-only companion with a dimensional task ring and animated task details. The visual refinements previously developed under the V1.4 working name are included in v1.3.0, following human acceptance.
+**Petoken Community** — the free, open-source edition of Petoken. v1.4.0 follows Codex and Claude Code side by side (blue and gold task Stars), shows remaining context and quotas in a small card above the character, and adds a local workbench for projects, todos and notes.
 
 ## What it does
 
-Petoken is a small Windows desktop companion for Codex. It follows verified Codex tasks and shows their token usage and available cost estimates — per conversation, per project, or globally. An approved character idles on your desktop; hover or click it to reveal the usage panel.
+Petoken is a small Windows desktop companion for Codex and Claude Code. It follows verified tasks of both and shows their token usage and available cost estimates — per conversation, per project, or globally. An approved character idles on your desktop; hover or click it to reveal the usage panel.
 
-- **Codex-only tracking**: the current application reads Codex metadata; no alternate provider or mixed-provider mode is selectable.
+- **Codex + Claude Code**: Settings → Tracking provider offers Auto (default), Codex or Claude Code. Codex Stars are blue, Claude Code Stars are gold.
 - **Task Stars**: a centered dimensional ring, stable-number pages for more than 8 tasks, persistent decoration and animated task-local details.
 - **Task-level live usage**: input / output / reasoning / cache splits for the current task.
-- **Quotas and resets** (Codex): official 5-hour / weekly usage with reset countdowns.
+- **Quotas and resets**: Codex 5-hour / weekly usage with reset countdowns (Pro accounts have only the weekly window); Claude Code Pro/Max windows after turning on **Settings → Sync Claude usage**.
+- **Usage card**: while tasks run, a small card above the character shows, for each open app, the context, 5-hour and weekly amounts left and when they reset.
+- **Workbench**: local projects, todos and plain-text notes, with optional task-to-project links.
 - **Cost**: an API-equivalent estimate (USD / CAD / EUR / CNY) only when model pricing and token evidence support it; otherwise `N/A`.
 - **Token Analytics**: model / session / date grouping with local lifetime history.
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v1.3.0
+## Latest stable release: v1.4.0
 
-Download [Petoken-v1.3.0-Windows-x64.zip](https://github.com/windknows-ai/petoken/releases/download/v1.3.0/Petoken-v1.3.0-Windows-x64.zip) from the [v1.3.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.3.0). Verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download [Petoken-v1.4.0-Windows-x64.zip](https://github.com/windknows-ai/petoken/releases/download/v1.4.0/Petoken-v1.4.0-Windows-x64.zip) from the [v1.4.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.4.0). Verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
-## Supported source
+## Supported sources
 
-### In development — V1.5 Codex + Claude Code
+### Codex + Claude Code
 
-The development branch tracks exactly two providers: Codex and Claude Code.
-Settings → Tracking provider offers Auto (default), Codex or Claude Code.
-Auto follows whichever provider has a verified working task; task stars show
-both providers at once — **Codex stars are blue, Claude Code stars are
-gold**. Claude Code usage comes from its local session transcripts and live
-session registry (CLI and desktop Code tab alike). Context use is measured
-against each model's official context window; subscription quotas and reset
-times are not stored locally by Claude Code and read `N/A`. Claude Code tasks
-can be linked to workbench projects; the workbench database upgrades once to
-schema 2 and keeps a full backup of the previous file beside it. Unreleased;
-not part of the v1.3.0 download.
+Petoken tracks exactly two providers: Codex and Claude Code. Auto follows
+whichever provider has a verified working task; task Stars show both at once —
+**Codex Stars are blue, Claude Code Stars are gold** — and are named after
+their project. Claude Code usage comes from its local session transcripts and
+live session registry (CLI and desktop Code tab alike). Context use is measured
+against each model's official context window. Claude Code keeps no quota on
+disk: its 5-hour / weekly windows appear only after you turn on
+**Settings → Sync Claude usage** (claude.ai Pro/Max), which hands Claude Code's
+status-line numbers to Petoken; otherwise they read `N/A`.
 
-### In development — V1.4 workbench
+### Usage card and usage panel
 
-The current development preview also has a fixed-size silver-lavender/indigo
-usage overview. Click the pet to open it; hovering and cursor leave do not
-change visibility. Check **Usage panel** in the pet's context menu to keep it
-open and independently on top; uncheck to close. The top task menu inspects a
-conversation without opening its Star detail. These changes are unreleased;
-the stable v1.3.0 download below retains its original interaction behavior.
+While tasks run, a click-through card above the character shows one block per
+open app (Codex desktop or CLI, Claude desktop or CLI): context, 5-hour and
+weekly amounts left with reset countdowns. A window the account does not have
+is not drawn. Click the character to open the full usage panel. **Usage panel
+(always shown)** in the character's right-click menu keeps it open and on top;
+it starts unchecked every time Petoken opens.
 
-The development branch adds a native Home / Projects / Todos / Notes workbench,
-opened from the Hub, character menu or tray. Personal records stay on this device
-in `%LOCALAPPDATA%\CodexWisp\workbench.sqlite3`; notes use explicit Save / Ctrl+S
-and protect unsaved drafts on navigation or exit. It uses current accepted Codex
-tasks for optional project links and the existing task detail view.
+### Workbench
 
-A skippable Chinese/English first-use tutorial explains the pet and walks through
-projects, todos, notes and task stars. Reopen Getting started from the workbench,
-character menu or tray; completing or skipping the guide is remembered locally.
+A native Home / Projects / Todos / Notes workbench opens from the Hub,
+character menu or tray. Personal records stay on this device in
+`%LOCALAPPDATA%\CodexWisp\workbench.sqlite3`; notes use explicit Save / Ctrl+S
+and protect unsaved drafts on navigation or exit. Codex and Claude Code tasks
+can be linked to projects. A skippable Chinese/English first-use tutorial
+explains the pet and the workbench.
 
-This is not part of the published v1.3.0 download. For the isolated development
-package, use `preview-workbench.cmd` and the
-[workbench QA guide](docs/V1_4_WORKBENCH_QA.md). Sample records are temporary.
-
-### Current Codex source
+### Source status
 
 | Source | Status | What you get |
 | --- | --- | --- |
-| Codex desktop client | Supported in v1.3.0 | Verified usage totals, available 5-hour / weekly quotas with resets, supported API-equivalent cost, working/idle context |
-| Claude Code (CLI / desktop Code tab) | In development (V1.5) | Deduplicated usage totals, API-equivalent cost from Anthropic list prices, working/idle from Claude Code's session registry; 5-hour / weekly limits after turning on **Settings → Sync Claude usage** (Pro/Max, via Claude Code's status line), otherwise N/A |
+| Codex desktop client and CLI | Supported | Verified usage totals, available 5-hour / weekly quotas with resets, supported API-equivalent cost, working/idle context |
+| Claude Code (CLI / desktop Code tab) | Supported since v1.4.0 | Deduplicated usage totals, API-equivalent cost from Anthropic list prices, working/idle from Claude Code's session registry; 5-hour / weekly limits after turning on **Settings → Sync Claude usage** (Pro/Max, via Claude Code's status line), otherwise N/A |
 
-If the Codex source is missing or stale, its views show that limitation honestly. Historical v1.2.0 provider behavior is recorded in its release notes; alternate-provider tracking is no longer part of the current product.
+If a source is missing or stale, its views show that limitation honestly. No other provider is read.
 
 ## Install and use
 
-1. Download `Petoken-v1.3.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.3.0).
+1. Download `Petoken-v1.4.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.4.0).
 2. Extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
-3. For Codex tracking, keep the Codex desktop client running (live Working state needs a verified active task). For an isolated demonstration, run `preview-v1.3.cmd`; its tasks are synthetic and it does not save your settings.
+3. Use Codex or Claude Code as usual; Petoken follows their running tasks. Optionally turn on **Settings → Sync Claude usage** for Claude quotas. For an isolated demonstration of both providers, run `preview-v1.5.cmd` (`preview-workbench.cmd` for the workbench); their data is synthetic and they do not save your settings.
 
-Interact: hover about 0.35 s or click the character to open the panel, move away about 0.7 s to hide it; drag to move; right-click for the menu; `Alt + Arrow keys` moves the panel.
+Interact: click the character to open the panel; drag to move; right-click for the menu; `Alt + Arrow keys` moves the panel.
 
 ## Privacy / local-first
 
-- Petoken reads local Codex task metadata and numeric usage events, window task titles and activity state, and memory-only media metadata for the music display. The V1.5 development branch also reads Claude Code's local session transcripts — numeric usage and session metadata only; message content is discarded in memory — and its live-session registry. No other provider's data is read.
+- Petoken reads local Codex task metadata and numeric usage events, window task titles and activity state, and memory-only media metadata for the music display. It also reads Claude Code's local session transcripts — numeric usage and session metadata only; message content is discarded in memory — and its live-session registry. No other provider's data is read.
 - **Sync Claude usage** is opt-in: it adds a status-line command to Claude Code's settings (backed up first) that keeps only usage numbers. Turn it off in Settings to remove it.
 - Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere.
 - Details: [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) and [`SECURITY.md`](SECURITY.md).
@@ -120,8 +115,9 @@ Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.3.0 release notes: [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
-- Visual QA checklist (human accepted): [`docs/V1_3_VISUAL_QA.md`](docs/V1_3_VISUAL_QA.md)
+- v1.4.0 release notes: [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md)
+- Visual QA checklist (human accepted): [`docs/V1_5_DUAL_PROVIDER_QA.md`](docs/V1_5_DUAL_PROVIDER_QA.md)
+- Previous release notes: [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
 - Historical v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)
 
 ## Community and licensing
