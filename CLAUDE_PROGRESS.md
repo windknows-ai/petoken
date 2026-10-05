@@ -4,7 +4,7 @@
 
 Codex compatibility layer (`cd637e1`) merged as `116fb9a`; compatibility notice and V1.5 preview added in `3809953`. Full suite after merge: 1042 tests, all pass. **Waiting for the maintainer's visual QA.**
 
-- Package: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-05-v1.5-dual-provider\package-dev\petoken\` — launcher `preview-v1.5.cmd`, checklist `V1_5_DUAL_PROVIDER_QA.md`. EXE SHA256 `2b91d275a9d738c9a5550c8245776daf9a6b20e1e8f941cf9889b67e786f703d`; ZIP `ce703ca9b196514a2b90f8e44717b1e0f73c1e5bcbe451cfcc2fc6fa27171489`. Frozen smoke capture `frozen-mixed.png` shows blue Codex and gold Claude stars.
+- Package: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-05-v1.5-dual-provider\package-dev\petoken\` — launcher `preview-v1.5.cmd`, checklist `V1_5_DUAL_PROVIDER_QA.md`. EXE SHA256 `a9bdc92fb69ab5d7a5593b1c78fc295c3ca6323d29473827ac4a29f96a060e7a`; ZIP `820cdcf577083a5ca21314ea8be42160b72239a38ae5179d6ae8d4d1bba6f43d` (rebuilt from `cb52d3b`). Frozen capture `frozen-ring.png` shows blue Codex and gold Claude stars with a matching ring gradient.
 - Codex compatibility notice: Hub connection label appends 部分兼容 / Partly compatible (or 格式无法识别) when `payload['compatibility']['status']` is partial/unsupported; tooltip lists version and reasons. On this machine Codex 0.156.1 reports partial (`partial_usage_history`, `unknown_quota_structure`).
 
 - `claude_usage.py`: Claude Code adapter. Reads `~/.claude/projects/**/*.jsonl` incrementally (complete lines only), dedupes repeated usage by `message.id`, skips `<synthetic>`, maps Anthropic usage into the shared token schema, prices via `pricing.estimate_claude_usd`. Liveness from `~/.claude/sessions/<pid>.json` (`busy` + same pid and creation time alive). Session project = its start directory. Content never retained.
@@ -20,7 +20,8 @@ Codex compatibility layer (`cd637e1`) merged as `116fb9a`; compatibility notice 
 
 - [x] Merged `codex/v1.5-codex-compat` (only Codex files touched; full suite passes) and surfaced its compatibility status in the Hub.
 - [x] Built the isolated package for visual QA.
-- [ ] Act on the maintainer's visual QA findings. Release/main merge only on explicit authorization.
+- [x] QA round 1 fixes (`cb52d3b`): preview Settings save (synthetic poller rejected `mark_provider`), pinned-Hub X now closes + unpins with a pointing cursor, ring and trails tinted by nearby star colours (blue/gold, meeting through lavender).
+- [ ] Next maintainer QA round. Release/main merge only on explicit authorization.
 
 ## Open questions for the maintainer
 
