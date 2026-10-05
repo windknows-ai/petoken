@@ -1,3 +1,8 @@
+import os as _os
+import tempfile as _tempfile
+# Hermetic Claude lane: a never-created home keeps real ~/.claude data out.
+_os.environ.setdefault('PETOKEN_CLAUDE_HOME', _os.path.join(
+    _tempfile.gettempdir(), 'petoken-tests-no-claude-home'))
 import hashlib
 import tempfile
 import threading
@@ -703,13 +708,17 @@ class ProviderUiTests(unittest.TestCase):
         self.panel.provider_poller = ProviderPoller(home)
         return self.panel.provider_poller
 
-    def test_settings_exposes_no_visible_provider_selector(self):
+    def test_settings_exposes_auto_codex_and_claude_selector(self):
         settings = Settings(self.panel)
         settings.show()
         self.app.processEvents()
-        tracking = getattr(settings, 'tracking', None)
-        self.assertTrue(tracking is None or not tracking.isVisible())
-        self.assertEqual(self.panel.prefs['tracking_provider'], 'codex')
+        tracking = settings.tracking
+        self.assertTrue(tracking.isVisible())
+        self.assertEqual([tracking.itemData(i) for i in range(tracking.count())],
+                         ['auto', 'codex', 'claude'])
+        self.assertEqual([tracking.itemText(i) for i in range(1, tracking.count())],
+                         ['Codex', 'Claude Code'])
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'auto')
         settings.close()
 
     def test_legacy_preference_does_not_switch_provider_or_context(self):
@@ -717,7 +726,8 @@ class ProviderUiTests(unittest.TestCase):
         before = self._poll_render(active_title='t1', detection_valid=True, now=NOW_S)
         for legacy in ('auto', 'opencode', 'unknown'):
             after = self._apply_render({'scope': 'global', 'tracking_provider': legacy}, now=NOW_S)
-            self.assertEqual(after['preference'], 'codex')
+            # Retired choices open Auto; with no Claude data Codex serves.
+            self.assertEqual(after['preference'], 'auto')
             self.assertEqual(after['result']['provider_id'], 'codex')
             self.assertEqual(after['result']['tokens'], before['result']['tokens'])
             self.assertNotIn('OpenCode', self.panel.connection.text())
@@ -4474,7 +4484,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         self.app.processEvents()
         snapshot = self.panel.snapshot
         self.assertEqual(len(snapshot.get('active_tasks') or []), 2)
-        self.assertEqual(snapshot.get('preference'), 'codex')
+        self.assertEqual(snapshot.get('preference'), 'auto')
         self._assert_exact_coverage(snapshot)
         self.assertEqual(
             {k: self.manager.label_number_for(k)
@@ -4589,7 +4599,7 @@ class MultiTaskIntegrationTests(unittest.TestCase):
                         self.manager.slot_for(key)) for key in self.manager.window_identities()}
         for preference in ('auto', 'opencode', 'codex', 'unknown'):
             out = self._apply_publish({'tracking_provider': preference})
-            self.assertEqual(out['preference'], 'codex')
+            self.assertEqual(out['preference'], 'codex' if preference == 'codex' else 'auto')
             self.assertEqual(set(self._assert_exact_coverage(out)), set(before))
             for key, (orb, number, slot) in before.items():
                 self.assertIs(self.manager.window_for(key), orb)

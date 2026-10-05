@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt,QTimer,QPoint,QPointF,QRectF,QSize
 from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QFontMetrics,QPen,QKeySequence,QShortcut
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
+from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 import pet_assets as assets
 import pet_geometry as geometry
 import halo_geometry
@@ -154,14 +155,14 @@ class DesktopPet(QWidget):
             self.update()
 
     def update_data(self,data):
-        if (data or {}).get('provider_id', 'codex') != 'codex':
+        if (data or {}).get('provider_id', 'codex') not in PROVIDER_REGISTRY:
             return
         self.snapshot=data
         # An explicitly absent working_context retires the previous
         # live context at once: hysteresis may preserve animation
         # timing, never a false Working label or stale token data.
         self.working_context=(data or {}).get('working_context') or None
-        if (self.working_context or {}).get('provider_id', 'codex') != 'codex':
+        if (self.working_context or {}).get('provider_id', 'codex') not in PROVIDER_REGISTRY:
             self.working_context = None
         context=self.working_context or data
         t=context.get('tokens',{})
@@ -173,8 +174,9 @@ class DesktopPet(QWidget):
         total_text=format_tokens(t.get('total_tokens'),style)
         in_text=format_tokens(t.get('input_tokens'),style)
         out_text=format_tokens(t.get('output_tokens'),style)
-        provider_line='Codex · ' if provider == 'codex' else ''
-        title=context.get('title') or self.tr_text('codex_working')
+        provider_line=(PROVIDER_NAMES[provider] + ' · ') if provider in PROVIDER_NAMES else ''
+        title=context.get('title') or self.tr_text(
+            'claude_working' if provider == 'claude' else 'codex_working')
         project=context.get('project') or self.tr_text('project_unavailable')
         self.setToolTip(provider_line+f"{project} · {title}\n{context.get('model') or '—'} · {context.get('effort') or '—'}\n"+
                        self.tr_text('pet_tooltip_tokens',total=total_text,

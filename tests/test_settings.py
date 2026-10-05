@@ -58,7 +58,8 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(loaded["future_setting"], {"kept": True})
 
     def test_older_schema_is_upgraded_and_future_schema_is_preserved(self):
-        self.assertEqual(load_preferences_from({"settings_schema_version": 0})["settings_schema_version"], 1)
+        self.assertEqual(load_preferences_from({"settings_schema_version": 0})["settings_schema_version"], 2)
+        self.assertEqual(SETTINGS_SCHEMA_VERSION, 2)
         self.assertEqual(load_preferences_from({"settings_schema_version": 3})["settings_schema_version"], 3)
 
     def test_language_preference_persists_through_atomic_save(self):
@@ -97,47 +98,56 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(loaded["currency"], "USD")
 
 
-    def test_tracking_provider_defaults_codex_and_persists(self):
-        self.assertEqual(DEFAULT_PREFERENCES["tracking_provider"], "codex")
+    def test_tracking_provider_defaults_auto_and_choices_persist(self):
+        self.assertEqual(DEFAULT_PREFERENCES["tracking_provider"], "auto")
         self.assertEqual(load_preferences(self.path)["tracking_provider"],
-                         "codex")
-        save_preferences(self.path, {"tracking_provider": "codex"})
-        self.assertEqual(load_preferences(self.path)["tracking_provider"],
-                         "codex")
+                         "auto")
+        for choice in ("codex", "claude", "auto"):
+            save_preferences(self.path, {"tracking_provider": choice,
+                                         "settings_schema_version": 2})
+            self.assertEqual(load_preferences(self.path)["tracking_provider"],
+                             choice)
 
     def test_tracking_provider_invalid_and_legacy_fall_back(self):
         save_preferences(self.path, {"tracking_provider": "All Providers"})
         self.assertEqual(load_preferences(self.path)["tracking_provider"],
-                         "codex")
+                         "auto")
         self.assertEqual(
             load_preferences_from({"scope": "global"})["tracking_provider"],
+            "auto")
+        self.assertEqual(
+            load_preferences_from(
+                {"tracking_provider": " Codex ",
+                 "settings_schema_version": 2})["tracking_provider"],
             "codex")
+        # The forced Codex value written by Codex-only builds opens Auto.
         self.assertEqual(
             load_preferences_from(
                 {"tracking_provider": " Codex "})["tracking_provider"],
-            "codex")
+            "auto")
 
     def test_retired_choices_normalize_without_rewriting_on_load(self):
         self.path.parent.mkdir(parents=True)
-        for retired in ("auto", "opencode", "All Providers", None):
+        for retired in ("codex", "opencode", "All Providers", None):
             with self.subTest(retired=retired):
                 original = json.dumps({"tracking_provider": retired,
                                        "pinned": "thread-1",
                                        "future_setting": {"kept": True}})
                 self.path.write_text(original, encoding="utf-8")
                 loaded = load_preferences(self.path)
-                self.assertEqual(loaded["tracking_provider"], "codex")
+                self.assertEqual(loaded["tracking_provider"], "auto")
                 self.assertEqual(loaded["pinned"], "thread-1")
                 self.assertEqual(loaded["future_setting"], {"kept": True})
                 self.assertEqual(self.path.read_text(encoding="utf-8"), original)
 
-    def test_saving_retired_choice_persists_codex_only(self):
-        for retired in ("auto", "opencode"):
+    def test_saving_retired_choice_persists_auto(self):
+        for retired in ("opencode", "All Providers"):
             with self.subTest(retired=retired):
                 save_preferences(self.path, {"tracking_provider": retired})
-                self.assertEqual(load_preferences(self.path)["tracking_provider"], "codex")
-                self.assertEqual(json.loads(self.path.read_text(encoding="utf-8"))[
-                    "tracking_provider"], "codex")
+                self.assertEqual(load_preferences(self.path)["tracking_provider"], "auto")
+                saved = json.loads(self.path.read_text(encoding="utf-8"))
+                self.assertEqual(saved["tracking_provider"], "auto")
+                self.assertEqual(saved["settings_schema_version"], 2)
 
 
 def load_preferences_from(data):

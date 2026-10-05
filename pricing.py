@@ -23,6 +23,87 @@ MODEL_PRICES = {
     'gpt-5.6-luna': (.2, .02, .25, 1.2),
 }
 
+# Claude Code (Anthropic first-party API) USD / million tokens, verified
+# 2026-10-05: https://platform.claude.com/docs/en/about-claude/pricing
+# Order: base input, cache hits/refreshes, output. Cache writes derive from
+# base input (5-minute 1.25x, 1-hour 2x); dated snapshot IDs share their
+# family price. Unknown models stay unknown and never borrow a price.
+CLAUDE_PRICES = {
+    'claude-fable-5-1': (10, .25, 50),
+    'claude-mythos-5-1': (10, .25, 50),
+    'claude-fable-5': (10, 1, 50),
+    'claude-mythos-5': (10, 1, 50),
+    'claude-opus-5-5': (4, .2, 20),
+    'claude-opus-5': (5, .5, 25),
+    'claude-opus-4-8': (5, .5, 25),
+    'claude-opus-4-7': (5, .5, 25),
+    'claude-opus-4-6': (5, .5, 25),
+    'claude-opus-4-5': (5, .5, 25),
+    'claude-opus-4-1': (15, 1.5, 75),
+    'claude-opus-4': (15, 1.5, 75),
+    'claude-sonnet-5-5': (2, .2, 10),
+    'claude-sonnet-5': (2, .2, 10),
+    'claude-sonnet-4-6': (3, .3, 15),
+    'claude-sonnet-4-5': (3, .3, 15),
+    'claude-sonnet-4': (3, .3, 15),
+    'claude-haiku-4-5': (1, .1, 5),
+    'claude-haiku-3-5': (.8, .08, 4),
+}
+# Fast mode doubles every rate (caching multipliers stack on top) only on
+# these models; elsewhere a fast request runs and bills at standard rates.
+CLAUDE_FAST_MODELS = frozenset({'claude-opus-5-5', 'claude-opus-5',
+                                'claude-opus-4-8'})
+# US-only inference (inference_geo "us") is 1.1x on Claude 4.6 and later.
+_CLAUDE_PRE_GEO = frozenset({'claude-opus-4-5', 'claude-opus-4-1',
+                             'claude-opus-4', 'claude-sonnet-4-5',
+                             'claude-sonnet-4', 'claude-haiku-4-5',
+                             'claude-haiku-3-5'})
+
+
+def claude_price_model(model):
+    """Price-table key for a recorded Claude model ID, or ``None``."""
+    if not isinstance(model, str):
+        return None
+    name = model.strip().lower()
+    head, _, tail = name.rpartition('-')
+    if head and len(tail) == 8 and tail.isdigit():
+        name = head  # Dated snapshot: claude-haiku-4-5-20251001.
+    return name if name in CLAUDE_PRICES else None
+
+
+def estimate_claude_usd(usage, model):
+    """API-equivalent USD for one Claude response ``usage``; ``None`` if unknown.
+
+    Anthropic ``input_tokens`` already exclude cache reads and writes, so the
+    four categories are disjoint. A cache write without its 5m/1h split is
+    priced as 5-minute writes (the API default), the cheaper reading.
+    """
+    key = claude_price_model(model)
+    if key is None or not isinstance(usage, dict):
+        return None
+    def tokens(name):
+        value = usage.get(name)
+        return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+    plain, read, write, out = (tokens('input_tokens'), tokens('cache_read_input_tokens'),
+                               tokens('cache_creation_input_tokens'), tokens('output_tokens'))
+    if plain is None or out is None:
+        return None
+    read, write = read or 0, write or 0
+    base, hit, output = CLAUDE_PRICES[key]
+    split = usage.get('cache_creation')
+    long_write = 0
+    if isinstance(split, dict):
+        value = split.get('ephemeral_1h_input_tokens')
+        long_write = min(write, value) if isinstance(value, int) and value > 0 else 0
+    cost = (plain * base + read * hit + (write - long_write) * base * 1.25
+            + long_write * base * 2 + out * output) / 1_000_000
+    if usage.get('speed') == 'fast' and key in CLAUDE_FAST_MODELS:
+        cost *= 2
+    if usage.get('inference_geo') == 'us' and key not in _CLAUDE_PRE_GEO:
+        cost *= 1.1
+    return cost if math.isfinite(cost) else None
+
+
 SUPPORTED_CURRENCIES = ("USD", "CAD", "EUR", "CNY")
 DEFAULT_CURRENCY = "CAD"
 

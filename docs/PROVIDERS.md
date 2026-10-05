@@ -1,8 +1,49 @@
-# Current V1.3 source: Codex
+# Current V1.5 sources: Codex and Claude Code
 
-The current product is a Codex desktop companion. Runtime tracking, settings, task Stars and isolated QA previews are Codex-only. Legacy alternate-provider preferences migrate to Codex; no alternate-provider choice is exposed in the current application.
+V1.5 tracks exactly two providers: Codex and Claude Code. No other provider
+will be added. Settings offer Auto (default), Codex or Claude Code. Auto
+follows the provider whose task is verifiably working, and stars show both
+providers' working tasks: Codex stars are blue, Claude Code stars are gold.
+A manual choice shows only that provider in the Hub and the stars. Legacy
+OpenCode preferences migrate to Auto, and so does the forced `codex` value
+that Codex-only builds (settings schema 1) saved without a user choice.
 
-Read only Codex numeric usage/task metadata. Unknown model remains Unknown, unavailable usage/quota/cost remains N/A, real zero remains zero, and partial coverage remains explicit. Model pricing must support any API-equivalent cost estimate. Working/Idle evidence does not establish finer task phases.
+## Claude Code (V1.5) verification record
+
+Verified on Windows against Claude Code 2.1.286 (CLI and the desktop app's
+Code tab share one data directory). Adapter: `claude_usage.py`.
+
+- **Data directory**: `%USERPROFILE%\.claude`, or `CLAUDE_CONFIG_DIR`.
+  `PETOKEN_CLAUDE_HOME` overrides it for tests and isolated QA only.
+- **Transcripts**: `projects/<encoded launch dir>/<sessionId>.jsonl`, one
+  JSON object per line; subagent transcripts carry their parent's
+  `sessionId`. Only `type: "assistant"` lines carry `message.usage`.
+- **Duplicated usage**: one API response is written as several lines (one
+  per content block) that repeat identical usage. Records dedupe by
+  `message.id` (fallback `requestId`); counting lines would multiply tokens.
+- **Usage fields**: `input_tokens`, `cache_read_input_tokens`,
+  `cache_creation_input_tokens` with a `cache_creation` split
+  (`ephemeral_5m_input_tokens` / `ephemeral_1h_input_tokens`),
+  `output_tokens`, `output_tokens_details.thinking_tokens`, `speed`,
+  `inference_geo`. `message.model` names the model; `<synthetic>` marks
+  locally generated messages without API usage and is skipped.
+- **Metadata used**: `sessionId`, `timestamp`, `cwd`, `gitBranch`, `effort`,
+  `version`, `isSidechain`, and `custom-title` lines (session title). A
+  session belongs to the directory it started in.
+- **Live sessions**: each running process writes `sessions/<pid>.json`
+  with `sessionId`, `cwd`, `status` (`busy` while a turn runs),
+  `statusUpdatedAt` (ms), optional `name` and `procStart`. `procStart`
+  equals the process creation FILETIME reported by `GetProcessTimes`, so
+  a session is Working only when its entry is `busy` AND that exact
+  process (pid plus creation time) is alive. A missing registry makes
+  activity unknown, never idle.
+- **Not available locally**: subscription 5-hour/weekly limits, reset
+  times, the context window and billed amounts. These stay `N/A`.
+- **Privacy**: transcript lines are parsed in memory only to reach numeric
+  usage and the metadata above; message content, prompts, tool input and
+  output are never stored, displayed, logged or exported.
+
+Read only numeric usage/task metadata. Unknown model remains Unknown, unavailable usage/quota/cost remains N/A, real zero remains zero, and partial coverage remains explicit. Model pricing must support any API-equivalent cost estimate. Working/Idle evidence does not establish finer task phases.
 
 The former OpenCode adapter and its low-level tests remain internal historical compatibility material while active runtime/UI/configuration paths are removed. They do not constitute a supported current provider, an active polling lane, or authorization to read its store. The records below are retained to preserve verified history and shared-infrastructure reasoning; they describe earlier slices and the released v1.2.0 product, not current V1.3 behavior.
 

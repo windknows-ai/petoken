@@ -63,3 +63,29 @@ This calculation is shown only when the actual source provides every component a
 ## Cost estimate
 
 Cost uses the recorded model and service tier, official per-million-token rates, OpenAI's long-context threshold/rates when applicable, and a dated Bank of Canada USD/CAD observation. Reasoning is priced as part of output. An unknown model price, partial token coverage or unavailable cache-write split is labelled as a partial API-equivalent estimate, never a subscription charge.
+
+## Claude Code (V1.5)
+
+Claude Code records Anthropic usage per API response. Anthropic
+`input_tokens` exclude cache traffic, so `claude_usage.map_usage` converts
+each deduplicated response into the shared categories above:
+
+| Shared field | Claude Code source |
+| --- | --- |
+| `input_tokens` | `input_tokens + cache_read_input_tokens + cache_creation_input_tokens` |
+| `cached_input_tokens` | `cache_read_input_tokens` |
+| `cache_write_input_tokens` | `cache_creation_input_tokens` |
+| `output_tokens` | `output_tokens` (thinking included) |
+| `reasoning_output_tokens` | `output_tokens_details.thinking_tokens`, else unknown |
+| `total_tokens` | `input_tokens + output_tokens` (shared field) |
+
+Any missing category leaves the derived input and total unknown instead of
+zero. The derived analytics then hold for both providers: uncached input
+minus cache writes equals Anthropic's own `input_tokens`.
+
+The cost estimate (`pricing.estimate_claude_usd`) uses Anthropic's
+first-party price table: base input, cache hits/refreshes and output per
+model, cache writes at 1.25x (5 minutes) or 2x (1 hour) of base input from
+the recorded split, 2x for fast mode on Opus 5.5 / Opus 5 / Opus 4.8 and
+1.1x for US-only inference on Claude 4.6 and later. Dated snapshot IDs use
+their family price; unknown models stay unpriced (`N/A`).

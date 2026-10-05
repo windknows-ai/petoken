@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from widget import Panel
@@ -124,6 +125,25 @@ class WorkbenchIntegrationTests(unittest.TestCase):
         self.panel.open_workbench()
         self.assertEqual(window.task_list.count(), 3)
         self.assertEqual(manager.total_task_count(), 3)
+
+    def test_claude_tasks_are_listed_but_never_linked_to_projects(self):
+        manager = self.panel.task_manager
+        manager.apply_snapshot(fixture_tasks(2))  # Codex #1, Claude Code #2.
+        self.panel.open_workbench()
+        self.app.processEvents()
+        window = self.panel.workbench_window
+        items = {window.task_list.item(i).data(Qt.UserRole): window.task_list.item(i)
+                 for i in range(window.task_list.count())}
+        claude = ('claude', 'claude:synthetic-qa-2')
+        self.assertTrue(items[claude].text().endswith(' · Claude Code'))
+        window.task_list.setCurrentItem(items[claude])
+        items[claude].setSelected(True)
+        window._update_actions()
+        self.assertTrue(window.task_detail_button.isEnabled())
+        self.assertFalse(window.task_link_button.isEnabled())
+        self.assertFalse(window.assign_task(claude, None))
+        self.assertNotIn(claude, window.store.task_links())
+        window.close()
 
 
 if __name__ == '__main__':

@@ -96,32 +96,47 @@ class FailClosedDefaultsTests(unittest.TestCase):
 
 class PreferenceTests(unittest.TestCase):
     def test_normalize_tracking_provider(self):
-        self.assertEqual(normalize_tracking_provider('auto'), 'codex')
+        self.assertEqual(normalize_tracking_provider('auto'), 'auto')
         self.assertEqual(normalize_tracking_provider(' Codex '), 'codex')
-        self.assertEqual(normalize_tracking_provider('OPENCODE'), 'codex')
+        self.assertEqual(normalize_tracking_provider(' Claude '), 'claude')
+        self.assertEqual(normalize_tracking_provider('OPENCODE'), 'auto')
         for legacy in (None, '', 'all', 'All Providers', 5, True, ['auto']):
-            self.assertEqual(normalize_tracking_provider(legacy), 'codex')
+            self.assertEqual(normalize_tracking_provider(legacy), 'auto')
 
     def test_preferences_round_trip_isolated(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'prefs.json'
             save_preferences(path, {'tracking_provider': 'opencode'})
             self.assertEqual(load_preferences(path)['tracking_provider'],
-                             'codex')
+                             'auto')
             save_preferences(path, {'tracking_provider': 'bogus'})
             loaded = load_preferences(path)
-            self.assertEqual(loaded['tracking_provider'], 'codex')
+            self.assertEqual(loaded['tracking_provider'], 'auto')
             # Legacy files without the key gain the default; old keys stay.
             save_preferences(path, {'scope': 'global'})
             loaded = load_preferences(path)
-            self.assertEqual(loaded['tracking_provider'], 'codex')
+            self.assertEqual(loaded['tracking_provider'], 'auto')
             self.assertEqual(loaded['scope'], 'global')
 
     def test_normalize_keeps_existing_keys(self):
         prefs = normalize_preferences({'tracking_provider': 'codex',
+                                       'settings_schema_version': 2,
                                        'custom': 1})
         self.assertEqual((prefs['tracking_provider'], prefs['custom']),
                          ('codex', 1))
+
+    def test_forced_codex_from_codex_only_builds_migrates_once_to_auto(self):
+        # V1.3/V1.4 had no provider choice and saved the forced value.
+        for raw in ({'tracking_provider': 'codex'},
+                    {'tracking_provider': 'codex', 'settings_schema_version': 1}):
+            migrated = normalize_preferences(raw)
+            self.assertEqual(migrated['tracking_provider'], 'auto')
+            self.assertEqual(migrated['settings_schema_version'], 2)
+            # A Codex choice saved by V1.5 itself is a real choice and stays.
+            again = normalize_preferences(dict(migrated, tracking_provider='codex'))
+            self.assertEqual(again['tracking_provider'], 'codex')
+        claude = normalize_preferences({'tracking_provider': 'claude'})
+        self.assertEqual(claude['tracking_provider'], 'claude')
 
 
 class ManualSelectionTests(unittest.TestCase):
@@ -1151,10 +1166,10 @@ class SyntheticThirdProviderTests(unittest.TestCase):
 
 
 class TrackingPreferenceTests(unittest.TestCase):
-    def test_unknown_persisted_preference_falls_back_to_codex(self):
-        self.assertEqual(normalize_tracking_provider('synthetic'), 'codex')
-        self.assertEqual(normalize_tracking_provider(''), 'codex')
-        self.assertEqual(normalize_tracking_provider(None), 'codex')
+    def test_unknown_persisted_preference_falls_back_to_auto(self):
+        self.assertEqual(normalize_tracking_provider('synthetic'), 'auto')
+        self.assertEqual(normalize_tracking_provider(''), 'auto')
+        self.assertEqual(normalize_tracking_provider(None), 'auto')
 
     def test_manual_codex_back_to_auto_resumes_ranking(self):
         sel = ProviderSelection(('codex', 'opencode'))

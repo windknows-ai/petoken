@@ -1,19 +1,21 @@
-"""Minimal provider result contract with a Codex-only wrapper (V1.2 slice 2).
+"""Minimal provider result contract and the active provider registry.
 
 Wraps existing CodexStore reads and quota payloads with provider identity,
 capabilities, and freshness metadata. Every Codex field passes through
 untouched: the same Codex input produces equivalent values. The active
-product registry contains Codex alone; historical adapters are never
-imported or registered here. There are no combined totals.
+product registry holds exactly Codex and Claude Code (V1.5); the Claude
+adapter lives in claude_usage.py. Historical adapters are never imported
+or registered here. There are no combined totals.
 """
 from __future__ import annotations
 
 import time
 
 PROVIDER_CODEX = 'codex'
+PROVIDER_CLAUDE = 'claude'
 # Historical adapter identity only; absent from the active product registry.
 PROVIDER_OPENCODE = 'opencode'
-PROVIDER_NAMES = {PROVIDER_CODEX: 'Codex'}
+PROVIDER_NAMES = {PROVIDER_CODEX: 'Codex', PROVIDER_CLAUDE: 'Claude Code'}
 
 # Known Codex capabilities (fixed, factual per V1.1 behavior). Anything not
 # listed here is unsupported until a later slice proves it.
@@ -26,15 +28,33 @@ CODEX_CAPABILITIES = frozenset({
     'fork_accounting',   # fork-deduplicated aggregation
     'nullable_fields',   # explicit unknown instead of zero-filled
 })
+# Claude Code capabilities proven by claude_usage.py. No quotas: Claude
+# subscription limits are not readable locally and stay unavailable.
+CLAUDE_CAPABILITIES = frozenset({
+    'scopes',            # global / project (by cwd) / conversation (session)
+    'working_context',   # session registry reports a busy, live process
+    'cost_estimate',     # API-equivalent estimate from recorded usage
+    'history',           # on-demand history detail
+    'nullable_fields',   # explicit unknown instead of zero-filled
+})
+
+
 def _codex_capabilities():
     return CODEX_CAPABILITIES
 
 
-# Current product boundary. Historical adapter source remains isolated and
-# is not imported, selectable or polled by the application.
+def _claude_capabilities():
+    return CLAUDE_CAPABILITIES
+
+
+# Current product boundary, in display order: Codex, then Claude Code.
+# Historical adapter source remains isolated and is not imported,
+# selectable or polled by the application.
 PROVIDER_REGISTRY = {
     PROVIDER_CODEX: dict(display_name='Codex',
                          capabilities=_codex_capabilities),
+    PROVIDER_CLAUDE: dict(display_name='Claude Code',
+                          capabilities=_claude_capabilities),
 }
 
 

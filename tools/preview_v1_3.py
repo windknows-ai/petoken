@@ -26,6 +26,8 @@ from providers import active_task
 from widget import Panel
 
 FIXTURE_CASES = ('known', 'zero', 'unknown', 'partial', 'same_project', 'long_labels')
+# Synthetic task sources: mixed alternates Codex (blue) and Claude Code (gold).
+SOURCES = ('mixed', 'codex', 'claude')
 MAX_TASKS = 64
 ANCHORS = ('center', 'left', 'right', 'top', 'bottom',
            'top-left', 'top-right', 'bottom-left', 'bottom-right')
@@ -38,14 +40,27 @@ class SyntheticHubPoller:
 
     def apply_settings(self, prefs):
         data = self.preview.hub_snapshot(prefs)
-        return dict(result=data, active_tasks=data['active_tasks'], preference='codex')
+        return dict(result=data, active_tasks=data['active_tasks'],
+                    preference=data['preference'])
 
     def close(self):
         self.preview = None
 
 
-def fixture_tasks(count=3, case='known'):
-    """Build explicitly synthetic, distinct Codex task-local projections."""
+def task_provider(index, source='mixed'):
+    """Synthetic provider of task ``index`` (0-based) for one source mode."""
+    if source == 'mixed':
+        return 'claude' if index % 2 else 'codex'
+    return source
+
+
+def task_key(index, source='mixed'):
+    key = f'synthetic-qa-{index + 1}'
+    return f'claude:{key}' if task_provider(index, source) == 'claude' else key
+
+
+def fixture_tasks(count=3, case='known', source='mixed'):
+    """Build explicitly synthetic, distinct task-local projections."""
     tasks = []
     for index in range(count):
         unknown, zero = case == 'unknown', case == 'zero'
@@ -62,7 +77,7 @@ def fixture_tasks(count=3, case='known'):
         if case == 'long_labels':
             project += ' — Long project label / 较长项目名称' * 8
             model += '-long-model-label' * 12
-        tasks.append(active_task('codex', f'synthetic-qa-{index + 1}',
+        tasks.append(active_task(task_provider(index, source), task_key(index, source),
             activity_at=time.time(), display=dict(project=project),
             presentation=dict(tokens=tokens, model=model,
                 effort=None if unknown else 'high', context=None,
@@ -73,14 +88,16 @@ def fixture_tasks(count=3, case='known'):
 
 
 class Preview(QWidget):
-    def __init__(self, count=3, language='en', case='known', anchor='center'):
+    def __init__(self, count=3, language='en', case='known', anchor='center',
+                 source='mixed'):
         super().__init__()
         self.closed = False
         self.generation = 0
         self.panel = Panel(live=False)
         self.panel.provider_poller.close()
         self.panel.provider_poller = SyntheticHubPoller(self)
-        self.panel.prefs.update(language=language, panel_pinned=True, tracking_provider='codex', scope='global')
+        self.panel.prefs.update(language=language, panel_pinned=True,
+                                tracking_provider=self.preference_for(source), scope='global')
         self.panel.pet = self.pet = DesktopPet(self.panel)
         self.pet.activity_timer.stop()
         # Arm only the existing presentation timer; Panel remains live=False.
@@ -95,7 +112,8 @@ class Preview(QWidget):
         self.count.setRange(0, MAX_TASKS)
         self.count.setValue(count)
         layout.addRow('Tasks / 任务数量', self.count)
-        layout.addRow('Source / 来源', QLabel('Codex — SYNTHETIC / 合成数据'))
+        self.provider = self.combo(SOURCES, source)
+        layout.addRow('Source / 来源 (SYNTHETIC / 合成)', self.provider)
         self.case = self.combo(FIXTURE_CASES, case)
         layout.addRow('Usage fixture / 用量样例', self.case)
         self.language = self.combo(('en', 'zh_CN'), language)
@@ -147,7 +165,7 @@ class Preview(QWidget):
         quit_button = QPushButton('Exit preview / 退出预览')
         quit_button.clicked.connect(self.close)
         layout.addRow(quit_button)
-        for control in (self.count, self.case, self.language):
+        for control in (self.count, self.case, self.language, self.provider):
             signal = control.valueChanged if isinstance(control, QSpinBox) else control.currentTextChanged
             signal.connect(self.refresh)
         self.pose.currentTextChanged.connect(self.set_pose)
@@ -160,6 +178,10 @@ class Preview(QWidget):
         self.set_pose()
 
     @staticmethod
+    def preference_for(source):
+        return 'auto' if source == 'mixed' else source
+
+    @staticmethod
     def combo(values, current):
         combo = QComboBox()
         combo.addItems(values)
@@ -170,7 +192,8 @@ class Preview(QWidget):
         if self.closed:
             return
         self.panel.prefs.update(language=self.language.currentText(),
-                                tracking_provider='codex')
+                                tracking_provider=self.preference_for(
+                                    self.provider.currentText()))
         self.panel.apply_language()
         self.panel.render(self.hub_snapshot())
         self.panel.connection.setText('SYNTHETIC QA — no provider connection / 无提供方连接')
@@ -183,7 +206,8 @@ class Preview(QWidget):
     def hub_snapshot(self, prefs=None):
         prefs = self.panel.prefs if prefs is None else prefs
         self.generation = max(self.generation, self.panel._render_generation or 0) + 1
-        tasks = fixture_tasks(self.count.value(), self.case.currentText())
+        source = self.provider.currentText()
+        tasks = fixture_tasks(self.count.value(), self.case.currentText(), source)
         if not self.source.isChecked():
             tasks = []
         chosen = next((task for task in tasks if task['task_key'] == prefs.get('pinned')), None)
@@ -202,8 +226,9 @@ class Preview(QWidget):
         available = bool(scoped) and all(task['presentation']['available'] for task in scoped)
         title = ('Synthetic QA task / 合成任务 ' + chosen['task_key'].rsplit('-', 1)[-1]
                  if chosen and scope == 'conversation' else 'Synthetic QA overview / 合成预览总览')
-        return dict(provider_id='codex', generation=self.generation,
-            preference='codex', active_tasks=tasks,
+        provider = (chosen or {}).get('provider_id') or task_provider(0, source)
+        return dict(provider_id=provider, generation=self.generation,
+            preference=self.preference_for(source), active_tasks=tasks,
             scope=scope, available=available, tokens=tokens, partial=True, usd=0,
             title=title, project=(chosen or {}).get('display', {}).get('project', 'Synthetic QA'),
             model=projection.get('model'), effort=projection.get('effort'),
@@ -212,7 +237,7 @@ class Preview(QWidget):
                   for i, task in enumerate(tasks)],
             scope_activity=dict(valid=self.source.isChecked(), active=bool(chosen)),
             notes=['synthetic_fixture_no_pricing'],
-            selection=dict(selected='codex', source_available=self.source.isChecked(), live=bool(tasks),
+            selection=dict(selected=provider, source_available=self.source.isChecked(), live=bool(tasks),
                            stale=False, activity_unknown=not self.source.isChecked()),
             codex_activity=dict(active=bool(tasks), valid=self.source.isChecked()))
 
@@ -287,7 +312,7 @@ class Preview(QWidget):
             self.panel.grab().save(str(output.with_stem(output.stem + '-hub')))
         output.with_suffix('.json').write_text(json.dumps(dict(
             kind='SYNTHETIC_QA', language=self.panel.language,
-            fixture=self.case.currentText(), provider='codex',
+            fixture=self.case.currentText(), provider=self.provider.currentText(),
             anchor=self.anchor.currentText(),
             live_provider_polling=bool(self.panel.live),
             requested_task_count=self.count.value(),
@@ -330,7 +355,8 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--count', type=int, choices=range(MAX_TASKS + 1), default=3)
     parser.add_argument('--language', choices=('en', 'zh_CN'), default='en')
-    parser.add_argument('--provider', choices=('codex',), default='codex')
+    parser.add_argument('--provider', choices=SOURCES, default='mixed',
+                        help='Synthetic task source; mixed alternates Codex and Claude Code')
     parser.add_argument('--anchor', choices=ANCHORS, default='center')
     parser.add_argument('--case', choices=FIXTURE_CASES, default='known')
     parser.add_argument('--expand', type=int, choices=range(1, MAX_TASKS + 1), metavar='TASK_NUMBER')
@@ -360,11 +386,14 @@ def main(argv=None):
     with ExitStack() as stack:
         directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-synthetic-qa-'))
         stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
-        preview = Preview(args.count, args.language, args.case, args.anchor)
+        preview = Preview(args.count, args.language, args.case, args.anchor,
+                          args.provider)
         preview.motion.setChecked(args.motion == 'on')
         preview.pose.setCurrentText(args.pose)
         if args.inspect is not None:
-            preview.panel.select_hub_task(('codex', f'synthetic-qa-{args.inspect}'))
+            index = args.inspect - 1
+            preview.panel.select_hub_task((task_provider(index, args.provider),
+                                           task_key(index, args.provider)))
         if args.scope:
             preview.panel.change_scope(args.scope)
         if args.expand is not None:

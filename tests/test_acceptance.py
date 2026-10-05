@@ -250,11 +250,13 @@ class CombinationTests(unittest.TestCase):
         self.assertEqual(len(seen), 2)
 
     def test_resized_language_and_scope_switches(self):
+        from widget import HUB_SIZE
         self.panel.show()
+        # V1.4 fixed Hub: a resize request never changes the accepted size.
         self.panel.resize(500, 500)
         self.render_combo('zh_CN', 'project', 'compact', 'CAD')
         self.render_combo('en', 'global', 'full', 'USD')
-        self.assertEqual((self.panel.width(), self.panel.height()), (500, 500))
+        self.assertEqual((self.panel.width(), self.panel.height()), HUB_SIZE)
         self.assertFalse(self.panel.grab().toImage().isNull())
         self.assertIn('Global', self.panel.scope_button.text())
 

@@ -291,6 +291,34 @@ class Bridge(QObject):
 # data, and never computes accounting: every visible value comes from the
 # task's own presentation projection, with N/A for unknown fields.
 
+# Per-provider star colors (V1.5): Codex stars are blue, Claude Code stars
+# are gold. Geometry, motion, number medallion and hit areas are shared;
+# only these fills change, so the provider reads at a glance.
+STAR_PALETTES = {
+    'codex': dict(
+        glow=((236, 244, 255, 170), (122, 170, 255, 100), (110, 150, 230, 0)),
+        fill=('#e6f0ff', '#ffffff', '#cfe4ff', '#6f9fe8'),
+        outline='#4f86e0',
+        cuts=('#c9dcfb', '#8fb6f0', '#a9c5f2', '#f2f7ff'),
+        halo=((140, 200, 255), (110, 160, 255)),
+        body=((190, 214, 255), (245, 249, 255), (110, 160, 240)),
+        inner=((216, 236, 255), (160, 205, 255))),
+    'claude': dict(
+        glow=((255, 248, 230, 170), (255, 200, 90, 105), (230, 170, 60, 0)),
+        fill=('#fff4d9', '#ffffff', '#ffe7ad', '#e0a93c'),
+        outline='#c98f22',
+        cuts=('#fbe3a8', '#f2c46a', '#f7d48a', '#fffaf0'),
+        halo=((255, 214, 140), (240, 180, 80)),
+        body=((255, 226, 160), (255, 250, 238), (226, 168, 60)),
+        inner=((255, 241, 205), (255, 220, 140))),
+}
+
+
+def star_palette(provider_id):
+    """Star colors for one provider; unknown providers use Codex blue."""
+    return STAR_PALETTES.get(provider_id, STAR_PALETTES['codex'])
+
+
 def task_identity(task):
     """Stable provider-scoped panel key: (provider_id, task_key).
 
@@ -322,14 +350,15 @@ def order_tasks(tasks):
 def filter_tasks_for_preference(tasks, preference):
     """Multi-task provider filter, independent of primary selection.
 
-    Auto shows every accepted task; a manual preference shows only that
-    provider's tasks. Pure subset over already-accepted sets: no debounce,
-    no provider reads, and the underlying snapshots are never mutated.
+    Auto shows every accepted task of the active providers (Codex and
+    Claude Code); a manual preference shows only that provider's tasks.
+    Retired/foreign providers never appear. Pure subset over already
+    accepted sets: no debounce, no provider reads, and the underlying
+    snapshots are never mutated.
     """
     preference = normalize_tracking_provider(preference)
-    if preference == 'auto':
-        return list(tasks or [])
-    return [t for t in (tasks or []) if (t or {}).get('provider_id') == preference]
+    allowed = (tuple(PROVIDER_REGISTRY) if preference == 'auto' else (preference,))
+    return [t for t in (tasks or []) if (t or {}).get('provider_id') in allowed]
 
 
 def format_recorded_cost(amount):
@@ -653,14 +682,15 @@ class TaskOrbWindow(QWidget):
         cx, cy = center.x(), center.y()
         halo_r = 34.0 * self.halo_radius
         # Static halo: soft blue/violet glow, no box behind the star.
+        palette = star_palette(self.provider_id)
         halo = QRadialGradient(cx, cy, halo_r)
         halo.setColorAt(0.0, QColor(255, 255, 255,
                                     self._alpha(30, self.halo_alpha)))
-        halo.setColorAt(0.5, QColor(140, 200, 255,
+        halo.setColorAt(0.5, QColor(*palette['halo'][0],
                                      self._alpha(20, self.halo_alpha)))
-        halo.setColorAt(0.85, QColor(140, 130, 255,
+        halo.setColorAt(0.85, QColor(*palette['halo'][1],
                                     self._alpha(9, self.halo_alpha)))
-        halo.setColorAt(1.0, QColor(140, 130, 255, 0))
+        halo.setColorAt(1.0, QColor(*palette['halo'][1], 0))
         painter.setPen(Qt.NoPen)
         painter.setBrush(halo)
         painter.drawEllipse(center, halo_r, halo_r)
@@ -668,12 +698,9 @@ class TaskOrbWindow(QWidget):
         outer = QPolygonF(self._scaled_points())
         body = QLinearGradient(cx, cy - 30 * self.star_scale,
                                cx, cy + 30 * self.star_scale)
-        body.setColorAt(0.0, QColor(208, 194, 255,
-                                    self._alpha(235, self.facet_intensity)))
-        body.setColorAt(0.5, QColor(245, 249, 255,
-                                    self._alpha(235, self.facet_intensity)))
-        body.setColorAt(1.0, QColor(137, 165, 255,
-                                    self._alpha(235, self.facet_intensity)))
+        for stop, color in zip((0.0, 0.5, 1.0), palette['body']):
+            body.setColorAt(stop, QColor(*color,
+                                         self._alpha(235, self.facet_intensity)))
         painter.setBrush(body)
         painter.drawPolygon(outer)
         painter.setPen(Qt.NoPen)
@@ -683,9 +710,9 @@ class TaskOrbWindow(QWidget):
                      for pt in self._scaled_points()]
         inner = QLinearGradient(cx, cy - 18 * self.star_scale,
                                 cx, cy + 18 * self.star_scale)
-        inner.setColorAt(0.0, QColor(216, 246, 255,
+        inner.setColorAt(0.0, QColor(*palette['inner'][0],
                                      self._alpha(230, self.facet_intensity)))
-        inner.setColorAt(1.0, QColor(165, 230, 255,
+        inner.setColorAt(1.0, QColor(*palette['inner'][1],
                                      self._alpha(230, self.facet_intensity)))
         painter.setBrush(inner)
         painter.drawPolygon(QPolygonF(inner_pts))
@@ -729,10 +756,10 @@ class TaskOrbWindow(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setOpacity(.72 + .28 * (self.depth + 1) / 2)
         cx, cy = pet_geometry.TASK_STAR_CENTER
+        palette = star_palette(self.provider_id)
         glow = QRadialGradient(cx, cy, 22)
-        glow.setColorAt(0, QColor(245, 240, 255, 170))
-        glow.setColorAt(.35, QColor(173, 156, 255, 95))
-        glow.setColorAt(1, QColor(158, 144, 222, 0))
+        for stop, color in zip((0, .35, 1), palette['glow']):
+            glow.setColorAt(stop, QColor(*color))
         painter.setPen(Qt.NoPen)
         painter.setBrush(glow)
         painter.drawEllipse(QPointF(cx, cy), 22, 22)
@@ -741,18 +768,15 @@ class TaskOrbWindow(QWidget):
                   (0, 20), (-4, 5), (-14, 0), (-4, -5)]
         polygon = QPolygonF([QPointF(cx + x * scale, cy + y * scale) for x, y in points])
         fill = QLinearGradient(cx - 12, cy - 20, cx + 12, cy + 20)
-        fill.setColorAt(0, QColor('#eee8ff'))
-        fill.setColorAt(.38, QColor('#ffffff'))
-        fill.setColorAt(.55, QColor('#d6eaff'))
-        fill.setColorAt(1, QColor('#a498e0'))
-        painter.setPen(QPen(QColor('#9b84ea'), 1.15))
+        for stop, color in zip((0, .38, .55, 1), palette['fill']):
+            fill.setColorAt(stop, QColor(color))
+        painter.setPen(QPen(QColor(palette['outline']), 1.15))
         painter.setBrush(fill)
         painter.drawPolygon(polygon)
         # Alternating cuts keep the crystal legible at its real desktop size.
         painter.setPen(Qt.NoPen)
         center = QPointF(cx, cy)
-        for index, color in ((0, '#d7cafa'), (2, '#a4bce9'),
-                             (4, '#b4a0e5'), (6, '#f5f2ff')):
+        for index, color in zip((0, 2, 4, 6), palette['cuts']):
             painter.setBrush(QColor(color))
             painter.drawPolygon(QPolygonF([center, polygon[index], polygon[index + 1]]))
         painter.setPen(QPen(QColor(255, 255, 255, 230), .7))
@@ -1185,7 +1209,7 @@ class TaskPanelManager(HaloScene):
         previous_keys = set(self._windows)
         seen = {}
         for task in tasks or []:
-            if (task or {}).get('provider_id') == 'codex':
+            if (task or {}).get('provider_id') in PROVIDER_REGISTRY:
                 seen[task_identity(task)] = task
         for key, task in seen.items():
             self._universe[key] = task
@@ -3662,10 +3686,9 @@ class Settings(QDialog):
         self.tracking.setCurrentIndex(max(0, self.tracking.findData(
             normalize_tracking_provider(panel.prefs.get('tracking_provider')))))
         self.tracking_label = label()
-        # A single source needs no provider chooser. Retain the hidden field
-        # only for old preference readers; normalized output is always Codex.
-        self.tracking.hide()
-        self.tracking_label.hide()
+        # Auto (default) follows whichever source is working; a manual
+        # choice shows only that provider in the Hub and the Stars.
+        self.form.addRow(self.tracking_label, self.tracking)
         self.language = QComboBox()
         initial_language = normalize_language(panel.prefs.get('language'))
         self.language.addItem(text('language_zh_CN', initial_language), 'zh_CN')
@@ -3813,7 +3836,7 @@ class Settings(QDialog):
         self.reset_armed = False
         self.task.setCurrentIndex(0)
         self.scope.setCurrentIndex(self.scope.findData('conversation'))
-        self.tracking.setCurrentIndex(self.tracking.findData('codex'))
+        self.tracking.setCurrentIndex(self.tracking.findData('auto'))
         self.language.setCurrentIndex(self.language.findData(DEFAULT_LANGUAGE))
         self.token_format.setCurrentIndex(
             self.token_format.findData(DEFAULT_TOKEN_NUMBER_FORMAT))
@@ -4287,7 +4310,7 @@ class Panel(QWidget):
         if self.closing:
             return
         data = data or {}
-        if (data.get('provider_id') or 'codex') != 'codex':
+        if (data.get('provider_id') or 'codex') not in PROVIDER_REGISTRY:
             return
         generation = data.get('generation')
         # Legacy generation-less payloads (synthetic fixtures, old local
@@ -4302,7 +4325,7 @@ class Panel(QWidget):
             self._render_generation = generation
         self.snapshot = data
         provider = data.get('provider_id') or 'codex'
-        provider_label = 'Codex'
+        provider_label = PROVIDER_NAMES.get(provider, provider)
         self.apply_provider_chrome(provider)
         selection = data.get('selection')
         if selection is None:
@@ -4437,9 +4460,16 @@ class Panel(QWidget):
         self.bridge.data.emit(out)
 
     def refresh_provider_mode(self, data):
-        """Display the current sole source without obsolete selection modes."""
-        self.provider_mode.setText('Codex')
-        self.provider_mode.setToolTip('Codex')
+        """Show the provider the Hub currently presents, and Auto when the
+        user lets activity choose between Codex and Claude Code."""
+        data = data or {}
+        provider = PROVIDER_NAMES.get(data.get('provider_id') or 'codex', 'Codex')
+        preference = normalize_tracking_provider(
+            data.get('preference') or self.prefs.get('tracking_provider'))
+        text_value = (f"{provider} · {self.tr_text('tracking_auto')}"
+                      if preference == 'auto' else provider)
+        self.provider_mode.setText(text_value)
+        self.provider_mode.setToolTip(text_value)
 
     def refresh_task_panels(self, data):
         """Apply accepted active tasks to the orb manager.
@@ -4473,7 +4503,9 @@ class Panel(QWidget):
         data = self.snapshot if data is None else data
         count = self.task_manager.total_task_count()
         overview = self.tr_text('task_overview', count=count)
-        identity = ('codex', self.prefs.get('pinned'))
+        pinned = self.prefs.get('pinned')
+        identity = next((key for key in self.task_manager._universe
+                         if pinned and key[1] == pinned), (None, None))
         if identity in self.task_manager._universe:
             overview = self.task_manager.label_text(identity, self.language) + ' · ' + overview
         self.tasks_button.setText(overview + ' ▾')
@@ -4510,7 +4542,8 @@ class Panel(QWidget):
         if self.closing:
             return
         if identity is not None:
-            if (identity[0] != 'codex' or identity not in self.task_manager._universe
+            if (identity[0] not in PROVIDER_REGISTRY
+                    or identity not in self.task_manager._universe
                     or identity in self.task_manager._ring_staged):
                 return
             self.prefs.update(pinned=identity[1], scope='conversation')
@@ -4534,11 +4567,13 @@ class Panel(QWidget):
         self.project.setToolTip(hub_project)
 
     def analytics_payload(self, data, provider):
-        # Current Codex scope/selection/generation are guarded before dispatch.
+        # Current provider scope/selection/generation are guarded before dispatch.
         return data
 
     def apply_provider_chrome(self, provider):
-        """The sole current source supplies Codex context and quota chrome."""
+        """Context and quota rows stay in place for every provider; Claude
+        Code has no locally readable quota or context window, so its rows
+        honestly read N/A instead of disappearing."""
         for widget in (self.quota_divider, self.context, self.five,
                        self.week, self.status):
             widget.setVisible(True)
@@ -4619,7 +4654,12 @@ class Panel(QWidget):
                 duration=f"{'%dd ' % days if days else ''}{hours:02}:{minutes:02}:{seconds:02}"
                 widget.reset.setText(self.tr_text('awaiting_reset') if w['expired'] else self.tr_text('reset_in', duration=duration))
                 widget.reset.setVisible(True)
-        self.status.setText(self.tr_text('quota_waiting') if stale else self.tr_text('syncing', time=time.strftime('%H:%M:%S')))
+        if (self.snapshot.get('provider_id') or 'codex') != 'codex':
+            # Claude Code keeps no readable quota locally: say so plainly
+            # instead of implying a refresh that will never arrive.
+            self.status.setText(self.tr_text('quota_not_provided'))
+        else:
+            self.status.setText(self.tr_text('quota_waiting') if stale else self.tr_text('syncing', time=time.strftime('%H:%M:%S')))
         token_age = sample_age(self.snapshot.get('sample'))
         error = quota.get('error') if quota_usable else None
         if error in ('quota_error',):

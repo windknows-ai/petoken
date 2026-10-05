@@ -1,7 +1,8 @@
 """Deterministic provider selection: preference + activity ranking (V1.2 slice 4).
 
-Production exposes Codex alone. Explicit provider-ID injection retains
-historical pure ranking tests without activating adapters. No I/O or threads.
+Production exposes Codex and Claude Code (V1.5) with Auto as the default.
+Explicit provider-ID injection retains historical pure ranking tests without
+activating adapters. No I/O or threads.
 A status snapshot is a plain dict per provider::
 
     {provider_id, available, source_available, activity_valid, working,
@@ -58,14 +59,17 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
-from providers import PROVIDER_CODEX, PROVIDER_OPENCODE, PROVIDER_REGISTRY
+from providers import (PROVIDER_CLAUDE, PROVIDER_CODEX, PROVIDER_OPENCODE,
+                       PROVIDER_REGISTRY)
 
 PREFERENCE_AUTO = 'auto'
 PREFERENCE_CODEX = PROVIDER_CODEX
+PREFERENCE_CLAUDE = PROVIDER_CLAUDE
 PREFERENCE_OPENCODE = PROVIDER_OPENCODE
-# Persisted Auto/OpenCode preferences migrate to the sole active provider.
-TRACKING_CHOICES = tuple(PROVIDER_REGISTRY)
-DEFAULT_TRACKING_PROVIDER = PREFERENCE_CODEX
+# Derived from the runtime registry: Auto plus exactly the active provider
+# IDs in registry order. Retired OpenCode preferences migrate to Auto.
+TRACKING_CHOICES = (PREFERENCE_AUTO,) + tuple(PROVIDER_REGISTRY)
+DEFAULT_TRACKING_PROVIDER = PREFERENCE_AUTO
 KNOWN_PROVIDERS = tuple(PROVIDER_REGISTRY)
 
 # A newly preferred provider must hold for 1 s before switching (00).
@@ -87,9 +91,14 @@ CODEX_SOURCE_FAILURES = frozenset(
 OPENCODE_SOURCE_FAILURES = frozenset(
     {'missing_store', 'store_locked', 'unsupported_schema'})
 
+# Claude store statuses meaning the source itself is down, checked at both
+# envelope layers like Codex.
+CLAUDE_SOURCE_FAILURES = frozenset(
+    {'status_claude_no_local_data', 'status_read_failed'})
+
 
 def normalize_tracking_provider(value):
-    """Normalize current and legacy preferences to the active Codex product."""
+    """Normalize current and legacy preferences: unknown/retired -> Auto."""
     if isinstance(value, str) and value.strip().lower() in TRACKING_CHOICES:
         return value.strip().lower()
     return DEFAULT_TRACKING_PROVIDER
@@ -199,8 +208,53 @@ def opencode_provider_status(read_result, activity, last_success_at=None):
                 error=reason or snapshot.get('reason') or '')
 
 
+def claude_provider_status(read_result, last_success_at=None):
+    """Shape a Claude Code envelope into a selection status snapshot.
+
+    Same fail-closed rules as Codex: a source failure at either envelope
+    layer makes the provider unavailable, and only a verified live
+    registry claim (busy session of a running process) counts as working.
+    Recency is the working session's registry status time, unknown when
+    idle, so idle history never fabricates activity.
+    """
+    if not isinstance(read_result, dict):
+        return dict(provider_id=PROVIDER_CLAUDE, available=False,
+                    source_available=False, activity_valid=False,
+                    working=False, activity_at=None,
+                    last_success_at=_epoch(last_success_at), error='')
+    payload = read_result.get('payload')
+    if not isinstance(payload, dict):
+        return dict(provider_id=PROVIDER_CLAUDE, available=False,
+                    source_available=False, activity_valid=False,
+                    working=False, activity_at=None,
+                    last_success_at=_epoch(last_success_at),
+                    error=read_result.get('reason') or '')
+    status_code = payload.get('status') or ''
+    reason = read_result.get('reason') or ''
+    activity = payload.get('claude_activity')
+    activity = activity if isinstance(activity, dict) else None
+    source_available = (status_code not in CLAUDE_SOURCE_FAILURES
+                        and reason not in CLAUDE_SOURCE_FAILURES)
+    activity_valid = bool(source_available and activity is not None
+                          and activity.get('valid', False))
+    working = bool(activity_valid and activity.get('active', False)
+                   and isinstance(read_result.get('working_context'), dict))
+    return dict(provider_id=PROVIDER_CLAUDE,
+                available=bool(read_result.get('available', False)),
+                source_available=source_available,
+                activity_valid=activity_valid,
+                working=working,
+                activity_at=(_epoch(activity.get('activity_at'))
+                             if working else None),
+                last_success_at=_epoch(last_success_at),
+                error=reason)
+
+
 def _stable_order(provider_ids):
-    return sorted(provider_ids)
+    """Registry order first (Codex, then Claude Code), unknown IDs after
+    in name order, so a tie never depends on alphabetical provider IDs."""
+    order = {pid: index for index, pid in enumerate(PROVIDER_REGISTRY)}
+    return sorted(provider_ids, key=lambda pid: (order.get(pid, len(order)), pid))
 
 
 def _source_available(status):

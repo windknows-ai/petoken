@@ -11,9 +11,13 @@ from PySide6.QtWidgets import (
 )
 
 from localization import text
+from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 from pet_assets import sprite_for, ASSETS_DIR
 import theme
 from workbench_store import WorkbenchError
+
+# Providers whose tasks may be linked to projects in the local store.
+LINKABLE_PROVIDERS = ('codex',)
 
 
 class CompanionPortrait(QWidget):
@@ -424,7 +428,7 @@ class WorkbenchWindow(QWidget):
         manager = self.panel.task_manager
         rows = [(key, manager.label_text(key, self.language))
                 for key in manager.task_identities()
-                if key[0] == 'codex' and key in manager._universe
+                if key[0] in PROVIDER_REGISTRY and key in manager._universe
                 and self._in_scope(self._links.get(key))]
         fingerprint = tuple(rows), frozenset(manager._ring_staged)
         if fingerprint == getattr(self, '_task_fingerprint', None):
@@ -434,7 +438,7 @@ class WorkbenchWindow(QWidget):
         selected = current.data(Qt.UserRole) if current and current.isSelected() else None
         self.task_list.clear()
         for key, title in rows:
-            item = QListWidgetItem(title + ' · Codex')
+            item = QListWidgetItem(title + ' · ' + PROVIDER_NAMES.get(key[0], key[0]))
             item.setData(Qt.UserRole, key)
             if key in manager._ring_staged:
                 item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
@@ -460,7 +464,11 @@ class WorkbenchWindow(QWidget):
         self.panel.task_manager.activate_task(item.data(Qt.UserRole), keyboard=True)
 
     def assign_task(self, identity, project_id):
-        if (identity not in self.panel.task_manager._universe
+        # Project links stay Codex-only until the workbench database gains a
+        # versioned migration (roadmap: data migration before 2.x); Claude
+        # Code tasks are listed and openable but never written to the store.
+        if (identity[0] not in LINKABLE_PROVIDERS
+                or identity not in self.panel.task_manager._universe
                 or identity in self.panel.task_manager._ring_staged):
             return False
         ok, _ = self._attempt(self.store.link_task, *identity, project_id)
@@ -593,8 +601,9 @@ class WorkbenchWindow(QWidget):
         note = self.notes_list.currentItem()
         selected_note = bool(note and note.isSelected() and note.data(Qt.UserRole) == self.note_id)
         task = self._selected_task()
+        linkable = bool(task and task.data(Qt.UserRole)[0] in LINKABLE_PROVIDERS)
         for button, available in [
-                (self.task_detail_button, bool(task)), (self.task_link_button, bool(task)),
+                (self.task_detail_button, bool(task)), (self.task_link_button, linkable),
                 (self.todo_edit_button, bool(todo)), (self.todo_delete_button, bool(todo)),
                 (self.project_edit_button, bool(project)), (self.project_delete_button, bool(project)),
                 (self.project_folder_button, bool(project and project['directory'])),

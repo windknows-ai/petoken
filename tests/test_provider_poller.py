@@ -1,6 +1,9 @@
 """Codex product orchestration and retained lifecycle/concurrency regressions."""
 import os
 import tempfile
+# Hermetic Claude lane: a never-created home keeps real ~/.claude data out.
+os.environ.setdefault('PETOKEN_CLAUDE_HOME', os.path.join(
+    tempfile.gettempdir(), 'petoken-tests-no-claude-home'))
 import threading
 import unittest
 from datetime import datetime, timezone
@@ -933,13 +936,29 @@ class ActiveTaskFilterTests(unittest.TestCase):
         self.assertEqual(self._keys(second), ['A', 'B'])
         self.assertEqual(self._keys(third), ['A', 'B'])
 
-    def test_unknown_preference_falls_back_to_codex(self):
+    def test_unknown_preference_falls_back_to_auto(self):
         from provider_poller import filter_active_tasks
         sets, statuses = self._sets()
         merged = filter_active_tasks(
             sets, statuses, {'codex': 1000.0, 'opencode': 1000.0},
-            'claude', now=1001.0)
+            'bogus', now=1001.0)
         self.assertEqual(self._keys(merged), ['A', 'B'])
+
+    def test_manual_claude_preference_exposes_only_claude_lane(self):
+        from providers import active_task, active_task_set
+        from provider_poller import filter_active_tasks
+        sets, statuses = self._sets()
+        sets['claude'] = active_task_set(
+            'claude', [active_task('claude', 'claude:S')], revision=3,
+            observed_at=1000.0, valid=True, source_available=True)
+        statuses['claude'] = dict(provider_id='claude', source_available=True)
+        success = {'codex': 1000.0, 'claude': 1000.0}
+        self.assertEqual(self._keys(filter_active_tasks(
+            sets, statuses, success, 'claude', now=1001.0)), ['claude:S'])
+        self.assertEqual(self._keys(filter_active_tasks(
+            sets, statuses, success, 'codex', now=1001.0)), ['A', 'B'])
+        self.assertEqual(self._keys(filter_active_tasks(
+            sets, statuses, success, 'auto', now=1001.0)), ['A', 'B', 'claude:S'])
 
     def test_stale_and_invalid_sets_dropped(self):
         from provider_poller import filter_active_tasks
@@ -1006,8 +1025,9 @@ class CodexProductBoundaryTests(unittest.TestCase):
         import subprocess
         import sys
         code = '''
-import builtins, sys, tempfile
+import builtins, os, sys, tempfile
 from pathlib import Path
+os.environ['PETOKEN_CLAUDE_HOME'] = os.path.join(tempfile.gettempdir(), 'petoken-tests-no-claude-home')
 original = builtins.__import__
 def guarded(name, *args, **kwargs):
     if name == 'opencode_provider' or name.startswith('opencode_provider.'):
@@ -1025,13 +1045,17 @@ with tempfile.TemporaryDirectory() as root:
         for _ in range(3):
             out = p.loop_tick({'tracking_provider': preference}, now=1000)
             assert p.drain()
-        assert out['preference'] == out['provider_id'] == 'codex'
+        expected = 'codex' if preference == 'codex' else 'auto'
+        assert out['preference'] == expected, out['preference']
+        # No local Claude data: Auto serves the readable Codex source.
+        assert out['provider_id'] == 'codex'
         assert 'opencode' not in out and 'opencode_activity' not in out
-        assert set(p._workers) == {'codex'}
+        assert set(p._workers) == {'codex', 'claude'}
     p.close()
     assert p.poll()['active_tasks'] == []
-assert PROVIDER_KEYS == TRACKING_CHOICES == tuple(PROVIDER_REGISTRY) == ('codex',)
-assert POOL_THREADS == 1 and 'opencode_provider' not in sys.modules
+assert PROVIDER_KEYS == tuple(PROVIDER_REGISTRY) == ('codex', 'claude')
+assert TRACKING_CHOICES == ('auto', 'codex', 'claude')
+assert POOL_THREADS == 2 and 'opencode_provider' not in sys.modules
 '''
         result = subprocess.run([sys.executable, '-c', code], cwd=Path(__file__).parent.parent,
                                 capture_output=True, text=True, timeout=20)
@@ -1043,7 +1067,8 @@ assert POOL_THREADS == 1 and 'opencode_provider' not in sys.modules
             with self.subTest(preference=preference):
                 out = self.poller.apply_settings(
                     dict(self.prefs, tracking_provider=preference), now=NOW_S)
-                self.assertEqual(out['preference'], 'codex')
+                self.assertEqual(out['preference'], 'auto')
+                self.assertEqual(out['provider_id'], 'codex')
                 self.assertEqual(out['result']['tokens'], before['result']['tokens'])
                 self.assertEqual([t['task_key'] for t in out['active_tasks']], ['t1'])
                 self.assertEqual(self.poller.selection.last_use, {})
@@ -1052,16 +1077,16 @@ assert POOL_THREADS == 1 and 'opencode_provider' not in sys.modules
         import json
         from app_config import load_preferences
         path = Path(self.temp.name) / 'preferences.json'
-        for preference in ('auto', 'opencode', ['opencode'], {'provider': 'opencode'}):
+        for preference in ('codex', 'opencode', ['opencode'], {'provider': 'opencode'}):
             raw = json.dumps({'tracking_provider': preference, 'user_note': 'keep'})
             path.write_text(raw, encoding='utf-8')
             before = path.read_bytes()
             loaded = load_preferences(path)
-            self.assertEqual(loaded['tracking_provider'], 'codex')
+            self.assertEqual(loaded['tracking_provider'], 'auto')
             self.assertEqual(loaded['user_note'], 'keep')
             self.assertEqual(path.read_bytes(), before)
         path.write_text('{broken', encoding='utf-8')
-        self.assertEqual(load_preferences(path)['tracking_provider'], 'codex')
+        self.assertEqual(load_preferences(path)['tracking_provider'], 'auto')
         self.assertEqual(path.read_text(encoding='utf-8'), '{broken')
 
     def test_default_selector_and_submit_reject_foreign_provider(self):
@@ -1076,7 +1101,7 @@ assert POOL_THREADS == 1 and 'opencode_provider' not in sys.modules
                                    generation=1, now=NOW_S)
             self.assertIsNone(snap['selected'])
             self.assertFalse(snap['live'])
-            self.assertEqual(snap['preference'], 'codex')
+            self.assertEqual(snap['preference'], 'auto')
         tick = _Tick(0, 0, 'codex', 'global', '', False, '', False, NOW_S)
         self.assertFalse(self.poller._submit('opencode', tick))
         self.assertEqual(self.poller._workers, {})
@@ -1088,8 +1113,9 @@ assert POOL_THREADS == 1 and 'opencode_provider' not in sys.modules
         for _ in range(10):
             self.poller.poll(self.prefs, now=NOW_S)
             self.assertIs(self.poller._inflight['codex'], future)
-        self.assertEqual(tuple(self.poller._workers), ('codex',))
-        self.assertTrue(self.poller._workers['codex'].daemon)
+        # One slot per provider: a blocked Codex read never stalls Claude.
+        self.assertEqual(set(self.poller._workers), {'codex', 'claude'})
+        self.assertTrue(all(w.daemon for w in self.poller._workers.values()))
         release.set()
         self.assertTrue(self.poller.drain())
 
@@ -1126,7 +1152,8 @@ assert POOL_THREADS == 1 and 'opencode_provider' not in sys.modules
         release.set()
         self.assertTrue(self.poller.drain())
         self.poller._collect()
-        self.assertEqual(self.poller._accepted_rid, before)
+        # Only the Codex lane is fenced; the healthy Claude lane keeps going.
+        self.assertEqual(self.poller._accepted_rid['codex'], before['codex'])
         self.assertFalse(self.poller._status['codex']['source_available'])
         self.assertFalse(self.poller._active_sets['codex']['valid'])
 

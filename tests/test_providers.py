@@ -82,17 +82,24 @@ class ProviderContractTests(unittest.TestCase):
 class ProviderRegistryTests(unittest.TestCase):
     """The current product registry exposes Codex alone."""
 
-    def test_registry_contains_only_codex(self):
+    def test_registry_contains_exactly_codex_and_claude(self):
         from providers import PROVIDER_REGISTRY
         from provider_selection import KNOWN_PROVIDERS, TRACKING_CHOICES
-        self.assertEqual(tuple(PROVIDER_REGISTRY), ('codex',))
-        self.assertEqual(KNOWN_PROVIDERS, ('codex',))
+        self.assertEqual(tuple(PROVIDER_REGISTRY), ('codex', 'claude'))
+        self.assertEqual(KNOWN_PROVIDERS, ('codex', 'claude'))
         self.assertEqual(tuple(PROVIDER_REGISTRY), KNOWN_PROVIDERS)
-        self.assertEqual(TRACKING_CHOICES, ('codex',))
+        self.assertEqual(TRACKING_CHOICES, ('auto', 'codex', 'claude'))
+
+    def test_claude_capabilities_exclude_quotas(self):
+        from providers import CLAUDE_CAPABILITIES
+        for capability in CLAUDE_CAPABILITIES:
+            self.assertTrue(is_supported('claude', capability), capability)
+        self.assertFalse(is_supported('claude', 'quotas'))
+        self.assertFalse(is_supported('claude', 'fork_accounting'))
 
     def test_display_names_unchanged(self):
         from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
-        self.assertEqual(PROVIDER_NAMES, {'codex': 'Codex'})
+        self.assertEqual(PROVIDER_NAMES, {'codex': 'Codex', 'claude': 'Claude Code'})
         for pid, entry in PROVIDER_REGISTRY.items():
             self.assertEqual(entry['display_name'], PROVIDER_NAMES[pid])
 

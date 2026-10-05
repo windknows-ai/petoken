@@ -3,6 +3,11 @@
 Deterministic Events/barriers/fake clocks only. No sleep-based primary
 proof (join timeouts guard hangs, never prove correctness).
 """
+import os as _os
+import tempfile as _tempfile
+# Hermetic Claude lane: a never-created home keeps real ~/.claude data out.
+_os.environ.setdefault('PETOKEN_CLAUDE_HOME', _os.path.join(
+    _tempfile.gettempdir(), 'petoken-tests-no-claude-home'))
 import subprocess
 import sys
 import json
@@ -768,9 +773,10 @@ class QtBridgeRaceTests(unittest.TestCase):
         self._poll_render(active_title='t1', detection_valid=True, now=NOW_S)
         gen0 = poller.generation
         settings = Settings(self.panel)
-        self.assertEqual(settings.tracking.count(), 1)
-        self.assertEqual(settings.tracking.itemData(0), 'codex')
-        self.assertTrue(settings.tracking.isHidden())
+        self.assertEqual([settings.tracking.itemData(i) for i in range(settings.tracking.count())],
+                         ['auto', 'codex', 'claude'])
+        self.assertFalse(settings.tracking.isHidden())
+        settings.tracking.setCurrentIndex(settings.tracking.findData('codex'))
         settings.scope.setCurrentIndex(settings.scope.findData('project'))
         settings.task.setCurrentIndex(max(0, settings.task.findData('t1')))
         settings.save()
@@ -790,7 +796,7 @@ class QtBridgeRaceTests(unittest.TestCase):
         settings.reset_to_defaults()
         settings.reset_to_defaults()
         settings.save()
-        self.assertEqual(self.panel.prefs['tracking_provider'], 'codex')
+        self.assertEqual(self.panel.prefs['tracking_provider'], 'auto')
         self.assertEqual(self.panel.prefs['scope'], 'conversation')
         gen2, prefs2 = poller.generation, dict(self.panel.prefs)
         selection = dict(poller.selection.snapshot())
@@ -1156,10 +1162,10 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
                 generations.append(out['generation'])
                 self.assertTrue(poller.drain(timeout=10))
         # One poll tick per iteration (failed resets add no generation of
-        # their own); workers stay at exactly one bounded Codex lane.
+        # their own); workers stay at exactly one bounded lane per provider.
         steps = [b - a for a, b in zip(generations, generations[1:])]
         self.assertTrue(all(step == 1 for step in steps), steps)
-        self.assertEqual(len(poller._workers), 1)
+        self.assertEqual(set(poller._workers), {'codex', 'claude'})
         self.assertEqual(poller.selection.last_use, {})
 
     def test_close_during_reset_request_stays_tagged(self):
@@ -1243,7 +1249,7 @@ class CurrentFailureSemanticsTests(unittest.TestCase):
                     out = poller.loop_tick(prefs, now=NOW_S, reset_requested=True)
                     self.assertEqual(poller._codex_fence, old_fence + offset)
                     self.assertIs(poller._inflight['codex'], future)
-                    self.assertEqual(tuple(poller._workers), ('codex',))
+                    self.assertEqual(set(poller._workers), {'codex', 'claude'})
                     self.assertFalse(out['selection']['live'])
                     self.assertEqual(out['active_tasks'], [])
             release.set()

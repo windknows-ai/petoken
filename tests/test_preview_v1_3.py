@@ -21,7 +21,14 @@ class PreviewFixtureTests(unittest.TestCase):
             tasks = fixture_tasks(count)
             self.assertEqual(len(tasks), count)
             self.assertEqual(len({(t['provider_id'], t['task_key']) for t in tasks}), count)
-            self.assertTrue(all(task['provider_id'] == 'codex' for task in tasks))
+            # Mixed (default) alternates Codex and Claude Code; Claude keys are scoped.
+            self.assertEqual([t['provider_id'] for t in tasks],
+                             ['claude' if i % 2 else 'codex' for i in range(count)])
+            self.assertTrue(all(t['task_key'].startswith('claude:') == (t['provider_id'] == 'claude')
+                                for t in tasks))
+            for source in ('codex', 'claude'):
+                self.assertTrue(all(t['provider_id'] == source
+                                    for t in fixture_tasks(count, source=source)))
             self.assertEqual(len({t['presentation']['tokens']['total_tokens'] for t in tasks}), count)
         for case in ('zero', 'unknown', 'partial'):
             for task in fixture_tasks(2, case=case):
@@ -129,13 +136,17 @@ class PreviewTests(unittest.TestCase):
                 self.assertEqual(preview.panel.task_manager.window_count(), 3)
                 self.assertFalse(preview.pet.activity_timer.isActive())
                 self.assertEqual(preview.panel.snapshot['provider_id'], 'codex')
-                self.assertEqual(preview.panel.prefs['tracking_provider'], 'codex')
+                self.assertEqual(preview.panel.prefs['tracking_provider'], 'auto')
+                self.assertEqual(set(preview.panel.task_manager.task_identities()),
+                                 {('codex', 'synthetic-qa-1'), ('claude', 'claude:synthetic-qa-2'),
+                                  ('codex', 'synthetic-qa-3')})
                 labels = '\n'.join(label.text() for label in preview.findChildren(QLabel))
                 choices = [combo.itemText(index) for combo in preview.findChildren(QComboBox)
                            for index in range(combo.count())]
                 self.assertNotIn('OpenCode', labels)
                 self.assertNotIn('opencode', choices)
-                self.assertNotIn('mixed', choices)
+                for source in ('mixed', 'codex', 'claude'):
+                    self.assertIn(source, choices)
                 preview.source.setChecked(False)
                 self.assertEqual(preview.panel.task_manager.window_count(), 0)
                 preview.source.setChecked(True)
@@ -205,7 +216,7 @@ class PreviewTests(unittest.TestCase):
                 self.assertTrue(output.is_file())
                 evidence = json.loads(output.with_suffix('.json').read_text(encoding='utf-8'))
                 self.assertEqual(evidence['kind'], 'SYNTHETIC_QA')
-                self.assertEqual(evidence['provider'], 'codex')
+                self.assertEqual(evidence['provider'], 'mixed')
                 self.assertEqual(evidence['anchor'], 'center')
                 self.assertFalse(evidence['live_provider_polling'])
                 self.assertEqual(evidence['expanded_task_number'], 1)
@@ -339,7 +350,7 @@ class PreviewTests(unittest.TestCase):
         for argv in (['--output', 'unused.png'], ['--smoke', '0'],
                      ['--smoke', 'nan'], ['--smoke', 'inf'], ['--smoke', '1e100'],
                      ['--count', '0', '--expand', '1'], ['--provider', 'opencode'],
-                     ['--provider', 'mixed'], ['--anchor', 'outside']):
+                     ['--provider', 'all'], ['--anchor', 'outside']):
             diagnostic = StringIO()
             with self.subTest(argv=argv), redirect_stderr(diagnostic), self.assertRaises(SystemExit) as result:
                 main(argv)

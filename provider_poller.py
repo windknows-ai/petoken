@@ -1,8 +1,8 @@
 """Background poll orchestration: providers -> selection -> snapshot (V1.2 slice 5).
 
-Qt-free worker logic. One dedicated Codex daemon worker (never
-overlapping reads against the adapter, no GUI-thread I/O) replaces the
-previous pool: a permanently blocked provider read
+Qt-free worker logic. One dedicated daemon worker per provider (Codex
+and Claude Code; never overlapping reads against one adapter, no
+GUI-thread I/O) replaces the previous pool: a permanently blocked provider read
 cannot keep the process alive, because daemon workers are never joined
 and close() never blocks. Every poll captures one immutable tick
 (generation, settings epoch, preference/scope/pinned, history mode and
@@ -35,15 +35,18 @@ import threading
 import time
 from concurrent.futures import CancelledError
 
-from provider_selection import (FRESHNESS_S, ProviderSelection,
+from claude_usage import ClaudeProvider
+from provider_selection import (FRESHNESS_S, PREFERENCE_AUTO,
+                                ProviderSelection, claude_provider_status,
                                 codex_provider_status,
                                 normalize_tracking_provider)
-from providers import (CODEX_CAPABILITIES, PROVIDER_CODEX,
-                       CodexProvider, active_task_set, base_result)
+from providers import (CLAUDE_CAPABILITIES, CODEX_CAPABILITIES,
+                       PROVIDER_CLAUDE, PROVIDER_CODEX, CodexProvider,
+                       active_task_set, base_result)
 from usage import CodexStore
 
-PROVIDER_KEYS = (PROVIDER_CODEX,)
-POOL_THREADS = 1  # One dedicated daemon slot for the active Codex adapter.
+PROVIDER_KEYS = (PROVIDER_CODEX, PROVIDER_CLAUDE)
+POOL_THREADS = 2  # One dedicated daemon slot per active provider adapter.
 
 _VALID_SCOPES = ('global', 'project', 'conversation')
 
@@ -54,15 +57,35 @@ def _normalize_scope(value):
     return scope if scope in _VALID_SCOPES else 'conversation'
 
 
+def hub_preference(preference, pinned):
+    """Provider the Hub inspects for one tick.
+
+    Under Auto an explicitly pinned task routes the Hub to that task's own
+    provider (Claude pins are ``claude:``-scoped, any other pin is a Codex
+    thread), so inspecting a task never shows another provider's data. A
+    manual provider preference always wins. Star membership never uses
+    this: it follows the user's preference alone.
+    """
+    preference = normalize_tracking_provider(preference)
+    if preference != PREFERENCE_AUTO or not pinned:
+        return preference
+    return (PROVIDER_CLAUDE if str(pinned).startswith(f'{PROVIDER_CLAUDE}:')
+            else PROVIDER_CODEX)
+
+
 def filter_active_tasks(active_sets, statuses, success_at, preference,
                         now=None):
-    """Verified fresh Codex membership over accepted sets, without I/O.
+    """Verified fresh membership over accepted provider sets, without I/O.
 
-    Legacy preferences normalize to Codex. Foreign provider sets cannot
-    enter the active product, even when supplied by an old caller.
+    Auto unions every active provider lane; a manual preference exposes
+    only its own lane. Retired/unknown preferences normalize to Auto, and
+    foreign provider sets cannot enter the active product, even when
+    supplied by an old caller.
     """
     now = time.time() if now is None else now
-    lanes = PROVIDER_KEYS
+    preference = normalize_tracking_provider(preference)
+    lanes = (PROVIDER_KEYS if preference == PREFERENCE_AUTO
+             else tuple(pid for pid in PROVIDER_KEYS if pid == preference))
     merged = []
     for pid in lanes:
         entry = (active_sets or {}).get(pid) or {}
@@ -206,6 +229,20 @@ def _codex_failed():
                                          reason='status_read_failed')))
 
 
+def _claude_failed():
+    return base_result(
+        PROVIDER_CLAUDE, available=False, status='unavailable',
+        reason='status_read_failed', capabilities=CLAUDE_CAPABILITIES,
+        notes=('status_read_failed',),
+        payload=dict(status='status_read_failed', rows=[],
+                     claude_activity=dict(active=False, valid=False,
+                                          reason='status_read_failed')))
+
+
+def _failed_read(key):
+    return _claude_failed() if key == PROVIDER_CLAUDE else _codex_failed()
+
+
 def _compatible(prov, req_scope, req_pinned):
     """Cached scoped data may serve the request only when it was read for
     the same scope (global ignores pinned) and the same pinned session."""
@@ -219,10 +256,11 @@ def _compatible(prov, req_scope, req_pinned):
 
 
 class ProviderPoller:
-    """Owns the Codex adapter, selection, request epochs and daemon slot."""
+    """Owns the provider adapters, selection, request epochs and daemon slots."""
 
-    def __init__(self, codex_store=None):
+    def __init__(self, codex_store=None, claude_store=None):
         self.codex = CodexProvider(codex_store)
+        self.claude = ClaudeProvider(claude_store)
         self.selection = ProviderSelection()
         self.generation = 0
         self._lock = threading.RLock()
@@ -412,7 +450,7 @@ class ProviderPoller:
                 tick.scope, tick.pinned, tick.want_history,
                 tick.active_title, tick.detection_valid, tick.now,
                 self._codex_fence)
-            adapter = self.codex
+            adapter = self.claude if key == PROVIDER_CLAUDE else self.codex
 
             def reader(req, ad=adapter):
                 return ad.read(
@@ -483,7 +521,7 @@ class ProviderPoller:
                     want_history=request.want_history, epoch=request.epoch,
                     rid=request.rid, generation=request.generation)
                 if failed:
-                    self._reads[key] = _codex_failed()
+                    self._reads[key] = _failed_read(key)
                     self._status[key] = self._shape(key)
                     self._store_active_set_locked(key, request, None)
                     continue
@@ -552,8 +590,9 @@ class ProviderPoller:
 
     def _shape(self, key):
         """Shape the latest accepted read into a selection status."""
-        return codex_provider_status(
-            self._reads.get(key), self._success_at.get(key))
+        shape = (claude_provider_status if key == PROVIDER_CLAUDE
+                 else codex_provider_status)
+        return shape(self._reads.get(key), self._success_at.get(key))
 
     def _snapshot_statuses(self):
         with self._lock:
@@ -585,16 +624,18 @@ class ProviderPoller:
             if (tick.epoch != self._epoch
                     or tick.generation != self.generation):
                 return self._obsolete_result(tick)
+            hub = hub_preference(tick.preference, tick.pinned)
             snapshot = self.selection.update(
-                self._snapshot_statuses(), preference=tick.preference,
+                self._snapshot_statuses(), preference=hub,
                 now=tick.now, generation=tick.generation)
             result = self._publish_locked(
-                snapshot, tick.preference, tick.scope, tick.pinned,
+                snapshot, hub, tick.scope, tick.pinned,
                 tick.generation)
             return dict(generation=tick.generation,
                         preference=tick.preference, selection=snapshot,
                         provider_id=result['provider_id'], result=result,
                         codex=self._reads.get(PROVIDER_CODEX),
+                        claude=self._reads.get(PROVIDER_CLAUDE),
                         active_tasks=self._merged_active_tasks(
                             tick.preference, tick.now))
 
@@ -605,12 +646,12 @@ class ProviderPoller:
         scoped tokens/cost are never filled from incompatible cache.
         """
         working = None
-        if live and selected == PROVIDER_CODEX:
-            read = self._reads.get(PROVIDER_CODEX)
+        if live and selected in PROVIDER_KEYS:
+            read = self._reads.get(selected)
             context = (read.get('working_context')
                        if isinstance(read, dict) else None)
             if isinstance(context, dict):
-                working = dict(context, provider_id=PROVIDER_CODEX)
+                working = dict(context, provider_id=selected)
         return dict(provider_id=selected, status='no_reliable_record',
                     available=False, scope=scope, working_context=working)
 
@@ -627,15 +668,15 @@ class ProviderPoller:
             result['selection'] = snapshot
             result['generation'] = generation
             return result
-        if selected == PROVIDER_CODEX:
-            read = self._reads.get(PROVIDER_CODEX) or {}
+        if selected in PROVIDER_KEYS:
+            read = self._reads.get(selected) or {}
             result = dict(read.get('payload') or {})
-            result['provider_id'] = PROVIDER_CODEX
+            result['provider_id'] = selected
             result['scope'] = scope
             if live:
                 context = read.get('working_context')
                 result['working_context'] = (
-                    dict(context, provider_id=PROVIDER_CODEX)
+                    dict(context, provider_id=selected)
                     if isinstance(context, dict) else None)
             else:
                 # The bubble follows selection, never a stale detector.
@@ -665,7 +706,8 @@ class ProviderPoller:
         # relabeling in flight work.
         if isinstance(tick_or_pref, _Tick):
             tick = tick_or_pref
-            self._submit(PROVIDER_CODEX, tick)
+            for key in PROVIDER_KEYS:
+                self._submit(key, tick)
             return
         with self._lock:
             if self._closed:
@@ -675,7 +717,8 @@ class ProviderPoller:
         template = _Tick(generation, epoch, normalize_tracking_provider(tick_or_pref),
                          _normalize_scope(scope), pinned or '',
                          want_history, active_title, detection_valid, now)
-        self._submit(PROVIDER_CODEX, template)
+        for key in PROVIDER_KEYS:
+            self._submit(key, template)
 
     def _obsolete_result(self, tick):
         """Tick retired by a newer epoch/generation: no selection mutation,
@@ -685,6 +728,7 @@ class ProviderPoller:
                 return self._closed_result(tick)
             snapshot = self.selection.snapshot()
             codex_read = self._reads.get(PROVIDER_CODEX)
+            claude_read = self._reads.get(PROVIDER_CLAUDE)
         result = dict(provider_id=tick.preference
                       if tick.preference != 'auto' else PROVIDER_CODEX,
                       status='obsolete_tick', available=False,
@@ -692,7 +736,7 @@ class ProviderPoller:
                       selection=snapshot, generation=tick.generation)
         return dict(generation=tick.generation, preference=tick.preference,
                     selection=snapshot, provider_id=result['provider_id'],
-                    result=result, codex=codex_read,
+                    result=result, codex=codex_read, claude=claude_read,
                     active_tasks=[])
 
     def _closed_result(self, tick=None, prefs=None):
@@ -705,6 +749,7 @@ class ProviderPoller:
             scope = (tick.scope if tick is not None
                      else _normalize_scope((prefs or {}).get('scope')))
             codex_read = self._reads.get(PROVIDER_CODEX)
+            claude_read = self._reads.get(PROVIDER_CLAUDE)
         result = dict(provider_id=preference
                       if preference != 'auto' else PROVIDER_CODEX,
                       status='no_reliable_record', available=False,
@@ -715,7 +760,7 @@ class ProviderPoller:
         # tasks. Historical analytics state elsewhere is untouched.
         return dict(generation=generation, preference=preference,
                     selection=snapshot, provider_id=result['provider_id'],
-                    result=result, codex=codex_read,
+                    result=result, codex=codex_read, claude=claude_read,
                     active_tasks=[])
 
     @staticmethod
@@ -744,15 +789,16 @@ class ProviderPoller:
                     or tick.generation != self.generation):
                 return self._obsolete_result(tick)
             preference = tick.preference
-            targets = ((preference,) if preference != 'auto'
+            hub = hub_preference(preference, tick.pinned)
+            targets = ((hub,) if hub != 'auto'
                        else PROVIDER_KEYS)
             inputs = self._snapshot_statuses()
             for target in targets:
                 inputs[target] = self._failed_status(target)
             snapshot = self.selection.update(
-                inputs, preference=preference, now=tick.now,
+                inputs, preference=hub, now=tick.now,
                 generation=tick.generation)
-            result = self._publish_locked(snapshot, preference, tick.scope,
+            result = self._publish_locked(snapshot, hub, tick.scope,
                                            tick.pinned, tick.generation)
             # Filter against the temporary failure statuses being
             # returned — not the last successful lane statuses — so a
@@ -763,6 +809,7 @@ class ProviderPoller:
                 generation=tick.generation, preference=preference,
                 selection=snapshot, provider_id=result['provider_id'],
                 result=result, codex=self._reads.get(PROVIDER_CODEX),
+                claude=self._reads.get(PROVIDER_CLAUDE),
                 active_tasks=self._merged_active_tasks(
                     preference, tick.now, statuses=inputs))
 
@@ -844,10 +891,11 @@ class ProviderPoller:
                 prefs.get('tracking_provider'))
             scope = _normalize_scope(prefs.get('scope'))
             pinned = prefs.get('pinned') or ''
+            hub = hub_preference(preference, pinned)
             snapshot = self.selection.update(
-                self._snapshot_statuses(), preference=preference, now=now,
+                self._snapshot_statuses(), preference=hub, now=now,
                 generation=tick_generation)
-            result = self._publish_locked(snapshot, preference, scope,
+            result = self._publish_locked(snapshot, hub, scope,
                                            pinned, tick_generation)
             return dict(generation=tick_generation, preference=preference,
                         selection=snapshot, provider_id=result['provider_id'],
@@ -897,7 +945,7 @@ class ProviderPoller:
             preference = normalize_tracking_provider(
                 prefs.get('tracking_provider'))
         except Exception:
-            preference = PROVIDER_CODEX
+            preference = PREFERENCE_AUTO
         try:
             scope = _normalize_scope(prefs.get('scope'))
         except Exception:

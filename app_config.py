@@ -12,7 +12,9 @@ from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 from pet_geometry import PET_SCALE_DEFAULT, normalize_pet_scale
 
 APP_VERSION = "1.3.0"
-SETTINGS_SCHEMA_VERSION = 1
+# 2: V1.5 Codex + Claude Code. Earlier builds offered no provider choice and
+# saved the forced "codex" value, so that value migrates once to Auto.
+SETTINGS_SCHEMA_VERSION = 2
 DEFAULT_PREFERENCES = {
     "settings_schema_version": SETTINGS_SCHEMA_VERSION,
     "language": DEFAULT_LANGUAGE,
@@ -72,12 +74,17 @@ def normalize_preferences(data):
             preferences[key] = valid_position(preferences[key])
     preferences["pet_scale_percent"] = normalize_pet_scale(
         preferences.get("pet_scale_percent"))
-    schema = preferences.get("settings_schema_version")
+    schema = raw.get("settings_schema_version")
     if isinstance(schema, bool) or not isinstance(schema, int) or schema < 1:
-        preferences["settings_schema_version"] = SETTINGS_SCHEMA_VERSION
+        schema = 1 if raw else SETTINGS_SCHEMA_VERSION
+    if (schema < 2 and normalize_tracking_provider(
+            preferences.get("tracking_provider")) == "codex"):
+        preferences["tracking_provider"] = "auto"
+    preferences["settings_schema_version"] = max(schema, SETTINGS_SCHEMA_VERSION)
     preferences["token_number_format"] = normalize_token_format(
         preferences.get("token_number_format"))
-    # Normalize retired provider choices in memory; loading never rewrites disk.
+    # Normalize retired provider choices (OpenCode) in memory; loading
+    # never rewrites disk.
     preferences["tracking_provider"] = normalize_tracking_provider(
         preferences.get("tracking_provider"))
     preferences["language"] = normalize_language(preferences.get("language"))

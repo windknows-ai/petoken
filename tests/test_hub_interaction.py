@@ -1,4 +1,9 @@
 """Fixed overview and explicit native pet controls; isolated preference files."""
+import os as _os
+import tempfile as _tempfile
+# Hermetic Claude lane: a never-created home keeps real ~/.claude data out.
+_os.environ.setdefault('PETOKEN_CLAUDE_HOME', _os.path.join(
+    _tempfile.gettempdir(), 'petoken-tests-no-claude-home'))
 import tempfile
 import time
 import unittest

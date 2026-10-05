@@ -27,6 +27,18 @@ Download [Petoken-v1.3.0-Windows-x64.zip](https://github.com/windknows-ai/petoke
 
 ## Supported source
 
+### In development — V1.5 Codex + Claude Code
+
+The development branch tracks exactly two providers: Codex and Claude Code.
+Settings → Tracking provider offers Auto (default), Codex or Claude Code.
+Auto follows whichever provider has a verified working task; task stars show
+both providers at once — **Codex stars are blue, Claude Code stars are
+gold**. Claude Code usage comes from its local session transcripts and live
+session registry (CLI and desktop Code tab alike); quotas, reset times and the
+context window are not stored locally by Claude Code and read `N/A`. Claude
+Code tasks appear in the workbench task list but cannot yet be linked to
+projects. Unreleased; not part of the v1.3.0 download.
+
 ### In development — V1.4 workbench
 
 The current development preview also has a fixed-size silver-lavender/indigo
@@ -55,6 +67,7 @@ package, use `preview-workbench.cmd` and the
 | Source | Status | What you get |
 | --- | --- | --- |
 | Codex desktop client | Supported in v1.3.0 | Verified usage totals, available 5-hour / weekly quotas with resets, supported API-equivalent cost, working/idle context |
+| Claude Code (CLI / desktop Code tab) | In development (V1.5) | Deduplicated usage totals, API-equivalent cost from Anthropic list prices, working/idle from Claude Code's session registry; no local quotas (N/A) |
 
 If the Codex source is missing or stale, its views show that limitation honestly. Historical v1.2.0 provider behavior is recorded in its release notes; alternate-provider tracking is no longer part of the current product.
 
@@ -68,7 +81,7 @@ Interact: hover about 0.35 s or click the character to open the panel, move away
 
 ## Privacy / local-first
 
-- Petoken reads local Codex task metadata and numeric usage events, window task titles and activity state, and memory-only media metadata for the music display. It does not read alternate-provider stores.
+- Petoken reads local Codex task metadata and numeric usage events, window task titles and activity state, and memory-only media metadata for the music display. The V1.5 development branch also reads Claude Code's local session transcripts — numeric usage and session metadata only; message content is discarded in memory — and its live-session registry. No other provider's data is read.
 - Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere.
 - Details: [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) and [`SECURITY.md`](SECURITY.md).
 

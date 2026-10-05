@@ -4,6 +4,11 @@ Historical OpenCode accounting is exercised directly through its adapter and
 inert renderer, never registered with a current Panel/ProviderPoller. These
 cases preserve parsing/history evidence; they are not current product support.
 """
+import os as _os
+import tempfile as _tempfile
+# Hermetic Claude lane: a never-created home keeps real ~/.claude data out.
+_os.environ.setdefault('PETOKEN_CLAUDE_HOME', _os.path.join(
+    _tempfile.gettempdir(), 'petoken-tests-no-claude-home'))
 import json
 import tempfile
 import time
