@@ -46,6 +46,18 @@ TOOLTIP_BG = '#D9D5EA'
 TOOLTIP_BORDER = '#81779F'
 SCROLL_BG = BG
 
+# Action tiers (V1.5 polish). Primary actions use the clothing indigo with
+# pale text (about 9:1 contrast); destructive actions use a quiet berry that
+# reads as "careful" without alarm-red; selection carries an indigo bar.
+PRIMARY_FILL = '#483F86'
+PRIMARY_FILL_HOVER = '#5A51A0'
+PRIMARY_FILL_PRESSED = '#3A3270'
+PRIMARY_TEXT = '#F6F4FC'
+DANGER_TEXT = '#8A2E4A'
+DANGER_BORDER = '#B48294'
+DANGER_HOVER_BG = '#DDC6D1'
+SELECT_BAR = '#483F86'
+
 # Corner radii: one consistent set, rounder for the companion feel.
 RADIUS_SURFACE = 20
 RADIUS_CARD = 12

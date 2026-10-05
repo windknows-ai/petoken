@@ -55,7 +55,7 @@ def seed(window):
         '这些都是临时合成数据。关闭预览后会删除。\n\n'
         '✧ 项目空间：把相关的待办和便签放在一起。\n'
         '✧ 便签：Ctrl+S 保存，切换或关闭前会保护未保存的编辑。\n'
-        '✧ Codex：选择任务可打开已验证的任务详情。\n\n'
+        '✧ 任务：选择 Codex 或 Claude Code 任务可打开已验证的任务详情。\n\n'
         'Temporary synthetic records; removed when this preview closes.\n', first['id'])
     store.create_note('QA · 学习笔记 / Study notes', 'A small idea, ready to grow.\n给想法留一点空间。', second['id'])
     store.create_note('QA · 灵感 / Ideas', 'This note is unassigned. / 这张便签没有关联项目。')

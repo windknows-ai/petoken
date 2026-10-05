@@ -15,17 +15,17 @@ from widget import HUB_SIZE, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Setting
 
 ZH_ABOUT = [
     ("关于数据", None),
-    ("1. 费用估算", "显示的是 API 等价费用估算，不代表 ChatGPT / Codex 订阅的实际扣费。"),
-    ("2. Token 统计", "数据来自本地可读取的 Codex 记录。缓存、Context 等根据现有记录计算；缺失记录时，结果可能只是部分统计，且不包含工具调用费用。"),
+    ("1. 费用估算", "显示的是 API 等价费用估算，不代表 ChatGPT / Codex 或 Claude 订阅的实际扣费。"),
+    ("2. Token 统计", "数据来自本地可读取的 Codex 和 Claude Code 记录。缓存、Context 等根据现有记录计算；缺失记录时，结果可能只是部分统计，且不包含工具调用费用。"),
     ("3. 模型与推理强度", "模型和 reasoning 通常以会话首次记录的配置为准。通过启动器或会话中途修改的设置，不一定会被完整记录。"),
-    ("4. 状态与隐私", "状态优先级：Codex 工作 ＞ 麦克风 ＞ 音乐 ＞ 打字 ＞ 待机。浮窗会跟随桌宠展开。Petoken 不保存你输入的按键内容，也不会持久化保存媒体字幕内容。"),
+    ("4. 状态与隐私", "状态优先级：Codex / Claude Code 工作 ＞ 麦克风 ＞ 音乐 ＞ 打字 ＞ 待机。浮窗会跟随桌宠展开。Petoken 不保存你输入的按键内容，也不会持久化保存媒体字幕内容。"),
 ]
 EN_ABOUT = [
     ("About the Data", None),
-    ("1. Cost Estimate", "The displayed cost is an API-equivalent estimate and does not represent your actual ChatGPT or Codex subscription charge."),
-    ("2. Token Usage", "Usage is calculated from readable local Codex records. Cache and context values are derived from available data; missing records may result in partial totals, and tool-call costs are not included."),
+    ("1. Cost Estimate", "The displayed cost is an API-equivalent estimate and does not represent your actual ChatGPT, Codex or Claude subscription charge."),
+    ("2. Token Usage", "Usage is calculated from readable local Codex and Claude Code records. Cache and context values are derived from available data; missing records may result in partial totals, and tool-call costs are not included."),
     ("3. Model & Reasoning", "Model and reasoning values usually follow the first configuration recorded for the session. Launcher-side or mid-session changes may not always be fully captured."),
-    ("4. Status & Privacy", "Status priority: Codex Working ＞ Microphone ＞ Music ＞ Typing ＞ Idle. The panel opens beside the desktop pet. Petoken never stores keystroke content or persistently saves media subtitle text."),
+    ("4. Status & Privacy", "Status priority: Codex / Claude Code Working ＞ Microphone ＞ Music ＞ Typing ＞ Idle. The panel opens beside the desktop pet. Petoken never stores keystroke content or persistently saves media subtitle text."),
 ]
 
 

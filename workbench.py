@@ -1,8 +1,8 @@
-"""Native personal workbench; user records are separate from Codex telemetry."""
+"""Native personal workbench; user records are separate from Codex and Claude Code telemetry."""
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl, QTimer, QRectF, QSize
-from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut, QPainter, QPainterPath, QColor, QPen, QIcon
+from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut, QPainter, QPainterPath, QColor, QPen, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
     QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
@@ -15,6 +15,21 @@ from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 from pet_assets import sprite_for, ASSETS_DIR
 import theme
 from workbench_store import WorkbenchError
+
+def provider_dot(provider_id, size=10):
+    """A small round marker in the provider's star colour (blue / gold)."""
+    pixmap = QPixmap(size * 2, size * 2)
+    pixmap.setDevicePixelRatio(2)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    ring = theme.star_palette(provider_id)['ring']
+    painter.setPen(QPen(QColor(*(round(c * .7) for c in ring)), .8))
+    painter.setBrush(QColor(*ring))
+    painter.drawEllipse(QRectF(1, 1, size - 2, size - 2))
+    painter.end()
+    return QIcon(pixmap)
+
 
 # Providers whose tasks may be linked to projects in the local store.
 LINKABLE_PROVIDERS = ('codex', 'claude')
@@ -85,25 +100,37 @@ class WorkbenchWindow(QWidget):
             QLabel {{background:transparent;}}
             QLabel#heading {{font-family:{theme.FONT_DISPLAY}; font-size:22px; font-weight:600;}}
             QLabel#muted {{color:{theme.MUTED};}}
-            QLabel#section {{font-size:14px; font-weight:600; color:{theme.INK};}}
-            QLabel#summary {{background:transparent; padding:4px 0px 12px 0px; color:{theme.VIOLET};}}
+            QLabel#section {{font-size:14px; font-weight:600; color:{theme.VIOLET}; padding:2px 0px 4px 2px;}}
+            QLabel#summary {{background:{theme.SURFACE_TOP}; border:1px solid {theme.BORDER_SOFT}; border-radius:12px;
+                             padding:5px 12px; color:{theme.VIOLET};}}
             QTabWidget::pane {{background:{theme.CARD}; border:1px solid {theme.BORDER}; border-radius:12px;}}
             QTabBar::tab {{background:{theme.TABLE_HEADER}; border:1px solid {theme.BORDER_CONTROL}; padding:8px 12px; margin:5px 5px 0px 0px; border-top-left-radius:10px; border-top-right-radius:10px;}}
             QTabBar::tab:selected {{background:{theme.CARD}; color:{theme.INK}; margin-top:0px; padding-top:13px; border-bottom-color:{theme.CARD};}}
             QTabBar::tab:hover {{background:{theme.HOVER_BG};}}
             QListWidget,QTreeWidget {{background:transparent; border:0; padding:4px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
             QPlainTextEdit,QLineEdit,QComboBox {{background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:10px; padding:6px; selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};}}
-            QListWidget::item {{padding:10px 7px; margin-bottom:3px; border-radius:7px;}}
-            QTreeWidget::item {{padding:10px 7px; border-bottom:1px solid {theme.DIVIDER};}}
+            QListWidget::item {{padding:8px 10px; margin:1px 0px; border-radius:8px; border-left:3px solid transparent;}}
+            QTreeWidget::item {{padding:9px 7px; border-bottom:1px solid {theme.DIVIDER};}}
             QListWidget::item:hover,QTreeWidget::item:hover {{background:{theme.HOVER_BG};}}
-            QListWidget::item:selected,QTreeWidget::item:selected {{background:{theme.TAB_SELECTED_BG};}}
-            QPushButton {{background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-bottom:3px solid {theme.BORDER_CONTROL}; border-radius:10px; padding:7px 13px;}}
-            QPushButton:pressed {{border-bottom-width:1px; padding-top:9px; background:{theme.HOVER_BG};}}
-            QPushButton:hover {{background:{theme.HOVER_BG}; border-color:{theme.VIOLET};}}
+            QListWidget::item:selected {{background:{theme.TAB_SELECTED_BG}; border-left:3px solid {theme.SELECT_BAR};}}
+            QTreeWidget::item:selected {{background:{theme.TAB_SELECTED_BG};}}
+            QListWidget::indicator {{width:16px; height:16px; border:1px solid {theme.BORDER_CONTROL}; border-radius:5px; background:{theme.CONTROL_BG};}}
+            QListWidget::indicator:checked {{background:{theme.CHECK_BG}; border-color:{theme.VIOLET}; image:url("{ASSETS_DIR.as_posix()}/checkmark.svg");}}
+            QPushButton {{background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_SOFT}; border-bottom:2px solid {theme.BORDER_CONTROL};
+                          border-radius:9px; padding:6px 14px; min-height:18px; font-weight:500;}}
+            QPushButton:hover {{background:{theme.HOVER_BG}; border-color:{theme.HOVER_BORDER};}}
+            QPushButton:pressed {{border-bottom-width:1px; padding-top:7px; background:{theme.HOVER_BG};}}
             QPushButton:focus {{border-color:{theme.VIOLET};}}
             QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus {{border:1px solid {theme.VIOLET};}}
-            QPushButton:disabled {{color:{theme.MUTED};}}
-            QPushButton#primary {{background:{theme.PRIMARY_BG}; border-color:{theme.BORDER_CONTROL}; color:{theme.VIOLET};}}
+            QPushButton:disabled {{color:{theme.MUTED}; background:{theme.TABLE_ALT}; border-color:{theme.BORDER_SOFT};}}
+            QPushButton#primary {{background:{theme.PRIMARY_FILL}; color:{theme.PRIMARY_TEXT};
+                                  border:1px solid {theme.PRIMARY_FILL_PRESSED}; border-bottom:2px solid {theme.PRIMARY_FILL_PRESSED};}}
+            QPushButton#primary:hover {{background:{theme.PRIMARY_FILL_HOVER};}}
+            QPushButton#primary:pressed {{background:{theme.PRIMARY_FILL_PRESSED}; border-bottom-width:1px; padding-top:7px;}}
+            QPushButton#primary:focus {{border-color:{theme.INK};}}
+            QPushButton#danger {{color:{theme.DANGER_TEXT}; border-color:{theme.DANGER_BORDER}; border-bottom-color:{theme.DANGER_BORDER};}}
+            QPushButton#danger:hover {{background:{theme.DANGER_HOVER_BG}; border-color:{theme.DANGER_TEXT};}}
+            QPushButton#danger:pressed {{background:{theme.DANGER_HOVER_BG}; border-bottom-width:1px; padding-top:7px;}}
             QCheckBox {{spacing:8px; padding:5px;}}
             QHeaderView::section {{background:{theme.TABLE_HEADER}; color:{theme.INK}; padding:9px; border:0;}}
             QScrollBar:vertical {{background:transparent; width:9px;}}
@@ -175,6 +202,10 @@ class WorkbenchWindow(QWidget):
         root.addWidget(self.status)
         self.save_shortcut = QShortcut(QKeySequence.Save, self)
         self.save_shortcut.activated.connect(self.save_note)
+        # Lists elide long titles instead of growing a horizontal scrollbar.
+        for listing in self.findChildren(QListWidget):
+            listing.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            listing.setTextElideMode(Qt.ElideRight)
         self.tutorial = WorkbenchTutorial(self)
         self.apply_language()
 
@@ -192,10 +223,13 @@ class WorkbenchWindow(QWidget):
         self._captions.append((label, key))
         return label
 
-    def button(self, layout, key, callback, primary=False):
+    def button(self, layout, key, callback, primary=False, danger=False):
         button = QPushButton()
+        button.setCursor(Qt.PointingHandCursor)
         if primary:
             button.setObjectName('primary')
+        elif danger:
+            button.setObjectName('danger')
         self._captions.append((button, key))
         button.clicked.connect(callback)
         layout.addWidget(button)
@@ -214,7 +248,7 @@ class WorkbenchWindow(QWidget):
         self.summary = QLabel()
         self.summary.setObjectName('summary')
         self.summary.setWordWrap(True)
-        layout.addWidget(self.summary)
+        layout.addWidget(self.summary, 0, Qt.AlignLeft)  # A compact pill, not a full-width bar.
         columns = QSplitter()
         for key, attr in [('wb_next', 'pending_list'), ('wb_codex_tasks', 'task_list')]:
             card = QWidget()
@@ -265,16 +299,17 @@ class WorkbenchWindow(QWidget):
         actions.addWidget(self.show_completed)
         actions.addStretch()
         self.todo_edit_button = self.button(actions, 'wb_edit', self.edit_todo)
-        self.todo_delete_button = self.button(actions, 'wb_delete', self.delete_todo)
+        self.todo_delete_button = self.button(actions, 'wb_delete', self.delete_todo, danger=True)
         layout.addLayout(actions)
 
     def _build_notes(self):
         layout = self.page()
         actions = QHBoxLayout()
-        self.button(actions, 'wb_new_note', self.new_note, True)
+        self.button(actions, 'wb_new_note', self.new_note)
         actions.addStretch()
-        self.save_button = self.button(actions, 'wb_save', self.save_note)
-        self.note_delete_button = self.button(actions, 'wb_delete', self.delete_note)
+        # While editing, saving is the main action; a new note is secondary.
+        self.save_button = self.button(actions, 'wb_save', self.save_note, True)
+        self.note_delete_button = self.button(actions, 'wb_delete', self.delete_note, danger=True)
         layout.addLayout(actions)
         split = QSplitter()
         self.notes_list = QListWidget()
@@ -320,7 +355,7 @@ class WorkbenchWindow(QWidget):
         self.project_edit_button = self.button(actions, 'wb_edit', self.edit_selected_project)
         self.project_folder_button = self.button(actions, 'wb_folder_open', self.open_folder)
         actions.addStretch()
-        self.project_delete_button = self.button(actions, 'wb_delete', self.delete_project)
+        self.project_delete_button = self.button(actions, 'wb_delete', self.delete_project, danger=True)
         layout.addLayout(actions)
 
     def _attempt(self, callback, *args, **kwargs):
@@ -438,7 +473,7 @@ class WorkbenchWindow(QWidget):
         selected = current.data(Qt.UserRole) if current and current.isSelected() else None
         self.task_list.clear()
         for key, title in rows:
-            item = QListWidgetItem(title + ' · ' + PROVIDER_NAMES.get(key[0], key[0]))
+            item = QListWidgetItem(provider_dot(key[0]), title + ' · ' + PROVIDER_NAMES.get(key[0], key[0]))
             item.setData(Qt.UserRole, key)
             if key in manager._ring_staged:
                 item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
