@@ -72,7 +72,7 @@ If a source is missing or stale, its views show that limitation honestly. No oth
 
 1. Download `Petoken-v1.4.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.4.0).
 2. Extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
-3. Use Codex or Claude Code as usual; Petoken follows their running tasks. Optionally turn on **Settings → Sync Claude usage** for Claude quotas. For an isolated demonstration of both providers, run `preview-v1.5.cmd` (`preview-workbench.cmd` for the workbench); their data is synthetic and they do not save your settings.
+3. Use Codex or Claude Code as usual; Petoken follows their running tasks. Optionally turn on **Settings → Sync Claude usage** for Claude quotas. The interface starts in English; switch to Simplified Chinese in Settings → Language.
 
 Interact: click the character to open the panel; drag to move; right-click for the menu; `Alt + Arrow keys` moves the panel.
 

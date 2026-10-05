@@ -1,6 +1,6 @@
 """Central Simplified Chinese and English user-interface strings."""
 
-DEFAULT_LANGUAGE = "zh_CN"
+DEFAULT_LANGUAGE = "en"
 SUPPORTED_LANGUAGES = ("zh_CN", "en")
 
 ZH_CN = {

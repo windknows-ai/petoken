@@ -32,7 +32,7 @@ try {
         --distpath $distributionDirectory `
         --workpath $workDirectory `
         --specpath $specDirectory `
-        --icon (Join-Path $repo 'assets\skirk-pet.png') `
+        --icon (Join-Path $repo 'assets\petoken.ico') `
         --add-data "$(Join-Path $repo 'assets');assets" `
         --collect-submodules winrt `
         (Join-Path $repo 'widget.py')
@@ -54,22 +54,17 @@ foreach ($runtime in 'vcruntime140.dll','vcruntime140_1.dll') {
 Copy-Item -LiteralPath (Join-Path $repo 'README.md') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'LICENSE') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'THIRD_PARTY_NOTICES.md') -Destination $app -Force
-foreach ($document in 'ROADMAP.md','DESIGN.md','SECURITY.md','CONTRIBUTING.md','CHANGELOG.md') {
+# User-facing documents only. Developer previews, QA checklists, design and
+# roadmap notes stay in the repository (the preview entry points remain
+# available from source via tools/).
+foreach ($document in 'SECURITY.md','CHANGELOG.md') {
     Copy-Item -LiteralPath (Join-Path $repo $document) -Destination $app -Force
 }
 $documentation = Join-Path $app 'docs'
 New-Item -ItemType Directory -Path $documentation -Force | Out-Null
-foreach ($document in 'USAGE_MODEL.md','PROVIDERS.md','TOKEN_ACCOUNTING.md','ARTWORK.md','RELEASE_NOTES_v1.2.0.md','RELEASE_NOTES_v1.3.0.md','RELEASE_NOTES_v1.4.0.md','V1_3_VISUAL_QA.md','V1_4_VISUAL_QA.md','V1_4_WORKBENCH_QA.md','V1_5_DUAL_PROVIDER_QA.md') {
+foreach ($document in 'USAGE_MODEL.md','ARTWORK.md') {
     Copy-Item -LiteralPath (Join-Path $repo "docs\$document") -Destination $documentation -Force
 }
-Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_3_VISUAL_QA.md') -Destination $app -Force
-Copy-Item -LiteralPath (Join-Path $repo 'tools\launch_v1_3_preview.cmd') -Destination (Join-Path $app 'preview-v1.3.cmd') -Force
-Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_4_VISUAL_QA.md') -Destination $app -Force
-Copy-Item -LiteralPath (Join-Path $repo 'tools\launch_v1_4_preview.cmd') -Destination (Join-Path $app 'preview-v1.4.cmd') -Force
-Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_4_WORKBENCH_QA.md') -Destination $app -Force
-Copy-Item -LiteralPath (Join-Path $repo 'tools\launch_workbench_preview.cmd') -Destination (Join-Path $app 'preview-workbench.cmd') -Force
-Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_5_DUAL_PROVIDER_QA.md') -Destination $app -Force
-Copy-Item -LiteralPath (Join-Path $repo 'tools\launch_v1_5_preview.cmd') -Destination (Join-Path $app 'preview-v1.5.cmd') -Force
 
 $licenses = Join-Path $app 'THIRD_PARTY_LICENSES'
 New-Item -ItemType Directory -Path $licenses -Force | Out-Null

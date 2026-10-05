@@ -39,9 +39,9 @@ run `petoken.exe`; keep `_internal` alongside it.
 
 Existing settings upgrade once from the Codex-only provider choice to Auto.
 The workbench database upgrades once to schema 2 and keeps a full backup of
-the previous file beside it. `preview-v1.5.cmd` opens an isolated synthetic
-demonstration of both providers and the usage card; `preview-workbench.cmd`
-does the same for the workbench. Neither reads your data or saves settings.
+the previous file beside it. A new installation starts in English (Simplified
+Chinese is in Settings → Language); an existing language choice is kept. The
+download contains only the program, its licences and user documents.
 
 ## Privacy
 

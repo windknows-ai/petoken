@@ -7,7 +7,6 @@ import time
 import unittest
 from unittest.mock import patch
 
-from opencode_provider import OpenCodeProvider, _display_basename, _sanitize_session
 from usage import (CodexActivityDetector, CodexStore, SessionUsage,
                    _context_percent, _display_basename as codex_basename,
                    project_identity, quota_window)
@@ -68,16 +67,6 @@ class SourceTruthRecoveryTests(unittest.TestCase):
         zero = dict(input_tokens=0, cached_input_tokens=0, output_tokens=0)
         self.assertEqual(estimate_usd(zero, 'gpt-5.6-sol'), 0)
 
-    def test_nonstandard_uri_spellings_hide_private_metadata(self):
-        for prefix in ('https:', 'https:/', 'https:\\', 'https:\\\\',
-                       'ssh:/', 'ssh:\\'):
-            value = prefix + 'synthetic-user:synthetic-secret@example.invalid/Project?token=synthetic-private#private'
-            for helper in (codex_basename, _display_basename):
-                with self.subTest(prefix=prefix, helper=helper.__module__):
-                    self.assertEqual(helper(value), 'Project')
-            self.assertEqual(project_identity(dict(id='t', cwd=value), {})[0], 'Project')
-        for helper in (codex_basename, _display_basename):
-            self.assertIsNone(helper('https:synthetic-user:synthetic-secret@example.invalid'))
 
     def test_quota_shape_and_percent_validation(self):
         for limits in (None, [], 'bad', True, {'primary': []}):
@@ -107,42 +96,6 @@ class SourceTruthRecoveryTests(unittest.TestCase):
             usedPercent=0, resetsAt=200)}, 300, now=100)
         self.assertEqual(datetime.fromtimestamp(result['reset']), datetime.fromtimestamp(200))
 
-    def test_uri_directory_labels_exclude_credentials_query_and_fragment(self):
-        values = [
-            'https://synthetic-user:synthetic-secret@example.invalid/private/Project?token=synthetic-private#private',
-            'ssh://synthetic-user:synthetic-secret@example.invalid/private/Project?token=synthetic-private#private',
-            '//synthetic-user:synthetic-secret@example.invalid/private/Project?token=synthetic-private#private',
-        ]
-        for value in values:
-            with self.subTest(value=value):
-                self.assertEqual(_display_basename(value), 'Project')
-                label, source, identity = project_identity(dict(id='t', cwd=value), {})
-                self.assertEqual((label, source), ('Project', 'cwd_basename'))
-                self.assertTrue(identity.startswith('cwd:'))
-                self.assertEqual(project_identity(dict(id='t', project_id='p'),
-                    {'local-projects': {'p': {'name': value}}})[0], 'Project')
-                self.assertEqual(project_identity(dict(id='t', git_origin_url=value), {})[0], 'Project')
-        for value in ('https://synthetic-user:synthetic-secret@example.invalid',
-                      'https://[broken/private/Project?token=synthetic-private'):
-            self.assertIsNone(_display_basename(value))
-            self.assertIsNone(project_identity(dict(id='t', cwd=value), {})[0])
-
-    def test_native_path_names_and_identity_remain_distinct(self):
-        for value, expected in ((r'D:\Private\Project Name', 'Project Name'),
-                                (r'\\?\D:\Private\Project', 'Project'),
-                                (r'\\synthetic-server\private\Project#1', 'Project#1'),
-                                ('/private/Project#1', 'Project#1'),
-                                ('/private/Project?1', 'Project?1'),
-                                ('Project', 'Project')):
-            with self.subTest(value=value):
-                self.assertEqual(_display_basename(value), expected)
-                self.assertEqual(project_identity(dict(id='t', cwd=value), {})[0], expected)
-        first = project_identity(dict(id='a', cwd='/one/Project'), {})
-        second = project_identity(dict(id='b', cwd='/two/Project'), {})
-        self.assertEqual(first[0], second[0])
-        self.assertNotEqual(first[2], second[2])
-        for value in ([], {}, True, 1, None):
-            self.assertIsNone(_display_basename(value))
 
     def test_malformed_project_assignments_fall_back_without_losing_siblings(self):
         states = [
@@ -196,28 +149,6 @@ class SourceTruthRecoveryTests(unittest.TestCase):
             self.assertEqual(session.total['total_tokens'], 7)
             self.assertTrue(session.partial)
             self.assertIn('note_usage_record_invalid', session.notes)
-
-    def test_opencode_effort_comes_from_each_task_model(self):
-        rows = {}
-        for thread, model, effort in (('a', 'custom-a', 'high'), ('b', 'custom-b', None)):
-            row, _ = _sanitize_session(dict(id=thread, directory='/private/Project',
-                model=json.dumps(dict(id=model, variant=effort)), version='1.18.31',
-                tokens_input=0, tokens_output=0, tokens_reasoning=0,
-                tokens_cache_read=0, tokens_cache_write=0, cost=0))
-            rows[thread] = row
-        with tempfile.TemporaryDirectory() as directory:
-            provider = OpenCodeProvider(Path(directory) / 'synthetic.db')
-            try:
-                provider._sessions = rows
-                with patch.object(provider, 'activity_snapshot', return_value=dict(valid=True,
-                        sessions=[dict(session_id='opencode:' + thread,
-                                       working=True, instant=1000) for thread in rows])):
-                    tasks = provider.active_tasks()['tasks']
-            finally:
-                provider.close()
-        self.assertEqual([(task['presentation']['model'], task['presentation']['effort'])
-                          for task in tasks], [('custom-a', 'high'), ('custom-b', None)])
-        self.assertTrue(all(task['presentation']['tokens']['total'] == 0 for task in tasks))
 
 
 if __name__ == '__main__':

@@ -11,14 +11,10 @@ from pathlib import Path
 
 from app_config import load_preferences, normalize_preferences, save_preferences
 from app_mode import DAILY_MODE, TOKEN_MODE, AppModeState
-from opencode_provider import OpenCodeProvider
 from provider_selection import (FRESHNESS_S, STABILITY_S, ProviderSelection,
                                 codex_provider_status,
-                                normalize_tracking_provider,
-                                opencode_provider_status)
+                                normalize_tracking_provider)
 from providers import CodexProvider
-from tests.test_opencode_provider import (BASE_MS, make_message, make_part,
-                                          make_session, write_store)
 from usage import CodexStore
 
 NOW = 2000000.0
@@ -439,73 +435,6 @@ class ModeFeedTests(unittest.TestCase):
                          DAILY_MODE)
 
 
-class ProviderIntegrationTests(unittest.TestCase):
-    def test_opencode_working_beats_idle_codex(self):
-        import tests.test_providers as codex_fixture
-        from opencode_provider import OpenCodeProvider
-        from tests.test_opencode_provider import (BASE_MS, make_message,
-                                                  make_part, make_session,
-                                                  write_store)
-        from usage import CodexStore
-        with tempfile.TemporaryDirectory() as directory:
-            home = codex_fixture.write_home(directory, [{'id': 't1'}])
-            codex_read = CodexProvider(CodexStore(home)).read(
-                scope='global')
-            path = write_store(Path(directory) / 'open.db',
-                               [make_session('ses_live',
-                                             updated=BASE_MS + 1000)],
-                               [make_message('m1', 'ses_live')],
-                               [make_part('p1', 'ses_live',
-                                          created=BASE_MS + 900)])
-            provider = OpenCodeProvider(path)
-            fake_now = BASE_MS / 1000 + 101
-            opencode_read = provider.read(scope='global')
-            activity = provider.activity_snapshot(now=fake_now)
-            sel = ProviderSelection(('codex', 'opencode'))
-            snap = sel.update(
-                {'codex': codex_provider_status(codex_read,
-                                                last_success_at=fake_now),
-                 'opencode': opencode_provider_status(
-                     opencode_read, activity, last_success_at=fake_now)},
-                now=fake_now)
-            provider.close()
-        self.assertTrue(activity['working'])
-        self.assertFalse(codex_read['working_context'])
-        self.assertEqual((snap['selected'], snap['live']), ('opencode', True))
-        # Winner coherence: selected provider's own tokens/cost travel along.
-        self.assertEqual(opencode_read['tokens']['input'], 100)
-        self.assertEqual(opencode_read['cost']['amount'], 0.05)
-
-    def test_codex_working_beats_idle_opencode(self):
-        import tests.test_providers as codex_fixture
-        from opencode_provider import OpenCodeProvider
-        from tests.test_opencode_provider import (BASE_MS, make_session,
-                                                  write_store)
-        from usage import CodexStore
-        with tempfile.TemporaryDirectory() as directory:
-            home = codex_fixture.write_home(
-                directory, [{'id': 't1', 'working': True}])
-            codex_read = CodexProvider(CodexStore(home)).read(
-                active_title='t1', scope='global',
-                activity_detection_valid=True)
-            path = write_store(Path(directory) / 'open.db',
-                               [make_session('ses_idle',
-                                             updated=BASE_MS + 1000)])
-            provider = OpenCodeProvider(path)
-            fake_now = BASE_MS / 1000 + 101
-            opencode_read = provider.read(scope='global')
-            activity = provider.activity_snapshot(now=fake_now)
-            sel = ProviderSelection(('codex', 'opencode'))
-            snap = sel.update(
-                {'codex': codex_provider_status(codex_read,
-                                                last_success_at=fake_now),
-                 'opencode': opencode_provider_status(
-                     opencode_read, activity, last_success_at=fake_now)},
-                now=fake_now)
-            provider.close()
-        self.assertFalse(activity['working'])
-        self.assertEqual((snap['selected'], snap['live']), ('codex', True))
-        self.assertEqual(codex_read['working_context']['thread'], 't1')
 
 
 class ManualBypassTests(unittest.TestCase):
@@ -697,93 +626,7 @@ class AttributableRecencyTests(unittest.TestCase):
         self.assertTrue(shaped['working'])
         self.assertTrue(shaped['activity_valid'])
 
-    def test_idle_row_edit_cannot_steal_opencode_selection(self):
-        sample_epoch = self.TOKEN_EPOCH  # Codex fixture token event
-        now_s = sample_epoch + 300
-        open_start_ms = int((sample_epoch - 500) * 1000)
-        with tempfile.TemporaryDirectory() as directory:
-            path = write_store(Path(directory) / 'open.db',
-                               [make_session('ses_1',
-                                             updated=open_start_ms)],
-                               [make_message('m1', 'ses_1')],
-                               [make_part('p1', 'ses_1',
-                                          created=open_start_ms)])
-            provider = OpenCodeProvider(path)
-            before = opencode_provider_status(
-                provider.read(scope='global'),
-                provider.activity_snapshot(now=now_s),
-                last_success_at=now_s)
-            with closing(sqlite3.connect(path, timeout=5)) as db:
-                db.execute('UPDATE session SET time_updated=?',
-                           (int(now_s * 1000),))
-                db.commit()
-            after = opencode_provider_status(
-                provider.read(scope='global'),
-                provider.activity_snapshot(now=now_s),
-                last_success_at=now_s)
-            provider.close()
-        # The idle metadata edit moves no lifecycle instant.
-        self.assertEqual(before['activity_at'], after['activity_at'])
-        self.assertEqual(before['activity_at'], open_start_ms / 1000)
-        sel = ProviderSelection(('codex', 'opencode'))
-        codex = status('codex', available=True, source_available=True,
-                       activity_valid=True, working=True,
-                       activity_at=sample_epoch, success_at=now_s)
-        self.assertEqual(
-            sel.update({'codex': codex,
-                        'opencode': dict(before, last_success_at=now_s)},
-                       now=now_s)['selected'], 'codex')
-        sel2 = ProviderSelection(('codex', 'opencode'))
-        self.assertEqual(
-            sel2.update({'codex': codex,
-                         'opencode': dict(after, last_success_at=now_s)},
-                        now=now_s)['selected'], 'codex')
 
-    def test_idle_row_edit_cannot_steal_codex_selection(self):
-        import tests.test_providers as codex_fixture
-        sample_epoch = self.TOKEN_EPOCH
-        now_s = sample_epoch + 200
-        open_start_ms = int((sample_epoch + 100) * 1000)
-        home_dir = tempfile.TemporaryDirectory()
-        self.addCleanup(home_dir.cleanup)
-        home = codex_fixture.write_home(home_dir.name,
-                                        [{'id': 't1', 'working': True}])
-        codex_read = CodexProvider(CodexStore(home)).read(
-            active_title='t1', scope='global',
-            activity_detection_valid=True)
-        with tempfile.TemporaryDirectory() as directory:
-            path = write_store(Path(directory) / 'open.db',
-                               [make_session('ses_1',
-                                             updated=open_start_ms)],
-                               [make_message('m1', 'ses_1')],
-                               [make_part('p1', 'ses_1',
-                                          created=open_start_ms)])
-            provider = OpenCodeProvider(path)
-            activity = provider.activity_snapshot(now=now_s)
-            opencode_read = provider.read(scope='global')
-            before = opencode_provider_status(opencode_read, activity,
-                                              last_success_at=now_s)
-            with closing(sqlite3.connect(home / 'state_1.sqlite',
-                                         timeout=5)) as db:
-                db.execute('UPDATE threads SET updated_at=?',
-                           (int(now_s),))
-                db.commit()
-            codex_reread = CodexProvider(CodexStore(home)).read(
-                active_title='t1', scope='global',
-                activity_detection_valid=True)
-            after_codex = codex_provider_status(codex_reread,
-                                                last_success_at=now_s)
-            provider.close()
-        # Newer OpenCode lifecycle wins before and after the Codex row bump.
-        self.assertTrue(activity['working'])
-        self.assertEqual(before['activity_at'], open_start_ms / 1000)
-        self.assertEqual(after_codex['activity_at'], sample_epoch)
-        sel = ProviderSelection(('codex', 'opencode'))
-        snap = sel.update(
-            {'codex': after_codex,
-             'opencode': dict(before, last_success_at=now_s)}, now=now_s)
-        self.assertEqual(snap['selected'], 'opencode')
-        self.assertTrue(snap['live'])
 
 
 class EndToEndValidityTests(unittest.TestCase):
@@ -915,22 +758,6 @@ class EndToEndValidityTests(unittest.TestCase):
         self.assertEqual(snap['selected'], 'opencode')
         self.assertFalse(snap['live'])
 
-    def test_outer_reason_failure_opencode_symmetric(self):
-        from tests.test_opencode_provider import (BASE_MS, make_session,
-                                                  write_store)
-        with tempfile.TemporaryDirectory() as directory:
-            path = write_store(Path(directory) / 'open.db',
-                               [make_session('ses_1')])
-            provider = OpenCodeProvider(path)
-            read = provider.read(pinned='ses_1')
-            activity = {'valid': True, 'working': True,
-                        'last_lifecycle_at': BASE_MS,
-                        'evidence_unknown': False}
-            read['reason'] = 'store_locked'
-            shaped = opencode_provider_status(read, activity,
-                                              last_success_at=NOW)
-            self.assertFalse(shaped['source_available'])
-            self.assertFalse(shaped['working'])
 
     def test_verified_working_carries_no_unknown_flag(self):
         import tests.test_providers as codex_fixture
@@ -952,124 +779,6 @@ class EndToEndValidityTests(unittest.TestCase):
                          ('codex', True, False))
 
 
-class DualLayerOpenCodeFailureTests(unittest.TestCase):
-    """Parameterized outer/inner source-failure coverage.
-
-    Real cached-successful read envelopes (synthetic store, no real
-    content) plus a valid working activity snapshot; only the failure
-    markers vary. Every case runs the full shaper -> selector chain.
-    """
-    ERRORS = ('missing_store', 'store_locked', 'unsupported_schema')
-
-    def _live_pair(self, directory):
-        path = write_store(Path(directory) / 'open.db',
-                           [make_session('ses_1')])
-        provider = OpenCodeProvider(path)
-        read = provider.read(pinned='ses_1')
-        self.assertTrue(read['available'])
-        self.assertEqual(read['reason'], '')
-        self.assertNotIn('status', read['payload'])
-        activity = {'valid': True, 'working': True,
-                    'last_lifecycle_at': BASE_MS,
-                    'evidence_unknown': False}
-        return read, activity
-
-    def _opponent(self):
-        return status('codex', activity_at=NOW - 500)
-
-    def _assert_invalidated(self, shaped, selection_snap, manual_snap):
-        self.assertFalse(shaped['source_available'])
-        self.assertFalse(shaped['working'])
-        self.assertFalse(shaped['activity_valid'])
-        # Cached scoped/history data is kept, never cleared by the failure.
-        self.assertTrue(shaped['available'])
-        self.assertEqual((selection_snap['selected'],
-                          selection_snap['live']),
-                         ('codex', False))
-        self.assertIsNone(manual_snap['selected'])
-        self.assertFalse(manual_snap['live'])
-        self.assertEqual(manual_snap['reason'], 'manual_unavailable')
-
-    def _run_chain(self, read, activity):
-        shaped = opencode_provider_status(read, activity,
-                                          last_success_at=NOW)
-        auto = ProviderSelection(('codex', 'opencode')).update(
-            {'codex': self._opponent(), 'opencode': shaped}, now=NOW)
-        manual = ProviderSelection(('codex', 'opencode')).update(
-            {'codex': self._opponent(), 'opencode': shaped},
-            preference='opencode', now=NOW)
-        return shaped, auto, manual
-
-    def test_outer_only_failure(self):
-        with tempfile.TemporaryDirectory() as directory:
-            for err in self.ERRORS:
-                with self.subTest(layer='outer', error=err):
-                    read, activity = self._live_pair(directory)
-                    read = copy.deepcopy(read)
-                    read['reason'] = err  # payload keeps no status marker
-                    shaped, auto, manual = self._run_chain(read, activity)
-                    self._assert_invalidated(shaped, auto, manual)
-
-    def test_inner_only_failure(self):
-        with tempfile.TemporaryDirectory() as directory:
-            for err in self.ERRORS:
-                with self.subTest(layer='inner', error=err):
-                    read, activity = self._live_pair(directory)
-                    read = copy.deepcopy(read)
-                    read['payload']['status'] = err  # outer reason stays ''
-                    self.assertEqual(read['reason'], '')
-                    shaped, auto, manual = self._run_chain(read, activity)
-                    self._assert_invalidated(shaped, auto, manual)
-
-    def test_mixed_benign_and_failure(self):
-        with tempfile.TemporaryDirectory() as directory:
-            for err in self.ERRORS:
-                with self.subTest(layer='outer-benign', error=err):
-                    read, activity = self._live_pair(directory)
-                    read = copy.deepcopy(read)
-                    read['reason'] = 'session_not_found'
-                    read['payload']['status'] = err
-                    shaped, auto, manual = self._run_chain(read, activity)
-                    self._assert_invalidated(shaped, auto, manual)
-                with self.subTest(layer='inner-benign', error=err):
-                    read, activity = self._live_pair(directory)
-                    read = copy.deepcopy(read)
-                    read['reason'] = err
-                    read['payload']['status'] = 'session_not_found'
-                    shaped, auto, manual = self._run_chain(read, activity)
-                    self._assert_invalidated(shaped, auto, manual)
-
-    def test_healthy_and_benign_still_live(self):
-        with tempfile.TemporaryDirectory() as directory:
-            read, activity = self._live_pair(directory)
-            shaped = opencode_provider_status(read, activity,
-                                              last_success_at=NOW)
-            sel = ProviderSelection(('codex', 'opencode'))
-            snap = sel.update(
-                {'codex': self._opponent(), 'opencode': shaped}, now=NOW)
-            self.assertEqual((snap['selected'], snap['live']),
-                             ('opencode', True))
-            # A benign marker at either layer alone never invalidates.
-            benign = copy.deepcopy(read)
-            benign['payload']['status'] = 'session_not_found'
-            shaped_benign = opencode_provider_status(benign, activity,
-                                                     last_success_at=NOW)
-            self.assertTrue(shaped_benign['source_available'])
-            self.assertTrue(shaped_benign['working'])
-
-    def test_inner_only_failure_codex_unchanged(self):
-        import tests.test_providers as codex_fixture
-        home_dir = tempfile.TemporaryDirectory()
-        self.addCleanup(home_dir.cleanup)
-        home = codex_fixture.write_home(home_dir.name,
-                                        [{'id': 't1', 'working': True}])
-        read = CodexProvider(CodexStore(home)).read(
-            active_title='t1', scope='conversation',
-            activity_detection_valid=True)
-        read['payload']['status'] = 'status_database_unavailable'
-        shaped = codex_provider_status(read, last_success_at=NOW)
-        self.assertFalse(shaped['source_available'])
-        self.assertFalse(shaped['working'])
 
 
 class SyntheticThirdProviderTests(unittest.TestCase):

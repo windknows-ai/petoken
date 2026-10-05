@@ -5,7 +5,6 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from opencode_provider import OpenCodeProvider, _sanitize_session, parse_model
 from usage import CodexStore, SessionUsage, project_identity
 
 
@@ -105,37 +104,6 @@ class TaskProjectionCloseoutTests(unittest.TestCase):
                     projection = store._task_context(dict(id='t',
                         rollout_path='synthetic.jsonl'), {}, {})['presentation']
                 self.assertIsNone(projection['context'])
-
-    def test_opencode_model_fields_reject_malformed_types(self):
-        for value in ({'id': 'nested'}, [], True, 42, '', '  ', None):
-            with self.subTest(value=value):
-                self.assertEqual(parse_model(json.dumps(
-                    dict(id=value, providerID=value, variant=value))),
-                    dict(id=None, provider=None, variant=None))
-        self.assertEqual(parse_model(json.dumps(dict(id='custom/arbitrary:2026')))[
-            'id'], 'custom/arbitrary:2026')
-
-    def test_opencode_task_projection_is_sanitized_and_local(self):
-        row, _ = _sanitize_session(dict(id='s', directory='/synthetic/Project',
-            model=json.dumps(dict(id={'bad': 'type'})), version='1.18.31',
-            tokens_input=7, tokens_output=True, tokens_reasoning=0,
-            tokens_cache_read=0, tokens_cache_write=0, cost=float('nan')))
-        with tempfile.TemporaryDirectory() as directory:
-            provider = OpenCodeProvider(Path(directory) / 'synthetic.db')
-            provider._sessions = {'s': row}
-            with patch.object(provider, 'activity_snapshot', return_value=dict(
-                    valid=True, sessions=[dict(session_id='opencode:s', working=True,
-                                               instant=1000)])):
-                result = provider.active_tasks()['tasks'][0]
-            provider.close()
-        self.assertEqual(result['display']['project'], 'Project')
-        projection = result['presentation']
-        self.assertEqual(projection['tokens']['input'], 7)
-        self.assertIsNone(projection['tokens']['output'])
-        self.assertIsNone(projection['tokens']['total'])
-        self.assertIsNone(projection['model'])
-        self.assertIsNone(projection['cost_amount'])
-        self.assertTrue(projection['partial'])
 
 
 if __name__ == '__main__':

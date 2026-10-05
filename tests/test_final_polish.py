@@ -208,14 +208,14 @@ class FinalPolishTests(unittest.TestCase):
         try:
             settings.reset_button.click()
             settings.reset_button.click()
-            self.assertEqual(settings.about_heading.text(), '关于数据')
+            self.assertEqual(settings.about_heading.text(), 'About the Data')
             settings.save()
         finally:
             settings.deleteLater()
-        self.assertEqual(panel.prefs['language'], 'zh_CN')
+        self.assertEqual(panel.prefs['language'], 'en')
         check = Settings(panel)
         try:
-            self.assertEqual(check.about_heading.text(), '关于数据')
+            self.assertEqual(check.about_heading.text(), 'About the Data')
         finally:
             check.deleteLater()
 

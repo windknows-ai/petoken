@@ -101,7 +101,7 @@ class EdgeCaseTests(unittest.TestCase):
         path = Path(self.temp.name) / 'settings.json'
         path.write_text('{not valid json\x00', encoding='utf-8')
         prefs = load_preferences(path)
-        self.assertEqual(prefs['language'], 'zh_CN')
+        self.assertEqual(prefs['language'], 'en')
         self.assertEqual(prefs['currency'], 'CAD')
         self.assertEqual(prefs['scope'], 'conversation')
 

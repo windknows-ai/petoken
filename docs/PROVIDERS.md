@@ -68,7 +68,7 @@ Code tab share one data directory). Adapter: `claude_usage.py`.
 
 Read only numeric usage/task metadata. Unknown model remains Unknown, unavailable usage/quota/cost remains N/A, real zero remains zero, and partial coverage remains explicit. Model pricing must support any API-equivalent cost estimate. Working/Idle evidence does not establish finer task phases.
 
-The former OpenCode adapter and its low-level tests remain internal historical compatibility material while active runtime/UI/configuration paths are removed. They do not constitute a supported current provider, an active polling lane, or authorization to read its store. The records below are retained to preserve verified history and shared-infrastructure reasoning; they describe earlier slices and the released v1.2.0 product, not current V1.3 behavior.
+The former OpenCode adapter (`opencode_provider.py`) and its tests were removed in v1.4.0; they remain in git history. The records below preserve verified history and shared-infrastructure reasoning for the released v1.2.0 product only.
 
 ## Historical OpenCode discovery and implementation record
 

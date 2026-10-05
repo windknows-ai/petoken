@@ -1,4 +1,5 @@
 """Actual Expanded Star boundaries, task truth and native Qt lifecycle."""
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -433,7 +434,7 @@ class ExpandedStarTests(unittest.TestCase):
 
     def test_native_codex_card_render_contrast_both_languages_task_variants(self):
         from pathlib import Path
-        captures=Path(r'D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-03-visual-refinement')
+        captures=Path(tempfile.mkdtemp(prefix='petoken-card-captures-'))
         for language in ('en','zh_CN'):
             for variant in ('primary','secondary'):
                 for case in ('known','zero','unknown','partial'):

@@ -62,6 +62,7 @@ class UiTests(unittest.TestCase):
             self.assertEqual(image.pixelColor(0,0).alpha(),0,name)
 
     def test_unknown_cache_write_expanded_and_countdown_preserved(self):
+        self.panel.prefs['language']='zh_CN';self.panel.apply_language()
         tokens=normalize_usage(dict(input_tokens=100,cached_input_tokens=80,output_tokens=20,reasoning_output_tokens=12))
         a=aggregate([dict(session='fixture',model='gpt-6-astra',timestamp='2026-09-16T12:00:00Z',event_id='a',tokens=tokens)])
         self.panel.render(dict(title='测试任务',project='测试项目',model='gpt-6-astra',effort='high',
@@ -428,16 +429,16 @@ class UiTests(unittest.TestCase):
         self.assertEqual(settings.scope.currentData(),'global')
         settings.reset_button.click()
         self.assertEqual(settings.scope.currentData(),'conversation')
-        self.assertEqual(settings.language.currentData(),'zh_CN')
+        self.assertEqual(settings.language.currentData(),'en')
         self.assertEqual(settings.token_format.currentData(),'compact')
         self.assertEqual(settings.currency.currentData(),'CAD')
         self.assertTrue(settings.topmost.isChecked())
-        self.assertEqual(settings.windowTitle(),'petoken · 设置')
+        self.assertEqual(settings.windowTitle(),'petoken · Settings')
         with patch('widget.write_preferences') as write:
             settings.save()
         saved=write.call_args.args[0]
         self.assertEqual((saved['scope'],saved['language'],saved['token_number_format'],
-                          saved['currency'],saved['always_on_top']),('conversation','zh_CN','compact','CAD',True))
+                          saved['currency'],saved['always_on_top']),('conversation','en','compact','CAD',True))
         settings.deleteLater()
 
     def test_final_art_states_share_geometry_and_taps_differ(self):

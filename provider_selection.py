@@ -86,10 +86,6 @@ CODEX_SOURCE_FAILURES = frozenset(
     {'status_no_local_data', 'status_database_unavailable',
      'status_read_failed'})
 
-# Inert historical status shaping, used only by explicitly isolated adapter
-# tests/callers. Production registry and poller never invoke this path.
-OPENCODE_SOURCE_FAILURES = frozenset(
-    {'missing_store', 'store_locked', 'unsupported_schema'})
 
 # Claude store statuses meaning the source itself is down, checked at both
 # envelope layers like Codex.
@@ -167,45 +163,6 @@ def codex_provider_status(read_result, last_success_at=None):
                 error=reason)
 
 
-def opencode_provider_status(read_result, activity, last_success_at=None):
-    """Shape an OpenCode envelope + activity snapshot into a status.
-
-    A readable store with a missing pinned scope stays source-available;
-    idle recency uses attributable lifecycle instants only. Evidence
-    that is present but unusable downgrades validity instead of
-    claiming confirmed idle. Store failures are detected at BOTH
-    layers — outer read_result.reason AND inner payload.status — so a
-    cached payload carrying a failure marker still invalidates, while
-    benign scoped-data markers at either layer stay benign. A failed
-    source also forces validity down: cached activity never proves
-    current work.
-    """
-    read_result = read_result or {}
-    snapshot = activity if isinstance(activity, dict) else {}
-    payload = read_result.get('payload')
-    payload = payload if isinstance(payload, dict) else None
-    reason = read_result.get('reason') or ''
-    payload_status = payload.get('status') or '' if payload else ''
-    snap_valid = bool(snapshot.get('valid', False))
-    unknown_evidence = bool(snapshot.get('evidence_unknown', False))
-    source_available = (payload is not None
-                        and reason not in OPENCODE_SOURCE_FAILURES
-                        and payload_status not in OPENCODE_SOURCE_FAILURES)
-    base_valid = snap_valid and not (
-        unknown_evidence and not snapshot.get('working', False))
-    activity_valid = bool(source_available and base_valid)
-    working = bool(activity_valid and snapshot.get('working', False))
-    last_lifecycle = snapshot.get('last_lifecycle_at')
-    activity_at = (last_lifecycle / 1000 if isinstance(
-        last_lifecycle, (int, float)) and last_lifecycle >= 0 else None)
-    return dict(provider_id=PROVIDER_OPENCODE,
-                available=bool(read_result.get('available', False)),
-                source_available=source_available,
-                activity_valid=activity_valid,
-                working=working,
-                activity_at=activity_at,
-                last_success_at=_epoch(last_success_at),
-                error=reason or snapshot.get('reason') or '')
 
 
 def claude_provider_status(read_result, last_success_at=None):

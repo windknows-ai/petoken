@@ -4153,18 +4153,22 @@ class Panel(QWidget):
         self.header.mousePressEvent = self.begin_drag
         self.header.mouseMoveEvent = self.drag
         self.header.mouseReleaseEvent = self.end_drag
-        # Keep the vector spirit for the tray/window icon only.
+        # Vector spirit: icon fallback only, if the icon file is missing.
         self.spirit = Spirit()
         self.spirit.setVisible(False)
         for text, delta in [('Left',(-10,0)),('Right',(10,0)),('Up',(0,-10)),('Down',(0,10))]:
             QShortcut(QKeySequence('Alt+'+text), self, activated=lambda d=delta:self.move_clamped(self.pos()+QPoint(*d)))
         QShortcut(QKeySequence('Escape'), self, activated=self.handle_escape)
         self.tray = QSystemTrayIcon(self)
-        pix = QPixmap(64,64)
-        pix.fill(Qt.transparent)
-        self.spirit.render(pix)
-        self.setWindowIcon(QIcon(pix))
-        self.tray.setIcon(QIcon(pix))
+        # App, window and tray share the idle-pose icon (assets/petoken.ico).
+        icon = QIcon(str(assets.ASSETS_DIR / 'petoken.ico'))
+        if icon.isNull():
+            pix = QPixmap(64,64)
+            pix.fill(Qt.transparent)
+            self.spirit.render(pix)
+            icon = QIcon(pix)
+        self.setWindowIcon(icon)
+        self.tray.setIcon(icon)
         menu = QMenu()
         self.tray_actions = {
             'show_hide': menu.addAction('', self.toggle_visible),
