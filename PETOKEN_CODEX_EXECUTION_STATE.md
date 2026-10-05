@@ -1,6 +1,6 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — gentle companion surfaces**.
+Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — native toy/notebook UI**.
 
 ## V1.4 workbench current authority
 
@@ -8,6 +8,17 @@ Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA —
 - Baseline c953268 preserved in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4-workbench/baseline.json`; current branch codex/v1.4-workbench. Unrelated.autopilot untouched. Root owns shared continuity/Git, GUI work serialized.
 
 ## Current V1.4 progress
+
+- **V1.4 toy/notebook UI — WAITING_FOR_HUMAN_VISUAL_QA.** Human rejected the previous bright pearl appearance and corrected the reference to Steam Bongo Cat. Current style uses muted lavender paper, warm desk pages, connected notebook tabs with four original line icons, outlined tactile buttons, quieter unboxed content lists and a handwritten English heading. Shared Hub/Settings/detail/menu surfaces follow the flat outlined treatment. No new dependency or copied game artwork/code.
+- Source checkpoints `48b04a8` (style and portrait) and `8b1ad73` (compact pager) on `codex/v1.4-workbench`. Changed theme.py/widget.py/workbench.py, four navigation SVGs, two focused test files, DESIGN.md and QA guide. Desktop artwork/ring geometry and effects, Codex-only scope, data, selected-action guards and tutorial behavior preserved. Runtime version remains 1.3.0 pending a separate release decision.
+- Header uses an original-art head portrait in a rounded sticker frame. SmoothTransformation cache is sized to physical screen DPR and refreshed on scale change; original full 1254-square source remains intact. Direct painter downsampling speckling found in initial actual screenshots was corrected. Fresh native portraits at 100%, 125% and 150% reviewed; 4 refined theme/portrait cases PASS (0.520s).
+- Current related native gate: 87 PASS (11.154s) + 39 PASS (6.002s), 126 distinct cases in segments; no full-suite rerun. Seven source scenes and final refined Home pixels reviewed. Independent #18 passed eight compact bilingual/layout/interaction/shared-surface/DPI groups, initially blocked TOY1 (37px arrow inside 32px pager). Root exact six resting/focused/pressed containment failures reproduced; scoped padding/minheight repair preserves the 168×32 footprint. Six fresh 24/64-task and DPR 1/1.25/1.5 cases independently reaccepted, including native borders and keyboard/mouse access to every stable task identity. Initial BLOCKED/helper-error/red evidence retained.
+- Isolated rebuild exit0 after the pager repair. Root artifact PASS: 232 exact ZIP files/CRC/content, 19 compiled application modules equal current source, 423 archive modules with no OpenCode adapter or personal DB, 14 licenses, 19 README links, all SVGs and original artwork. Previous pearl/checkbox/onboarding/workbench/celestial and released v1.3.0 EXE/ZIP bytes preserved. Root 15 actual EXE scenes PASS (7 workbench, 5 tutorial, 3 Hub/detail/0/24/64/music/mic/pager); private settings/lock/DB hash+mtime unchanged. Final frozen Home/Todo/guide native pixels viewed. Independent review is source/native; artifact validation is root-scoped.
+- EXE SHA256 `b52ac4eee479c37fe09c65e768d2bb224218623bc71f0849a142d3d348e15869`; ZIP `99dca08fa4255bd243f6621fce8c524efa5b0a2857dfbc78af655841f43380b1`. No release/publish/push, stable overwrite or Astra.
+- Current launcher: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4-soft-toy\package-dev\petoken\preview-workbench.cmd`; ZIP sibling `petoken-Windows-x64.zip`. Evidence `root-toy-acceptance.json`, `root-package-audit.json`, `18-toy-review.md/json` and `18-toy-reaccept.md/json` in that phase folder. Temporary preview records are removed on exit; do not keep real notes there.
+- Technical work complete; zero active subagents/GUI/jobs and no concrete blocker in tested scope. Exact next step human style/portrait/daily-use QA of this isolated package; other DPI/physical device coverage and future release remain separate gates. Preserve unrelated untracked .autopilot.
+
+### Prior gentle companion baseline
 
 - **V1.4 gentle companion surfaces — WAITING_FOR_HUMAN_VISUAL_QA.** Pearl-white/lavender/quiet-blue shared palette, lighter Workbench header/sidebar/pill tabs, transparent draggable divider, complete native combo controls/chevron. Heading “你的小天地” / “Your little corner”. Hub/Settings/Analytics/detail/tutorial/bubbles share tokens; approved pet artwork/ring geometry/effects and Codex-only/data/selection behavior preserved.
 - Source `b7b9771` on `codex/v1.4-workbench`; changed theme.py/widget.py/workbench.py/analytics_view.py/localization.py, assets/chevron-down.svg, three focused test files and DESIGN/QA docs. No new dependency/theme system, version bump, Astra, release/push or stable overwrite.
@@ -250,7 +261,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | Gentle companion surface native reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Human palette/combo/splitter and shared-surface contrast | REVIEW / READ ONLY | No source/shared writes; external18-cozy reports/probes/owned captures only | InitialCOZY1/2 actual native selection contrast BLOCKED preserved; explicit local/shared roles repaired then fresh EN/ZH active/inactive selectedrows/editor/Analytics/nativepopup DownReturn/Hubmenu independentPASS. Initial popup helper sampled opening QRollEffect too early; settled popup works. Reports18-cozy-review/reaccept, GUIreleased. Artifact validation root-scoped. |
+| 18 | Native toy UI and portrait DPI reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Bongo Cat-inspired human UI feedback; native compact/contrast/DPI controls | REVIEW / READ ONLY | No source/shared writes; external18-toy reports/probes/owned captures only | Initial 8 native groups and 100/125/150% portrait PASS; TOY1 pager clipping BLOCKED preserved. After scoped repair, six 24/64-task and DPR 1.0/1.25/1.5 cases PASS, both arrows contained at rest/focus/press, actual lower borders viewed, keyboard/mouse paging reaches all identities once with stable labels. GUI released; artifact checks root-scoped. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -430,6 +441,14 @@ Completed: 2026-10-04
 Agents: #18
 Peak concurrency: 1
 Status: Complete — source/native independent PASS; root frozen/package PASS; WAITING_FOR_HUMAN_VISUAL_QA
+Started: 2026-10-04
+Completed: 2026-10-04
+
+### Wave 23 — Human Bongo Cat-inspired complete UI and sharp portrait refinement
+
+Agents: #18
+Peak concurrency: 1
+Status: Complete — source/native independent PASS; root isolated frozen/package PASS; WAITING_FOR_HUMAN_VISUAL_QA
 Started: 2026-10-04
 Completed: 2026-10-04
 
