@@ -1,4 +1,12 @@
-"""Transactional local projects, todos, notes and explicit Codex task links."""
+"""Transactional local projects, todos, notes and explicit task links.
+
+Schema 2 (V1.5) lets Codex and Claude Code tasks be linked to projects. An
+exact schema-1 database is migrated once on open: a complete SQLite backup
+is written beside it first, the task-link table is rebuilt inside one
+transaction with its row count verified, and any failure rolls back and
+leaves the original untouched. Anything unrecognized is never migrated.
+"""
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 import sqlite3
@@ -10,7 +18,9 @@ class WorkbenchError(Exception):
 
 
 _APPLICATION_ID = 0x50545742
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
+# Providers whose tasks may be linked to projects.
+LINK_PROVIDERS = ('codex', 'claude')
 _SCHEMA = {
     'projects': '''CREATE TABLE projects (
         id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, directory TEXT NOT NULL,
@@ -25,10 +35,15 @@ _SCHEMA = {
         project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
         created_at TEXT NOT NULL, updated_at TEXT NOT NULL)''',
     'task_links': '''CREATE TABLE task_links (
-        provider_id TEXT NOT NULL CHECK (provider_id = 'codex'), task_key TEXT NOT NULL,
+        provider_id TEXT NOT NULL CHECK (provider_id IN ('codex', 'claude')), task_key TEXT NOT NULL,
         project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
         PRIMARY KEY (provider_id, task_key))''',
 }
+# Schema 1 (V1.4): Codex-only task links. Kept to recognize and migrate it.
+_SCHEMA_V1 = dict(_SCHEMA, task_links='''CREATE TABLE task_links (
+        provider_id TEXT NOT NULL CHECK (provider_id = 'codex'), task_key TEXT NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        PRIMARY KEY (provider_id, task_key))''')
 
 
 def _text(value, field, limit=None, required=False):
@@ -87,6 +102,8 @@ class WorkbenchStore:
                             connection.execute(sql)
                         connection.execute(f'PRAGMA application_id={_APPLICATION_ID}')
                         connection.execute(f'PRAGMA user_version={_SCHEMA_VERSION}')
+            self.migration_backup = None
+            self._migrate_v1()
             self._validate_schema()
         except (OSError, ValueError, TypeError, sqlite3.Error, WorkbenchError) as error:
             self.close()
@@ -94,18 +111,53 @@ class WorkbenchStore:
                 raise
             raise WorkbenchError(f'Cannot open workbench database: {error}') from error
 
-    def _validate_schema(self):
+    def _migrate_v1(self):
+        """Upgrade an exact schema-1 store to schema 2, backup first."""
         connection = self._connection
         if (connection.execute('PRAGMA application_id').fetchone()[0] != _APPLICATION_ID
-                or connection.execute('PRAGMA user_version').fetchone()[0] != _SCHEMA_VERSION):
+                or connection.execute('PRAGMA user_version').fetchone()[0] != 1):
+            return
+        # Read-only proof that this is exactly our schema 1 before any write.
+        self._validate_schema(_SCHEMA_V1, 1)
+        stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        backup = self.path.with_name(f'{self.path.stem}.v1-backup-{stamp}{self.path.suffix}')
+        index = 1
+        while backup.exists():
+            index += 1
+            backup = self.path.with_name(f'{self.path.stem}.v1-backup-{stamp}-{index}{self.path.suffix}')
+        with closing(sqlite3.connect(backup)) as target:
+            connection.backup(target)
+        self.migration_backup = backup
+        try:
+            with connection:
+                connection.execute('BEGIN IMMEDIATE')
+                if connection.execute('PRAGMA user_version').fetchone()[0] != 1:
+                    return  # Another opener migrated it meanwhile.
+                count = connection.execute('SELECT COUNT(*) FROM task_links').fetchone()[0]
+                connection.execute('ALTER TABLE task_links RENAME TO task_links_v1')
+                connection.execute(_SCHEMA['task_links'])
+                connection.execute('INSERT INTO task_links (provider_id, task_key, project_id) '
+                                   'SELECT provider_id, task_key, project_id FROM task_links_v1')
+                connection.execute('DROP TABLE task_links_v1')
+                if connection.execute('SELECT COUNT(*) FROM task_links').fetchone()[0] != count:
+                    raise WorkbenchError('Workbench migration changed the task-link count')
+                connection.execute(f'PRAGMA user_version={_SCHEMA_VERSION}')
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
+
+    def _validate_schema(self, schema=None, version=_SCHEMA_VERSION):
+        schema = _SCHEMA if schema is None else schema
+        connection = self._connection
+        if (connection.execute('PRAGMA application_id').fetchone()[0] != _APPLICATION_ID
+                or connection.execute('PRAGMA user_version').fetchone()[0] != version):
             raise WorkbenchError('Unrecognized or unsupported workbench database')
         # Exact owned schema also verifies the delete actions and constraints;
         # reject extra triggers/views/indexes that could change write semantics.
         objects = connection.execute('SELECT name, type, sql FROM sqlite_master WHERE sql IS NOT NULL').fetchall()
         actual = {row['name']: ' '.join(row['sql'].split())
                   for row in objects if row['type'] == 'table'}
-        expected = {name: ' '.join(sql.split()) for name, sql in _SCHEMA.items()}
-        if len(objects) != len(_SCHEMA) or actual != expected:
+        expected = {name: ' '.join(sql.split()) for name, sql in schema.items()}
+        if len(objects) != len(schema) or actual != expected:
             raise WorkbenchError('Unrecognized workbench schema')
         if ([row[0] for row in connection.execute('PRAGMA quick_check')] != ['ok']
                 or connection.execute('PRAGMA foreign_key_check').fetchone() is not None):
@@ -232,8 +284,8 @@ class WorkbenchStore:
         self._delete('notes', id)
 
     def link_task(self, provider_id, task_key, project_id=None):
-        if provider_id != 'codex':
-            raise WorkbenchError('Only Codex tasks can be linked')
+        if provider_id not in LINK_PROVIDERS:
+            raise WorkbenchError('Only Codex and Claude Code tasks can be linked')
         _text(task_key, 'task key', required=True)
         self._project(project_id)
         try:

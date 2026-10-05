@@ -37,8 +37,14 @@ Code tab share one data directory). Adapter: `claude_usage.py`.
   a session is Working only when its entry is `busy` AND that exact
   process (pid plus creation time) is alive. A missing registry makes
   activity unknown, never idle.
-- **Not available locally**: subscription 5-hour/weekly limits, reset
-  times, the context window and billed amounts. These stay `N/A`.
+- **Context use**: latest main-chain request input over the model's official
+  context window (1M for current Opus/Sonnet/Fable, 200K for Haiku 4.5).
+  Local Opus 5.5 requests of 831K tokens confirm Claude Code uses the full
+  window; unlisted models, or a request larger than the window, stay `N/A`.
+- **Not available locally**: subscription 5-hour/weekly limits, reset times
+  and billed amounts. Claude Code keeps no local record of them; reading them
+  would need the account's credentials and a network request, which Petoken
+  does not make. These stay `N/A`.
 - **Privacy**: transcript lines are parsed in memory only to reach numeric
   usage and the metadata above; message content, prompts, tool input and
   output are never stored, displayed, logged or exported.

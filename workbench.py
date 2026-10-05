@@ -17,7 +17,7 @@ import theme
 from workbench_store import WorkbenchError
 
 # Providers whose tasks may be linked to projects in the local store.
-LINKABLE_PROVIDERS = ('codex',)
+LINKABLE_PROVIDERS = ('codex', 'claude')
 
 
 class CompanionPortrait(QWidget):
@@ -464,9 +464,6 @@ class WorkbenchWindow(QWidget):
         self.panel.task_manager.activate_task(item.data(Qt.UserRole), keyboard=True)
 
     def assign_task(self, identity, project_id):
-        # Project links stay Codex-only until the workbench database gains a
-        # versioned migration (roadmap: data migration before 2.x); Claude
-        # Code tasks are listed and openable but never written to the store.
         if (identity[0] not in LINKABLE_PROVIDERS
                 or identity not in self.panel.task_manager._universe
                 or identity in self.panel.task_manager._ring_staged):

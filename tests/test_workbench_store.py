@@ -230,5 +230,89 @@ class WorkbenchStoreTests(unittest.TestCase):
         self.assertTrue(nested.is_file())
 
 
+
+class SchemaMigrationTests(unittest.TestCase):
+    """Schema 1 (V1.4, Codex-only links) -> schema 2 (V1.5, Codex + Claude Code)."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.folder = Path(self.directory.name)
+        self.path = self.folder / 'workbench.sqlite3'
+
+    def make_v1(self, path, task_links_sql=None, link_provider='codex'):
+        import workbench_store
+        schema = dict(workbench_store._SCHEMA_V1)
+        if task_links_sql is not None:
+            schema['task_links'] = task_links_sql
+        project = str(uuid4())
+        with closing(sqlite3.connect(path)) as connection, connection:
+            for sql in schema.values():
+                connection.execute(sql)
+            connection.execute(f'PRAGMA application_id={workbench_store._APPLICATION_ID}')
+            connection.execute('PRAGMA user_version=1')
+            connection.execute("INSERT INTO projects VALUES (?, '项目', 'D:/p', 'now', 'now')", (project,))
+            connection.execute("INSERT INTO todos VALUES (?, 'todo', ?, 0, 'now', 'now')", (str(uuid4()), project))
+            connection.execute("INSERT INTO notes VALUES (?, 'n', '私密内容', ?, 'now', 'now')", (str(uuid4()), project))
+            connection.execute("INSERT INTO task_links VALUES (?, 'thread-1', ?)", (link_provider, project))
+        return project
+
+    def backups(self):
+        return sorted(self.folder.glob('workbench.v1-backup-*.sqlite3'))
+
+    def test_exact_v1_migrates_once_with_backup_and_keeps_every_record(self):
+        project = self.make_v1(self.path)
+        store = WorkbenchStore(self.path)
+        self.addCleanup(store.close)
+        self.assertEqual(store.task_links(), {('codex', 'thread-1'): project})
+        self.assertEqual(len(store.list_todos()), 1)
+        self.assertEqual(store.list_notes()[0]['body'], '私密内容')
+        store.link_task('claude', 'claude:session-1', project)
+        self.assertEqual(store.task_links()[('claude', 'claude:session-1')], project)
+        with self.assertRaises(WorkbenchError):
+            store.link_task('opencode', 'x', project)
+        [backup] = self.backups()
+        self.assertEqual(store.migration_backup, backup)
+        with closing(sqlite3.connect(backup)) as connection:
+            self.assertEqual(connection.execute('PRAGMA user_version').fetchone()[0], 1)
+            self.assertEqual(connection.execute('SELECT task_key FROM task_links').fetchall(), [('thread-1',)])
+        store.close()
+        again = WorkbenchStore(self.path)
+        self.addCleanup(again.close)
+        self.assertIsNone(again.migration_backup)
+        self.assertEqual(len(self.backups()), 1)
+        self.assertEqual(len(again.task_links()), 2)
+
+    def test_unrecognized_v1_is_never_backed_up_or_changed(self):
+        changed = """CREATE TABLE task_links (
+        provider_id TEXT NOT NULL CHECK (provider_id = 'CODEX'), task_key TEXT NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        PRIMARY KEY (provider_id, task_key))"""
+        self.make_v1(self.path, task_links_sql=changed, link_provider='CODEX')
+        original = hashlib.sha256(self.path.read_bytes()).hexdigest()
+        with self.assertRaises(WorkbenchError):
+            WorkbenchStore(self.path)
+        self.assertEqual(hashlib.sha256(self.path.read_bytes()).hexdigest(), original)
+        self.assertEqual(self.backups(), [])
+
+    def test_failed_migration_rolls_back_and_keeps_the_backup(self):
+        from unittest.mock import patch
+        import workbench_store
+        project = self.make_v1(self.path)
+        broken = dict(workbench_store._SCHEMA, task_links='CREATE TABLE task_links (broken')
+        with patch.object(workbench_store, '_SCHEMA', broken), self.assertRaises(WorkbenchError):
+            WorkbenchStore(self.path)
+        self.assertEqual(len(self.backups()), 1)
+        with closing(sqlite3.connect(self.path)) as connection:
+            self.assertEqual(connection.execute('PRAGMA user_version').fetchone()[0], 1)
+            self.assertEqual(connection.execute('SELECT project_id FROM task_links').fetchall(), [(project,)])
+            names = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            self.assertNotIn('task_links_v1', names)
+        # The untouched v1 store still migrates on the next normal open.
+        store = WorkbenchStore(self.path)
+        self.addCleanup(store.close)
+        self.assertEqual(store.task_links(), {('codex', 'thread-1'): project})
+
+
 if __name__ == '__main__':
     unittest.main()

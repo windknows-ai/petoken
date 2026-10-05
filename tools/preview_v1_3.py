@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFormLayout,
 
 from pet import DesktopPet
 from pet_assets import PREVIEW_STATES
+from analytics import aggregate
 from provider_selection import normalize_tracking_provider
 from providers import active_task
 from widget import Panel
@@ -84,7 +85,8 @@ def fixture_tasks(count=3, case='known', source='mixed'):
         tasks.append(active_task(task_provider(index, source), task_key(index, source),
             activity_at=time.time(), display=dict(project=project),
             presentation=dict(tokens=tokens, model=model,
-                effort=None if unknown else 'high', context=None,
+                effort=None if unknown else 'high',
+                context=None if unknown or zero else 12.5 * (index % 6 + 1),
                 cost_amount=0.0 if zero else None,
                 available=not unknown, source_available=True,
                 partial=case == 'partial', notes=())))
@@ -255,6 +257,9 @@ class Preview(QWidget):
         return dict(provider_id=provider, generation=self.generation,
             preference=preference, active_tasks=tasks,
             scope=scope, available=available, tokens=tokens, partial=True, usd=0,
+            analytics=aggregate([dict(session=task['task_key'], model=task['presentation']['model'],
+                                      timestamp='2026-10-05T12:00:00Z', event_id=task['task_key'],
+                                      tokens=task['presentation']['tokens']) for task in scoped]) if scoped else None,
             title=title, project=(chosen or {}).get('display', {}).get('project', 'Synthetic QA'),
             model=projection.get('model'), effort=projection.get('effort'),
             mode='fixed' if prefs.get('pinned') else 'follow', context=projection.get('context'),

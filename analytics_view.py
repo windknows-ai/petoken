@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QHeader
     QLabel, QPlainTextEdit, QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from localization import scope_text, text
+from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 import theme
 from token_format import format_ratio, format_tokens
 
@@ -139,12 +140,14 @@ class AnalyticsWindow(QDialog):
             self.update_data(self.snapshot)
 
     def update_data(self, data):
-        if (data.get('provider_id') or 'codex') != 'codex':
+        provider_id = data.get('provider_id') or 'codex'
+        if provider_id not in PROVIDER_REGISTRY:
             return
+        provider = PROVIDER_NAMES[provider_id]
         self.snapshot = data
         analysis = data.get('analytics')
         if data.get('status') or not analysis or not data.get('available'):
-            self.heading.setText(self.tr_text('analytics_heading_provider', provider='Codex', scope=scope_text(
+            self.heading.setText(self.tr_text('analytics_heading_provider', provider=provider, scope=scope_text(
                 data.get('scope', self.parentWidget().prefs.get('scope')), self.language)))
             self.subtitle.setText(self.tr_text(data.get('status') or 'no_reliable_record'))
             for widget in (self.metrics, self.models, self.sessions, self.ranges, self.days):
@@ -174,7 +177,7 @@ class AnalyticsWindow(QDialog):
         scope_name = scope_text(data.get('scope'), self.language, recorded=data.get('scope') == 'global')
         title = t(data.get('title')) if data.get('title') in ('display_local_history', 'display_untitled') else data.get('title', '')
         project = t(data.get('project')) if data.get('project') in ('display_all_usage', 'project_unavailable') else data.get('project', '')
-        self.heading.setText(t('analytics_heading_provider', provider='Codex', scope=scope_name))
+        self.heading.setText(t('analytics_heading_provider', provider=provider, scope=scope_name))
         self.subtitle.setText(t('analytics_subtitle', title=title, project=project, events=analysis['events']))
         fields = [
             ('group_official', 'total_tokens', 'metric_total'), ('group_official', 'input_tokens', 'metric_input'),
@@ -230,7 +233,10 @@ class AnalyticsWindow(QDialog):
             self.days.setRowCount(0)
             self.history_note.setText(t('history_loading'))
         localized_notes = [t(note) for note in data.get('notes', [])]
-        raw = json.dumps(dict(source='Codex JSONL event_msg/token_count/info (current session latest record)',
+        source = ('Claude Code JSONL assistant message.usage (deduplicated by message id)'
+                  if provider_id == 'claude' else
+                  'Codex JSONL event_msg/token_count/info (current session latest record)')
+        raw = json.dumps(dict(source=source,
             total_token_usage=data.get('raw_total'), last_token_usage=data.get('raw_last'),
             model_context_window=data.get('context_window'), timestamp=data.get('sample'),
             model_metadata=data.get('model'), reasoning_effort=data.get('effort'), service_tier=data.get('tier'),

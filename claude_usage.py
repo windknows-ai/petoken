@@ -20,8 +20,10 @@ Token mapping into the shared schema (``analytics.TOKEN_KEYS``): Anthropic
 cache_write``, ``cached_input = cache_read``, ``cache_write_input =
 cache_creation``, ``output = output`` (thinking included),
 ``reasoning_output = thinking`` when recorded, ``total = input + output``.
-Anything missing stays ``None``. Claude subscription quotas are not stored
-locally, so quotas, context window and reset times stay unavailable.
+Anything missing stays ``None``. Context use is the latest main-chain
+request's input against the model's official context window (a request
+larger than that window makes it unknown). Claude subscription quotas and
+reset times are not stored locally and stay unavailable.
 
 Synchronous by design: callers run it on the poller's background worker.
 """
@@ -36,7 +38,7 @@ from datetime import datetime
 from pathlib import Path
 
 from analytics import aggregate, count, summarize
-from pricing import estimate_claude_usd
+from pricing import claude_price_model, estimate_claude_usd
 from providers import (CLAUDE_CAPABILITIES, PROVIDER_CLAUDE, active_task,
                        base_result)
 
@@ -47,6 +49,31 @@ PROJECT_PREFIX = f'{PROVIDER_ID}-project:'
 # refreshed every read (one stat each, new complete lines only).
 DISCOVERY_TTL_S = 5.0
 REGISTRY_BUSY = 'busy'
+# Official context windows (tokens), verified 2026-10-05 against Anthropic's
+# models overview. Locally observed Opus 5.5 requests reach 831K tokens,
+# confirming Claude Code uses the full window. Unlisted models stay unknown.
+CONTEXT_WINDOWS = {
+    'claude-fable-5-1': 1_000_000, 'claude-mythos-5-1': 1_000_000,
+    'claude-fable-5': 1_000_000, 'claude-mythos-5': 1_000_000,
+    'claude-opus-5-5': 1_000_000, 'claude-opus-5': 1_000_000,
+    'claude-opus-4-8': 1_000_000, 'claude-opus-4-7': 1_000_000,
+    'claude-opus-4-6': 1_000_000, 'claude-sonnet-5-5': 1_000_000,
+    'claude-sonnet-5': 1_000_000, 'claude-sonnet-4-6': 1_000_000,
+    'claude-haiku-4-5': 200_000,
+}
+
+
+def context_window(model):
+    return CONTEXT_WINDOWS.get(claude_price_model(model))
+
+
+def context_percent(tokens, model):
+    """Share of the model's window used by the latest request, or None."""
+    window = context_window(model)
+    tokens = count(tokens)
+    if tokens is None or not window or tokens > window:
+        return None
+    return 100 * tokens / window
 
 
 def default_home():
@@ -369,7 +396,9 @@ class ClaudeStore:
             display=dict(project=project),
             presentation=dict(
                 tokens=summary['tokens'], model=(session or {}).get('model'),
-                effort=(session or {}).get('effort'), context=None,
+                effort=(session or {}).get('effort'),
+                context=context_percent((session or {}).get('last_input'),
+                                        (session or {}).get('model')),
                 available=bool(records),
                 source_available=bool((session or {}).get('source_available', True)),
                 partial=bool((session or {}).get('partial')),
@@ -412,7 +441,9 @@ class ClaudeStore:
                 status='working', tokens=self._summary(session)['tokens'],
                 available=bool((session or {}).get('records')),
                 model=(session or {}).get('model'), effort=(session or {}).get('effort'),
-                context=None, sample=(session or {}).get('sample'), selection=None,
+                context=context_percent((session or {}).get('last_input'),
+                                        (session or {}).get('model')),
+                sample=(session or {}).get('sample'), selection=None,
                 activity_reason='registry_busy')
 
         raw_pin = strip_scope(pinned)
@@ -486,9 +517,11 @@ class ClaudeStore:
             tokens=tokens, available=available,
             model=chosen['model'] if chosen else None,
             effort=chosen['effort'] if chosen else None,
-            tier=None, context=None,
+            tier=None,
+            context=(context_percent(chosen['last_input'], chosen['model'])
+                     if chosen else None),
             context_tokens=chosen['last_input'] if chosen else None,
-            context_window=None,
+            context_window=context_window(chosen['model']) if chosen else None,
             usd=sum(r.get('usd') or 0 for r in records), unknown=unknown,
             partial=partial, excluded_forks=0, count=len(relevant),
             sample=chosen['sample'] if chosen else None, limits=None,

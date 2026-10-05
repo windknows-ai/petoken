@@ -34,10 +34,12 @@ Settings → Tracking provider offers Auto (default), Codex or Claude Code.
 Auto follows whichever provider has a verified working task; task stars show
 both providers at once — **Codex stars are blue, Claude Code stars are
 gold**. Claude Code usage comes from its local session transcripts and live
-session registry (CLI and desktop Code tab alike); quotas, reset times and the
-context window are not stored locally by Claude Code and read `N/A`. Claude
-Code tasks appear in the workbench task list but cannot yet be linked to
-projects. Unreleased; not part of the v1.3.0 download.
+session registry (CLI and desktop Code tab alike). Context use is measured
+against each model's official context window; subscription quotas and reset
+times are not stored locally by Claude Code and read `N/A`. Claude Code tasks
+can be linked to workbench projects; the workbench database upgrades once to
+schema 2 and keeps a full backup of the previous file beside it. Unreleased;
+not part of the v1.3.0 download.
 
 ### In development — V1.4 workbench
 

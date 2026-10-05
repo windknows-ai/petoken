@@ -22,6 +22,11 @@ def _lerp(a, b, t):
     return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
 
 
+def _toward(color, target, amount):
+    """Move ``color`` part of the way to ``target`` (white lifts, ink deepens)."""
+    return _lerp(color, target, amount)
+
+
 def ring_tint(angle, tints):
     """Blend of the two stars around ``angle`` on the ring, or ``None``.
 
@@ -156,29 +161,52 @@ class HaloLayer(QWidget):
         painter.setPen(QPen(QColor(255, 218, 170, 210 if self.front else 145), 1.0))
         painter.drawPath(inlay)
         outer = self.pose._replace(rx=self.pose.rx + 11, ry=self.pose.ry + 8)
-        guide = QPainterPath()
-        for begin, end in ((.01, .47), (.53, .99)):
-            for i in range(25):
-                x, y, _ = geometry.project(outer, start + math.pi * (begin + (end - begin) * i / 24))
-                point = QPointF(x - self.x(), y - self.y())
-                guide.moveTo(point) if i == 0 else guide.lineTo(point)
-        pen = QPen(QColor(173, 153, 255, 210 if self.front else 150), 1.0)
-        pen.setDashPattern([1.5, 4])
-        painter.setPen(pen)
-        painter.drawPath(guide)
+        guide_alpha = 210 if self.front else 150
+        if not self.tints:
+            guide = QPainterPath()
+            for begin, end in ((.01, .47), (.53, .99)):
+                for i in range(25):
+                    x, y, _ = geometry.project(outer, start + math.pi * (begin + (end - begin) * i / 24))
+                    point = QPointF(x - self.x(), y - self.y())
+                    guide.moveTo(point) if i == 0 else guide.lineTo(point)
+            pen = QPen(QColor(173, 153, 255, guide_alpha), 1.0)
+            pen.setDashPattern([1.5, 4])
+            painter.setPen(pen)
+            painter.drawPath(guide)
+        else:
+            # Same dotted guide, coloured stretch by stretch like the hoop.
+            for begin, end in ((.01, .47), (.53, .99)):
+                for i in range(6):
+                    a0 = start + math.pi * (begin + (end - begin) * i / 6)
+                    a1 = start + math.pi * (begin + (end - begin) * (i + 1) / 6)
+                    piece = QPainterPath()
+                    for j in range(5):
+                        x, y, _ = geometry.project(outer, a0 + (a1 - a0) * j / 4)
+                        point = QPointF(x - self.x(), y - self.y())
+                        piece.moveTo(point) if j == 0 else piece.lineTo(point)
+                    pen = QPen(QColor(*ring_tint((a0 + a1) / 2, self.tints), guide_alpha), 1.0)
+                    pen.setDashPattern([1.5, 4])
+                    painter.setPen(pen)
+                    painter.drawPath(piece)
         for index in range(12):
             angle = start + math.pi * (index + .4) / 12
             x, y, _ = geometry.project(outer if index % 3 else inset, angle)
             point = QPointF(x - self.x(), y - self.y())
             strength = .8 + .2 * math.sin(self.now * 1.8 + index * 2.4)
+            tint = ring_tint(angle, self.tints)
+            if tint is None:
+                halo, edge, outline, fill = (205, 190, 255), (160, 140, 255), (172, 151, 246), (250, 245, 255)
+            else:
+                halo, edge = _toward(tint, (255, 255, 255), .35), tint
+                outline, fill = _toward(tint, (40, 30, 80), .18), _toward(tint, (255, 255, 255), .85)
             glow = QRadialGradient(point, 8)
-            glow.setColorAt(0, QColor(205, 190, 255, int(155 * strength)))
-            glow.setColorAt(1, QColor(160, 140, 255, 0))
+            glow.setColorAt(0, QColor(*halo, int(155 * strength)))
+            glow.setColorAt(1, QColor(*edge, 0))
             painter.setPen(Qt.NoPen)
             painter.setBrush(glow)
             painter.drawEllipse(point, 8, 8)
-            painter.setPen(QPen(QColor(172, 151, 246, 225), .7))
-            painter.setBrush(QColor(250, 245, 255, 245 if self.front else 190))
+            painter.setPen(QPen(QColor(*outline, 225), .7))
+            painter.setBrush(QColor(*fill, 245 if self.front else 190))
             if index % 3 == 0:
                 size = 3.2 if index % 2 == 0 else 2.4
                 painter.drawPolygon(QPolygonF([point + QPointF(0, -size * 1.5),
@@ -225,7 +253,7 @@ class HaloLayer(QWidget):
                 if .35 < age < self.AGE and (depth >= 0) == self.front:
                     fade = (1 - age / self.AGE) ** 1.5
                     painter.setPen(Qt.NoPen)
-                    painter.setBrush(QColor(212, 204, 255, int(160 * fade)))
+                    painter.setBrush(QColor(*_toward(glow, (255, 255, 255), .55), int(160 * fade)))
                     radius = .8 + .5 * (depth + 1) / 2
                     painter.drawEllipse(QPointF(x - self.x(), y - self.y()), radius, radius)
 

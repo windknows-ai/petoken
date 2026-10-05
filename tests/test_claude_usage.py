@@ -368,6 +368,30 @@ class RingTintTests(unittest.TestCase):
         layer.close()
         return color
 
+    def test_ornament_stars_follow_the_ring_colour(self):
+        import math
+        from halo_scene import HaloLayer
+        from halo_geometry import HaloPose, project
+        from theme import star_palette
+        pose = HaloPose(200, 200, 120, 60, 0.0)
+        colours = {}
+        for provider in ('codex', 'claude'):
+            layer = HaloLayer(True)
+            layer.tints = [(math.pi / 2, star_palette(provider)['ring'])]
+            layer.set_scene(pose, 0.0)
+            image = layer.grab().toImage()
+            ratio = image.devicePixelRatio()
+            # Bead 0 sits on the inset ring at angle 0.4 * pi / 12.
+            x, y, _ = project(pose._replace(rx=pose.rx - 4, ry=pose.ry - 4), math.pi * .4 / 12)
+            cx, cy = (x - layer.x()) * ratio, (y - layer.y()) * ratio
+            samples = [image.pixelColor(round(cx + dx), round(cy + dy))
+                       for dx in range(-6, 7) for dy in range(-6, 7)]
+            glow = [c for c in samples if c.alpha() > 40]
+            colours[provider] = (sum(c.red() for c in glow) / len(glow), sum(c.blue() for c in glow) / len(glow))
+            layer.close()
+        self.assertGreater(colours['claude'][0] - colours['claude'][1],
+                           colours['codex'][0] - colours['codex'][1])
+
     def test_front_ring_paints_its_star_color(self):
         import math
         from theme import star_palette
@@ -375,6 +399,29 @@ class RingTintTests(unittest.TestCase):
         self.assertGreater(gold.red(), gold.blue())
         blue = self.ring_color([(math.pi / 2, star_palette('codex')['ring'])])
         self.assertGreater(blue.blue(), blue.red())
+
+
+class ContextAndAnalyticsTests(unittest.TestCase):
+    def test_context_uses_the_official_model_window(self):
+        from claude_usage import context_percent, context_window
+        self.assertEqual(context_window('claude-opus-5-5'), 1_000_000)
+        self.assertEqual(context_window('claude-haiku-4-5-20251001'), 200_000)
+        self.assertAlmostEqual(context_percent(831_157, 'claude-opus-5-5'), 83.1157)
+        self.assertIsNone(context_percent(250_000, 'claude-haiku-4-5'))  # Beyond window: unknown.
+        self.assertIsNone(context_percent(10, 'claude-future-9'))
+        self.assertIsNone(context_percent(None, 'claude-opus-5-5'))
+
+    def test_store_reports_context_of_the_latest_request(self):
+        with tempfile.TemporaryDirectory() as root:
+            home = ClaudeHome(root)
+            home.transcript('alpha', 's1', [assistant('s1', 'm1', 'C:/a', '2026-10-05T01:00:00Z'),
+                                            assistant('s1', 'm2', 'C:/a', '2026-10-05T01:01:00Z',
+                                                      read=400_000)])
+            data = ClaudeStore(home.root).read()
+            self.assertEqual(data['context_tokens'], 400_210)
+            self.assertEqual(data['context_window'], 1_000_000)
+            self.assertAlmostEqual(data['context'], 40.021)
+
 
 class HubProviderPresentationTests(unittest.TestCase):
     @classmethod
@@ -425,6 +472,20 @@ class HubProviderPresentationTests(unittest.TestCase):
             'codex', compatibility=dict(status='supported', reasons=[])).text())
         # A Claude payload never carries or shows the Codex notice.
         self.assertNotIn('compatible', self.render('claude', compatibility=partial).text())
+
+    def test_token_analytics_window_renders_claude_data(self):
+        from analytics_view import AnalyticsWindow
+        with tempfile.TemporaryDirectory() as root:
+            home = ClaudeHome(root)
+            home.transcript('alpha', 's1', [assistant('s1', 'm1', 'C:/a', '2026-10-05T01:00:00Z')])
+            data = dict(ClaudeStore(home.root).read(scope='global', include_history=True),
+                        provider_id='claude')
+        window = AnalyticsWindow(self.panel)
+        window.update_data(data)
+        self.assertIn('Claude Code', window.heading.text())
+        self.assertGreater(window.models.rowCount(), 0)
+        self.assertIn('Claude Code JSONL', window.raw.toPlainText())
+        window.close()
 
     def test_claude_hub_names_provider_and_states_missing_limits(self):
         label = self.render('claude')

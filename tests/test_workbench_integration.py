@@ -126,7 +126,7 @@ class WorkbenchIntegrationTests(unittest.TestCase):
         self.assertEqual(window.task_list.count(), 3)
         self.assertEqual(manager.total_task_count(), 3)
 
-    def test_claude_tasks_are_listed_but_never_linked_to_projects(self):
+    def test_claude_tasks_are_listed_and_linkable_to_projects(self):
         manager = self.panel.task_manager
         manager.apply_snapshot(fixture_tasks(2))  # Codex #1, Claude Code #2.
         self.panel.open_workbench()
@@ -140,9 +140,10 @@ class WorkbenchIntegrationTests(unittest.TestCase):
         items[claude].setSelected(True)
         window._update_actions()
         self.assertTrue(window.task_detail_button.isEnabled())
-        self.assertFalse(window.task_link_button.isEnabled())
-        self.assertFalse(window.assign_task(claude, None))
-        self.assertNotIn(claude, window.store.task_links())
+        self.assertTrue(window.task_link_button.isEnabled())
+        project = window.store.create_project('Claude project', '')
+        self.assertTrue(window.assign_task(claude, project['id']))
+        self.assertEqual(window.store.task_links()[claude], project['id'])
         window.close()
 
 
