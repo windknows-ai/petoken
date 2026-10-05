@@ -9,6 +9,47 @@ from PySide6.QtWidgets import QWidget
 
 import halo_geometry as geometry
 import pet_geometry
+from theme import star_palette
+
+# Undecorated hoop colors (no task stars): the original lavender ring.
+RING_LAYERS = ((13, (132, 112, 255), 22, 13), (7, (158, 144, 255), 42, 25),
+               (3.4, (177, 177, 255), 165, 105), (1.15, (252, 250, 255), 255, 215))
+RING_SEGMENTS = 96
+RING_MEET = (196, 168, 250)
+
+
+def _lerp(a, b, t):
+    return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
+
+
+def ring_tint(angle, tints):
+    """Blend of the two stars around ``angle`` on the ring, or ``None``.
+
+    ``tints`` is a list of (ring angle, (r, g, b)). Each stretch takes the
+    color of the stars nearest to it and fades smoothly between neighbours;
+    a ring of one provider is a single color.
+    """
+    if not tints:
+        return None
+    if len(tints) == 1:
+        return tints[0][1]
+    ordered = sorted((a % math.tau, color) for a, color in tints)
+    angle %= math.tau
+    for index, (start, color) in enumerate(ordered):
+        end, next_color = ordered[(index + 1) % len(ordered)]
+        span = (end - start) % math.tau or math.tau
+        offset = (angle - start) % math.tau
+        if offset <= span:
+            t = offset / span
+            t = t * t * (3 - 2 * t)
+            if color == next_color:
+                return color
+            # Different providers meet through the hoop's own lavender, so
+            # blue and gold never mix into a muddy grey midway.
+            if t < .5:
+                return _lerp(color, RING_MEET, t * 2)
+            return _lerp(RING_MEET, next_color, t * 2 - 1)
+    return ordered[0][1]
 
 
 class HaloLayer(QWidget):
@@ -25,6 +66,7 @@ class HaloLayer(QWidget):
         self.pose = None
         self.now = 0.0
         self.stars = {}
+        self.tints = []
         self._trails = {}
 
     def record_sample(self, identity, x, y, stamp, depth=0.0):
@@ -76,19 +118,33 @@ class HaloLayer(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         start = 0 if self.front else math.pi
-        path = QPainterPath()
-        for i in range(97):
-            x, y, _ = geometry.project(self.pose, start + math.pi * i / 96)
-            point = QPointF(x - self.x(), y - self.y())
-            path.moveTo(point) if i == 0 else path.lineTo(point)
-        for width, color in ((13, QColor(132, 112, 255, 22 if self.front else 13)),
-                             (7, QColor(158, 144, 255, 42 if self.front else 25)),
-                             (3.4, QColor(177, 177, 255, 165 if self.front else 105)),
-                             (1.15, QColor(252, 250, 255, 255 if self.front else 215))):
-            pen = QPen(color, width)
-            pen.setCapStyle(Qt.RoundCap)
-            painter.setPen(pen)
-            painter.drawPath(path)
+        angles = [start + math.pi * i / RING_SEGMENTS for i in range(RING_SEGMENTS + 1)]
+        points = []
+        for angle in angles:
+            x, y, _ = geometry.project(self.pose, angle)
+            points.append(QPointF(x - self.x(), y - self.y()))
+        if not self.tints:
+            path = QPainterPath()
+            for i, point in enumerate(points):
+                path.moveTo(point) if i == 0 else path.lineTo(point)
+            for width, rgb, front_alpha, back_alpha in RING_LAYERS:
+                pen = QPen(QColor(*rgb, front_alpha if self.front else back_alpha), width)
+                pen.setCapStyle(Qt.RoundCap)
+                painter.setPen(pen)
+                painter.drawPath(path)
+        else:
+            # Stretch by stretch, the ring takes the colour of its nearest
+            # stars; the bright core keeps a pale highlight of that tint.
+            tints = [ring_tint((a + b) / 2, self.tints) for a, b in zip(angles, angles[1:])]
+            for layer, (width, _rgb, front_alpha, back_alpha) in enumerate(RING_LAYERS):
+                alpha = front_alpha if self.front else back_alpha
+                for index, tint in enumerate(tints):
+                    rgb = (tuple(round(c + (255 - c) * .62) for c in tint)
+                           if layer == len(RING_LAYERS) - 1 else tint)
+                    pen = QPen(QColor(*rgb, alpha), width)
+                    pen.setCapStyle(Qt.FlatCap)
+                    painter.setPen(pen)
+                    painter.drawLine(points[index], points[index + 1])
         # All ornament shares the projected plane and existing clock, and
         # stays inside the hit-disc margin; no extra native input surfaces.
         inlay = QPainterPath()
@@ -140,7 +196,13 @@ class HaloLayer(QWidget):
             painter.drawLine(QPointF(x, y + 19), QPointF(x, y + geometry.LABEL_TOP))
             painter.setBrush(QColor('#f7f6ff'))
             painter.drawEllipse(QPointF(x, y + 24), 1.1, 1.1)
-        for trail in self._trails.values():
+        for key, trail in self._trails.items():
+            # A trail follows its own star: Codex blue, Claude Code gold.
+            if isinstance(key, tuple) and key and key[0] in ('codex', 'claude'):
+                ring = star_palette(key[0])['ring']
+                glow, body = ring, tuple(round(c + (255 - c) * .35) for c in ring)
+            else:
+                glow, body = (158, 144, 255), (184, 218, 255)
             for first, last in zip(trail, list(trail)[1:]):
                 x, y, stamp, depth = last
                 if (depth >= 0) != self.front:
@@ -150,8 +212,8 @@ class HaloLayer(QWidget):
                     continue
                 strength = fade * (.60 + .40 * (depth + 1) / 2)
                 a, b = QPointF(first[0] - self.x(), first[1] - self.y()), QPointF(x - self.x(), y - self.y())
-                for width, color in ((8, QColor(158, 144, 255, int(30 * strength))),
-                                     (2.5, QColor(184, 218, 255, int(150 * strength))),
+                for width, color in ((8, QColor(*glow, int(30 * strength))),
+                                     (2.5, QColor(*body, int(150 * strength))),
                                      (.9, QColor(252, 249, 255, int(230 * strength)))):
                     pen = QPen(color, width * (.7 + .3 * fade))
                     pen.setCapStyle(Qt.RoundCap)
@@ -311,7 +373,11 @@ class HaloScene:
             if record:
                 for layer in (self.back_overlay, self.trail_overlay):
                     layer.record_sample(key, x, y, now, depths[key])
+        tints = [((self._ring_t * math.tau / 24 + self._halo_offsets[k]) % math.tau,
+                  star_palette(k[0] if isinstance(k, tuple) and k else None)['ring'])
+                 for k in centers]
         for layer in (self.back_overlay, self.trail_overlay):
+            layer.tints = tints
             layer.stars = {k: (self._placed[k][0] + pet_geometry.TASK_STAR_CENTER[0],
                                self._placed[k][1] + pet_geometry.TASK_STAR_CENTER[1],
                                depths[k]) for k in centers}

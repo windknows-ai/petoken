@@ -291,32 +291,9 @@ class Bridge(QObject):
 # data, and never computes accounting: every visible value comes from the
 # task's own presentation projection, with N/A for unknown fields.
 
-# Per-provider star colors (V1.5): Codex stars are blue, Claude Code stars
-# are gold. Geometry, motion, number medallion and hit areas are shared;
-# only these fills change, so the provider reads at a glance.
-STAR_PALETTES = {
-    'codex': dict(
-        glow=((236, 244, 255, 170), (122, 170, 255, 100), (110, 150, 230, 0)),
-        fill=('#e6f0ff', '#ffffff', '#cfe4ff', '#6f9fe8'),
-        outline='#4f86e0',
-        cuts=('#c9dcfb', '#8fb6f0', '#a9c5f2', '#f2f7ff'),
-        halo=((140, 200, 255), (110, 160, 255)),
-        body=((190, 214, 255), (245, 249, 255), (110, 160, 240)),
-        inner=((216, 236, 255), (160, 205, 255))),
-    'claude': dict(
-        glow=((255, 248, 230, 170), (255, 200, 90, 105), (230, 170, 60, 0)),
-        fill=('#fff4d9', '#ffffff', '#ffe7ad', '#e0a93c'),
-        outline='#c98f22',
-        cuts=('#fbe3a8', '#f2c46a', '#f7d48a', '#fffaf0'),
-        halo=((255, 214, 140), (240, 180, 80)),
-        body=((255, 226, 160), (255, 250, 238), (226, 168, 60)),
-        inner=((255, 241, 205), (255, 220, 140))),
-}
-
-
-def star_palette(provider_id):
-    """Star colors for one provider; unknown providers use Codex blue."""
-    return STAR_PALETTES.get(provider_id, STAR_PALETTES['codex'])
+# Per-provider star colors (V1.5) live in theme.py so stars, the star ring
+# and trails share one palette: Codex blue, Claude Code gold.
+from theme import STAR_PALETTES, star_palette  # noqa: E402,F401
 
 
 def task_identity(task):
@@ -3953,9 +3930,12 @@ class Panel(QWidget):
         self.collapse_button = button('−', '', self.toggle_compact)
         self.collapse_button.setFixedSize(30, 28)
         controls.addWidget(self.collapse_button)
-        self.hide_button = button('×', '', self.hide_to_tray)
+        self.hide_button = button('×', '', self.close_hub)
         self.hide_button.setFixedSize(30, 28)
         controls.addWidget(self.hide_button)
+        # The header drags the Hub (move cursor); its buttons are clicks.
+        for control in (self.collapse_button, self.hide_button):
+            control.setCursor(Qt.PointingHandCursor)
         head.addLayout(controls)
         layout.addWidget(self.header)
         self.project = label('', 'muted')
@@ -4776,8 +4756,9 @@ class Panel(QWidget):
         return bool(self.prefs.get('panel_pinned', False))
 
     def update_panel_controls(self):
-        self.hide_button.setEnabled(not self.is_pinned())
-        tip = self.tr_text('panel_pinned_help' if self.is_pinned() else 'hide_to_tray')
+        # X always works; on a pinned Hub it also unpins (see close_hub).
+        self.hide_button.setEnabled(True)
+        tip = self.tr_text('close_unpins_hub' if self.is_pinned() else 'hide_to_tray')
         self.hide_button.setToolTip(tip)
         self.hide_button.setAccessibleName(tip)
 
@@ -4890,6 +4871,21 @@ class Panel(QWidget):
             self.task_manager.collapse_detail()
         else:
             self.hide_to_tray()
+
+    def close_hub(self):
+        """The Hub's X: always closes. A pinned Hub is unpinned first, the
+        same as unchecking Usage panel in the pet menu. Escape, outside
+        clicks and other hide paths still leave a pinned Hub open."""
+        if self.closing:
+            return
+        if self.is_pinned():
+            self.set_panel_pinned(False)
+            if self.task_manager.legacy_exterior_motion:
+                self.task_manager.set_visible(False)
+            else:
+                self.task_manager._stack_halo(force=True)
+            return
+        self.hide_to_tray()
 
     def hide_to_tray(self):
         if self.is_pinned() and not self.closing:

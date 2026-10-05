@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFormLayout,
 
 from pet import DesktopPet
 from pet_assets import PREVIEW_STATES
+from provider_selection import normalize_tracking_provider
 from providers import active_task
 from widget import Panel
 
@@ -38,7 +39,10 @@ class SyntheticHubPoller:
     def __init__(self, preview):
         self.preview = preview
 
-    def apply_settings(self, prefs):
+    def apply_settings(self, prefs, mark_provider=None):
+        """Same signature as the real poller: Settings.save passes
+        ``mark_provider``. Saved choices stay in memory for this preview."""
+        self.preview.sync_controls(prefs)
         data = self.preview.hub_snapshot(prefs)
         return dict(result=data, active_tasks=data['active_tasks'],
                     preference=data['preference'])
@@ -165,9 +169,12 @@ class Preview(QWidget):
         quit_button = QPushButton('Exit preview / 退出预览')
         quit_button.clicked.connect(self.close)
         layout.addRow(quit_button)
-        for control in (self.count, self.case, self.language, self.provider):
+        for control in (self.count, self.case, self.language):
             signal = control.valueChanged if isinstance(control, QSpinBox) else control.currentTextChanged
             signal.connect(self.refresh)
+        # A new synthetic source resets the tracking choice to match it;
+        # afterwards the Settings choice (Auto / Codex / Claude Code) wins.
+        self.provider.currentTextChanged.connect(self.change_source)
         self.pose.currentTextChanged.connect(self.set_pose)
         self.anchor.currentTextChanged.connect(self.move_anchor)
         self.move(screen.left() + 20, screen.top() + 20)
@@ -188,12 +195,24 @@ class Preview(QWidget):
         combo.setCurrentText(current)
         return combo
 
+    def change_source(self, source):
+        if self.closed:
+            return
+        self.panel.prefs.update(tracking_provider=self.preference_for(source), pinned='')
+        self.refresh()
+
+    def sync_controls(self, prefs):
+        """Mirror a saved Settings language into the preview's own control."""
+        language = prefs.get('language')
+        if language in ('en', 'zh_CN') and language != self.language.currentText():
+            self.language.blockSignals(True)
+            self.language.setCurrentText(language)
+            self.language.blockSignals(False)
+
     def refresh(self, *_):
         if self.closed:
             return
-        self.panel.prefs.update(language=self.language.currentText(),
-                                tracking_provider=self.preference_for(
-                                    self.provider.currentText()))
+        self.panel.prefs.update(language=self.language.currentText())
         self.panel.apply_language()
         self.panel.render(self.hub_snapshot())
         self.panel.connection.setText('SYNTHETIC QA — no provider connection / 无提供方连接')
@@ -207,15 +226,20 @@ class Preview(QWidget):
         prefs = self.panel.prefs if prefs is None else prefs
         self.generation = max(self.generation, self.panel._render_generation or 0) + 1
         source = self.provider.currentText()
+        preference = normalize_tracking_provider(prefs.get('tracking_provider'))
         tasks = fixture_tasks(self.count.value(), self.case.currentText(), source)
         if not self.source.isChecked():
             tasks = []
-        chosen = next((task for task in tasks if task['task_key'] == prefs.get('pinned')), None)
+        # The Hub inspects only tasks the tracking choice shows; the star
+        # manager applies the same filter to the full synthetic set.
+        shown = [task for task in tasks
+                 if preference == 'auto' or task['provider_id'] == preference]
+        chosen = next((task for task in shown if task['task_key'] == prefs.get('pinned')), None)
         if not prefs.get('pinned'):
-            chosen = tasks[0] if tasks else None
+            chosen = shown[0] if shown else None
         scope = prefs.get('scope', 'global')
-        scoped = (tasks if scope == 'global' else
-                  [task for task in tasks if chosen and task['display'] == chosen['display']]
+        scoped = (shown if scope == 'global' else
+                  [task for task in shown if chosen and task['display'] == chosen['display']]
                   if scope == 'project' else [chosen] if chosen else [])
         tokens = {}
         if scoped:
@@ -226,9 +250,10 @@ class Preview(QWidget):
         available = bool(scoped) and all(task['presentation']['available'] for task in scoped)
         title = ('Synthetic QA task / 合成任务 ' + chosen['task_key'].rsplit('-', 1)[-1]
                  if chosen and scope == 'conversation' else 'Synthetic QA overview / 合成预览总览')
-        provider = (chosen or {}).get('provider_id') or task_provider(0, source)
+        provider = ((chosen or {}).get('provider_id')
+                    or (preference if preference != 'auto' else task_provider(0, source)))
         return dict(provider_id=provider, generation=self.generation,
-            preference=self.preference_for(source), active_tasks=tasks,
+            preference=preference, active_tasks=tasks,
             scope=scope, available=available, tokens=tokens, partial=True, usd=0,
             title=title, project=(chosen or {}).get('display', {}).get('project', 'Synthetic QA'),
             model=projection.get('model'), effort=projection.get('effort'),

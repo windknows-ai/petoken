@@ -139,7 +139,7 @@ class PanelPersistTests(unittest.TestCase):
             action.trigger()
             self.assertTrue(action.isChecked())
             self.assertTrue(panel.isVisible())
-            self.assertFalse(panel.hide_button.isEnabled())
+            self.assertTrue(panel.hide_button.isEnabled())
             action.trigger()
             self.assertFalse(panel.isVisible())
             menu.deleteLater()
@@ -151,7 +151,14 @@ class PanelPersistTests(unittest.TestCase):
         first.persist()
         second = self.make_panel()
         self.assertTrue(second.is_pinned())
-        self.assertFalse(second.hide_button.isEnabled())
+        self.assertTrue(second.hide_button.isEnabled())
+        # The X closes a pinned Hub and unpins it, durably.
+        second.show()
+        second.hide_button.click()
+        self.assertFalse(second.is_pinned())
+        self.assertFalse(second.isVisible())
+        third = self.make_panel()
+        self.assertFalse(third.is_pinned())
 
     def test_pinned_panel_restores_visible_unpinned_stays_hidden(self):
         pinned = self.make_panel({'panel_pinned': True})

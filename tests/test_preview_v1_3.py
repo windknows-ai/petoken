@@ -346,6 +346,32 @@ class PreviewTests(unittest.TestCase):
                 preview.deleteLater()
                 self.app.processEvents()
 
+    def test_settings_save_applies_tracking_choice_inside_preview(self):
+        from widget import Settings
+        with tempfile.TemporaryDirectory() as directory, patch('widget.PREF_DIR', Path(directory)):
+            preview = Preview(count=4)
+            manager = preview.panel.task_manager
+            try:
+                settings = Settings(preview.panel)
+                settings.tracking.setCurrentIndex(settings.tracking.findData('claude'))
+                settings.language.setCurrentIndex(settings.language.findData('en'))
+                settings.save()  # Previously raised TypeError (mark_provider).
+                self.app.processEvents()
+                self.assertEqual(preview.panel.prefs['tracking_provider'], 'claude')
+                self.assertEqual(preview.language.currentText(), 'en')
+                self.assertEqual({key[0] for key in manager.window_identities()}, {'claude'})
+                self.assertEqual(preview.panel.snapshot['provider_id'], 'claude')
+                preview.count.setValue(3)  # A refresh keeps the saved choice.
+                self.assertEqual(preview.panel.prefs['tracking_provider'], 'claude')
+                preview.provider.setCurrentText('codex')  # New source resets it.
+                self.assertEqual(preview.panel.prefs['tracking_provider'], 'codex')
+                self.assertEqual({key[0] for key in manager.window_identities()}, {'codex'})
+            finally:
+                preview.cleanup()
+                preview.close()
+                preview.deleteLater()
+                self.app.processEvents()
+
     def test_capture_cli_rejects_unbounded_or_invalid_requests(self):
         for argv in (['--output', 'unused.png'], ['--smoke', '0'],
                      ['--smoke', 'nan'], ['--smoke', 'inf'], ['--smoke', '1e100'],

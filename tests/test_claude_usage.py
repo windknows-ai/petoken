@@ -331,6 +331,51 @@ class StarColorTests(unittest.TestCase):
 
 
 
+
+class RingTintTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls.app = QApplication.instance() or QApplication([])
+
+    def test_ring_takes_nearby_star_colors_and_meets_in_lavender(self):
+        import math
+        from halo_scene import RING_MEET, ring_tint
+        from theme import star_palette
+        blue, gold = star_palette('codex')['ring'], star_palette('claude')['ring']
+        self.assertIsNone(ring_tint(1.0, []))
+        self.assertEqual(ring_tint(2.5, [(0.0, gold)]), gold)
+        self.assertEqual(ring_tint(2.5, [(0.0, blue), (math.pi, blue)]), blue)
+        mixed = [(0.0, blue), (math.pi, gold)]
+        self.assertEqual(ring_tint(0.0, mixed), blue)
+        self.assertEqual(ring_tint(math.pi, mixed), gold)
+        self.assertEqual(ring_tint(math.pi / 2, mixed), RING_MEET)
+        self.assertEqual(ring_tint(3 * math.pi / 2, mixed), RING_MEET)
+        self.assertEqual(ring_tint(math.tau, mixed), blue)
+
+    def ring_color(self, tints):
+        import math
+        from halo_scene import HaloLayer
+        from halo_geometry import HaloPose, project
+        pose = HaloPose(200, 200, 120, 60, 0.0)
+        layer = HaloLayer(True)
+        layer.tints = tints
+        layer.set_scene(pose, 0.0)
+        image = layer.grab().toImage()
+        x, y, _ = project(pose, math.pi / 2)
+        ratio = image.devicePixelRatio()
+        color = image.pixelColor(round((x - layer.x()) * ratio), round((y - layer.y()) * ratio))
+        layer.close()
+        return color
+
+    def test_front_ring_paints_its_star_color(self):
+        import math
+        from theme import star_palette
+        gold = self.ring_color([(math.pi / 2, star_palette('claude')['ring'])])
+        self.assertGreater(gold.red(), gold.blue())
+        blue = self.ring_color([(math.pi / 2, star_palette('codex')['ring'])])
+        self.assertGreater(blue.blue(), blue.red())
+
 class HubProviderPresentationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

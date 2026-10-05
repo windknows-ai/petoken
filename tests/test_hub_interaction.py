@@ -114,7 +114,9 @@ class HubInteractionTests(unittest.TestCase):
         self.panel.close()
         QTest.keyClick(self.panel, Qt.Key_Escape)
         self.assertTrue(self.panel.isVisible())
-        self.assertFalse(self.panel.hide_button.isEnabled())
+        # X stays clickable on a pinned Hub (it closes and unpins).
+        self.assertTrue(self.panel.hide_button.isEnabled())
+        self.assertEqual(self.panel.hide_button.cursor().shape(), Qt.PointingHandCursor)
         self.panel.set_always_on_top(False)
         self.assertTrue(self.panel.windowFlags() & Qt.WindowStaysOnTopHint)
         action.trigger()
