@@ -19,6 +19,25 @@ import theme
 from workbench_store import WorkbenchError
 from notifications import KINDS as NOTIFY_KINDS, REPEATS
 
+NOTIFY_COLORS = dict(finished='#3E7D61', failed=theme.DANGER_TEXT, needs_approval='#C98A1E',
+                     quota_low=theme.VIOLET, reminder=theme.ICE)
+_DOTS = {}
+
+
+def _kind_dot(kind):
+    """Small coloured dot that marks a notification's type in the list."""
+    if kind not in _DOTS:
+        pixmap = QPixmap(20, 20)
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(NOTIFY_COLORS.get(kind, theme.MUTED)))
+        painter.drawEllipse(3, 3, 14, 14)
+        painter.end()
+        _DOTS[kind] = QIcon(pixmap)
+    return _DOTS[kind]
+
 def provider_dot(provider_id, size=10):
     """A small round marker in the provider's star colour (blue / gold)."""
     pixmap = QPixmap(size * 2, size * 2)
@@ -210,6 +229,9 @@ class WorkbenchWindow(QWidget):
         for listing in self.findChildren(QListWidget):
             listing.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             listing.setTextElideMode(Qt.ElideRight)
+            if listing is not self.project_list:
+                # Rows share one colour; a divider tells them apart.
+                listing.setStyleSheet(f'QListWidget::item {{ border-bottom: 1px solid {theme.DIVIDER}; }}')
         self.tutorial = WorkbenchTutorial(self)
         self.apply_language()
 
@@ -281,13 +303,8 @@ class WorkbenchWindow(QWidget):
         layout = self.page()
         layout.addWidget(self.caption('wb_todo_intro', 'muted'))
         add = QHBoxLayout()
-        self.todo_input = QLineEdit()
-        self.todo_input.setMaxLength(200)
-        self.todo_input.returnPressed.connect(self.add_todo)
-        self.todo_project = QComboBox()
-        add.addWidget(self.todo_input, 1)
-        add.addWidget(self.todo_project)
-        self.button(add, 'wb_add', self.add_todo, True)
+        self.button(add, 'wb_add_todo', lambda: self.add_todo(), True)
+        add.addStretch()
         layout.addLayout(add)
         self.todo_list = QListWidget()
         self.todo_list.itemChanged.connect(self._todo_changed)
@@ -406,7 +423,6 @@ class WorkbenchWindow(QWidget):
             self.project_list.addItem(item)
             if identity == self.project_scope:
                 self.project_list.setCurrentItem(item)
-        self._combo(self.todo_project, self.todo_project.currentData())
         # A passive refresh must not rebind a draft to a different project.
         if not dirty:
             self._combo(self.note_project, self.note_project.currentData())
@@ -473,33 +489,21 @@ class WorkbenchWindow(QWidget):
         top.addStretch()
         layout.addLayout(top)
         self.notify_list = QListWidget()
-        self.notify_list.itemDoubleClicked.connect(
-            lambda item: self.panel.open_notice(item.data(Qt.UserRole)))
-        self.notify_list.setMinimumHeight(240)
+        self.notify_list.setObjectName('notifyList')
+        # Rows are told apart by a coloured dot per type and a divider line.
+        self.notify_list.setIconSize(QSize(10, 10))
+        self.notify_list.itemDoubleClicked.connect(self._open_notice_item)
         layout.addWidget(self.notify_list, 3)
         self.notify_empty = self.caption('wb_notify_empty', 'muted')
         layout.addWidget(self.notify_empty)
-        layout.addWidget(self.caption('wb_reminders', 'heading'))
-        add = QHBoxLayout()
-        self.reminder_title = QLineEdit()
-        self.reminder_title.setMaxLength(200)
-        self.reminder_title.returnPressed.connect(self.add_reminder)
-        self.reminder_repeat = QComboBox()
-        for repeat in REPEATS:
-            self.reminder_repeat.addItem('', repeat)
-        self.reminder_when = QDateTimeEdit(QDateTime.currentDateTime().addSecs(3600))
-        self.reminder_when.setDisplayFormat('yyyy-MM-dd HH:mm')
-        self.reminder_when.setCalendarPopup(True)
-        self.reminder_todo = QComboBox()
-        add.addWidget(self.reminder_title, 1)
-        add.addWidget(self.reminder_repeat)
-        add.addWidget(self.reminder_when)
-        add.addWidget(self.reminder_todo)
-        self.button(add, 'wb_add', self.add_reminder, True)
-        layout.addLayout(add)
+        header = QHBoxLayout()
+        header.addWidget(self.caption('wb_reminders', 'heading'))
+        header.addStretch()
+        self.button(header, 'wb_add_reminder', lambda: self.add_reminder(), True)
+        layout.addLayout(header)
         self.reminder_list = QListWidget()
-        self.reminder_list.setMaximumHeight(130)
-        layout.addWidget(self.reminder_list)
+        self.reminder_list.setMinimumHeight(70)
+        layout.addWidget(self.reminder_list, 1)
         actions = QHBoxLayout()
         actions.addStretch()
         self.button(actions, 'wb_delete', self.delete_reminder, danger=True)
@@ -525,18 +529,12 @@ class WorkbenchWindow(QWidget):
             detail = event['detail'] if event['kind'] in ('failed', 'reminder') else (
                 f"{event['detail']}%" if event['kind'] == 'quota_low' else '')
             parts = [self._when(event['at']), provider, kind, event['project'], detail]
-            item = QListWidgetItem(' · '.join(part for part in parts if part))
+            item = QListWidgetItem(_kind_dot(event['kind']), ' · '.join(part for part in parts if part))
             item.setData(Qt.UserRole, event)
+            if event['kind'] == 'needs_approval':
+                item.setToolTip(self.tr('wb_notify_open_hint'))
             self.notify_list.addItem(item)
         self.notify_empty.setVisible(self.notify_list.count() == 0)
-        current = self.reminder_todo.currentData()
-        self.reminder_todo.clear()
-        self.reminder_todo.addItem(self.tr('wb_reminder_no_todo'), None)
-        for todo in (self._todos or {}).values() if hasattr(self, '_todos') else ():
-            if not todo.get('done'):
-                self.reminder_todo.addItem(todo['title'], todo['id'])
-        index = self.reminder_todo.findData(current)
-        self.reminder_todo.setCurrentIndex(max(0, index))
         self.reminder_list.clear()
         days = self.tr('wb_weekday_names').split(',')
         for row in center.store.list_reminders():
@@ -555,25 +553,78 @@ class WorkbenchWindow(QWidget):
             item.setData(Qt.UserRole, row['id'])
             self.reminder_list.addItem(item)
 
-    def add_reminder(self):
+    def _open_notice_item(self, item):
+        """Only a pending approval is worth opening; the others are history."""
+        event = item.data(Qt.UserRole) or {}
+        if event.get('kind') == 'needs_approval':
+            self.panel.open_notice(event)
+
+    def _reminder_dialog(self):
+        """Content, repeat, time and linked todo, or None when cancelled."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(self.tr('wb_add_reminder'))
+        dialog.setMinimumWidth(420)
+        layout = QVBoxLayout(dialog)
+        form = QFormLayout()
+        title = QLineEdit()
+        title.setMaxLength(200)
+        title.setPlaceholderText(self.tr('wb_reminder_placeholder'))
+        repeat = QComboBox()
+        for value in REPEATS:
+            repeat.addItem(self.tr(f'wb_repeat_{value}'), value)
+        when = QDateTimeEdit(QDateTime.currentDateTime().addSecs(3600))
+        when.setDisplayFormat('yyyy-MM-dd HH:mm')
+        when.setCalendarPopup(True)
+        todo = QComboBox()
+        todo.addItem(self.tr('wb_reminder_no_todo'), None)
+        for record in (getattr(self, '_todos', None) or {}).values():
+            if not record.get('done'):
+                todo.addItem(record['title'], record['id'])
+        form.addRow(self.tr('wb_todo_content'), title)
+        form.addRow(self.tr('wb_reminder_repeat'), repeat)
+        form.addRow(self.tr('wb_reminder_time'), when)
+        form.addRow(self.tr('wb_reminder_todo'), todo)
+        layout.addLayout(form)
+        error = QLabel()
+        error.setWordWrap(True)
+        error.hide()
+        layout.addWidget(error)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        result = {}
+
+        def submit():
+            moment = when.dateTime().toPython()
+            ok = self.add_reminder(title.text(), repeat.currentData(), moment, todo.currentData())
+            if ok:
+                result['ok'] = True
+                dialog.accept()
+            else:
+                error.setText(self.tr('wb_reminder_past' if title.text().strip() else 'wb_reminder_empty'))
+                error.show()
+        buttons.accepted.connect(submit)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        dialog.exec()
+        return bool(result)
+
+    def add_reminder(self, title=None, repeat='once', when=None, todo_id=None):
+        """Add opens a dialog; values passed in are added directly."""
         center = getattr(self.panel, 'notifications', None)
-        title = self.reminder_title.text().strip()
-        if center is None or not title:
-            return
-        when = self.reminder_when.dateTime().toPython()
-        repeat = self.reminder_repeat.currentData()
+        if center is None:
+            return False
+        if title is None:
+            return self._reminder_dialog()
+        if not (title or '').strip() or when is None:
+            return False
         try:
             center.store.add_reminder(title, repeat, when.hour * 60 + when.minute,
                                       weekday=when.weekday() if repeat == 'weekly' else None,
                                       day=when.strftime('%Y-%m-%d') if repeat == 'once' else None,
-                                      todo_id=self.reminder_todo.currentData())
+                                      todo_id=todo_id)
         except ValueError:
-            self.status.setText(self.tr('wb_reminder_past'))
-            self.status.show()
-            return
-        self.status.hide()
-        self.reminder_title.clear()
+            return False
         self.refresh_notifications()
+        return True
 
     def delete_reminder(self):
         item = self.reminder_list.currentItem()
@@ -663,10 +714,6 @@ class WorkbenchWindow(QWidget):
             return False
         self.project_scope = project_id
         self.refresh()
-        if project_id:
-            self.todo_project.setCurrentIndex(self.todo_project.findData(project_id))
-        else:
-            self.todo_project.setCurrentIndex(0)
         return True
 
     @staticmethod
@@ -678,11 +725,17 @@ class WorkbenchWindow(QWidget):
                 break
         listing.blockSignals(False)
 
-    def add_todo(self):
-        ok, _ = self._attempt(self.store.create_todo, self.todo_input.text(),
-                              self.todo_project.currentData())
+    def add_todo(self, title=None, project=None):
+        """Add opens a dialog: write, confirm, then the todo is added.
+        A title passed in (tests, scripts) is added directly."""
+        if title is None:
+            saved = self._record_dialog(self.tr('wb_add_todo'), '', self.project_scope or None,
+                                        save=self.store.create_todo, label='wb_todo_content')
+            if saved:
+                self.refresh()
+            return saved
+        ok, _ = self._attempt(self.store.create_todo, title, project)
         if ok:
-            self.todo_input.clear()
             self.refresh()
         return ok
 
@@ -708,7 +761,7 @@ class WorkbenchWindow(QWidget):
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
 
-    def _record_dialog(self, title, value='', project=None, directory=None, save=None):
+    def _record_dialog(self, title, value='', project=None, directory=None, save=None, label='wb_name'):
         dialog = QDialog(self)
         dialog.setWindowTitle(title)
         dialog.setMinimumWidth(400)
@@ -716,7 +769,7 @@ class WorkbenchWindow(QWidget):
         form = QFormLayout()
         name = QLineEdit(value)
         name.setMaxLength(200)
-        form.addRow(self.tr('wb_name'), name)
+        form.addRow(self.tr(label), name)
         extra = QLineEdit(directory) if directory is not None else QComboBox()
         if directory is None:
             self._combo(extra, project)
@@ -849,10 +902,44 @@ class WorkbenchWindow(QWidget):
             self._draft_changed()
         return ok
 
-    def new_note(self):
+    def _note_dialog(self):
+        """Title, project and text for a new note, or None when cancelled."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(self.tr('wb_new_note'))
+        dialog.setMinimumWidth(460)
+        layout = QVBoxLayout(dialog)
+        form = QFormLayout()
+        title = QLineEdit()
+        title.setMaxLength(200)
+        title.setPlaceholderText(self.tr('wb_note_title'))
+        project = QComboBox()
+        self._combo(project, self.project_scope or None)
+        body = QPlainTextEdit()
+        body.setPlaceholderText(self.tr('wb_note_body'))
+        form.addRow(self.tr('wb_name'), title)
+        form.addRow(self.tr('wb_project'), project)
+        layout.addLayout(form)
+        layout.addWidget(body, 1)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(lambda: dialog.accept() if title.text().strip() else title.setFocus())
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        if dialog.exec() != QDialog.Accepted:
+            return None
+        return title.text().strip(), body.toPlainText(), project.currentData()
+
+    def new_note(self, title=None, body='', project=None):
+        """Add opens a dialog: write, confirm, then the note is added."""
         if not self._guard_note():
             return False
-        ok, record = self._attempt(self.store.create_note, self.tr('wb_untitled'), '', self.project_scope or None)
+        if title is None:
+            values = self._note_dialog()
+            if values is None:
+                return False
+            title, body, project = values
+        else:
+            project = project if project is not None else (self.project_scope or None)
+        ok, record = self._attempt(self.store.create_note, title, body, project)
         if ok:
             self.refresh(note_id=record['id'])
             self.tabs.setCurrentIndex(2)
@@ -928,16 +1015,11 @@ class WorkbenchWindow(QWidget):
         for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects', 'wb_notifications']):
             self.tabs.setTabText(index, self.tr(key))
         self.projects_table.setHeaderLabels([self.tr('wb_name'), self.tr('wb_folder')])
-        self.todo_input.setPlaceholderText(self.tr('wb_todo_placeholder'))
-        self.reminder_title.setPlaceholderText(self.tr('wb_reminder_placeholder'))
-        for combo, keys in ((self.notify_filter, ('wb_notify_all',) + tuple(f'notify_kind_{k}' for k in NOTIFY_KINDS)),
-                            (self.reminder_repeat, tuple(f'wb_repeat_{r}' for r in REPEATS))):
-            for index, key in enumerate(keys):
-                combo.setItemText(index, self.tr(key))
+        for index, key in enumerate(('wb_notify_all',) + tuple(f'notify_kind_{k}' for k in NOTIFY_KINDS)):
+            self.notify_filter.setItemText(index, self.tr(key))
         self.note_title.setPlaceholderText(self.tr('wb_note_title'))
         self.note_body.setPlaceholderText(self.tr('wb_note_body'))
-        for widget, key in [(self.project_list, 'wb_spaces'), (self.todo_input, 'wb_todo_placeholder'),
-                            (self.todo_project, 'wb_project'), (self.note_title, 'wb_note_title'),
+        for widget, key in [(self.project_list, 'wb_spaces'), (self.note_title, 'wb_note_title'),
                             (self.note_body, 'wb_note_body'), (self.note_project, 'wb_project'),
                             (self.notes_list, 'wb_notes'), (self.task_list, 'wb_codex_tasks')]:
             widget.setAccessibleName(self.tr(key))
@@ -1103,7 +1185,8 @@ class WorkbenchTutorial(QDialog):
                 self.open_guide()
         elif self.step == 2:
             window.tabs.setCurrentIndex(1)
-            window.todo_input.setFocus()
+            if not window.add_todo():
+                self.open_guide()
         elif self.step == 3:
             if not window.new_note():
                 self.open_guide()

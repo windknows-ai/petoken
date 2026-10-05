@@ -65,8 +65,7 @@ class WorkbenchIntegrationTests(unittest.TestCase):
     def test_nonlive_uses_temporary_database_and_reuses_window(self):
         self.panel.open_workbench()
         first = self.panel.workbench_window
-        first.todo_input.setText('Temporary QA')
-        first.add_todo()
+        first.add_todo('Temporary QA')
         self.assertFalse((Path(self.temp.name) / 'workbench.sqlite3').exists())
         self.assertEqual(first.store.list_todos()[0]['title'], 'Temporary QA')
         first.close()
@@ -88,7 +87,7 @@ class WorkbenchIntegrationTests(unittest.TestCase):
 
     def test_shutdown_cancel_preserves_companion_and_draft(self):
         self.panel.open_workbench()
-        self.panel.workbench_window.new_note()
+        self.panel.workbench_window.new_note(self.panel.workbench_window.tr('wb_untitled'))
         self.panel.workbench_window.note_body.setPlainText('Keep draft')
         with patch('workbench.QMessageBox.question', return_value=QMessageBox.Cancel):
             self.assertFalse(self.panel.shutdown())
@@ -99,7 +98,7 @@ class WorkbenchIntegrationTests(unittest.TestCase):
 
     def test_language_update_keeps_note_and_entry_point(self):
         self.panel.open_workbench()
-        self.panel.workbench_window.new_note()
+        self.panel.workbench_window.new_note(self.panel.workbench_window.tr('wb_untitled'))
         self.panel.workbench_window.note_body.setPlainText('Keep draft')
         self.panel.prefs['language'] = 'en'
         self.panel.apply_language()

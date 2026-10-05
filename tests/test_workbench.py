@@ -88,10 +88,12 @@ class WorkbenchTests(unittest.TestCase):
         self.assertEqual(self.window.task_list.count(), 24)
         self.assertEqual(self.window.todo_list.count(), 0)
         self.assertEqual(self.window.notes_list.count(), 0)
-        self.window.todo_input.setText('整理本周项目')
-        self.assertTrue(self.window.add_todo())
+        self.assertTrue(self.window.add_todo('整理本周项目'))
         self.assertEqual(self.store.list_todos()[0]['title'], '整理本周项目')
-        self.assertEqual(self.window.todo_input.text(), '')
+        # The page itself only offers an Add button that opens a dialog.
+        with patch.object(self.window, '_record_dialog', return_value=False) as dialog:
+            self.assertFalse(self.window.add_todo())
+        dialog.assert_called_once()
 
     def test_todo_checkbox_reopens_and_failed_write_reverts(self):
         self.store.create_todo('Verify build')
@@ -190,7 +192,7 @@ class WorkbenchTests(unittest.TestCase):
     def test_note_actions_hide_for_empty_and_unselected_records(self):
         self.assertTrue(self.window.save_button.isHidden())
         self.assertTrue(self.window.note_delete_button.isHidden())
-        self.window.new_note()
+        self.window.new_note(self.window.tr('wb_untitled'))
         self.assertFalse(self.window.save_button.isHidden())
         self.assertFalse(self.window.note_delete_button.isHidden())
         self.window.notes_list.clearSelection()
@@ -285,7 +287,7 @@ class WorkbenchTests(unittest.TestCase):
         self.assertEqual(self.activations, [(('codex', '24'), True)])
 
     def test_note_save_persists_exact_unicode_and_newlines(self):
-        self.assertTrue(self.window.new_note())
+        self.assertTrue(self.window.new_note(self.window.tr('wb_untitled')))
         self.window.note_title.setText('交接')
         self.window.note_body.setPlainText('第一行\nsecond line 🌙\n')
         self.assertTrue(self.window.note_dirty)
@@ -295,7 +297,7 @@ class WorkbenchTests(unittest.TestCase):
 
     def test_failed_note_save_and_navigation_cancel_preserve_draft(self):
         project = self.store.create_project('Other')
-        self.window.new_note()
+        self.window.new_note(self.window.tr('wb_untitled'))
         self.window.note_body.setPlainText('unsaved draft')
         with patch.object(self.store, 'update_note', side_effect=WorkbenchError('locked')):
             self.assertFalse(self.window.save_note())
@@ -307,7 +309,7 @@ class WorkbenchTests(unittest.TestCase):
         self.assertEqual(self.window.note_body.toPlainText(), 'unsaved draft')
 
     def test_language_change_and_refresh_do_not_replace_dirty_note(self):
-        self.window.new_note()
+        self.window.new_note(self.window.tr('wb_untitled'))
         self.window.note_title.setText('Edited')
         self.window.note_body.setPlainText('draft')
         self.panel.prefs['language'] = 'en'
@@ -341,7 +343,7 @@ class WorkbenchTests(unittest.TestCase):
         self.assertEqual(self.window.task_list.count(), 0)
 
     def test_close_discard_resets_draft_before_window_reopens(self):
-        self.window.new_note()
+        self.window.new_note(self.window.tr('wb_untitled'))
         self.window.note_body.setPlainText('discard me')
         with patch('workbench.QMessageBox.question', return_value=QMessageBox.Discard):
             self.assertTrue(self.window.close())

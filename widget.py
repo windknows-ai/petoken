@@ -4975,7 +4975,9 @@ class Panel(QWidget):
     def open_notice(self, event):
         """Open the task an event belongs to, or the notification list."""
         identity = ((event or {}).get('provider'), (event or {}).get('task_key'))
-        if identity in self.task_manager._universe:
+        # Finished, failed and reminder events are history; only a pending
+        # approval still has something to act on.
+        if (event or {}).get('kind') == 'needs_approval' and identity in self.task_manager._universe:
             self.task_manager.activate_task(identity, keyboard=True)
             return
         self.open_workbench()

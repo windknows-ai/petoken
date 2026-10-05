@@ -41,7 +41,9 @@ class TutorialTests(unittest.TestCase):
     def test_action_routes_to_todos_and_can_resume_same_step(self):
         self.window.open_tutorial()
         self.window.tutorial.set_step(2)
-        self.window.tutorial.perform_action()
+        with patch.object(self.window, '_record_dialog', return_value=True) as dialog:
+            self.window.tutorial.perform_action()
+        dialog.assert_called_once()  # The step opens the Add todo dialog.
         self.assertEqual(self.window.tabs.currentIndex(), 1)
         self.assertFalse(self.window.tutorial.isVisible())
         self.window.open_tutorial()
@@ -49,7 +51,7 @@ class TutorialTests(unittest.TestCase):
         self.assertEqual(self.store.list_todos(), [])
 
     def test_note_action_cancel_preserves_draft_and_guide(self):
-        self.window.new_note()
+        self.window.new_note(self.window.tr('wb_untitled'))
         self.window.note_body.setPlainText('Keep draft')
         self.window.open_tutorial()
         self.window.tutorial.set_step(3)
@@ -60,7 +62,7 @@ class TutorialTests(unittest.TestCase):
         self.assertEqual(len(self.store.list_notes()), 1)
 
     def test_language_and_close_preserve_draft(self):
-        self.window.new_note()
+        self.window.new_note(self.window.tr('wb_untitled'))
         self.window.note_body.setPlainText('Keep draft')
         self.window.open_tutorial()
         self.panel.prefs['language'] = 'en'
