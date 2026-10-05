@@ -885,7 +885,8 @@ class CodexStore:
             self.compatibility['reasons'] = sorted(set(self.compatibility['reasons'] + ['unreadable_database:threads']))
             return dict(status='status_database_unavailable', rows=[],
                         codex_activity=dict(active=False,valid=False,reason='database_unavailable'))
-        desktop = [r for r in rows if r.get('source') in ('vscode','desktop') and r.get('archived') == 0]
+        # CLI/exec are top-level tasks too; subagents remain historical usage only.
+        desktop = [r for r in rows if r.get('source') in ('vscode','desktop','cli','exec') and r.get('archived') == 0]
         eligible = [r for r in rows if r.get('rollout_path')]
         codex_activity = self.activity.detect(desktop, active_title, activity_detection_valid)
         chosen, mode = select_thread(desktop, active_title, pinned)
