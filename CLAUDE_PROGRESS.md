@@ -2,15 +2,11 @@
 
 ## Released — v1.4.0 (2026-10-05)
 
-Published from `b82626f` (tag `v1.4.0`, GitHub release marked Latest) with
-`Petoken-v1.4.0-Windows-x64.zip` (SHA256 `344c6d7a482b272a889b35a1bd6e1e115d8977fa943dd741cff1f583fd583365`)
-and `SHA256SUMS.txt` (exe `d3a83a5253464565c994b5bb23bce2d2e59f3bea0ef061e1cd009b0c9ecebb4d`);
-the downloaded asset was re-verified. v1.4.0 = roadmap V1.4 workbench + V1.5 Codex/Claude Code.
-Full suite 1091 tests pass.
+Re-published from `8ab13de` (tag `v1.4.0` moved there at the user's request; assets replaced): English default, idle-pose app icon (`assets/petoken.ico`), download holds only program/licences/user docs, OpenCode adapter and its tests removed. ZIP SHA256 `4106d3e4a87f8fd7f1ef820c848ddf9ed8181ca4fe54964e1af6a912073ffade`; exe `36cb9b889e611e20e38815dc57ed647fc64c4d1448f5fff946b2fc906d642df6`; downloaded asset re-verified. Full suite 935 tests pass. Run only related tests for small changes (see memory).
 
 Local layout after the maintainer-approved cleanup (old folders went to the
 Recycle Bin; every version is on GitHub):
-- `D:\Documents\ChatGPT\codex-widget` — main checkout (`main` = `b82626f`), all git history, `.venv` for tests/builds; Codex works here.
+- `D:\Documents\ChatGPT\codex-widget` — main checkout (`main` = `8ab13de`), all git history, `.venv` for tests/builds; Codex works here.
 - `D:\Documents\ChatGPT\petoken-claude` — Claude worktree.
 - `D:\Documents\ChatGPT\petoken-takeover-backups` — only the roadmap docx and `Petoken-v1.4.0\` (runnable released build).
 Package/backup paths named in the history below no longer exist.
