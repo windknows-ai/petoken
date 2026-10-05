@@ -6,7 +6,7 @@ SUPPORTED_LANGUAGES = ("zh_CN", "en")
 ZH_CN = {
     "settings_title": "petoken · 设置", "save": "保存", "cancel": "取消",
     "language": "界面语言", "language_zh_CN": "简体中文", "language_en": "English",
-    "task_auto": "自动跟随 Codex 当前任务", "task_unnamed": "未命名任务",
+    "task_auto": "自动跟随当前任务", "task_unnamed": "未命名任务",
     "task_selection": "跟随 / 固定任务", "token_scope": "Token 与费用范围",
     "reset_defaults": "恢复默认设置", "confirm_reset": "再次点击确认重置",
     "token_number_format": "Token 数字格式", "token_format_full": "完整数字",
@@ -196,7 +196,7 @@ ZH_CN = {
 EN = {
     "settings_title": "petoken · Settings", "save": "Save", "cancel": "Cancel",
     "language": "Display language", "language_zh_CN": "简体中文", "language_en": "English",
-    "task_auto": "Automatically follow the current Codex task", "task_unnamed": "Untitled task",
+    "task_auto": "Automatically follow the current task", "task_unnamed": "Untitled task",
     "task_selection": "Follow / pinned task", "token_scope": "Token and cost scope",
     "reset_defaults": "Reset to Defaults", "confirm_reset": "Click again to confirm reset",
     "token_number_format": "Token number format", "token_format_full": "Full",
@@ -392,7 +392,7 @@ ZH_CN.update({
     'wb_next': '接下来做什么', 'wb_codex_tasks': '当前任务（Codex / Claude Code）',
     'wb_summary': '{projects} 个项目    ·    {todos} 项待办    ·    {notes} 张便签',
     'wb_empty_todos': '暂时没有待办，给下一步留个位置。',
-    'wb_empty_tasks': '当前没有 Codex 任务。任务出现后会显示在这里。',
+    'wb_empty_tasks': '当前没有 Codex 或 Claude Code 任务。任务出现后会显示在这里。',
     'wb_empty_notes': '新建或选择一张便签，记下你的想法。',
     'wb_empty_projects': '还没有项目。创建一个空间，把相关事项放在一起。',
     'wb_details': '查看详情', 'wb_link': '关联项目',
@@ -422,7 +422,7 @@ EN.update({
     'wb_next': 'Up next', 'wb_codex_tasks': 'Current tasks (Codex / Claude Code)',
     'wb_summary': '{projects} projects    ·    {todos} pending    ·    {notes} notes',
     'wb_empty_todos': 'Nothing pending. Make room for your next step.',
-    'wb_empty_tasks': 'No current Codex tasks. They will appear here when available.',
+    'wb_empty_tasks': 'No current Codex or Claude Code tasks. They will appear here when available.',
     'wb_empty_notes': 'Create or select a note to capture an idea.',
     'wb_empty_projects': 'No projects yet. Create a space for related work.',
     'wb_details': 'View details', 'wb_link': 'Link project',
@@ -462,7 +462,7 @@ ZH_CN.update({
     'wb_tutorial_body_3': '新建便签，写一个标题和内容，点击「保存」或按 Ctrl+S。便签和待办保存在这台设备上。\n\n切换便签、项目或退出时，未保存的编辑会提示你选择保存、放弃或取消。\n\n现在试着写下一句话吧。',
     'wb_tutorial_action_3': '新建一张便签',
     'wb_tutorial_title_4': '让星星陪你工作',
-    'wb_tutorial_body_4': '每颗星星对应一个当前 Codex 任务。点击星星，或在首页选择任务后点「查看详情」，可以查看它的用量信息。\n\n「关联项目」可以把这个任务放进你自己的项目空间。\n\n没有任务时列表为空是正常的。使用 Codex 后，可用任务会自动出现；个人待办和便签照常使用。',
+    'wb_tutorial_body_4': '每颗星星对应一个当前任务：Codex 是蓝色，Claude Code 是金色。点击星星，或在首页选择任务后点「查看详情」，可以查看它的用量信息。\n\n「关联项目」可以把这个任务放进你自己的项目空间。\n\n没有任务时列表为空是正常的。使用 Codex 或 Claude Code 后，可用任务会自动出现；个人待办和便签照常使用。',
     'wb_tutorial_action_4': '看看 Codex 任务',
 })
 EN.update({
@@ -483,7 +483,7 @@ EN.update({
     'wb_tutorial_body_3': 'Create a note, write a title and some text, then select Save or press Ctrl+S. Notes and todos stay on this device.\n\nWhen you switch notes or projects, or exit, unsaved edits prompt you to Save, Discard or Cancel.\n\nTry writing one sentence.',
     'wb_tutorial_action_3': 'Create a note',
     'wb_tutorial_title_4': 'Work alongside the stars',
-    'wb_tutorial_body_4': 'Each star represents a current Codex task. Select a star, or choose a task on Home and View details, to see its available usage.\n\nLink project puts the task in your own project space.\n\nAn empty task list is normal when none are available. Supported Codex tasks appear automatically; personal todos and notes still work.',
+    'wb_tutorial_body_4': 'Each star represents a current task: blue for Codex, gold for Claude Code. Select a star, or choose a task on Home and View details, to see its available usage.\n\nLink project puts the task in your own project space.\n\nAn empty task list is normal when none are available. Codex and Claude Code tasks appear automatically; personal todos and notes still work.',
     'wb_tutorial_action_4': 'Look at Codex tasks',
 })
 

@@ -2805,10 +2805,17 @@ class TaskPanelManager(HaloScene):
             target_x = x - card.width() - pet_geometry.TASK_WINDOW_GAP
         card.move(*pet_geometry.clamp_position(target_x, round(cy - card.height() / 2),
                                                card.width(), card.height(), self._last_screen_rect))
+        # The card's final rect is known here, before any opening animation.
+        avoid = getattr(self.panel, 'avoid_rect', None)
+        if avoid is not None:
+            avoid(card.geometry())
 
     def collapse_detail(self, replan=True):
         if self.expanded_identity is None:
             return
+        restore = getattr(self.panel, 'restore_after_avoid', None)
+        if restore is not None:
+            restore()
         dirty = self._expansion_dirty or self._motion_enabled() != self._last_motion_enabled
         anchor = self.expanded_anchor
         self.expanded_identity = None
@@ -4151,11 +4158,62 @@ class Panel(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
         self.anchor_to_pet()
+        self._avoid_open_detail()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if self.isVisible():
             self.anchor_to_pet()
+            self._avoid_open_detail()
+
+    def _avoid_open_detail(self):
+        manager = getattr(self, 'task_manager', None)
+        card = getattr(manager, 'detail_window', None) if manager is not None else None
+        if (card is not None and manager.expanded_identity is not None
+                and card.isVisible()):
+            self._avoid_origin = None  # A fresh anchor is the spot to return to.
+            self.avoid_rect(card.geometry())
+
+    def avoid_rect(self, rect):
+        """Step the Hub aside so a star's detail card stays readable.
+
+        Tries right of, left of, below and above the card; takes the
+        on-screen spot that leaves the card uncovered with the shortest
+        move. The original spot is remembered and restored when the card
+        closes, unless the user moves the Hub meanwhile.
+        """
+        if getattr(self, 'closing', False) or rect is None or not self.isVisible():
+            return
+        hub = self.geometry()
+        if not hub.intersects(rect):
+            return
+        screen = (QApplication.screenAt(rect.center()) or self.screen()
+                  or QApplication.primaryScreen()).availableGeometry()
+        gap, w, h = 12, hub.width(), hub.height()
+
+        def clamp(x, y):
+            return (max(screen.left(), min(x, screen.right() - w + 1)),
+                    max(screen.top(), min(y, screen.bottom() - h + 1)))
+        best = None
+        for x, y in ((rect.right() + 1 + gap, hub.y()), (rect.left() - gap - w, hub.y()),
+                     (hub.x(), rect.bottom() + 1 + gap), (hub.x(), rect.top() - gap - h)):
+            x, y = clamp(x, y)
+            overlap = QRect(x, y, w, h).intersected(rect)
+            covered = 0 if overlap.isEmpty() else overlap.width() * overlap.height()
+            key = (covered, abs(x - hub.x()) + abs(y - hub.y()))
+            if best is None or key < best[0]:
+                best = (key, (x, y))
+        if getattr(self, '_avoid_origin', None) is None:
+            self._avoid_origin = self.pos()
+        self.move(*best[1])
+        self._avoid_target = self.pos()
+
+    def restore_after_avoid(self):
+        origin = getattr(self, '_avoid_origin', None)
+        target = getattr(self, '_avoid_target', None)
+        self._avoid_origin = self._avoid_target = None
+        if origin is not None and not getattr(self, 'closing', False) and self.pos() == target:
+            self.move(origin)
 
     @property
     def language(self):
@@ -4932,7 +4990,9 @@ class Panel(QWidget):
             self.pet.close()
         if self.rates.thread.is_alive():
             self.rates.close()
-        self.prefs['position'] = [self.x(),self.y()]
+        origin = getattr(self, '_avoid_origin', None)
+        spot = origin if origin is not None and self.pos() == getattr(self, '_avoid_target', None) else self.pos()
+        self.prefs['position'] = [spot.x(), spot.y()]
         self.persist()
         self.tray.hide()
         if self._workbench_temp:

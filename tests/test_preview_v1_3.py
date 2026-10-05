@@ -6,6 +6,7 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+from PySide6.QtCore import QPoint
 from unittest.mock import patch
 
 from PySide6.QtWidgets import QApplication, QComboBox, QLabel
@@ -366,6 +367,38 @@ class PreviewTests(unittest.TestCase):
                 preview.provider.setCurrentText('codex')  # New source resets it.
                 self.assertEqual(preview.panel.prefs['tracking_provider'], 'codex')
                 self.assertEqual({key[0] for key in manager.window_identities()}, {'codex'})
+            finally:
+                preview.cleanup()
+                preview.close()
+                preview.deleteLater()
+                self.app.processEvents()
+
+    def test_hub_steps_aside_for_star_detail_and_returns(self):
+        with tempfile.TemporaryDirectory() as directory, patch('widget.PREF_DIR', Path(directory)):
+            preview = Preview(count=4)
+            panel, manager = preview.panel, preview.panel.task_manager
+            try:
+                preview.toggle_detail()
+                self.app.processEvents()
+                card = manager.detail_window
+                self.assertIsNotNone(manager.expanded_identity)
+                # Put the Hub right over the card, as in the reported overlap.
+                panel.move(card.pos())
+                origin = panel.pos()
+                panel._avoid_origin = None
+                manager._refresh_detail()
+                self.assertFalse(panel.geometry().intersects(card.geometry()))
+                manager.collapse_detail()
+                self.assertEqual(panel.pos(), origin)
+                # A user drag while the card is open is kept on close.
+                preview.toggle_detail()
+                panel.move(card.pos())
+                panel._avoid_origin = None
+                manager._refresh_detail()
+                moved = panel.pos() + QPoint(5, 5)
+                panel.move(moved)
+                manager.collapse_detail()
+                self.assertEqual(panel.pos(), moved)
             finally:
                 preview.cleanup()
                 preview.close()
