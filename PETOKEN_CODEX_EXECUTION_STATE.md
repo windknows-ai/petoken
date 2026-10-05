@@ -1,6 +1,6 @@
 # Petoken Codex execution state
 
-Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — checkbox/selection**.
+Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA — gentle companion surfaces**.
 
 ## V1.4 workbench current authority
 
@@ -8,6 +8,17 @@ Updated: 2026-10-04 (America/Toronto). Status: **WAITING_FOR_HUMAN_VISUAL_QA —
 - Baseline c953268 preserved in `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4-workbench/baseline.json`; current branch codex/v1.4-workbench. Unrelated.autopilot untouched. Root owns shared continuity/Git, GUI work serialized.
 
 ## Current V1.4 progress
+
+- **V1.4 gentle companion surfaces — WAITING_FOR_HUMAN_VISUAL_QA.** Pearl-white/lavender/quiet-blue shared palette, lighter Workbench header/sidebar/pill tabs, transparent draggable divider, complete native combo controls/chevron. Heading “你的小天地” / “Your little corner”. Hub/Settings/Analytics/detail/tutorial/bubbles share tokens; approved pet artwork/ring geometry/effects and Codex-only/data/selection behavior preserved.
+- Source `b7b9771` on `codex/v1.4-workbench`; changed theme.py/widget.py/workbench.py/analytics_view.py/localization.py, assets/chevron-down.svg, three focused test files and DESIGN/QA docs. No new dependency/theme system, version bump, Astra, release/push or stable overwrite.
+- Current native278effective cases accepted in segments:276PASS from278case59.201s gate;2newfixtures initially failed only hex case normalization, corrected2rerunPASS0.679s. Root exact3case red and initial84native/7source scene evidence retained. No full suite repeat or lost prior acceptance. Old pager dark-background fixture now semantic/contrast-aware. Standalone combo fixture already passed before styling repair; no claim of exact contextual black-frame reproduction.
+- Independent#18 initially BLOCKED COZY1 white selected Workbench text1.238:1 and COZY2 dark Analytics text on native blue2.123:1. Explicit local/shared selection foreground/background repaired; fresh actual EN/ZH active/inactive records/editor/Analytics/native popup keyboard selection/Hub menu reacceptedPASS9.730:1. Earlier popup helper sampled QRollEffect too early; settled native popup works. Initial reports/red/failed helpers retained; independent source/native scope, artifact validation root-scoped.
+- Isolated Windows build exit0; root228exactZIPfiles/CRC/content,19compiledapplicationmodules equal source,423archive/noOpenCodeorpersonalDB,14licenses/19READMElinks/chevron+tick+approvedartwork checked. Prior checkbox/onboarding/workbench/celestial and releasedv1.3.0 EXE/ZIP hashes unchanged. Root15actualEXE scenesPASS (7workbench+5tutorial+3Hub/detail/0/24/64/mic/music/pager); private settings/lock/DB hash+mtime unchanged. Final actual frozen Home/selectedNotes/tutorial/Hub-detail-pager pixels viewed/readable.
+- EXE SHA256 `131dd48a0ef2115a37e0106b405fc725ec1a045010c7f21b3187bfe69d1d66f0`; ZIP `3354d44ca93fc36826fd5a79e77134c132c9cc7ffe8d47efd2df537e697c3e9a`. Embedded1.3.0 deliberately retained during unreleasedV1.4 development.
+- Current launcher: `D:\Documents\ChatGPT\petoken-takeover-backups\2026-10-04-v1.4-cozy\package-dev\petoken\preview-workbench.cmd`; ZIP sibling `petoken-Windows-x64.zip`. Evidence root-cozy-acceptance.json/root-package-audit.json and18-cozy-review/reaccept.md/json under2026-10-04-v1.4-cozy. Empty isolated preview discards records on exit; do not keep real notes there.
+- Technical work complete; zero active subagents/GUI/jobs, no concrete blocker in tested scope. Native Windows125%DPI checked; human appearance/daily-use/otherDPI and separate future release decision pending. Unrelated.autopilot untouched. Exact next step human visual QA of current isolated launcher; act on concrete feedback, do not automatically publish.
+
+### Prior checkbox/selection baseline
 
 - **V1.4 checkbox/selection — WAITING_FOR_HUMAN_VISUAL_QA.** Checked checkboxes now show a contrasting navy tick on the existing cyan field; source/frozen native pixels inspected. Todo/project Edit/Delete, note Delete and task Details/Link show only for valid selected records. Folder action needs a configured directory; Save is hidden for an empty editor and remains available for an active draft.
 - Source `a1b2bb8` on `codex/v1.4-workbench`; changed widget.py/workbench.py/assets/checkmark.svg, focused tests and QA guide.92currenttargeted native/workbench/tutorial/settings/UItestsPASS10.799s. No full regression repeat, new dependency, Astra, publication or stable overwrite.
@@ -239,7 +250,7 @@ None.
 | 15 | Source truth and privacy repair; /root/repair_source_truth | /root | gpt-6.1-sol high | Interrupted | Initial source truth repair complete; consolidated #17 Windows/arithmetic/URI repair plus huge-token formatting | WRITE | usage.py; opencode_provider.py; token_format.py; source tests | Agent interrupted before followup tests/report; implemented work preserved and completed by root, independently accepted#19 source/cost; checkpoint15da402; no pending source blocker |
 | 16 | Independent backend publication/recovery reviewer; /root/review_publication_recovery | /root | gpt-6.1-sol high | Completed | Independently reproduce and accept atomic publication and saved-scope recovery | REVIEW | No | VERDICT PASS backend:79targeted/50races/40cleanup/25startup; before-fails/current-pass; hungclose6us, current subprocess exit |
 | 17 | Independent source truth/privacy reviewer; /root/review_source_truth | /root | gpt-6.1-sol high | Completed | Adversarial synthetic quota, model/effort, metadata privacy and malformed lifecycle acceptance | REVIEW | No | VERDICT BLOCKED source:94focusedPASS; independent probes3 failing methods:year0001 OSError, huge context overflow, URI prefix leakage |
-| 18 | V1.4 final frozen artifact/native paint auditor; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Checkbox/selection native source review and bounded repair reacceptance | REVIEW / READ ONLY | No source/shared writes; external18-selection reports/probes/owned captures only | Six initial selection/checkbox scopes PASS; SEL1 modal deleteditem/SEL2 actualWin32Cancel mismatch BLOCKED then rootrepairs independently reaccepted4nativeprobesPASS including unchanged validlink. InitialBLOCKED preserved,18-selection-reaccept.md/json; GUIreleased. Fresh package verification root-scoped, no independentartifactclaim. |
+| 18 | Gentle companion surface native reviewer; /root/review_motion_routes | /root | gpt-6.1-sol high | Completed | Human palette/combo/splitter and shared-surface contrast | REVIEW / READ ONLY | No source/shared writes; external18-cozy reports/probes/owned captures only | InitialCOZY1/2 actual native selection contrast BLOCKED preserved; explicit local/shared roles repaired then fresh EN/ZH active/inactive selectedrows/editor/Analytics/nativepopup DownReturn/Hubmenu independentPASS. Initial popup helper sampled opening QRollEffect too early; settled popup works. Reports18-cozy-review/reaccept, GUIreleased. Artifact validation root-scoped. |
 | 19 | Independent interrupted source-batch acceptance; /root/source_acceptance_resume | /root | gpt-6.1-sol high | Completed | Initial source38+12PASS; bounded added pricing overflow acceptance | REVIEW | No | VERDICT PASS source38+12 plus costboundary12focused+4probes; overflowunknown/rawexact/zero/sibling/tiers preserved |
 | 20 | V1.4 joint composition geometry; /root/repair_planning_responsiveness | /root | gpt-6.1-sol high | Completed | V1.4 centered safe placement | WRITE/TEST | halo_geometry.py; tests/test_halo_geometry.py | V1.4 joint clamp22purePASS2.486s;138240new fullcycleframes, exactcentering50..150scale/8edges/negativeorigins; fileownershipreleased |
 | 21 | Codex-only QA presentation; /root/codex_only_qa_presentation | /root | parent inherited non-Astra | Interrupted | 21 Codex-only preview/docs/captures | WRITE | Eight preview/docs files; released | Source complete; native6PASS1.005s log verified; owned3PNG exists; final report delivery usage-limit interrupted |
@@ -411,6 +422,14 @@ Completed: 2026-10-04
 Agents: #18
 Peak concurrency: 1
 Status: Complete — source/native independent PASS; root frozen/package PASS; human QA pending
+Started: 2026-10-04
+Completed: 2026-10-04
+
+### Wave 22 — Human gentle companion aesthetic refinement
+
+Agents: #18
+Peak concurrency: 1
+Status: Complete — source/native independent PASS; root frozen/package PASS; WAITING_FOR_HUMAN_VISUAL_QA
 Started: 2026-10-04
 Completed: 2026-10-04
 
