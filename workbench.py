@@ -229,9 +229,13 @@ class WorkbenchWindow(QWidget):
         for listing in self.findChildren(QListWidget):
             listing.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             listing.setTextElideMode(Qt.ElideRight)
+            # No dotted/dark focus frame around the clicked row.
+            style = 'QListWidget { outline: 0px; }'
             if listing is not self.project_list:
                 # Rows share one colour; a divider tells them apart.
-                listing.setStyleSheet(f'QListWidget::item {{ border-bottom: 1px solid {theme.DIVIDER}; }}')
+                style += f' QListWidget::item {{ border-bottom: 1px solid {theme.DIVIDER}; }}'
+            listing.setStyleSheet(style)
+        self.projects_table.setStyleSheet('QTreeWidget { outline: 0px; }')
         self.tutorial = WorkbenchTutorial(self)
         self.apply_language()
 

@@ -4923,7 +4923,7 @@ class Panel(QWidget):
             self.publish_snapshot(snapshot)
 
     def open_settings(self):
-        self.show()
+        # Settings is its own window: opening it never opens the usage panel.
         Settings(self).exec()
 
     def poll_notifications(self, now=None):
