@@ -211,6 +211,13 @@ class Preview(QWidget):
         self.detail_status = QLabel('')
         self.detail_status.setWordWrap(True)
         layout.addRow(self.detail_status)
+        # V1.6: synthetic notifications show the pop-up, the pet reaction
+        # and the workbench Notifications list without running a task.
+        self.panel.preview_toasts = True
+        self.notify_kind = self.combo(('finished', 'failed', 'needs_approval', 'quota_low', 'reminder'), 'finished')
+        notify_button = QPushButton('Send test notification / 发送测试通知')
+        notify_button.clicked.connect(self.send_notification)
+        layout.addRow(self.notify_kind, notify_button)
         quit_button = QPushButton('Exit preview / 退出预览')
         quit_button.clicked.connect(self.close)
         layout.addRow(quit_button)
@@ -352,6 +359,17 @@ class Preview(QWidget):
         self.page.setValue(manager.page_index + 1)
         self.page.blockSignals(False)
         self.detail_status.clear()
+
+    def send_notification(self):
+        kind = self.notify_kind.currentText()
+        manager = self.panel.task_manager
+        identity = next(iter(manager.task_identities()), ('codex', 'synthetic'))
+        self._notice_count = getattr(self, '_notice_count', 0) + 1
+        self.panel.notifications.ingest(dict(
+            kind=kind, provider=identity[0], task_key=identity[1], at=time.time(),
+            project='SYNTHETIC QA', detail={'failed': 'rate_limit', 'quota_low': '18',
+                                            'reminder': 'SYNTHETIC reminder / 合成提醒'}.get(kind, ''),
+            dedupe=f'preview:{self._notice_count}'), now=time.time() + self._notice_count * 1000)
 
     def set_scene_visible(self, visible):
         self.panel.set_panel_pinned(visible)

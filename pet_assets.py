@@ -50,13 +50,18 @@ REGISTRY = (
     AssetEntry("microphone", "assets/v1_1/microphone.png", "assets/skirk-microphone.png"),
     AssetEntry("music", "assets/v1_1/music.png", "assets/skirk-music.png"),
     AssetEntry("guitar", "assets/v1_1/guitar.png", "assets/skirk-pet.png"),
+    # V1.6 notification reactions.
+    AssetEntry("celebrate", "assets/v1_1/celebrate.png", "assets/skirk-pet.png"),
+    AssetEntry("sad", "assets/v1_1/sad.png", "assets/skirk-pet.png"),
+    AssetEntry("wave", "assets/v1_1/wave.png", "assets/skirk-pet.png"),
 )
 
 # Activity-layer names that are not character poses.
 ALIASES = {"working": "codex_working", "usage": "idle"}
 
 # Preview states understood by DesktopPet (activity names).
-PREVIEW_STATES = ("idle", "typing", "microphone", "music", "working", "usage")
+PREVIEW_STATES = ("idle", "typing", "microphone", "music", "working", "usage",
+                  "celebrate", "sad", "wave")
 
 
 def entry_for(state):

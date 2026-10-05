@@ -1,13 +1,15 @@
 """Native personal workbench; user records are separate from Codex and Claude Code telemetry."""
+from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, QTimer, QRectF, QSize
+from PySide6.QtCore import Qt, QUrl, QTimer, QRectF, QSize, QDateTime
 from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut, QPainter, QPainterPath, QColor, QPen, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
     QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
     QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTabWidget,
     QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget, QScrollArea, QProgressBar,
+    QDateTimeEdit,
 )
 
 from localization import text
@@ -15,6 +17,7 @@ from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 from pet_assets import sprite_for, ASSETS_DIR
 import theme
 from workbench_store import WorkbenchError
+from notifications import KINDS as NOTIFY_KINDS, REPEATS
 
 def provider_dot(provider_id, size=10):
     """A small round marker in the provider's star colour (blue / gold)."""
@@ -193,7 +196,8 @@ class WorkbenchWindow(QWidget):
         self._build_todos()
         self._build_notes()
         self._build_projects()
-        for index, name in enumerate(('home', 'todos', 'notes', 'projects')):
+        self._build_notifications()
+        for index, name in enumerate(('home', 'todos', 'notes', 'projects', 'notifications')):
             self.tabs.setTabIcon(index, QIcon(str(ASSETS_DIR / f'workbench-{name}.svg')))
         self.status = QLabel('')
         self.status.setWordWrap(True)
@@ -453,6 +457,131 @@ class WorkbenchWindow(QWidget):
                                     todos=len(pending), notes=len(scoped_notes)))
         self._draft_changed()
         self.update_tasks()
+        self.refresh_notifications()
+
+    # --- V1.6 notifications ---------------------------------------------
+    def _build_notifications(self):
+        layout = self.page()
+        self.notifications_tab = self.tabs.count() - 1
+        layout.addWidget(self.caption('wb_notify_intro', 'muted'))
+        top = QHBoxLayout()
+        self.notify_filter = QComboBox()
+        for key in (None,) + NOTIFY_KINDS:
+            self.notify_filter.addItem('', key)
+        self.notify_filter.currentIndexChanged.connect(lambda _: self.refresh_notifications())
+        top.addWidget(self.notify_filter)
+        top.addStretch()
+        layout.addLayout(top)
+        self.notify_list = QListWidget()
+        self.notify_list.itemDoubleClicked.connect(
+            lambda item: self.panel.open_notice(item.data(Qt.UserRole)))
+        self.notify_list.setMinimumHeight(240)
+        layout.addWidget(self.notify_list, 3)
+        self.notify_empty = self.caption('wb_notify_empty', 'muted')
+        layout.addWidget(self.notify_empty)
+        layout.addWidget(self.caption('wb_reminders', 'heading'))
+        add = QHBoxLayout()
+        self.reminder_title = QLineEdit()
+        self.reminder_title.setMaxLength(200)
+        self.reminder_title.returnPressed.connect(self.add_reminder)
+        self.reminder_repeat = QComboBox()
+        for repeat in REPEATS:
+            self.reminder_repeat.addItem('', repeat)
+        self.reminder_when = QDateTimeEdit(QDateTime.currentDateTime().addSecs(3600))
+        self.reminder_when.setDisplayFormat('yyyy-MM-dd HH:mm')
+        self.reminder_when.setCalendarPopup(True)
+        self.reminder_todo = QComboBox()
+        add.addWidget(self.reminder_title, 1)
+        add.addWidget(self.reminder_repeat)
+        add.addWidget(self.reminder_when)
+        add.addWidget(self.reminder_todo)
+        self.button(add, 'wb_add', self.add_reminder, True)
+        layout.addLayout(add)
+        self.reminder_list = QListWidget()
+        self.reminder_list.setMaximumHeight(130)
+        layout.addWidget(self.reminder_list)
+        actions = QHBoxLayout()
+        actions.addStretch()
+        self.button(actions, 'wb_delete', self.delete_reminder, danger=True)
+        layout.addLayout(actions)
+
+    def show_notifications(self):
+        self.tabs.setCurrentIndex(self.notifications_tab)
+        self.refresh_notifications()
+        self.show()
+        self.raise_()
+
+    def _when(self, at):
+        return datetime.fromtimestamp(at).strftime('%m-%d %H:%M')
+
+    def refresh_notifications(self):
+        center = getattr(self.panel, 'notifications', None)
+        if self._shutdown or center is None:
+            return
+        self.notify_list.clear()
+        for event in center.store.list_events(self.notify_filter.currentData()):
+            provider = PROVIDER_NAMES.get(event['provider'], '')
+            kind = self.tr(f"notify_kind_{event['kind']}")
+            detail = event['detail'] if event['kind'] in ('failed', 'reminder') else (
+                f"{event['detail']}%" if event['kind'] == 'quota_low' else '')
+            parts = [self._when(event['at']), provider, kind, event['project'], detail]
+            item = QListWidgetItem(' · '.join(part for part in parts if part))
+            item.setData(Qt.UserRole, event)
+            self.notify_list.addItem(item)
+        self.notify_empty.setVisible(self.notify_list.count() == 0)
+        current = self.reminder_todo.currentData()
+        self.reminder_todo.clear()
+        self.reminder_todo.addItem(self.tr('wb_reminder_no_todo'), None)
+        for todo in (self._todos or {}).values() if hasattr(self, '_todos') else ():
+            if not todo.get('done'):
+                self.reminder_todo.addItem(todo['title'], todo['id'])
+        index = self.reminder_todo.findData(current)
+        self.reminder_todo.setCurrentIndex(max(0, index))
+        self.reminder_list.clear()
+        days = self.tr('wb_weekday_names').split(',')
+        for row in center.store.list_reminders():
+            time_text = f"{row['minute'] // 60:02}:{row['minute'] % 60:02}"
+            if row['repeat'] == 'once':
+                when = f"{row['day']} {time_text}"
+            elif row['repeat'] == 'daily':
+                when = self.tr('wb_every_day', time=time_text)
+            else:
+                when = self.tr('wb_every_week', day=days[row['weekday']], time=time_text)
+            todo = (getattr(self, '_todos', {}) or {}).get(row['todo_id'])
+            text_ = ' · '.join(part for part in (when, row['title'], todo and todo['title']) if part)
+            if row['next_at'] is None:
+                text_ += ' · ' + self.tr('wb_reminder_done')
+            item = QListWidgetItem(text_)
+            item.setData(Qt.UserRole, row['id'])
+            self.reminder_list.addItem(item)
+
+    def add_reminder(self):
+        center = getattr(self.panel, 'notifications', None)
+        title = self.reminder_title.text().strip()
+        if center is None or not title:
+            return
+        when = self.reminder_when.dateTime().toPython()
+        repeat = self.reminder_repeat.currentData()
+        try:
+            center.store.add_reminder(title, repeat, when.hour * 60 + when.minute,
+                                      weekday=when.weekday() if repeat == 'weekly' else None,
+                                      day=when.strftime('%Y-%m-%d') if repeat == 'once' else None,
+                                      todo_id=self.reminder_todo.currentData())
+        except ValueError:
+            self.status.setText(self.tr('wb_reminder_past'))
+            self.status.show()
+            return
+        self.status.hide()
+        self.reminder_title.clear()
+        self.refresh_notifications()
+
+    def delete_reminder(self):
+        item = self.reminder_list.currentItem()
+        center = getattr(self.panel, 'notifications', None)
+        if item is None or center is None:
+            return
+        center.store.delete_reminder(item.data(Qt.UserRole))
+        self.refresh_notifications()
 
     def _in_scope(self, project):
         return self.project_scope is None or project == (self.project_scope or None)
@@ -796,10 +925,15 @@ class WorkbenchWindow(QWidget):
         self.setWindowTitle(self.tr('workbench_open') + ' · Petoken')
         for widget, key in self._captions:
             widget.setText(self.tr(key))
-        for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects']):
+        for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects', 'wb_notifications']):
             self.tabs.setTabText(index, self.tr(key))
         self.projects_table.setHeaderLabels([self.tr('wb_name'), self.tr('wb_folder')])
         self.todo_input.setPlaceholderText(self.tr('wb_todo_placeholder'))
+        self.reminder_title.setPlaceholderText(self.tr('wb_reminder_placeholder'))
+        for combo, keys in ((self.notify_filter, ('wb_notify_all',) + tuple(f'notify_kind_{k}' for k in NOTIFY_KINDS)),
+                            (self.reminder_repeat, tuple(f'wb_repeat_{r}' for r in REPEATS))):
+            for index, key in enumerate(keys):
+                combo.setItemText(index, self.tr(key))
         self.note_title.setPlaceholderText(self.tr('wb_note_title'))
         self.note_body.setPlaceholderText(self.tr('wb_note_body'))
         for widget, key in [(self.project_list, 'wb_spaces'), (self.todo_input, 'wb_todo_placeholder'),

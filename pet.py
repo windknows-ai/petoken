@@ -1,5 +1,6 @@
 """Transparent character desktop pet; click to reveal the existing dashboard."""
 import math
+import time
 from PySide6.QtCore import Qt,QTimer,QPoint,QPointF,QRectF,QSize
 from PySide6.QtGui import QColor,QPainter,QPixmap,QFont,QFontMetrics,QPen,QKeySequence,QShortcut
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
@@ -37,6 +38,9 @@ class DesktopPet(QWidget):
         self._render_dpr=None
         self.current_state='idle'
         self.preview_state=None
+        # V1.6: a short pose after a notification (finished, failed, waiting).
+        self.reaction_state=None
+        self.reaction_until=0.0
         self.activity_timer=QTimer(self)
         self.activity_timer.timeout.connect(self.update_activity)
         self.activity_timer.start(100)
@@ -179,7 +183,9 @@ class DesktopPet(QWidget):
         monitor=getattr(self.panel,'activity',None)
         codex_working=getattr(self.panel,'app_mode',None)
         # Opening usage is an overlay, not a pose: keep the same live companion.
-        state=self.preview_state or (monitor.state.state(
+        if self.reaction_state and time.monotonic()>=self.reaction_until:
+            self.reaction_state=None
+        state=self.reaction_state or self.preview_state or (monitor.state.state(
             codex_working=bool(codex_working and codex_working.is_token)) if monitor else 'idle')
         if state!=self.current_state:
             self.current_state=state
@@ -216,6 +222,19 @@ class DesktopPet(QWidget):
                            input=in_text,output=out_text)+
                        '\n'+self.tr_text('pet_tooltip_actions'))
         self.update()
+
+    REACTIONS={'finished':('celebrate',6),'failed':('sad',8),'needs_approval':('wave',12),
+               'quota_low':('sad',6),'reminder':('wave',8)}
+
+    def react(self,kind):
+        """Play the pose for a notification for a few seconds."""
+        pose,seconds=self.REACTIONS.get(kind,(None,0))
+        if pose is None or pose not in self.sprites:
+            return
+        self.reaction_state=pose
+        self.reaction_until=time.monotonic()+seconds
+        self.reaction=1.0
+        self.update_activity()
 
     def token_bubble_visible(self):
         mode=getattr(self.panel,'app_mode',None)

@@ -112,7 +112,7 @@ class PreviewTests(unittest.TestCase):
                     image = preview.pet.grab().toImage().convertToFormat(QImage.Format_RGBA8888)
                     self.assertFalse(image.isNull())
                     painted[pose] = hashlib.sha256(bytes(image.constBits())).hexdigest()
-                self.assertEqual(len({painted[pose] for pose in PREVIEW_STATES if pose != 'usage'}), 5)
+                self.assertEqual(len({painted[pose] for pose in PREVIEW_STATES if pose != 'usage'}), 8)
                 self.assertEqual(painted['usage'], painted['idle'])
                 labels = '\n'.join(label.text() for label in preview.findChildren(QLabel))
                 self.assertIn('usage uses idle artwork', labels)

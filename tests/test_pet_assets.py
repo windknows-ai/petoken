@@ -24,7 +24,8 @@ class PetAssetTests(unittest.TestCase):
 
     def test_registry_resolves_every_current_state(self):
         self.assertEqual(set(assets.registered_states()),
-                         {'idle', 'typing', 'codex_working', 'microphone', 'music', 'guitar'})
+                         {'idle', 'typing', 'codex_working', 'microphone', 'music', 'guitar',
+                          'celebrate', 'sad', 'wave'})
         for state in assets.PREVIEW_STATES:
             pixmap = assets.sprite_for(state)
             self.assertIsNotNone(pixmap, state)

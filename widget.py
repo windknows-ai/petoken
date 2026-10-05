@@ -13,13 +13,15 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QPointF, QRect, QRectF, QSize, QLockFile
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QPointF, QRect, QRectF, QSize, QLockFile, QTime
 from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QRadialGradient, QPixmap, QPolygonF, QKeySequence, QRegion, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
-    QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy)
+    QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy, QTimeEdit)
 
+import claude_events
 import claude_statusline
+from notifications import NotificationCenter, NotificationStore
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
@@ -3747,6 +3749,34 @@ class Settings(QDialog):
         self.claude_sync.setEnabled(self._claude_sync_state in ('on', 'off'))
         self.claude_sync_label = label()
         self.form.addRow(self.claude_sync_label, self.claude_sync)
+        # V1.6: Claude Code hooks for instant notifications (opt-in, same
+        # backup/restore rules as usage sync) and Do Not Disturb.
+        self._claude_notify_state = claude_events.state()
+        self.claude_notify = QCheckBox()
+        self.claude_notify.setChecked(self._claude_notify_state in ('on', 'partial'))
+        self.claude_notify.setEnabled(self._claude_notify_state != 'unreadable')
+        self.claude_notify_label = label()
+        self.form.addRow(self.claude_notify_label, self.claude_notify)
+        self.dnd = QCheckBox()
+        self.dnd.setChecked(bool(panel.prefs.get('dnd_enabled')))
+        self.dnd_label = label()
+        self.form.addRow(self.dnd_label, self.dnd)
+        self.dnd_scheduled = QCheckBox()
+        self.dnd_scheduled.setChecked(bool(panel.prefs.get('dnd_scheduled')))
+        self.dnd_start = QTimeEdit(QTime.fromString(panel.prefs.get('dnd_start', '22:00'), 'HH:mm'))
+        self.dnd_end = QTimeEdit(QTime.fromString(panel.prefs.get('dnd_end', '08:00'), 'HH:mm'))
+        for edit in (self.dnd_start, self.dnd_end):
+            edit.setDisplayFormat('HH:mm')
+        schedule = QHBoxLayout()
+        schedule.setContentsMargins(0, 0, 0, 0)
+        schedule.addWidget(self.dnd_scheduled)
+        schedule.addWidget(self.dnd_start)
+        self.dnd_to = QLabel('–')
+        schedule.addWidget(self.dnd_to)
+        schedule.addWidget(self.dnd_end)
+        schedule.addStretch()
+        self.dnd_scheduled_label = label()
+        self.form.addRow(self.dnd_scheduled_label, schedule)
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -3850,6 +3880,18 @@ class Settings(QDialog):
             sync_tip += '\n' + t('claude_usage_sync_unreadable')
         self.claude_sync.setToolTip(sync_tip)
         self.claude_sync_label.setToolTip(sync_tip)
+        self.claude_notify_label.setText(t('claude_notify'))
+        self.claude_notify.setAccessibleName(t('claude_notify'))
+        notify_tip = t('claude_notify_tip') + (
+            '\n' + t('claude_usage_sync_unreadable') if self._claude_notify_state == 'unreadable' else '')
+        self.claude_notify.setToolTip(notify_tip)
+        self.claude_notify_label.setToolTip(notify_tip)
+        self.dnd_label.setText(t('dnd'))
+        self.dnd.setAccessibleName(t('dnd'))
+        self.dnd.setToolTip(t('dnd_tip'))
+        self.dnd_scheduled_label.setText(t('dnd_scheduled'))
+        self.dnd_scheduled.setAccessibleName(t('dnd_scheduled'))
+        self.dnd_scheduled.setToolTip(t('dnd_tip'))
         self.pet_scale_label.setText(t('character_size'))
         self.pet_scale.setToolTip(t('character_size'))
         self.pet_scale.setAccessibleName(t('character_size'))
@@ -3881,6 +3923,10 @@ class Settings(QDialog):
         self.currency.setCurrentIndex(self.currency.findData(DEFAULT_CURRENCY))
         self.topmost.setChecked(True)
         self.star_ring.setChecked(True)
+        self.dnd.setChecked(False)
+        self.dnd_scheduled.setChecked(False)
+        self.dnd_start.setTime(QTime(22, 0))
+        self.dnd_end.setTime(QTime(8, 0))
         self.pet_scale.setValue(pet_geometry.PET_SCALE_DEFAULT)
         self.apply_language()
 
@@ -3896,6 +3942,10 @@ class Settings(QDialog):
                      currency=self.currency.currentData(),
                      always_on_top=self.topmost.isChecked(),
                      star_ring_enabled=self.star_ring.isChecked(),
+                     dnd_enabled=self.dnd.isChecked(),
+                     dnd_scheduled=self.dnd_scheduled.isChecked(),
+                     dnd_start=self.dnd_start.time().toString('HH:mm'),
+                     dnd_end=self.dnd_end.time().toString('HH:mm'),
                      pet_scale_percent=int(self.pet_scale.value()))
         # Legacy `manual_fx` / `prices` keys stay untouched in the file for
         # backward-compatible loading, but no longer drive pricing or FX.
@@ -3911,6 +3961,13 @@ class Settings(QDialog):
                 (claude_statusline.enable if wanted else claude_statusline.disable)()
             except (OSError, ValueError):
                 pass  # Claude Code's settings stay as they were.
+        wanted = self.claude_notify.isChecked()
+        if self.claude_notify.isEnabled() and wanted != (self._claude_notify_state in ('on', 'partial')):
+            try:
+                (claude_events.enable if wanted else claude_events.disable)()
+            except (OSError, ValueError):
+                pass
+        panel._claude_hooks_on = claude_events.state() == 'on'
         panel.task_manager.set_visible(prefs['star_ring_enabled'])
         # Every save retires outstanding requests for the previous
         # settings, even when only scope/pinned changed: the new epoch
@@ -4207,6 +4264,22 @@ class Panel(QWidget):
         self.clock = QTimer(self)
         self.clock.timeout.connect(self.refresh_status)
         self.clock.start(1000)
+        # V1.6 notifications. Non-live panels (tests, previews) keep their
+        # history in a disposable folder, never in the user's data.
+        notify_dir = PREF_DIR if live else Path(tempfile.mkdtemp(prefix='petoken-notify-qa-'))
+        self.notifications = NotificationCenter(
+            NotificationStore(notify_dir / 'notifications.sqlite3'), lambda: self.prefs)
+        self.notifications.fired.connect(self.announce)
+        self.notifications.recorded.connect(self._notifications_recorded)
+        self.tray.messageClicked.connect(self.open_last_notification)
+        self._last_notice = None
+        self._slow_notify_at = 0.0
+        self._claude_hooks_on = claude_events.state() == 'on'
+        self.claude_events = claude_events.ClaudeEventReader() if live else None
+        self.notify_clock = QTimer(self)
+        self.notify_clock.timeout.connect(self.poll_notifications)
+        if live:
+            self.notify_clock.start(2000)
 
     def anchor_to_pet(self):
         pet = getattr(self, 'pet', None)
@@ -4643,6 +4716,10 @@ class Panel(QWidget):
             # Task orbs are additive presentation: they must never break
             # the legacy companion panel render.
             pass
+        if 'preference' in data and getattr(self, 'notifications', None) is not None:
+            self.notifications.observe_tasks(
+                tasks or [], preference,
+                hooks_providers=('claude',) if self._claude_hooks_on else ())
         self.refresh_task_controls(data)
         self.task_manager.sync_motion()
 
@@ -4848,6 +4925,65 @@ class Panel(QWidget):
     def open_settings(self):
         self.show()
         Settings(self).exec()
+
+    def poll_notifications(self, now=None):
+        """Every 2 s: Claude hook events; every 30 s: quotas and reminders."""
+        if self.closing:
+            return
+        center = self.notifications
+        if self.claude_events is not None:
+            for event in self.claude_events.poll():
+                center.ingest(event)
+        now = time.time() if now is None else now
+        if now - self._slow_notify_at < 30:
+            return
+        self._slow_notify_at = now
+        self._claude_hooks_on = claude_events.state() == 'on'
+        if (self.quota_provider or 'codex') == 'codex':
+            center.observe_quota('codex', (self.quota or {}).get('limits'), now)
+        presence = getattr(getattr(self, 'pet', None), 'presence', None)
+        center.observe_quota('claude', getattr(presence, 'claude_limits', None), now)
+        center.fire_reminders(now)
+
+    def notification_text(self, event):
+        """Title and body of a notification, in the UI language."""
+        provider = PROVIDER_NAMES.get(event.get('provider'), '')
+        project = event.get('project') or ''
+        kind = event.get('kind')
+        if kind == 'reminder':
+            return self.tr_text('notify_reminder'), event.get('detail') or ''
+        if kind == 'quota_low':
+            return self.tr_text('notify_quota_low', provider=provider, left=event.get('detail') or '?'), ''
+        title = self.tr_text(f'notify_{kind}', provider=provider)
+        detail = event.get('detail') if kind == 'failed' else ''
+        return title, ' · '.join(part for part in (project, detail) if part)
+
+    def announce(self, event):
+        self._last_notice = dict(event)
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            pet.react(event.get('kind'))
+        if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
+            title, body = self.notification_text(event)
+            self.tray.showMessage(title, body or ' ', self.windowIcon(), 6000)
+
+    def _notifications_recorded(self):
+        window = self.workbench_window
+        if window is not None and window.isVisible():
+            window.refresh_notifications()
+
+    def open_notice(self, event):
+        """Open the task an event belongs to, or the notification list."""
+        identity = ((event or {}).get('provider'), (event or {}).get('task_key'))
+        if identity in self.task_manager._universe:
+            self.task_manager.activate_task(identity, keyboard=True)
+            return
+        self.open_workbench()
+        if self.workbench_window is not None:
+            self.workbench_window.show_notifications()
+
+    def open_last_notification(self):
+        self.open_notice(self._last_notice)
 
     def open_workbench(self):
         from workbench import WorkbenchWindow
@@ -5066,6 +5202,7 @@ class Panel(QWidget):
         if self.workbench_window and not self.workbench_window.shutdown():
             return False
         self.closing = True
+        self.notify_clock.stop()
         self.stop.set()
         self.active.stop.set()
         self.activity.close()

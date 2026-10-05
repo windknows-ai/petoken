@@ -28,6 +28,10 @@ DEFAULT_PREFERENCES = {
     "pet_motion": True,
     "star_ring_enabled": True,
     "workbench_tutorial_seen": False,
+    "dnd_enabled": False,
+    "dnd_scheduled": False,
+    "dnd_start": "22:00",
+    "dnd_end": "08:00",
 }
 
 
@@ -69,6 +73,15 @@ def normalize_preferences(data):
         preferences["star_ring_enabled"] = True
     if not isinstance(preferences.get("workbench_tutorial_seen"), bool):
         preferences["workbench_tutorial_seen"] = False
+    for key in ("dnd_enabled", "dnd_scheduled"):
+        if not isinstance(preferences.get(key), bool):
+            preferences[key] = False
+    for key, fallback in (("dnd_start", "22:00"), ("dnd_end", "08:00")):
+        value = preferences.get(key)
+        if not (isinstance(value, str) and len(value) == 5 and value[2] == ":"
+                and value[:2].isdigit() and value[3:].isdigit()
+                and int(value[:2]) < 24 and int(value[3:]) < 60):
+            preferences[key] = fallback
     for key in ("position", "pet_position"):
         if key in preferences:
             preferences[key] = valid_position(preferences[key])
