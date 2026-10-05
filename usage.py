@@ -14,6 +14,9 @@ from pathlib import Path
 from analytics import TOKEN_KEYS, count, normalize_usage, derive, aggregate, summarize
 from pricing import MODEL_PRICES as PRICES, estimate_usd
 from providers import PROVIDER_CODEX, active_task
+from codex_compat import (THREAD_REQUIRED, THREAD_OPTIONAL, TURN_REQUIRED,
+                          installed_version, inspect_table, log_fingerprint,
+                          probe_database, state_database, version_string)
 
 
 def quota_window(limits, minutes, now=None):
@@ -179,6 +182,22 @@ class SessionUsage:
         self.created = None
         self.known = {k:0 for k in TOKEN_KEYS}
         self.coverage = {k:0 for k in TOKEN_KEYS}
+        self.cli_version = None
+        self.compatibility_reasons = set()
+        self.schema_fingerprints = set()
+        self.source_stamp = None
+
+    def unavailable_usage(self, reason, event):
+        self.compatibility_reasons.add(reason)
+        self.partial = True
+        self.available = False
+        self.last = {k: None for k in TOKEN_KEYS}
+        self.raw_total = self.raw_last = {}
+        self.window = None
+        identity = hashlib.sha256(json.dumps(event, sort_keys=True).encode()).hexdigest()
+        if identity not in self.seen:
+            self.seen.add(identity)
+            self.add_record({k: None for k in TOKEN_KEYS}, None, event.get('timestamp'), identity)
 
     def display_metadata(self, row):
         values = {}
@@ -193,14 +212,16 @@ class SessionUsage:
         if not isinstance(e, dict) or not isinstance(e.get('payload', {}), dict):
             self.partial = True
             self.notes.add('note_usage_record_invalid')
+            self.compatibility_reasons.add('invalid_log_record')
             return
         p = e.get('payload') or {}
         if e.get('type') == 'session_meta':
             if self.meta_seen:
                 return  # Copied ancestor metadata must not change child identity.
             self.meta_seen = True
-            self.session_id = p.get('id') or self.session_id
-            self.fork_from = p.get('forked_from_id')
+            self.session_id = p.get('id') if isinstance(p.get('id'), str) and p['id'] else self.session_id
+            self.fork_from = p.get('forked_from_id') if isinstance(p.get('forked_from_id'), str) else None
+            self.cli_version = version_string(p.get('cli_version'))
             self.created = p.get('timestamp')
             source = p.get('source')
             if isinstance(source, dict):
@@ -220,20 +241,37 @@ class SessionUsage:
         if e.get('type') != 'event_msg' or p.get('type') != 'token_count':
             return
         if p.get('rate_limits'):
-            self.limits = p['rate_limits']
+            limits = p['rate_limits']
+            if isinstance(limits, dict) and any(isinstance(limits.get(k), dict) for k in ('primary', 'secondary')):
+                self.limits = limits
+            else:
+                self.limits = None
+                self.compatibility_reasons.add('unknown_quota_structure')
         info = p.get('info')
         if not isinstance(info, dict):
+            if info is not None or set(p) - {'type', 'info', 'rate_limits'}:
+                self.unavailable_usage('unknown_usage_structure', e)
             return
+        self.schema_fingerprints.add(log_fingerprint(info))
         raw_total = info.get('total_token_usage')
         raw_last = info.get('last_token_usage')
         if not isinstance(raw_total,dict) and not isinstance(raw_last,dict):
+            self.unavailable_usage('unknown_usage_structure', e)
             return
         self.raw_total = raw_total if isinstance(raw_total,dict) else {}
         self.raw_last = raw_last if isinstance(raw_last,dict) else {}
         current = normalize_usage(raw_total)
         last = normalize_usage(raw_last)
+        if not any(v is not None for v in (*current.values(), *last.values())):
+            self.unavailable_usage('unknown_usage_structure', e)
+            return
+        for key in TOKEN_KEYS:
+            if current[key] is None and last[key] is None:
+                self.compatibility_reasons.add('unavailable_counter:'+key)
         self.last = last
         self.window = count(info.get('model_context_window'))
+        if self.window is None:
+            self.compatibility_reasons.add('unavailable_context_window')
         self.sample = e.get('timestamp')
         self.available = True
         identity = hashlib.sha256(json.dumps([e.get('timestamp'),raw_total,raw_last],sort_keys=True).encode()).hexdigest()
@@ -289,9 +327,15 @@ class SessionUsage:
 
     def refresh(self):
         try:
-            size = self.path.stat().st_size
-            if size < self.offset:
+            stat = self.path.stat()
+            size = stat.st_size
+            stamp = (stat.st_dev, stat.st_ino, stat.st_mtime_ns)
+            if size < self.offset or (self.source_stamp and
+                    (stamp[:2] != self.source_stamp[:2] or
+                     (size == self.offset and stamp != self.source_stamp))):
                 self.__init__(self.path)
+            self.source_stamp = stamp
+            self.compatibility_reasons.discard('usage_file_unavailable')
             if size == self.offset:
                 self.source_available = True
                 return
@@ -310,10 +354,14 @@ class SessionUsage:
                     except (ValueError, TypeError, AttributeError):
                         self.partial = True
                         self.notes.add('note_usage_record_invalid')
+                        self.compatibility_reasons.add('invalid_log_record')
         except OSError:
+            # Preserve explicitly stale historical task projections. The current
+            # scope result below rejects a missing source instead of reusing it.
             self.partial = True
             self.source_available = False
             self.notes.add('note_usage_source_unavailable')
+            self.compatibility_reasons.add('usage_file_unavailable')
 
 
 class CodexTurnLedger:
@@ -376,6 +424,8 @@ class CodexTurnLedger:
                     self.path.as_uri() + '?mode=ro', uri=True,
                     timeout=.2)) as connection:
                 connection.row_factory = sqlite3.Row
+                if inspect_table(connection, 'thread_turns', TURN_REQUIRED)['status'] == 'unsupported':
+                    return None
                 row = connection.execute(
                     'SELECT turn_id, status, started_at FROM thread_turns '
                     'WHERE thread_id=? ORDER BY started_at DESC, '
@@ -690,6 +740,22 @@ class CodexStore:
         # thread_history_1.sqlite from this store's own canonical
         # home (never a separately injected path).
         self.activity = CodexActivityDetector(self.home)
+        self._read_paths = set()
+        self._scope_sessions = ()
+        self.compatibility = self._probe_compatibility()
+
+    def _probe_compatibility(self):
+        database = state_database(self.home)
+        threads = probe_database(database, 'threads', THREAD_REQUIRED, THREAD_OPTIONAL)
+        ledger = probe_database(self.home / 'thread_history_1.sqlite', 'thread_turns', TURN_REQUIRED)
+        version = installed_version()
+        reasons = sorted(set(threads['reasons'] + ledger['reasons'] +
+                             ([] if version else ['installed_version_unavailable'])))
+        return dict(status=('unsupported' if threads['status'] == 'unsupported'
+                            else 'partial' if reasons else 'supported'),
+                    reasons=reasons, codex_version=version,
+                    version_source='installed_npm_package' if version else None,
+                    writer_versions=[], components=dict(threads=threads, turn_ledger=ledger))
 
     def _task_context(self, row, item, state):
         """Per-task presentation for one verified working thread.
@@ -710,6 +776,7 @@ class CodexStore:
             session = SessionUsage(key)
             self.sessions[key] = session
         session.refresh()
+        self._read_paths.add(key)
         summary = summarize(unique_records([session]))
         project, project_source, project_id = project_identity(row, state)
         last_tokens = session.last.get('total_tokens')
@@ -728,6 +795,46 @@ class CodexStore:
 
     def read(self, active_title='', pinned='', scope='conversation', include_history=False,
              activity_detection_valid=False):
+        self.compatibility = self._probe_compatibility()
+        self._read_paths = set()
+        self._scope_sessions = ()
+        data = self._read(active_title, pinned, scope, include_history, activity_detection_valid)
+        report = self.compatibility
+        sessions = [self.sessions[key] for key in self._read_paths]
+        reasons = set().union(*(s.compatibility_reasons for s in sessions))
+        usage_supported = any(s.available and s.source_available for s in self._scope_sessions)
+        if not usage_supported:
+            reasons.add('usage_unavailable')
+        if any(s.partial for s in sessions):
+            reasons.add('partial_usage_history')
+        report['components']['usage'] = dict(
+            status='unsupported' if not usage_supported else 'partial' if reasons else 'supported',
+            reasons=sorted(reasons), fingerprints=sorted(set().union(*(s.schema_fingerprints for s in sessions))))
+        report['writer_versions'] = sorted({v for v in
+            [r.get('cli_version') for r in data.get('rows', [])] + [s.cli_version for s in sessions]
+            if version_string(v)})
+        report['reasons'] = sorted(set(report['reasons']) | reasons)
+        if report['status'] != 'unsupported' and report['reasons']:
+            report['status'] = 'partial'
+        if not usage_supported:
+            # Existing early unavailable results omit metrics entirely.
+            for key in ('available', 'tokens', 'usd', 'context', 'context_tokens', 'context_window'):
+                if key in data:
+                    data[key] = ({k: None for k in TOKEN_KEYS} if key == 'tokens'
+                                 else False if key == 'available' else None)
+        if self._scope_sessions and any(not s.source_available or not s.available for s in self._scope_sessions):
+            data.update(tokens={k: None for k in TOKEN_KEYS}, partial=True)
+            for field in ('analytics', 'history'):
+                if data.get(field):
+                    data[field] = dict(data[field], tokens=data['tokens'])
+        if data.get('scope_result'):
+            data['scope_result'].update(tokens=data['tokens'], available=data.get('available', False),
+                                        partial=data.get('partial', False), analytics=data.get('analytics'))
+        data['compatibility'] = report
+        return data
+
+    def _read(self, active_title='', pinned='', scope='conversation', include_history=False,
+              activity_detection_valid=False):
         scope = {'task':'conversation'}.get(scope, scope)
         if scope not in ('global','project','conversation'):
             scope = 'conversation'
@@ -739,21 +846,46 @@ class CodexStore:
                 self.state_stamp = stamp
         except (OSError, ValueError):
             pass
-        databases = list(self.home.glob('state_*.sqlite'))
-        if not databases:
+        db = state_database(self.home)
+        if db is None:
+            self.compatibility['status'] = 'unsupported'
+            self.compatibility['reasons'] = sorted(set(self.compatibility['reasons'] + ['missing_file:threads']))
             return dict(status='status_no_local_data', rows=[],
                         codex_activity=dict(active=False,valid=False,reason='no_database'))
-        db = max(databases, key=lambda p: int(p.stem.split('_')[-1]))
         try:
-            with closing(sqlite3.connect(db.as_uri()+'?mode=ro', uri=True, timeout=.2)) as c:
+            with closing(sqlite3.connect(db.resolve().as_uri()+'?mode=ro', uri=True, timeout=.2)) as c:
                 c.row_factory = sqlite3.Row
-                columns = {r[1] for r in c.execute('pragma table_info(threads)')}
-                fields = [x for x in ('id','name','title','cwd','rollout_path','model','reasoning_effort','source','project_id','git_origin_url','updated_at','archived') if x in columns]
-                rows = [dict(r) for r in c.execute(f"select {','.join(fields)} from threads order by updated_at desc")]
-        except sqlite3.Error:
+                schema = inspect_table(c, 'threads', THREAD_REQUIRED, THREAD_OPTIONAL)
+                self.compatibility['components']['threads'] = schema
+                if schema['status'] == 'unsupported':
+                    self.compatibility['status'] = 'unsupported'
+                    self.compatibility['reasons'] = sorted(set(self.compatibility['reasons'] + schema['reasons']))
+                    return dict(status='status_database_unavailable', rows=[],
+                        codex_activity=dict(active=False, valid=False, reason='database_unavailable'))
+                fields = schema['valid_fields']
+                selected = ','.join(f'"{x}" AS "{x}"' for x in fields)
+                rows = [dict(r) for r in c.execute(f'select {selected} from threads order by updated_at desc')]
+                if any(not isinstance(r.get('id'), str) or not r['id']
+                       or not isinstance(r.get('rollout_path'), str) or not r['rollout_path']
+                       or not isinstance(r.get('updated_at'), (int, float))
+                       or not math.isfinite(r['updated_at']) for r in rows):
+                    self.compatibility['status'] = 'unsupported'
+                    self.compatibility['reasons'].append('invalid_thread_values')
+                    return dict(status='status_database_unavailable', rows=[],
+                        codex_activity=dict(active=False, valid=False, reason='database_unavailable'))
+                for row in rows:
+                    for key, expected in THREAD_OPTIONAL.items():
+                        value = row.get(key)
+                        valid = (value is None or isinstance(value, str)) if expected == 'TEXT' else value in (0, 1)
+                        if not valid:
+                            row[key] = None
+                            self.compatibility['reasons'].append('invalid_thread_field:'+key)
+        except (OSError, ValueError, sqlite3.Error):
+            self.compatibility['status'] = 'unsupported'
+            self.compatibility['reasons'] = sorted(set(self.compatibility['reasons'] + ['unreadable_database:threads']))
             return dict(status='status_database_unavailable', rows=[],
                         codex_activity=dict(active=False,valid=False,reason='database_unavailable'))
-        desktop = [r for r in rows if r.get('source') in ('vscode','desktop') and not r.get('archived')]
+        desktop = [r for r in rows if r.get('source') in ('vscode','desktop') and r.get('archived') == 0]
         eligible = [r for r in rows if r.get('rollout_path')]
         codex_activity = self.activity.detect(desktop, active_title, activity_detection_valid)
         chosen, mode = select_thread(desktop, active_title, pinned)
@@ -768,6 +900,7 @@ class CodexStore:
                 self.sessions[key] = SessionUsage(key)
             working_session = self.sessions[key]
             working_session.refresh()
+            self._read_paths.add(key)
             working_summary = summarize(unique_records([working_session]))
             working_project, project_source, working_project_id = project_identity(working_row, state)
             last_tokens = working_session.last.get('total_tokens')
@@ -828,13 +961,16 @@ class CodexStore:
             if key not in self.sessions:
                 self.sessions[key] = SessionUsage(key)
             self.sessions[key].refresh()
+            self._read_paths.add(key)
         sessions = distinct_sessions(relevant, self.sessions)
+        self._scope_sessions = sessions
         current = self.sessions.get(chosen.get('rollout_path')) if chosen else None
         if current is None and sessions:
             current = sessions[0]
         records = unique_records(sessions)
         excluded_forks = sum(len(s.records) for s in sessions)-len(records)
-        signature = tuple(sorted((s.session_id,s.offset) for s in sessions))
+        signature = tuple(sorted((s.session_id, s.offset, s.source_stamp, s.source_available)
+                                 for s in sessions))
         if self.analytics_cache.get('signature') != signature:
             self.analytics_cache = dict(signature=signature,summary=aggregate(records))
         analysis = self.analytics_cache['summary']

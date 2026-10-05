@@ -1,3 +1,11 @@
+# Petoken V1.5 ownership (user-authorized 2026-10-05)
+
+Codex role: only responsible for the Codex compatibility layer.
+Allowed writes: usage.py; tests/test_usage.py; sanitized Codex fixtures; new codex_*.py modules and their tests; AGENTS.md; HANDOFF.md; PETOKEN_CODEX_EXECUTION_STATE.md.
+All other files belong to Claude, including providers.py, provider_selection.py, provider_poller.py, widget.py, localization.py, pricing.py, app_config.py, desktop.py, analytics*.py, pet/halo/workbench files, build.ps1, README and claude_* files. Do not modify them or .autopilot/.
+Work only in D:\Documents\ChatGPT\petoken-v1.3-slice-c on codex/v1.5-codex-compat, based on accepted V1.4 e529ddb. Claude has a separate checkout/claude branch; do not touch either.
+No cross-review, merge, push, release tag or publication. Claude merges; the human accepts visuals/functions. If shared changes are needed, report location, rationale and the Codex interface instead of editing them. Stop after Codex completion, local commit and report. Astra remains prohibited.
+
 ## Codex Instructions (auto-synced)
 
 # CODING PRINCIPLES
