@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import time
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -230,6 +230,25 @@ class PanelNotificationTests(unittest.TestCase):
         self.assertEqual(window.tabs.currentIndex(), window.notifications_tab)
         self.assertEqual(window.notify_list.count(), 1)
         self.assertIn('alpha', window.notify_list.item(0).text())
+
+    def test_workbench_buttons_new_note_and_reminder_delete(self):
+        from PySide6.QtWidgets import QDialog, QLineEdit, QPlainTextEdit
+        self.panel.open_workbench()
+        window = self.panel.workbench_window
+
+        def confirm(dialog):
+            dialog.findChildren(QLineEdit)[0].setText('Clicked note')
+            dialog.findChildren(QPlainTextEdit)[0].setPlainText('body')
+            return QDialog.Accepted
+        with patch.object(QDialog, 'exec', confirm):
+            window.new_note_button.click()  # Through the real button signal.
+        self.assertEqual([n['title'] for n in window.store.list_notes()], ['Clicked note'])
+        self.assertFalse(window.status.isVisible())
+        self.assertFalse(window.reminder_delete_button.isVisible())
+        self.assertTrue(window.add_reminder('water', 'daily', datetime.now() + timedelta(hours=1)))
+        self.assertTrue(window.reminder_delete_button.isHidden())
+        window.reminder_list.setCurrentRow(0)
+        self.assertFalse(window.reminder_delete_button.isHidden())
 
     def test_settings_save_quiet_hours(self):
         from widget import Settings

@@ -330,7 +330,8 @@ class WorkbenchWindow(QWidget):
     def _build_notes(self):
         layout = self.page()
         actions = QHBoxLayout()
-        self.button(actions, 'wb_new_note', self.new_note)
+        # A lambda: clicked(bool) would otherwise arrive as the note title.
+        self.new_note_button = self.button(actions, 'wb_new_note', lambda: self.new_note())
         actions.addStretch()
         # While editing, saving is the main action; a new note is secondary.
         self.save_button = self.button(actions, 'wb_save', self.save_note, True)
@@ -507,11 +508,14 @@ class WorkbenchWindow(QWidget):
         layout.addLayout(header)
         self.reminder_list = QListWidget()
         self.reminder_list.setMinimumHeight(70)
+        self.reminder_list.itemSelectionChanged.connect(self._reminder_selected)
         layout.addWidget(self.reminder_list, 1)
         actions = QHBoxLayout()
         actions.addStretch()
-        self.button(actions, 'wb_delete', self.delete_reminder, danger=True)
+        # Like todos: Delete appears only once a reminder is selected.
+        self.reminder_delete_button = self.button(actions, 'wb_delete', self.delete_reminder, danger=True)
         layout.addLayout(actions)
+        self._reminder_selected()
 
     def show_notifications(self):
         self.tabs.setCurrentIndex(self.notifications_tab)
@@ -526,6 +530,10 @@ class WorkbenchWindow(QWidget):
         center = getattr(self.panel, 'notifications', None)
         if self._shutdown or center is None:
             return
+        # Keep the reader's place: refreshing must not jump back to the top.
+        scroll = self.notify_list.verticalScrollBar().value()
+        current = self.notify_list.currentItem()
+        selected = (current.data(Qt.UserRole) or {}).get('dedupe') if current else None
         self.notify_list.clear()
         for event in center.store.list_events(self.notify_filter.currentData()):
             provider = PROVIDER_NAMES.get(event['provider'], '')
@@ -538,7 +546,12 @@ class WorkbenchWindow(QWidget):
             if event['kind'] == 'needs_approval':
                 item.setToolTip(self.tr('wb_notify_open_hint'))
             self.notify_list.addItem(item)
+            if selected and event['dedupe'] == selected:
+                self.notify_list.setCurrentItem(item)
+        self.notify_list.verticalScrollBar().setValue(scroll)
         self.notify_empty.setVisible(self.notify_list.count() == 0)
+        reminder = self.reminder_list.currentItem()
+        reminder_id = reminder.data(Qt.UserRole) if reminder and reminder.isSelected() else None
         self.reminder_list.clear()
         days = self.tr('wb_weekday_names').split(',')
         for row in center.store.list_reminders():
@@ -556,11 +569,22 @@ class WorkbenchWindow(QWidget):
             item = QListWidgetItem(text_)
             item.setData(Qt.UserRole, row['id'])
             self.reminder_list.addItem(item)
+            if row['id'] == reminder_id:
+                self.reminder_list.setCurrentItem(item)
+        self._reminder_selected()
+
+    def _reminder_selected(self):
+        item = self.reminder_list.currentItem()
+        available = bool(item and item.isSelected())
+        self.reminder_delete_button.setVisible(available)
+        self.reminder_delete_button.setEnabled(available)
 
     def _open_notice_item(self, item):
-        """Only a pending approval is worth opening; the others are history."""
+        """Only a pending approval whose task still runs is worth opening;
+        everything else is history, and the list stays where it is."""
         event = item.data(Qt.UserRole) or {}
-        if event.get('kind') == 'needs_approval':
+        identity = (event.get('provider'), event.get('task_key'))
+        if event.get('kind') == 'needs_approval' and identity in self.panel.task_manager._universe:
             self.panel.open_notice(event)
 
     def _reminder_dialog(self):
