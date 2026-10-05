@@ -5,7 +5,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from PySide6.QtCore import QPoint, QRect, QRectF
+from PySide6.QtCore import QPoint, QRect, QRectF, Qt
 from PySide6.QtWidgets import QApplication
 
 import halo_geometry
@@ -16,6 +16,26 @@ from widget import Panel
 
 
 class SceneV14Tests(unittest.TestCase):
+    def test_pager_buttons_fit_when_resting_focused_and_pressed(self):
+        from PySide6.QtTest import QTest
+        self.apply(24)
+        self.manager.set_page(1)
+        pager = self.manager.page_controls
+        for button in [self.manager.page_previous, self.manager.page_next]:
+            for state in ['resting', 'focused', 'pressed']:
+                with self.subTest(state=state):
+                    if state == 'focused':
+                        button.setFocus()
+                    elif state == 'pressed':
+                        QTest.mousePress(button, Qt.LeftButton)
+                    self.app.processEvents()
+                    self.assertTrue(pager.rect().contains(button.geometry()),
+                                    (pager.rect(), button.geometry()))
+                    if state == 'pressed':
+                        QTest.mouseRelease(button, Qt.LeftButton)
+        self.assertEqual(pager.size().width(), 168)
+        self.assertEqual(pager.size().height(), 32)
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

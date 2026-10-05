@@ -57,6 +57,8 @@ QLabel#badge {{ color:{theme.VIOLET}; background:{theme.BADGE_BG}; border:1px so
 QFrame#card {{ background:{theme.CARD}; border:1px solid {theme.BORDER_SOFT}; border-radius:{theme.RADIUS_CARD}px; }}
 QPushButton {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL}; border-bottom:2px solid {theme.BORDER_CONTROL}; border-radius:{theme.RADIUS_BUTTON}px; padding:5px 8px; min-height:24px; }}
 QPushButton:pressed {{ background:{theme.HOVER_BG}; border-bottom-width:1px; padding-top:6px; }}
+QWidget#pages QPushButton {{ min-height:18px; padding:1px 3px; }}
+QWidget#pages QPushButton:pressed {{ padding-top:2px; }}
 QPushButton:hover {{ background:{theme.HOVER_BG}; border-color:{theme.HOVER_BORDER}; }}
 QPushButton:focus {{ border-color:{theme.ICE}; }}
 QPushButton:checked {{ background:{theme.CHECKED_BG}; color:{theme.ICE}; border-color:{theme.BORDER_CONTROL}; }}
