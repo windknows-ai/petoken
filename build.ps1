@@ -68,6 +68,8 @@ Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_4_VISUAL_QA.md') -Destination $
 Copy-Item -LiteralPath (Join-Path $repo 'tools\launch_v1_4_preview.cmd') -Destination (Join-Path $app 'preview-v1.4.cmd') -Force
 Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_4_WORKBENCH_QA.md') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'tools\launch_workbench_preview.cmd') -Destination (Join-Path $app 'preview-workbench.cmd') -Force
+Copy-Item -LiteralPath (Join-Path $repo 'docs\V1_5_DUAL_PROVIDER_QA.md') -Destination $app -Force
+Copy-Item -LiteralPath (Join-Path $repo 'tools\launch_v1_5_preview.cmd') -Destination (Join-Path $app 'preview-v1.5.cmd') -Force
 
 $licenses = Join-Path $app 'THIRD_PARTY_LICENSES'
 New-Item -ItemType Directory -Path $licenses -Force | Out-Null

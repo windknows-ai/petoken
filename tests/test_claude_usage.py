@@ -330,5 +330,62 @@ class StarColorTests(unittest.TestCase):
         self.assertGreater(red, blue)
 
 
+
+class HubProviderPresentationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from unittest.mock import patch
+        from widget import Panel
+        from pet import DesktopPet
+        self.temp = tempfile.TemporaryDirectory()
+        self.pref_patch = patch('widget.PREF_DIR', Path(self.temp.name))
+        self.pref_patch.start()
+        self.panel = Panel(live=False)
+        self.panel.pet = DesktopPet(self.panel)
+        self.panel.pet.activity_timer.stop()
+
+    def tearDown(self):
+        self.panel.tray.hide()
+        self.panel.pet.close()
+        self.panel.close()
+        self.pref_patch.stop()
+        self.temp.cleanup()
+
+    def render(self, provider_id, language='en', **extra):
+        self.panel.prefs.update(language=language)
+        self.panel.apply_language()
+        data = dict(provider_id=provider_id, title='Task', project='Project',
+                    model='m', mode='follow', scope='global', available=True,
+                    tokens=map_usage(usage()), usd=1.0, notes=[], unknown=[],
+                    partial=False, count=1, **extra)
+        self.panel.render(data)
+        self.app.processEvents()
+        return self.panel.connection
+
+    def test_codex_compatibility_notice_only_when_not_fully_supported(self):
+        partial = dict(status='partial', codex_version='0.156.1',
+                       reasons=['unknown_quota_structure'])
+        label = self.render('codex', compatibility=partial)
+        self.assertIn('Partly compatible', label.text())
+        self.assertIn('0.156.1', label.toolTip())
+        self.assertIn('unknown_quota_structure', label.toolTip())
+        label = self.render('codex', language='zh_CN',
+                            compatibility=dict(status='unsupported', reasons=[]))
+        self.assertIn('格式无法识别', label.text())
+        self.assertNotIn('compatible', self.render(
+            'codex', compatibility=dict(status='supported', reasons=[])).text())
+        # A Claude payload never carries or shows the Codex notice.
+        self.assertNotIn('compatible', self.render('claude', compatibility=partial).text())
+
+    def test_claude_hub_names_provider_and_states_missing_limits(self):
+        label = self.render('claude')
+        self.assertTrue(label.text().startswith('Claude Code · '))
+        self.assertEqual(self.panel.status.text(), 'No limits from this source')
+
+
 if __name__ == '__main__':
     unittest.main()

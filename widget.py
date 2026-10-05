@@ -4354,6 +4354,7 @@ class Panel(QWidget):
             status = self.tr_text(data.get('status') or 'no_reliable_record')
             self.connection.setText(f'{provider_label} · {status}')
             self.connection.setToolTip(status)
+            self.apply_compatibility_notice(data)
             self.title.setFullText(self.tr_text('waiting_available_task'))
             self.project.setText(provider_label.upper())
             self.project.setToolTip(provider_label.upper())
@@ -4379,6 +4380,7 @@ class Panel(QWidget):
         modes = {'follow':'mode_follow', 'fixed':'mode_fixed', 'recent':'mode_recent', 'working':'mode_working'}
         self.connection.setText(f'{provider_label} · {self.tr_text(modes.get(data.get("mode"),"waiting_data"))}')
         self.connection.setToolTip(self.tr_text('task_detection_tip'))
+        self.apply_compatibility_notice(data)
         project_text = self.display_text(data.get('project'), 'waiting_codex').upper()
         self.project.setText(project_text)
         self.project.setToolTip(project_text)
@@ -4443,6 +4445,34 @@ class Panel(QWidget):
             self.analytics_window.update_data(
                 self.analytics_payload(data, provider))
         self.apply_hub_neutralization(provider_label, data)
+
+    def compatibility_notice(self, data):
+        """(short label, tooltip) for a Codex compatibility report that is
+        not fully supported, else (None, None). The report comes from the
+        Codex adapter (``payload['compatibility']``); Claude Code payloads
+        carry none and never show this notice."""
+        data = data or {}
+        report = data.get('compatibility')
+        if ((data.get('provider_id') or 'codex') != 'codex'
+                or not isinstance(report, dict)
+                or report.get('status') not in ('partial', 'unsupported')):
+            return None, None
+        status = report['status']
+        lines = [self.tr_text(f'compat_{status}_tip')]
+        version = report.get('codex_version')
+        if isinstance(version, str) and version:
+            lines.append(self.tr_text('compat_version', version=version))
+        reasons = [str(reason) for reason in (report.get('reasons') or [])]
+        if reasons:
+            lines.append(', '.join(reasons[:6]) + (' …' if len(reasons) > 6 else ''))
+        return self.tr_text(f'compat_{status}'), '\n'.join(lines)
+
+    def apply_compatibility_notice(self, data):
+        short, tip = self.compatibility_notice(data)
+        if short is None:
+            return
+        self.connection.setText(f'{self.connection.text()} · {short}')
+        self.connection.setToolTip(tip + '\n\n' + self.connection.toolTip())
 
     def publish_snapshot(self, snapshot):
         """Emit one poll envelope to the GUI thread with task sets attached.
@@ -4923,14 +4953,14 @@ def main():
         from tools.preview_workbench import main as preview_main
         return preview_main([argument for argument in sys.argv[1:]
                              if argument != '--preview-workbench'])
-    if any(argument in ('--preview-v1-3', '--preview-v1-4') for argument in sys.argv[1:]):
+    if any(argument in ('--preview-v1-3', '--preview-v1-4', '--preview-v1-5') for argument in sys.argv[1:]):
         # Frozen/script entry is __main__; keep the preview on this module's
         # globals so its temporary preference directory isolates the real UI.
         if __name__ == '__main__':
             sys.modules['widget'] = sys.modules[__name__]
         from tools.preview_v1_3 import main as preview_main
         return preview_main([argument for argument in sys.argv[1:]
-                             if argument not in ('--preview-v1-3', '--preview-v1-4')])
+                             if argument not in ('--preview-v1-3', '--preview-v1-4', '--preview-v1-5')])
     parser = argparse.ArgumentParser()
     parser.add_argument('--smoke', type=Path, help='Save a local screenshot after five seconds and exit')
     args = parser.parse_args()
