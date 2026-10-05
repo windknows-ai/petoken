@@ -18,6 +18,9 @@ Approved files, when supplied, use these exact names:
 - `microphone.png`
 - `music.png`
 - `guitar.png`
+- `celebrate.png` / `sad.png` / `wave.png` (V1.6 notification reactions:
+  task finished, task failed, waiting for your approval; maintainer-approved
+  redraw, 2026-10-05)
 
 Requirements per file:
 
