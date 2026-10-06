@@ -97,8 +97,55 @@ def launch_command(folder, prompt, cli=None, shell=None, terminal=None, model=No
     return command
 
 
+TERMINAL_PROCESSES = {'windowsterminal.exe', 'openconsole.exe', 'conhost.exe', 'powershell.exe', 'pwsh.exe'}
+
+
+def _terminal_windows():
+    """Visible top-level windows of terminal processes, by handle."""
+    try:
+        import psutil
+        import claude_focus
+        windows = claude_focus._windows_by_pid()
+    except Exception:
+        return set()
+    found = set()
+    for pid, handles in windows.items():
+        try:
+            if psutil.Process(pid).name().lower() in TERMINAL_PROCESSES:
+                found.update(handles)
+        except Exception:
+            continue
+    return found
+
+
+def _bring_new_terminal_forward(before, wait=6.0, step=0.25):
+    """Windows keeps a freshly started window behind the one you clicked
+    in; raise the new terminal window once it appears."""
+    import time
+    import claude_focus
+    deadline = time.time() + wait
+    while time.time() < deadline:
+        new = _terminal_windows() - before
+        if new:
+            claude_focus.raise_window(max(new))
+            return True
+        time.sleep(step)
+    return False
+
+
 def launch(argv):
-    """Start ``argv`` in its own console window."""
+    """Start ``argv`` in its own console window, in front."""
+    import threading
+    before = _terminal_windows() if sys.platform == 'win32' else set()
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            ctypes.windll.user32.AllowSetForegroundWindow(-1)   # ASFW_ANY: the new window may take focus.
+        except (AttributeError, OSError):
+            pass
     flags = getattr(subprocess, 'CREATE_NEW_CONSOLE', 0)
     # No std redirection: the PowerShell fallback must write to its own console.
-    return subprocess.Popen(argv, shell=False, creationflags=flags, close_fds=True)
+    process = subprocess.Popen(argv, shell=False, creationflags=flags, close_fds=True)
+    if sys.platform == 'win32':
+        threading.Thread(target=_bring_new_terminal_forward, args=(before,), daemon=True).start()
+    return process

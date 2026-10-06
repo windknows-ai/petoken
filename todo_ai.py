@@ -260,9 +260,22 @@ class TodoScheduler(QObject):
                 continue
             if kind == 'failed':
                 self.store.update_schedule(schedule['todo_id'], state='failed')
+            elif self._interrupted(schedule):
+                continue   # You stopped it: not done; a later real finish still counts.
             else:
                 self._finish(schedule, event)
             self.changed.emit()
+
+    @staticmethod
+    def _interrupted(schedule):
+        if schedule['provider_id'] != 'claude':
+            return False
+        try:
+            import claude_recap
+            from claude_usage import default_home, strip_scope
+            return claude_recap.interrupted(default_home(), strip_scope(schedule['task_key']))
+        except Exception:
+            return False
 
     def _finish(self, schedule, event):
         store, prefs = self.store, self.panel.prefs

@@ -100,6 +100,13 @@ class RecapTests(unittest.TestCase):
         self.assertEqual(sorted(path for _at, _project, path in found['edits']), ['a.py', 'b.py'])
         self.assertEqual(claude_recap.activity(self.home, since + 10 ** 9), dict(turns=[], edits=[]))
 
+    def test_interrupted_turn(self):
+        self.write([user(0, 'do it'), assistant(5, 'm1'), user(6, [dict(type='text', text='[Request interrupted by user]')])])
+        self.assertTrue(claude_recap.interrupted(self.home, SESSION))
+        self.write([user(0, 'do it'), assistant(5, 'm1'), user(9, 'and also this'), assistant(20, 'm2')])
+        self.assertFalse(claude_recap.interrupted(self.home, SESSION))   # A new prompt, finished normally.
+        self.assertFalse(claude_recap.interrupted(self.home, 'missing'))
+
     def test_detail_round_trip_and_text(self):
         detail = recap_detail(dict(files=['a.py', 'b.py', 'c.py'], duration_s=251.6, usd=0.42))
         self.assertEqual(parse_recap(detail)['names'], ['a.py', 'b.py', 'c.py'])

@@ -229,3 +229,28 @@ def activity(home, since):
 
 def _project(cwd):
     return PureWindowsPath(cwd).name if isinstance(cwd, str) and cwd else ''
+
+
+INTERRUPTED = '[Request interrupted'
+
+
+def interrupted(home, session):
+    """True when the session's last turn ended because the user interrupted
+    it ("[Request interrupted by user…]" after the last real prompt), so a
+    "finished" event for it does not mean the work is done."""
+    main, _subagents = transcript_files(home, session)
+    if main is None:
+        return False
+    entries = _entries(main)
+    last_prompt = max((index for index, entry in enumerate(entries) if _is_prompt(entry)), default=None)
+    if last_prompt is None:
+        return False
+    for entry in entries[last_prompt + 1:]:
+        if entry.get('type') != 'user':
+            continue
+        content = _content(entry)
+        texts = [content] if isinstance(content, str) else [
+            b.get('text') or '' for b in content or [] if isinstance(b, dict) and b.get('type') == 'text']
+        if any(isinstance(t, str) and t.strip().startswith(INTERRUPTED) for t in texts):
+            return True
+    return False

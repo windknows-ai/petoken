@@ -5272,6 +5272,8 @@ class Panel(QWidget):
             import claude_recap
             from claude_usage import default_home, strip_scope
             recap = claude_recap.recap(default_home(), strip_scope(key))
+            if claude_recap.interrupted(default_home(), strip_scope(key)):
+                event['silent'] = True   # You stopped it yourself: history only, no pop-up.
         elif provider == 'codex' and key:
             recap = self._codex_recap(key)
         if recap:

@@ -153,6 +153,17 @@ class SchedulerTests(unittest.TestCase):
         self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'failed')
         self.assertEqual(len(panel.notices), 1)
 
+    def test_interrupted_turn_does_not_tick_the_todo(self):
+        self.store.schedule_todo(self.todo['id'], NOW, 'claude', str(self.folder), 'x')
+        self.store.update_schedule(self.todo['id'], state='started', started_at=NOW, task_key='claude:s1')
+        with patch('claude_recap.interrupted', return_value=True):
+            self.scheduler().on_event(dict(kind='finished', provider='claude', task_key='claude:s1', detail=''))
+        self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'started')
+        self.assertFalse(self.store.list_todos()[0]['done'])
+        with patch('claude_recap.interrupted', return_value=False):
+            self.scheduler().on_event(dict(kind='finished', provider='claude', task_key='claude:s1', detail=''))
+        self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'finished')
+
     def test_failed_task_is_marked(self):
         self.store.schedule_todo(self.todo['id'], NOW, 'codex', str(self.folder), 'x')
         self.store.update_schedule(self.todo['id'], state='started', started_at=NOW, task_key='thread-1')
