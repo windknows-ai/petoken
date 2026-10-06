@@ -738,6 +738,7 @@ class CodexStore:
         self.state = {}
         self.analytics_cache = {}
         self.history_cache = {}
+        self._usage_event_sessions = {}
         # Production ledger wiring: the detector resolves
         # thread_history_1.sqlite from this store's own canonical
         # home (never a separately injected path).
@@ -746,6 +747,55 @@ class CodexStore:
         self._read_paths = set()
         self._scope_sessions = ()
         self.compatibility = self._probe_compatibility()
+
+    def usage_events(self, since_epoch):
+        """Deduplicated incremental usage deltas, with inclusive epoch cutoff.
+
+        None includes undated carry records. Numeric cutoffs exclude undated
+        records. This read-only report API never polls approval or mutates the
+        live scope caches; retaining the store enables incremental file reads.
+        """
+        if since_epoch is not None and (not isinstance(since_epoch, (int, float))
+                or epoch(since_epoch) is None):
+            raise ValueError('since_epoch must be nonnegative epoch seconds or None')
+        try:
+            state = json.loads((self.home/'.codex-global-state.json').read_text(encoding='utf-8'))
+            if not isinstance(state, dict):
+                state = {}
+        except (OSError, ValueError):
+            state = {}
+        rows, projects, ambiguous_projects = [], {}, set()
+        for row in thread_rows(self.home):
+            path = row.get('rollout_path')
+            if not path:
+                continue
+            if path not in self._usage_event_sessions:
+                self._usage_event_sessions[path] = SessionUsage(path)
+            session = self._usage_event_sessions[path]
+            session.refresh()
+            if (not session.meta_seen or session.session_id != row['id'] or not session.source_available
+                    or (session.fork_from and epoch(session.created) is None)):
+                continue
+            rows.append(row)
+            project = project_identity(row, state)[0]
+            if row['id'] in projects and projects[row['id']] != project:
+                ambiguous_projects.add(row['id'])
+            projects[row['id']] = project
+        for thread_id in ambiguous_projects:
+            projects[thread_id] = None
+        paths = {row['rollout_path'] for row in rows}
+        self._usage_event_sessions = {path: session for path, session in self._usage_event_sessions.items()
+                                      if path in paths}
+        records = unique_records(distinct_sessions(rows, self._usage_event_sessions))
+        result = []
+        for record in records:
+            at = epoch(record.get('timestamp'))
+            if since_epoch is not None and (at is None or at < since_epoch):
+                continue
+            result.append(dict(at=at, thread_id=record['session'], project=projects.get(record['session']),
+                               model=record.get('model'), total_tokens=record['tokens'].get('total_tokens'),
+                               usd=record.get('usd') if record['tokens'].get('cache_write_input_tokens') is not None else None))
+        return sorted(result, key=lambda item: (item['at'] is None, item['at'] or 0, item['thread_id']))
 
     def task_history(self, since_epoch):
         """Thread history starting at an inclusive UTC epoch cutoff.
@@ -1086,6 +1136,11 @@ class CodexStore:
 def task_history(since_epoch):
     """Convenience history read using CODEX_HOME/the default local Codex home."""
     return CodexStore().task_history(since_epoch)
+
+
+def usage_events(since_epoch):
+    """Public local Codex usage deltas; use CodexStore.usage_events for warm reads."""
+    return CodexStore().usage_events(since_epoch)
 
 
 def sample_age(timestamp):
