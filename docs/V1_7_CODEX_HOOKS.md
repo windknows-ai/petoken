@@ -169,11 +169,81 @@ external_id、启动 epoch、规范化完整 folder、SHA256(prompt)，筛选随
 两套 0.160.0 隔离 app-server 均实际把环境 todo-synthetic 带入启动 hook，
 生成的 thread_id 与 thread/start 返回值完全一致；没有把真实任务派给 Codex。
 
+## 3. 审批查询连接复用与性能
+
+CodexApprovalReader 现在每个 reader 复用一个既有 socket 的 proxy，不再每 5 s
+启动一个成功连接的子进程。5 s snapshot/失败重试节流不变；任务集合变化仍立即
+清空旧 snapshot，并且不能绕过节流。每一批 RPC 重设 750 ms 截止时间，request ID
+持续递增，只初始化一次；仍只调用 initialize/initialized/loaded/list/thread/read，
+不订阅、不恢复线程、不回答 server requests、不启动 daemon。
+
+任务为空、socket 消失/身份变化、proxy 退出、读取 EOF、RPC/结构错误/超时、显式
+close 时关闭自己的 proxy。已观察到断线立即使缓存变 None；静默未检测故障最多
+等到下一批查询。不把错误后的 True 沿用，不把未加载线程解释成 False。
+退出清理由弱引用 atexit registry 和 reader 回收兜底；新增 close() 可重复调用。
+
+首次测的是本机旧 socket：连接被拒绝，10 次尝试的 44.68 ms 没有可复用连接，
+所以不作为收益数据。没有重启真实 daemon。新建临时 HOME 和 Unix listener，
+只对该新目录设置当前用户的私有 ACL，并缩短路径避免 Windows SUN_LEN 限制。
+使用 localhost 合成模型响应引入一个实际 waitingOnApproval 任务，未执行待批命令。
+
+基线代码直接取 `git show 52bb0d1:codex_approval.py`；新旧各 12 次 loaded/list +
+thread/read，所有次均明确 True。为测查询成本，在实验中清零 _next_query，
+**不是生产节流值改变，也没有连续等一分钟**。模拟时钟测试另核验一分钟、13 批查询
+只初始化/启动一次。实测结束终止自己的 proxy，未到 5 s 时下一次 read 已返回 None。
+
+| 指标 | 基线短连接 | 复用连接 |
+|---|---:|---:|
+| 12 次查询启动 proxy 数 | 12 | 1 |
+| 单次中位数 | 34.8567 ms | 1.0604 ms |
+| 首次冷连接 | 35.5513 ms | 28.0721 ms |
+| 后续 11 次中位数 | 34.6578 ms | 1.0596 ms |
+| 范围 | 33.3072–37.0145 ms | 0.9393–28.0721 ms |
+
+该小样本查询中位数约下降 97%；这是传输查询耗时，不含 5 s 等待、模型计算或 UI。
+第一组重复实验也得到 36.08 -> 1.26 ms、12 -> 1，方向一致；不是硬性延迟保证。
+代价：有任务时持有一个 proxy + 读取线程，而不是两次查询间零 proxy。
+无任务的下一次 read 会释放；若共享层停止轮询但保留 store，需主动 close。
+
+### Claude 接入
+
+- 原 `usage.py` 的 `self.approval.read(...)` 无需改调用，awaiting_approval 和数字语义不变。
+- 停止/替换 store 或关闭应用时可以显式 `store.approval.close()`；幂等，只关这个 proxy。
+  现有 app 进程正常退出/reader GC 有兜底，但及时释放优于等 GC。
+- 不可达的 GUI stdio/独立 CLI 服务器仍无法仅靠共享 control socket 观察，返回 None。
+  本次不改变 transport、目录发现范围，也不接管真实用户管道。
+- 审批提醒尽量用 opt-in hook；轮询复用只是成本优化，不意味着 5 s 变为即时事件。
+
+### 回归与交付范围
+
+新增 5 个审批测试：EOF 的即时可见性、跨一分钟复用/唯一 ID/新 deadline、
+死 proxy 清 True 且节流重试、空任务/close 释放与重开、部分 True 后 RPC 错误整批清空。
+既有短连接 mock 断线断言改为复用中的 request 失败；原数字与三态回归保留。
+
+最终运行：
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest tests.test_codex_hooks tests.test_codex_launch tests.test_codex_approval tests.test_codex_events tests.test_codex_recap tests.test_codex_history tests.test_codex_focus tests.test_usage tests.test_scopes tests.test_activity tests.test_providers tests.test_provider_poller tests.test_provider_selection tests.test_task_projection_closeout tests.test_analytics tests.test_pricing tests.test_notifications -q
+```
+
+**401/401 PASS，18.228 s**；含 hooks 23、launch 12、approval 37，既有事件/小结/
+历史/聚焦/usage/范围/活动/provider/analytics/费用/通知数据回归。
+不是全项目 GUI 验收，未运行完整视觉/打包套件。
+35 项 hooks+launch 最后单独通过（9.199 s）；审批+usage+scopes 92 项通过（1.332 s）。
+
+仅改 codex_hooks.py、codex_launch.py、codex_approval.py、各自测试和本文。
+usage.py 不需要额外更改；所有共享代码、Claude 文件、设置、真实 Codex 配置、
+.autopilot、图片和发布状态保持原样。无新增依赖、代理子任务或 Astra 调用。
+
 ## Current execution state
 
 - Item 1 complete, local commit `d99c0d6`.
-- Launch correlation implemented; both isolated engines propagate the explicit ID.
-- IN PROGRESS: approval reuse/performance evaluation after item 2.
+- Item 2 complete, local commit `3de7d13`; both isolated engines propagate the explicit ID.
+- Item 3 implementation/real benchmark/401-test regression complete; committed
+  with this document. Report local commit IDs, then wait for the user's next task.
+  No merge/push; no further engineering item remains in this Codex assignment.
+- Human/Claude integration remaining: host hook trust and GUI/VS Code acceptance,
+  provider-preserving one-shot approval UI, store shutdown close, notification/binding wiring.
 
 ## Sources
 
