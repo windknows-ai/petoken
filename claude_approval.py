@@ -252,6 +252,13 @@ def parse_request(request_id, raw, at):
         return None
     tool_input = data.get('tool_input') if isinstance(data.get('tool_input'), dict) else {}
     cwd = _text(data.get('cwd'), 1000)
+    if data.get('provider') == 'codex':
+        # Codex's hook (codex_hooks.py) uses the same exchange. Codex has no
+        # "always allow" rules a hook could write, so it is allow once only.
+        return dict(id=request_id, at=at, provider='codex', session=_text(data.get('session_id'), 128),
+                    cwd=cwd, project=Path(cwd).name if cwd else '', tool=tool, wait=WAIT_S, input=tool_input,
+                    summary=summary(tool, tool_input), description=_text(tool_input.get('description'), 300),
+                    suggestions=[], rule=None, can_always=False)
     if tool == PLAN_TOOL:
         plan = _text(tool_input.get('plan'), 20000)
         return dict(id=request_id, at=at, session=_text(data.get('session_id'), 128), cwd=cwd,
@@ -444,7 +451,8 @@ class ApprovalBroker:
         self.answered.add(request_id)
         if not self._write(request_id, output):
             return False
-        if choice == 'always' and output and request.get('can_always'):
+        if (choice == 'always' and output and request.get('can_always')
+                and request.get('provider', 'claude') == 'claude'):
             record_rules(request)
         return True
 

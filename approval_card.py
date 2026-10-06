@@ -60,8 +60,14 @@ QPushButton#link {{ background:transparent; border:none; color:{theme.ICE}; padd
 
 
 def request_title(request, language):
-    provider = PROVIDER_NAMES.get('claude', 'Claude Code')
+    provider = PROVIDER_NAMES.get(request.get('provider', 'claude'), 'Claude Code')
     tool = request.get('tool') or ''
+    tool_input = request.get('input') or {}
+    if request.get('provider') == 'codex':   # Codex tool names differ; judge by what is asked.
+        if tool_input.get('command'):
+            return text('approval_title_shell', language, provider=provider)
+        if tool_input.get('file_path'):
+            return text('approval_title_edit', language, provider=provider)
     if tool in claude_approval.SHELL_TOOLS:
         return text('approval_title_shell', language, provider=provider)
     if tool in claude_approval.EDIT_TOOLS:

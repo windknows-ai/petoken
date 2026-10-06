@@ -148,6 +148,15 @@ class CodexProvider:
     def capabilities(self):
         return CODEX_CAPABILITIES
 
+    def close(self):
+        """Close the approval reader's reused proxy connection (Codex's)."""
+        approval = getattr(self.store, 'approval', None)
+        if approval is not None and hasattr(approval, 'close'):
+            try:
+                approval.close()
+            except Exception:
+                pass
+
     def read(self, active_title='', pinned='', scope='conversation',
              include_history=False, activity_detection_valid=False):
         """Delegate to CodexStore.read with identical arguments and tag the result."""

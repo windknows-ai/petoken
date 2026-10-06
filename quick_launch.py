@@ -94,10 +94,13 @@ def codex_available():
         return False
 
 
-def build_command(app, folder, prompt):
+def build_command(app, folder, prompt, external_id=None):
+    """``external_id`` (a todo ID) lets Codex's hook report which thread it became."""
     if app == 'claude':
         return claude_launch.launch_command(folder, prompt)
     import codex_launch
+    if external_id:
+        return codex_launch.launch_command(folder, prompt, external_id=external_id)
     return codex_launch.launch_command(folder, prompt)
 
 

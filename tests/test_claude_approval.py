@@ -1,4 +1,5 @@
 import json
+import unittest.mock
 import tempfile
 import time
 import unittest
@@ -258,3 +259,27 @@ class BrokerTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class CodexRequestTests(unittest.TestCase):
+    """Codex's hook (codex_hooks.py) uses the same exchange, allow once only."""
+
+    def test_codex_request_keeps_its_provider_and_has_no_always(self):
+        data = dict(provider='codex', hook_event_name='PermissionRequest', session_id='thread-1',
+                    cwd=r'C:\work\api', tool_name='exec_command',
+                    tool_input=dict(command='npm test', description='Run tests'))
+        request = ca.parse_request('a' * 32, json.dumps(data), 1.0)
+        self.assertEqual((request['provider'], request['summary'], request['can_always'], request['rule']),
+                         ('codex', 'npm test', False, None))
+        self.assertEqual(ca.decision(request, 'allow')['hookSpecificOutput']['decision']['behavior'], 'allow')
+        with tempfile.TemporaryDirectory() as folder:
+            broker = ca.ApprovalBroker(Path(folder) / 'q')
+            broker.pending[request['id']] = request
+            with unittest.mock.patch.object(ca, 'record_rules') as record:
+                broker.answer(request['id'], 'always')
+            record.assert_not_called()       # No Claude rules for a Codex request.
+
+    def test_codex_card_title(self):
+        from approval_card import request_title
+        self.assertEqual(request_title(dict(provider='codex', tool='exec_command', input=dict(command='ls')), 'en'),
+                         'Codex wants to run a command')

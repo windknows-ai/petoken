@@ -311,6 +311,10 @@ class ProviderPoller:
                 self._job_cond.notify_all()
             except Exception:
                 pass
+        codex = getattr(self, 'codex', None)
+        if codex is not None and hasattr(codex, 'close'):
+            codex.close()
+
     def _install_codex_locked(self, new_adapter):
         """Swap in a prebuilt Codex adapter. Caller holds the lock and has
         checked for close. Bumps the epoch (retiring in-flight work bound

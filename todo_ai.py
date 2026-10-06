@@ -188,6 +188,19 @@ class TodoScheduler(QObject):
         if missed:
             self.changed.emit()
 
+    def bind(self, bindings):
+        """Codex hook launch bindings: {thread_id, external_id (todo id)}."""
+        if not self.enabled:
+            return
+        for binding in bindings or []:
+            todo_id, thread = binding.get('external_id'), binding.get('thread_id')
+            try:
+                schedule = self.store.get_schedule(todo_id) if todo_id and thread else None
+            except Exception:
+                continue
+            if schedule and schedule['state'] == 'started' and schedule['provider_id'] == 'codex':
+                self._matched(todo_id, thread)
+
     def _matched(self, todo_id, key):
         try:
             self.store.update_schedule(todo_id, task_key=key)
@@ -204,7 +217,8 @@ class TodoScheduler(QObject):
         try:
             from quick_launch import build_command
             import claude_launch
-            argv = build_command(schedule['provider_id'], schedule['folder'], schedule['prompt'])
+            argv = build_command(schedule['provider_id'], schedule['folder'], schedule['prompt'],
+                                 external_id=todo_id)
             (self.launcher or claude_launch.launch)(argv)
         except (ValueError, RuntimeError, OSError):
             self.store.update_schedule(todo_id, state='failed')

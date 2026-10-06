@@ -96,7 +96,7 @@ class SchedulerTests(unittest.TestCase):
             self.assertEqual(self.launched, [])                 # Not yet.
             scheduler.tick(NOW + 5)
             scheduler.tick(NOW + 35)                           # The next check finds its task.
-        build.assert_called_once_with('claude', str(self.folder), 'Add dark mode')
+        build.assert_called_once_with('claude', str(self.folder), 'Add dark mode', external_id=self.todo['id'])
         self.assertEqual(self.launched, [['wt.exe', 'go']])
         deadline = time.time() + 3
         while not self.store.get_schedule(self.todo['id'])['task_key'] and time.time() < deadline:

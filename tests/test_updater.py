@@ -160,7 +160,7 @@ class OnboardingPrefTests(unittest.TestCase):
         panel = FakePanel()
         applied = []
         panel.finish_onboarding = applied.append
-        wizard = OnboardingWizard(panel, claude=True)
+        wizard = OnboardingWizard(panel, claude=True, codex=False)
         self.assertEqual(wizard.stack.count(), 4)
         wizard.language_box.setCurrentIndex(wizard.language_box.findData('zh_CN'))
         self.assertEqual(wizard.next.text(), '下一步')
@@ -173,7 +173,8 @@ class OnboardingPrefTests(unittest.TestCase):
         self.assertEqual(choices['language'], 'zh_CN')
         self.assertEqual(choices['claude'], dict(claude_sync=True, claude_notify=True, claude_approval=False,
                                                  mute_claude_toasts=True))
-        self.assertEqual(OnboardingWizard(panel, claude=False).stack.count(), 3)
+        self.assertEqual(OnboardingWizard(panel, claude=False, codex=False).stack.count(), 3)
+        self.assertEqual(OnboardingWizard(panel, claude=True, codex=True).stack.count(), 5)
 
 
 if __name__ == '__main__':

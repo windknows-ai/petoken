@@ -20,6 +20,14 @@ from localization import normalize_language, text
 CLAUDE_FEATURES = ('claude_sync', 'claude_notify', 'claude_approval', 'mute_claude_toasts')
 
 
+def codex_installed():
+    try:
+        from usage import CodexStore
+        return Path(CodexStore().home).is_dir()
+    except Exception:
+        return False
+
+
 def claude_installed():
     try:
         from claude_usage import default_home
@@ -29,10 +37,11 @@ def claude_installed():
 
 
 class OnboardingWizard(QDialog):
-    def __init__(self, panel, claude=None):
+    def __init__(self, panel, claude=None, codex=None):
         super().__init__(panel if isinstance(panel, QWidget) else None)
         self.panel = panel
         self.claude = claude_installed() if claude is None else claude
+        self.codex = codex_installed() if codex is None else codex
         self.setWindowTitle('Petoken')
         self.setMinimumSize(560, 420)
         self.language = normalize_language(panel.prefs.get('language'))
@@ -43,6 +52,8 @@ class OnboardingWizard(QDialog):
         self._welcome()
         if self.claude:
             self._claude_page()
+        if self.codex:
+            self._codex_page()
         self._assistant_page()
         self._done_page()
         row = QHBoxLayout()
@@ -107,6 +118,18 @@ class OnboardingWizard(QDialog):
             self.claude_boxes[key] = (box, note)
         layout.addStretch(1)
 
+    def _codex_page(self):
+        layout = self._page()
+        self.codex_box = QCheckBox()
+        self.codex_box.setChecked(True)
+        self.codex_note = QLabel()
+        self.codex_note.setObjectName('muted')
+        self.codex_note.setWordWrap(True)
+        self.codex_note.setContentsMargins(26, 0, 0, 6)
+        layout.addWidget(self.codex_box)
+        layout.addWidget(self.codex_note)
+        layout.addStretch(1)
+
     def _assistant_page(self):
         layout = self._page()
         from quick_launch import HOTKEYS
@@ -145,7 +168,8 @@ class OnboardingWizard(QDialog):
         self.retranslate()
 
     def retranslate(self):
-        titles = ['welcome'] + (['claude'] if self.claude else []) + ['assistant', 'done']
+        titles = (['welcome'] + (['claude'] if self.claude else []) + (['codex'] if self.codex else [])
+                  + ['assistant', 'done'])
         for (title, body), key in zip(self.pages, titles):
             title.setText(self.tr(f'onboard_{key}_title'))
             body.setText(self.tr(f'onboard_{key}_body'))
@@ -154,6 +178,9 @@ class OnboardingWizard(QDialog):
             for key, (box, note) in self.claude_boxes.items():
                 box.setText(self.tr(f'onboard_{key}'))
                 note.setText(self.tr(f'onboard_{key}_note'))
+        if self.codex:
+            self.codex_box.setText(self.tr('codex_hooks'))
+            self.codex_note.setText(self.tr('onboard_codex_note'))
         self.hotkey_label.setText(self.tr('launch_hotkey'))
         self.hotkey.setItemText(self.hotkey.count() - 1, self.tr('launch_hotkey_off'))
         self.hints.setText(self.tr('assistant_hints'))
@@ -181,7 +208,8 @@ class OnboardingWizard(QDialog):
     def choices(self):
         claude = ({key: box.isChecked() for key, (box, _note) in self.claude_boxes.items()}
                   if self.claude else {})
-        return dict(language=self.language, claude=claude, quick_launch_hotkey=self.hotkey.currentData(),
+        return dict(language=self.language, claude=claude, codex_hooks=self.codex and self.codex_box.isChecked(),
+                    quick_launch_hotkey=self.hotkey.currentData(),
                     assistant_hints=self.hints.isChecked(), update_check=self.update_check.isChecked(),
                     update_auto=self.update_auto.isChecked(), tutorial=self.tutorial.isChecked())
 

@@ -255,7 +255,7 @@ class UiTests(unittest.TestCase):
         self.assertEqual(settings.findChildren(QDoubleSpinBox),[])
         boxes=settings.findChildren(QCheckBox)
         self.assertEqual(set(boxes), {settings.topmost, settings.star_ring, settings.claude_sync,
-                                      settings.claude_notify, settings.claude_approval, settings.mute_claude_toasts,
+                                      settings.claude_notify, settings.claude_approval, settings.mute_claude_toasts, settings.codex_hooks,
                                       settings.update_check, settings.update_auto,
                                       settings.assistant_hints, settings.dnd,
                                       settings.dnd_scheduled})

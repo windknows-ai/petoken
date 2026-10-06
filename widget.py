@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
 
 import claude_approval
 import claude_toasts
+import codex_hooks
 from claude_usage import strip_scope
 import claude_events
 import claude_statusline
@@ -3810,6 +3811,12 @@ class Settings(QDialog):
         approval_row.addStretch(1)
         self.claude_approval_label = label()
         self.forms['claude'].addRow(self.claude_approval_label, approval_row)
+        self._codex_hooks_state = codex_hooks.state()
+        self.codex_hooks = QCheckBox()
+        self.codex_hooks.setChecked(self._codex_hooks_state in ('on', 'partial'))
+        self.codex_hooks.setEnabled(self._codex_hooks_state != 'unreadable')
+        self.codex_hooks_label = label()
+        self.forms['claude'].addRow(self.codex_hooks_label, self.codex_hooks)
         self.mute_claude_toasts = QCheckBox()
         self.mute_claude_toasts.setChecked(bool(panel.prefs.get('mute_claude_toasts', True)))
         self.mute_claude_toasts_label = label()
@@ -3944,6 +3951,7 @@ class Settings(QDialog):
             'Sync Claude usage': claude_statusline.state(),
             'Claude instant notifications': claude_events.state(),
             'Approve Claude on the pet': claude_approval.state(),
+            'Codex hooks (notifications and approvals)': codex_hooks.state(),
             'Mute Claude app pop-ups': f"{panel.prefs.get('mute_claude_toasts', True)}"
                                        f" (muted now: {getattr(panel, '_claude_toasts_muted', False)})",
             'Quick launch shortcut': f"{panel.prefs.get('quick_launch_hotkey')}"
@@ -4055,6 +4063,12 @@ class Settings(QDialog):
         self.claude_approval.setToolTip(approval_tip)
         self.claude_approval_label.setToolTip(approval_tip)
         self.claude_approval_rules.setText(t('approval_rules'))
+        self.codex_hooks_label.setText(t('codex_hooks'))
+        self.codex_hooks.setAccessibleName(t('codex_hooks'))
+        codex_tip = t('codex_hooks_tip') + (
+            '\n' + t('claude_usage_sync_unreadable') if self._codex_hooks_state == 'unreadable' else '')
+        self.codex_hooks.setToolTip(codex_tip)
+        self.codex_hooks_label.setToolTip(codex_tip)
         self.mute_claude_toasts_label.setText(t('mute_claude_toasts'))
         self.mute_claude_toasts.setAccessibleName(t('mute_claude_toasts'))
         self.mute_claude_toasts.setToolTip(t('mute_claude_toasts_tip'))
@@ -4183,6 +4197,12 @@ class Settings(QDialog):
         if self.claude_approval.isEnabled() and wanted != (self._claude_approval_state == 'on'):
             try:
                 (claude_approval.enable if wanted else claude_approval.disable)()
+            except (OSError, ValueError):
+                pass
+        wanted = self.codex_hooks.isChecked()
+        if self.codex_hooks.isEnabled() and wanted != (self._codex_hooks_state in ('on', 'partial')):
+            try:
+                (codex_hooks.enable if wanted else codex_hooks.disable)()
             except (OSError, ValueError):
                 pass
         panel.sync_approvals()
@@ -4508,6 +4528,7 @@ class Panel(QWidget):
         self._slow_notify_at = 0.0
         self._claude_hooks_on = claude_events.state() == 'on'
         self.claude_events = claude_events.ClaudeEventReader() if live else None
+        self.codex_events = codex_hooks.CodexEventReader() if live else None
         if live and self._claude_hooks_on:
             claude_events.refresh_script()   # Keep an older Petoken's script current.
         self.notify_clock = QTimer(self)
@@ -5201,6 +5222,13 @@ class Panel(QWidget):
             return
         center = self.notifications
         presence = getattr(getattr(self, 'pet', None), 'presence', None)
+        if self.codex_events is not None:
+            # Codex hooks (opt-in): finished / waiting events, and which
+            # thread a todo handed to Codex became.
+            for event in self.codex_events.poll():
+                self.assistant.note_event(event)
+                center.ingest(event)
+            self.todo_ai.bind(self.codex_events.launch_bindings)
         if self.claude_events is not None:
             events = self.claude_events.poll()
             people = claude_events.interactive_sessions() if any(
@@ -5290,6 +5318,11 @@ class Panel(QWidget):
                         module.enable()      # Backs up Claude Code's settings first.
                     except (OSError, ValueError):
                         pass
+            if choices.get('codex_hooks') and codex_hooks.state() == 'off':
+                try:
+                    codex_hooks.enable()    # Backs up Codex's hooks.json first.
+                except (OSError, ValueError):
+                    pass
             self._claude_hooks_on = claude_events.state() == 'on'
             self.apply_language()
             self.sync_approvals()
@@ -5344,12 +5377,18 @@ class Panel(QWidget):
 
     def sync_approvals(self):
         """Answer Claude Code's permission requests while the hook is installed."""
-        wanted = self.live and not self.closing and claude_approval.state() == 'on'
+        wanted = self.live and not self.closing and (claude_approval.state() == 'on'
+                                                      or codex_hooks.state() == 'on')
         if wanted and not self.approvals.active:
             try:
                 claude_approval.refresh()   # An older Petoken may have installed it.
             except (OSError, ValueError):
                 pass
+            if codex_hooks.state() == 'on':
+                try:
+                    codex_hooks.enable()    # Idempotent; refreshes an older script.
+                except (OSError, ValueError):
+                    pass
             self.approvals.start()
         elif not wanted and self.approvals.active:
             self.approvals.stop()
@@ -5397,8 +5436,10 @@ class Panel(QWidget):
         pet = getattr(self, 'pet', None)
         if pet is not None:
             pet.react(event.get('kind'))
-        carded = (event.get('kind') == 'needs_approval' and event.get('provider') == 'claude'
-                  and event.get('detail') != 'permission_prompt' and self.approvals.active)
+        carded = (event.get('kind') == 'needs_approval' and self.approvals.active
+                  and ((event.get('provider') == 'claude' and event.get('detail') != 'permission_prompt')
+                       or (event.get('provider') == 'codex' and event.get('source') == 'hook'
+                           and codex_hooks.state() == 'on')))
         if carded:
             return  # The approval card beside the pet is the notice.
         if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
