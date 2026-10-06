@@ -17,7 +17,7 @@ from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 from pet_assets import sprite_for, ASSETS_DIR
 import theme
 from workbench_store import WorkbenchError
-from notifications import KINDS as NOTIFY_KINDS, REPEATS
+from notifications import KINDS as NOTIFY_KINDS, REPEATS, parse_recap, recap_text
 
 NOTIFY_COLORS = dict(finished='#3E7D61', failed=theme.DANGER_TEXT, needs_approval='#C98A1E',
                      quota_low=theme.VIOLET, reminder=theme.ICE, forecast='#C98A1E',
@@ -541,11 +541,16 @@ class WorkbenchWindow(QWidget):
             kind = self.tr(f"notify_kind_{event['kind']}")
             detail = event['detail'] if event['kind'] in ('failed', 'reminder') else (
                 f"{event['detail']}%" if event['kind'] in ('quota_low', 'context_full') else '')
+            if event['kind'] == 'finished':
+                detail = recap_text(event['detail'], self.language, getattr(self.panel, 'currency', 'USD'),
+                                    (getattr(self.panel, 'fx', None) or {}).get('rates'))
             parts = [self._when(event['at']), provider, kind, event['project'], detail]
             item = QListWidgetItem(_kind_dot(event['kind']), ' · '.join(part for part in parts if part))
             item.setData(Qt.UserRole, event)
             if event['kind'] in ('needs_approval', 'stuck', 'context_full'):
                 item.setToolTip(self.tr('wb_notify_open_hint'))
+            elif (parse_recap(event['detail']) or {}).get('names'):
+                item.setToolTip('\n'.join(parse_recap(event['detail'])['names']))
             self.notify_list.addItem(item)
             if selected and event['dedupe'] == selected:
                 self.notify_list.setCurrentItem(item)

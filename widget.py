@@ -23,7 +23,7 @@ import claude_approval
 import claude_events
 import claude_statusline
 from forecast import Assistant
-from notifications import NotificationCenter, NotificationStore, quiet_now
+from notifications import NotificationCenter, NotificationStore, quiet_now, recap_detail, recap_text
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
@@ -4310,6 +4310,7 @@ class Panel(QWidget):
         notify_dir = PREF_DIR if live else Path(tempfile.mkdtemp(prefix='petoken-notify-qa-'))
         self.notifications = NotificationCenter(
             NotificationStore(notify_dir / 'notifications.sqlite3'), lambda: self.prefs)
+        self.notifications.enrich = self.recap_event
         self.notifications.fired.connect(self.announce)
         self.notifications.recorded.connect(self._notifications_recorded)
         self.tray.messageClicked.connect(self.open_last_notification)
@@ -5004,6 +5005,18 @@ class Panel(QWidget):
                 center.ingest(event)
         center.fire_reminders(now)
 
+    def recap_event(self, event):
+        """Finished events get what the task did: files, time, cost."""
+        provider, key = event.get('provider'), event.get('task_key') or ''
+        recap = None
+        if provider == 'claude':
+            import claude_recap
+            from claude_usage import default_home, strip_scope
+            recap = claude_recap.recap(default_home(), strip_scope(key))
+        if recap:
+            event['detail'] = recap_detail(recap)
+        return event
+
     def sync_approvals(self):
         """Answer Claude Code's permission requests while the hook is installed."""
         wanted = self.live and not self.closing and claude_approval.state() == 'on'
@@ -5046,6 +5059,8 @@ class Panel(QWidget):
             return self.tr_text('notify_quota_back', provider=provider), ''
         title = self.tr_text(f'notify_{kind}', provider=provider)
         detail = event.get('detail') if kind == 'failed' else ''
+        if kind == 'finished':
+            detail = recap_text(event.get('detail'), self.language, self.currency, self.fx.get('rates'))
         return title, ' · '.join(part for part in (project, detail) if part)
 
     def announce(self, event):

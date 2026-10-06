@@ -18,6 +18,7 @@ started is ever announced.
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 import time
 from contextlib import closing, contextmanager
@@ -77,6 +78,54 @@ def next_occurrence(repeat, minute, weekday=None, day=None, after=None):
             when += timedelta(days=7)
         return when.timestamp()
     return None
+
+
+def recap_detail(recap):
+    """A task recap as the stored ``detail`` of a finished event."""
+    files = recap.get('files')
+    data = dict(files=None if files is None else len(files),
+                names=list(files or [])[:20],
+                seconds=None if recap.get('duration_s') is None else round(recap['duration_s']),
+                usd=recap.get('usd'))
+    return json.dumps(data, ensure_ascii=False)
+
+
+def parse_recap(detail):
+    """The recap dict from a finished event's ``detail``, or None."""
+    if not isinstance(detail, str) or not detail.startswith('{'):
+        return None
+    try:
+        data = json.loads(detail)
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def recap_text(detail, language, currency='USD', rates=None):
+    """'3 files changed · 4m 12s · CA$0.58' (only the parts that are known)."""
+    from localization import text
+    from pricing import convert_usd, format_cost
+    from usage_overlay import format_duration
+    data = parse_recap(detail)
+    if data is None:
+        return ''
+    parts = []
+    files = data.get('files')
+    if isinstance(files, int):
+        parts.append(text('recap_files', language, count=files) if files else text('recap_no_files', language))
+    seconds = data.get('seconds')
+    if isinstance(seconds, (int, float)):
+        # Elapsed, not a countdown: exact under an hour (42s, 4m 12s).
+        minutes, rest = divmod(int(seconds), 60)
+        parts.append(format_duration(seconds) if minutes >= 60 else
+                     f'{minutes}m {rest}s' if minutes else f'{rest}s')
+    usd = data.get('usd')
+    if isinstance(usd, (int, float)):
+        value = convert_usd(usd, currency, rates or {}) if currency != 'USD' else usd
+        if value is None:
+            value, currency = usd, 'USD'
+        parts.append('≈ ' + format_cost(value, currency))
+    return ' · '.join(parts)
 
 
 def _minutes(value, fallback):
@@ -192,6 +241,8 @@ class NotificationCenter(QObject):
         self._recent = {}
         self._active = None
         self._preference = None
+        # Optional: adds a recap (files, time, cost) to finished events.
+        self.enrich = None
 
     def ingest(self, event, now=None):
         now = time.time() if now is None else now
@@ -200,6 +251,11 @@ class NotificationCenter(QObject):
         same = (event.get('provider'), event.get('task_key'), event['kind'])
         if event['kind'] != 'reminder' and now - self._recent.get(same, -1e18) < DUPLICATE_WINDOW_S:
             return False
+        if event['kind'] == 'finished' and self.enrich is not None:
+            try:
+                event = self.enrich(dict(event)) or event
+            except Exception:
+                pass  # A recap is a bonus; the notice itself must not fail.
         if not self.store.add_event(event):
             return False
         self._recent[same] = now
