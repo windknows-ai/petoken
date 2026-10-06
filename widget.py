@@ -1154,6 +1154,10 @@ class TaskPanelManager(HaloScene):
         left, top, right, bottom = halo_geometry.projected_bounds(pose)
         left, top = min(left, x), min(top, y)
         right, bottom = max(right, x + width), max(bottom, y + height)
+        # The focus countdown at her feet: the page buttons go below it.
+        tag = getattr(getattr(self.panel, 'pet', None), 'focus_tag', None)
+        if tag is not None and tag.isVisible():
+            bottom = max(bottom, tag.geometry().bottom() + 1)
         candidates = ((round(pose.cx - 84), math.ceil(bottom) + 8),
                       (round(pose.cx - 84), math.floor(top) - 40),
                       (math.ceil(right) + 8, round(pose.cy - 16)),

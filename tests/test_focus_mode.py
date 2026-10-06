@@ -198,12 +198,14 @@ class FocusPetTests(unittest.TestCase):
         menu = self.pet.context_menu()
         self.assertFalse(any(a.text().startswith('End focus') for a in menu.actions()))   # Not in the menu.
         menu.deleteLater()
-        # The countdown and its End focus button float above her head, in their own window.
+        # The countdown and its End focus button sit at her feet, in their own
+        # window above the task stars.
         self.pet.show()
         self.pet.update_activity()
         tag = self.pet.focus_tag
         self.assertTrue(tag.isVisible())
-        self.assertLess(tag.geometry().bottom(), self.pet.y() + self.pet._px(64))
+        self.assertLessEqual(tag.geometry().bottom(), self.pet.geometry().bottom())
+        self.assertGreater(tag.geometry().top(), self.pet.y() + self.pet.height() // 2)
         self.assertGreater(tag.stop_rect.left(), tag.tag_rect.right())
         from PySide6.QtCore import QEvent, QPointF, Qt
         from PySide6.QtGui import QMouseEvent

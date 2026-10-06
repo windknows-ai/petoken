@@ -240,10 +240,10 @@ class FocusMode(QObject):
 
 
 class FocusTag(QWidget):
-    """The countdown and its End button in a small window above her head.
+    """The countdown and its End button, a small window at her feet.
 
-    Above the usage card when it shows, otherwise just above her head: the
-    task stars and the page buttons circle her feet, so nothing covers it.
+    Its own window, kept above the task stars, so a star passing by goes
+    behind it; the page buttons move down below it while it shows.
     """
 
     GAP = 4
@@ -276,6 +276,7 @@ class FocusTag(QWidget):
         if text is None:
             if self.isVisible():
                 self.hide()
+                self._pager()
             return
         from PySide6.QtCore import QRectF, QSize
         from PySide6.QtGui import QFontMetrics
@@ -296,19 +297,27 @@ class FocusTag(QWidget):
                 self.setFixedSize(size)
             self.update()
         self.follow()
+        now = time.monotonic()
         if not self.isVisible():
             self.show()
-            self.raise_()
+            self._raised = 0.0
+            self._pager()
+        if now - getattr(self, '_raised', 0.0) > 1.0:
+            self.raise_()          # Above stars that appeared after it.
+            self._raised = now
+
+    def _pager(self):
+        manager = getattr(self.pet.panel, 'task_manager', None)
+        if manager is not None:
+            try:
+                manager._update_page_controls()
+            except Exception:
+                pass
 
     def follow(self):
         pet = self.pet
-        overlay = getattr(pet, 'usage_overlay', None)
-        if overlay is not None and overlay.isVisible():
-            top = overlay.y()
-        else:
-            top = pet.y() + pet._px(56)       # Just above her head.
         x = pet.x() + (pet.width() - self.width()) // 2
-        y = top - self.height() - self.GAP
+        y = pet.y() + pet.height() - self.height() - pet._px(2)     # At her feet.
         screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()
         x = max(screen.left(), min(x, screen.right() - self.width() + 1))
         y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))
