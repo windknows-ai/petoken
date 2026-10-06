@@ -19,6 +19,11 @@ import sys
 from pathlib import Path
 
 MAX_COMMAND = 32767
+# What `claude --model` / `--effort` accept (claude --help, Claude Code
+# 2.1.286). Aliases follow the newest model of each family; leaving either
+# unset keeps the user's own Claude Code setting.
+MODELS = ('fable', 'opus', 'sonnet', 'haiku')
+EFFORTS = ('low', 'medium', 'high', 'xhigh', 'max')
 
 
 def executable():
@@ -56,8 +61,12 @@ $taskProcess.WaitForExit()
     return base64.b64encode(script.encode('utf-16le')).decode('ascii')
 
 
-def launch_command(folder, prompt, cli=None, shell=None, terminal=None):
+def launch_command(folder, prompt, cli=None, shell=None, terminal=None, model=None, effort=None):
     """argv for Popen(shell=False); raises ValueError / RuntimeError."""
+    if model is not None and model not in MODELS:
+        raise ValueError('Unknown Claude model')
+    if effort is not None and effort not in EFFORTS:
+        raise ValueError('Unknown effort level')
     if not isinstance(prompt, str) or not prompt.strip() or '\0' in prompt:
         raise ValueError('A nonempty prompt without NUL is required')
     try:
@@ -70,7 +79,8 @@ def launch_command(folder, prompt, cli=None, shell=None, terminal=None):
     shell = shell or _shell()
     if not cli or not shell:
         raise RuntimeError('Claude Code CLI and Windows PowerShell are required')
-    arguments = subprocess.list2cmdline(['--', prompt])
+    options = (['--model', model] if model else []) + (['--effort', effort] if effort else [])
+    arguments = subprocess.list2cmdline([*options, '--', prompt])
     encoded = _encoded_script(dict(executable=cli, folder=str(project), arguments=arguments))
     command = [shell, '-NoLogo', '-NoProfile', '-NoExit', '-EncodedCommand', encoded]
     terminal = terminal if terminal is not None else shutil.which('wt.exe')

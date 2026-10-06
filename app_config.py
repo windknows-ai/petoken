@@ -43,6 +43,7 @@ DEFAULT_PREFERENCES = {
     "update_checked_at": 0,
     "onboarding_done": False,
     "schedule_missed": "ask",
+    "launch_options": {},
 }
 
 
@@ -96,6 +97,12 @@ def normalize_preferences(data):
     for key, fallback in (("update_check", True), ("update_auto", False), ("onboarding_done", False)):
         if not isinstance(preferences.get(key), bool):
             preferences[key] = fallback
+    options = preferences.get("launch_options")
+    preferences["launch_options"] = ({app: {key: str(value) for key, value in choice.items()
+                                            if key in ("model", "effort") and isinstance(value, str)}
+                                      for app, choice in options.items()
+                                      if app in ("claude", "codex") and isinstance(choice, dict)}
+                                     if isinstance(options, dict) else {})
     if preferences.get("schedule_missed") not in ("ask", "run"):
         preferences["schedule_missed"] = "ask"
     if not isinstance(preferences.get("update_skip"), str):

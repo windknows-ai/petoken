@@ -59,10 +59,26 @@ class DialogTests(unittest.TestCase):
         self.dialog.folder.setEditText(self.temp.name)
         with patch('quick_launch.build_command', return_value=['wt.exe', 'x']) as build:
             self.assertTrue(self.dialog.launch(started.append))
-        build.assert_called_once_with('claude', str(Path(self.temp.name)), 'add "dark mode"')
+        build.assert_called_once_with('claude', str(Path(self.temp.name)), 'add "dark mode"', model=None, effort=None)
         self.assertEqual(started, [['wt.exe', 'x']])
         self.assertEqual(self.panel.prefs['launch_app'], 'claude')
         self.assertEqual(self.panel.saved, 1)
+
+    def test_model_effort_and_chat_mode(self):
+        models = [self.dialog.model.itemData(i) for i in range(self.dialog.model.count())]
+        efforts = [self.dialog.effort.itemData(i) for i in range(self.dialog.effort.count())]
+        self.assertEqual(models, ['', 'fable', 'opus', 'sonnet', 'haiku'])
+        self.assertEqual(efforts, ['', 'low', 'medium', 'high', 'xhigh', 'max'])
+        self.dialog.model.setCurrentIndex(self.dialog.model.findData('opus'))
+        self.dialog.effort.setCurrentIndex(self.dialog.effort.findData('high'))
+        self.dialog.prompt.setPlainText('What is a monad?')
+        self.dialog.chat.setChecked(True)
+        self.assertFalse(self.dialog.folder.isEnabled())
+        with patch('quick_launch.chat_folder', return_value=self.temp.name),                 patch('quick_launch.build_command', return_value=['x']) as build:
+            self.assertTrue(self.dialog.launch(lambda argv: None))
+        build.assert_called_once_with('claude', self.temp.name, 'What is a monad?', model='opus', effort='high')
+        self.assertEqual(self.panel.prefs['launch_options']['claude'], dict(model='opus', effort='high'))
+        self.assertEqual(self.panel.prefs['launch_folders'], [self.temp.name])   # Chats are not remembered.
 
     def test_missing_codex_cannot_be_chosen(self):
         self.assertFalse(self.dialog.codex.isEnabled())

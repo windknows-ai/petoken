@@ -19,7 +19,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QAbstractNativeEventFilter, QObject, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import (QButtonGroup, QComboBox, QDialog, QFileDialog, QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QDialog, QFileDialog, QHBoxLayout, QLabel,
                                QPlainTextEdit, QPushButton, QRadioButton, QVBoxLayout)
 
 import claude_launch
@@ -94,14 +94,47 @@ def codex_available():
         return False
 
 
-def build_command(app, folder, prompt, external_id=None):
+def launch_options(app):
+    """(models, efforts) the app's CLI accepts; empty means only its own default.
+
+    Claude: ``claude_launch.MODELS`` / ``EFFORTS``. Codex: whatever Codex's
+    ``codex_launch.options()`` reports, once it provides one.
+    """
+    if app == 'claude':
+        return list(claude_launch.MODELS), list(claude_launch.EFFORTS)
+    try:
+        import codex_launch
+        found = codex_launch.options() if hasattr(codex_launch, 'options') else {}
+        return list(found.get('models') or []), list(found.get('efforts') or [])
+    except Exception:
+        return [], []
+
+
+def chat_folder():
+    """An empty folder of Petoken's own for a plain conversation."""
+    folder = claude_launch_data_dir() / 'chat'
+    folder.mkdir(parents=True, exist_ok=True)
+    return str(folder)
+
+
+def claude_launch_data_dir():
+    import claude_statusline
+    return claude_statusline.data_dir()
+
+
+def build_command(app, folder, prompt, external_id=None, model=None, effort=None):
     """``external_id`` (a todo ID) lets Codex's hook report which thread it became."""
     if app == 'claude':
-        return claude_launch.launch_command(folder, prompt)
+        return claude_launch.launch_command(folder, prompt, model=model or None, effort=effort or None)
     import codex_launch
+    extra = {}
     if external_id:
-        return codex_launch.launch_command(folder, prompt, external_id=external_id)
-    return codex_launch.launch_command(folder, prompt)
+        extra['external_id'] = external_id
+    if model:
+        extra['model'] = model
+    if effort:
+        extra['effort'] = effort
+    return codex_launch.launch_command(folder, prompt, **extra)
 
 
 class QuickLaunchDialog(QDialog):
@@ -118,14 +151,19 @@ class QuickLaunchDialog(QDialog):
         self.prompt.setPlaceholderText(text('launch_prompt_hint', language))
         self.prompt.setFixedHeight(96)
         layout.addWidget(self.prompt)
-        layout.addWidget(QLabel(text('launch_folder', language)))
+        self.chat = QCheckBox(text('launch_chat', language))
+        self.chat.setToolTip(text('launch_chat_tip', language))
+        self.chat.toggled.connect(self._chat_toggled)
+        layout.addWidget(self.chat)
+        self.folder_label = QLabel(text('launch_folder', language))
+        layout.addWidget(self.folder_label)
         row = QHBoxLayout()
         self.folder = QComboBox()
         self.folder.setEditable(True)
         self.folder.setInsertPolicy(QComboBox.NoInsert)
         for folder in known_folders(panel.prefs):
             self.folder.addItem(folder)
-        browse = QPushButton(text('launch_browse', language))
+        self.browse_button = browse = QPushButton(text('launch_browse', language))
         browse.clicked.connect(self.browse)
         row.addWidget(self.folder, 1)
         row.addWidget(browse)
@@ -149,6 +187,16 @@ class QuickLaunchDialog(QDialog):
             chosen = self.codex if self.codex.isEnabled() else None
         if chosen is not None:
             chosen.setChecked(True)
+        choices = QHBoxLayout()
+        self.model = QComboBox()
+        self.effort = QComboBox()
+        choices.addWidget(QLabel(text('launch_model', language)))
+        choices.addWidget(self.model, 1)
+        choices.addWidget(QLabel(text('launch_effort', language)))
+        choices.addWidget(self.effort, 1)
+        layout.addLayout(choices)
+        self.claude.toggled.connect(lambda _: self._fill_options())
+        self._fill_options()
         self.error = QLabel('')
         self.error.setWordWrap(True)
         self.error.setStyleSheet('color:#8A2E4A;')
@@ -170,6 +218,23 @@ class QuickLaunchDialog(QDialog):
         QShortcut(QKeySequence('Ctrl+Return'), self, activated=self.launch)
         self.prompt.setFocus()
 
+    def _chat_toggled(self, on):
+        for widget in (self.folder, self.browse_button, self.folder_label):
+            widget.setEnabled(not on)
+
+    def _fill_options(self):
+        """Model and effort lists follow the chosen app; the last choice is kept."""
+        app = self.app() or 'claude'
+        models, efforts = launch_options(app)
+        saved = (self.panel.prefs.get('launch_options') or {}).get(app) or {}
+        for box, values, key in ((self.model, models, 'model'), (self.effort, efforts, 'effort')):
+            box.clear()
+            box.addItem(text(f'launch_{key}_default', self.language), '')
+            for value in values:
+                box.addItem(value.capitalize() if app == 'claude' and key == 'model' else value, value)
+            box.setCurrentIndex(max(0, box.findData(saved.get(key, ''))))
+            box.setToolTip('' if values else text('launch_options_unavailable', self.language))
+
     def browse(self):
         folder = QFileDialog.getExistingDirectory(self, text('launch_folder', self.language),
                                                   self.folder.currentText())
@@ -185,8 +250,10 @@ class QuickLaunchDialog(QDialog):
 
     def launch(self, starter=None):
         prompt = self.prompt.toPlainText().strip()
-        folder = _clean_folder(self.folder.currentText())
+        chatting = self.chat.isChecked()
+        folder = chat_folder() if chatting else _clean_folder(self.folder.currentText())
         app = self.app()
+        model, effort = self.model.currentData() or None, self.effort.currentData() or None
         if not prompt:
             return self.fail('launch_need_prompt')
         if not folder:
@@ -194,14 +261,18 @@ class QuickLaunchDialog(QDialog):
         if app is None:
             return self.fail('launch_app_missing')
         try:
-            argv = build_command(app, folder, prompt)
+            argv = build_command(app, folder, prompt, model=model, effort=effort)
             (starter or claude_launch.launch)(argv)
         except ValueError:
             return self.fail('launch_too_long' if len(prompt) > 8000 else 'launch_need_folder')
         except (RuntimeError, OSError):
             return self.fail('launch_failed')
-        remember_folder(self.panel.prefs, folder)
+        if not chatting:
+            remember_folder(self.panel.prefs, folder)
         self.panel.prefs['launch_app'] = app
+        options = dict(self.panel.prefs.get('launch_options') or {})
+        options[app] = dict(model=model or '', effort=effort or '')
+        self.panel.prefs['launch_options'] = options
         try:
             self.panel.persist()
         except Exception:

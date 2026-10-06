@@ -46,6 +46,15 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertEqual(data['executable'], r'C:\bin\claude.exe')
         self.assertEqual(split_windows(data['arguments']), ['--', prompt])
 
+    def test_model_and_effort_come_before_the_prompt(self):
+        argv = claude_launch.launch_command(self.temp.name, '-p looks like a flag', cli='c.exe', shell='ps.exe',
+                                            terminal='', model='opus', effort='xhigh')
+        self.assertEqual(split_windows(payload(argv)['arguments']),
+                         ['--model', 'opus', '--effort', 'xhigh', '--', '-p looks like a flag'])
+        for bad in (dict(model='gpt-9'), dict(effort='ludicrous'), dict(model='opus --dangerously-skip-permissions')):
+            with self.assertRaises(ValueError):
+                claude_launch.launch_command(self.temp.name, 'hi', cli='c.exe', shell='ps.exe', terminal='', **bad)
+
     def test_powershell_fallback_and_validation(self):
         argv = claude_launch.launch_command(self.temp.name, 'hi', cli='c.exe', shell='ps.exe', terminal='')
         self.assertEqual(argv[0], 'ps.exe')
