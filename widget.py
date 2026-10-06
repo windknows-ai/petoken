@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
     QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy, QTimeEdit)
 
 import claude_approval
+from claude_usage import strip_scope
 import claude_events
 import claude_statusline
 from forecast import Assistant
@@ -5030,7 +5031,14 @@ class Panel(QWidget):
         center = self.notifications
         presence = getattr(getattr(self, 'pet', None), 'presence', None)
         if self.claude_events is not None:
-            for event in self.claude_events.poll():
+            events = self.claude_events.poll()
+            people = claude_events.interactive_sessions() if any(
+                e.get('kind') in ('finished', 'failed') for e in events) else set()
+            for event in events:
+                if event.get('kind') in ('finished', 'failed'):
+                    # A headless run (claude -p, an agent or script) is one
+                    # step of a bigger task: keep it in the history only.
+                    event['silent'] = strip_scope(event.get('task_key')) not in people
                 self.assistant.note_event(event)
                 if event.get('kind') == 'failed' and event.get('detail') == 'rate_limit':
                     self.assistant.expect_reset('claude', getattr(presence, 'claude_limits', None))

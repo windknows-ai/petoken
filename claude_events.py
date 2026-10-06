@@ -138,6 +138,29 @@ def disable(home=None):
     return state(home)
 
 
+def interactive_sessions(home=None):
+    """IDs of sessions a person opened (CLI or desktop), from Claude Code's
+    live-session registry. Headless runs (``claude -p``, SDK, scripts and
+    agents driving Claude) are not registered there."""
+    from claude_usage import default_home
+    folder = Path(home if home is not None else default_home()) / 'sessions'
+    found = set()
+    try:
+        paths = list(folder.glob('*.json'))
+    except OSError:
+        return found
+    for path in paths:
+        try:
+            data = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get('kind', 'interactive') == 'interactive':
+            session = _clean(data.get('sessionId'))
+            if session:
+                found.add(session)
+    return found
+
+
 def _clean(value):
     return value if isinstance(value, str) and _ID.match(value) else ''
 

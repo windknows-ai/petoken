@@ -260,7 +260,8 @@ class NotificationCenter(QObject):
             return False
         self._recent[same] = now
         self.recorded.emit()
-        if not quiet_now(self.prefs(), now):
+        # Silent events (a background run finishing) are history only.
+        if not event.get('silent') and not quiet_now(self.prefs(), now):
             self.fired.emit(dict(event))
         return True
 
