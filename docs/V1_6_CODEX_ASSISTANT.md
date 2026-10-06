@@ -6,7 +6,8 @@
 
 - 完成第 1 项：任务小结，25 项合成测试通过。最初测试暴露 fixture SQLite 连接未关闭以及损坏日志被跳过，已分别修复并重新验证。
 - 完成第 2 项：窗口定位，20 项测试通过（含对测试自身进程的原生 helper 检查；没有 Codex 数据依赖或真人窗口前置）。
-- IN PROGRESS：第 3 项派活命令；其后历史列表，独立提交。
+- 完成第 3 项：派活命令，9 项测试通过，含实际 PowerShell → 合成 Python recorder 的安全转义检查。初次检测测试的 mock 未真正停止，已修正测试 patch 管理并复验。
+- IN PROGRESS：第 4 项历史列表及最终相关回归，独立提交。
 
 ## 1. 任务小结
 
@@ -36,3 +37,17 @@
 - 不启动 Codex、不自动恢复 thread、不改配置或向终端输入任何文字。App 未运行时返回 None，不冷启动。进程可能在快照后退出；这属于 best effort，不宣称跨用户/远程会话精确定位。
 
 参考：[Microsoft GetConsoleWindow](https://learn.microsoft.com/en-us/windows/console/getconsolewindow)，官方明确说明 pseudoconsole HWND 不是本地可见终端窗口。接口决策测试全部使用合成进程/窗口；原生检查仅测试合成命令行的 Windows 参数解析及辅助脚本对测试进程自身的查询，没有切换真人窗口。
+
+## 3. 命令行派活
+
+`codex_launch.available() -> bool` 探测 Windows 上本机可用的原生 codex.exe 与 PowerShell；不检测登录、网络、权限或模型额度。复用现有 `_proxy_binary()` 的发现规则，不采用 .cmd/.ps1 wrapper。如果只有未知安装位置的包装脚本，available=False。
+
+`launch_command(folder, prompt) -> list[str]` 只生成 argv，不启动任务。优先 `wt.exe --window new new-tab`，否则 PowerShell。目录必须实际存在，prompt 必须非空且没有 NUL；非法输入/超出 Windows 32767 字符命令行限制抛 ValueError，缺执行程序抛 RuntimeError。
+
+prompt 和目录通过 UTF-8 JSON/base64 数据嵌入，再把固定脚本整体 UTF-16LE 编码为 EncodedCommand。原生 CLI 用 ProcessStartInfo/UseShellExecute=False 启动，并使用标准 Windows argv quoting，绕开 PowerShell 5.1 原生命令引用重组。prompt 放在 `codex --cd <folder> -- <prompt>` 的 `--` 后，不被当成 CLI 选项；原始文本也不进入 wt 的分号命令语法。无 Invoke-Expression、cmd /c、shell=True 或配置改动；不用 bypass 审批/沙箱参数。
+
+Claude 接入：使用 `subprocess.Popen(argv, shell=False)`。PowerShell fallback 从有控制台的进程启动时，调用方需传 `creationflags=subprocess.CREATE_NEW_CONSOLE`，保证新窗口；Windows GUI 主进程没有控制台时也可统一传此 flag。不要自行把 argv 拼接成 shell 命令；本模块没有真正运行 Codex。
+
+原生转义验证用后台 PowerShell 将合成参数传给 Python argv recorder，包含中文、引号、分号、换行、反斜杠和注入文本；只运行 recorder，不启动终端窗口或 Codex 任务。
+
+参考：[Windows Terminal 参数](https://learn.microsoft.com/en-us/windows/terminal/command-line-arguments)、[PowerShell EncodedCommand](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_exe)、[Codex CLI 参数](https://developers.openai.com/codex/cli/reference/)；只学习命令格式，没有复制代码。
