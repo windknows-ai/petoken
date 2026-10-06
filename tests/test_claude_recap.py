@@ -84,6 +84,22 @@ class RecapTests(unittest.TestCase):
         self.write([user(0, 'still thinking')])
         self.assertIsNone(claude_recap.recap(self.home, SESSION))
 
+    def test_activity_turns_and_edits_since(self):
+        self.write([
+            user(0, 'first'), assistant(30, 'm1', [edit('t1', CWD + r'\a.py')]), user(31, [result('t1')]),
+            assistant(90, 'm2'),
+            user(200, 'second'), assistant(260, 'm3', [edit('t2', CWD + r'\b.py', 'Write'), edit('t3', CWD + r'\c.py')]),
+            user(261, [result('t2'), result('t3', error=True)]), assistant(300, 'm4')])
+        import os
+        from claude_usage import _iso_epoch
+        since = _iso_epoch(stamp(0))
+        os.utime(self.folder / f'{SESSION}.jsonl', (since + 400, since + 400))   # Written after the turns.
+        found = claude_recap.activity(self.home, since)
+        self.assertEqual([(round(b - since), round(e - since), p) for b, e, p in found['turns']],
+                         [(0, 90, 'site'), (200, 300, 'site')])
+        self.assertEqual(sorted(path for _at, _project, path in found['edits']), ['a.py', 'b.py'])
+        self.assertEqual(claude_recap.activity(self.home, since + 10 ** 9), dict(turns=[], edits=[]))
+
     def test_detail_round_trip_and_text(self):
         detail = recap_detail(dict(files=['a.py', 'b.py', 'c.py'], duration_s=251.6, usd=0.42))
         self.assertEqual(parse_recap(detail)['names'], ['a.py', 'b.py', 'c.py'])

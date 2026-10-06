@@ -4405,6 +4405,8 @@ class Panel(QWidget):
         self._slow_notify_at = 0.0
         self._claude_hooks_on = claude_events.state() == 'on'
         self.claude_events = claude_events.ClaudeEventReader() if live else None
+        if live and self._claude_hooks_on:
+            claude_events.refresh_script()   # Keep an older Petoken's script current.
         self.notify_clock = QTimer(self)
         self.notify_clock.timeout.connect(self.poll_notifications)
         if live:
@@ -5183,6 +5185,10 @@ class Panel(QWidget):
         """Answer Claude Code's permission requests while the hook is installed."""
         wanted = self.live and not self.closing and claude_approval.state() == 'on'
         if wanted and not self.approvals.active:
+            try:
+                claude_approval.refresh()   # An older Petoken may have installed it.
+            except (OSError, ValueError):
+                pass
             self.approvals.start()
         elif not wanted and self.approvals.active:
             self.approvals.stop()

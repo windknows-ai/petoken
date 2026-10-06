@@ -148,6 +148,9 @@ class ReportPage(QWidget):
                                       ('when', 'app', 'title', 'project', 'tokens', 'cost')])
         for key, (_value, caption) in self.tiles.items():
             caption.setText(self.tr(f'report_tile_{key}'))
+        for key in ('time', 'files'):
+            for widget in self.tiles[key]:
+                widget.setToolTip(self.tr(f'report_tile_{key}_tip'))
         self.render()
 
     # Loading -------------------------------------------------------------

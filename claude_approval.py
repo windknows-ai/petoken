@@ -169,6 +169,24 @@ def enable(home=None, script=None, target=None):
     return state(home)
 
 
+def refresh(home=None, script=None, target=None):
+    """After a Petoken update, bring an installed hook up to date (script
+    text and Claude Code's timeout). Untouched when off or already current."""
+    if state(home) != 'on':
+        return state(home)
+    script = Path(script) if script is not None else script_path()
+    try:
+        current = script.read_text(encoding='utf-8-sig') == script_text(target)
+        groups = bridge._read_settings(bridge.settings_path(home)).get('hooks', {}).get('PermissionRequest') or []
+        timeouts = [h.get('timeout') for g in groups if _ours(g) for h in g.get('hooks') or []
+                    if isinstance(h, dict) and SCRIPT_NAME in str(h.get('args'))]
+    except (OSError, ValueError, AttributeError):
+        current, timeouts = False, []
+    if current and timeouts == [HOOK_TIMEOUT_S]:
+        return 'on'
+    return enable(home, script, target)
+
+
 def disable(home=None):
     """Remove only Petoken's approval hook."""
     current = state(home)

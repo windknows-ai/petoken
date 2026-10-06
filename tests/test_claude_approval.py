@@ -47,6 +47,25 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(data['hooks']['PermissionRequest'], [dict(hooks=[dict(type='command', command='other')])])
         self.assertEqual(data['model'], 'opus')
 
+    def test_refresh_updates_an_older_install(self):
+        self.assertEqual(ca.refresh(self.home, self.script, self.home / 'q'), 'off')   # Not installed: nothing.
+        ca.enable(self.home, self.script, self.home / 'q')
+        # An older Petoken: shorter wait in the script, 60 s hook timeout.
+        self.script.write_text(ca.script_text(self.home / 'q').replace('$wait = 45', '$wait = 10'), encoding='utf-8-sig')
+        data = self.settings()
+        data['hooks']['PermissionRequest'][1]['hooks'][0]['timeout'] = 60
+        (self.home / 'settings.json').write_text(json.dumps(data), encoding='utf-8')
+        backups = len(list(self.home.glob('settings.json.petoken-backup-*')))
+        self.assertEqual(ca.refresh(self.home, self.script, self.home / 'q'), 'on')
+        self.assertEqual(self.script.read_text(encoding='utf-8-sig'), ca.script_text(self.home / 'q'))
+        self.assertEqual(self.settings()['hooks']['PermissionRequest'][1]['hooks'][0]['timeout'], ca.HOOK_TIMEOUT_S)
+        self.assertEqual(len(self.settings()['hooks']['PermissionRequest']), 2)
+        # Already current: no rewrite, no new backup.
+        after = len(list(self.home.glob('settings.json.petoken-backup-*')))
+        ca.refresh(self.home, self.script, self.home / 'q')
+        self.assertEqual(len(list(self.home.glob('settings.json.petoken-backup-*'))), after)
+        self.assertGreaterEqual(after, backups)
+
     def test_unreadable_settings_are_left_alone(self):
         (self.home / 'settings.json').write_text('{oops', encoding='utf-8')
         self.assertEqual(ca.enable(self.home, self.script), 'unreadable')

@@ -32,7 +32,11 @@ DATA = dict(events=[
          finished_at=None, tokens=2100, usd=None),
     dict(provider='claude', id='old', title='Old work', project='docs', started_at=NOW - 40 * 86400,
          finished_at=NOW - 40 * 86400, tokens=1, usd=0),
-], missing=[])
+], missing=[], activity=dict(
+    # A turn from 14:00-14:10 today, one from 23:50 yesterday to 00:20 today.
+    turns=[(NOW - HOUR, NOW - HOUR + 600, 'site'), (NOW - 15 * HOUR - 600, NOW - 15 * HOUR + 1200, 'site')],
+    edits=[(NOW - HOUR, 'site', 'a.css'), (NOW - HOUR + 60, 'site', 'a.css'), (NOW - HOUR, 'site', 'b.css'),
+           (NOW - 30 * HOUR, 'site', 'old.css')]))
 
 
 class ReportTests(unittest.TestCase):
@@ -45,10 +49,10 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(datetime.fromtimestamp(previous), datetime(2026, 9, 28))
 
     def test_today(self):
-        notices = [dict(kind='finished', at=NOW - HOUR, project='site',
-                        detail=recap_detail(dict(files=['a.css', 'b.css'], duration_s=600, usd=0.75))),
-                   dict(kind='finished', at=NOW - 2 * HOUR, project='site',
-                        detail=recap_detail(dict(files=['a.css'], duration_s=120, usd=None))),
+        notices = [dict(kind='finished', at=NOW - HOUR, project='site', provider='claude',
+                        detail=recap_detail(dict(files=['ignored.css'], duration_s=600, usd=0.75))),
+                   dict(kind='finished', at=NOW - 2 * HOUR, project='api', provider='codex',
+                        detail=recap_detail(dict(files=['login.py'], duration_s=None, usd=None))),
                    dict(kind='failed', at=NOW - HOUR, project='api', detail='rate_limit'),
                    dict(kind='finished', at=NOW - 30 * HOUR, project='x', detail='')]
         summary = reports.summarize(DATA, notices, 'today', NOW)
@@ -56,8 +60,9 @@ class ReportTests(unittest.TestCase):
         self.assertAlmostEqual(summary['usd'], 0.85)
         self.assertTrue(summary['partial'])
         self.assertEqual(summary['providers']['claude'], dict(tokens=1500, usd=0.75, partial=False, tasks=1))
+        # 10 min today + the 20 min after midnight; a.css, b.css and Codex's login.py.
         self.assertEqual((summary['finished'], summary['failed'], summary['files'], summary['seconds']),
-                         (2, 1, 2, 720))
+                         (2, 1, 3, 1800))
         self.assertEqual([p['name'] for p in summary['projects']], ['api', 'site'])
         # By 15:00 yesterday 700 tokens were used.
         self.assertAlmostEqual(summary['change'], (3600 - 700) / 700)

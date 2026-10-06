@@ -122,6 +122,18 @@ def enable(home=None, script=None):
     return state(home)
 
 
+def refresh_script(script=None):
+    """After a Petoken update, rewrite an installed script that changed."""
+    script = Path(script) if script is not None else script_path()
+    try:
+        if script.exists() and script.read_text(encoding='utf-8-sig') != _SCRIPT:
+            script.write_text(_SCRIPT, encoding='utf-8-sig')
+            return True
+    except OSError:
+        pass
+    return False
+
+
 def disable(home=None):
     """Remove only Petoken's hooks; other hooks stay exactly as they were."""
     current = state(home)

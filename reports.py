@@ -5,8 +5,11 @@ Sources, all local:
   cost) from its transcripts, and every Codex usage record from Codex's
   rollouts. Tokens and cost are counted on the day they happened, so a
   long task that spans days is split correctly.
-- Notifications (notifications.py): finished / failed tasks, approvals,
-  and the recaps on finished tasks (files changed, time worked).
+- Claude Code activity (claude_recap.activity): each turn from your prompt
+  to Claude's last reply (AI working time) and every successful file edit,
+  straight from the transcripts, so it covers time Petoken was not running.
+- Notifications (notifications.py): finished / failed tasks and approvals,
+  plus the files listed in Codex recaps (Codex has no per-turn timing yet).
 - History: Claude sessions from the transcripts, Codex threads from
   Codex's ``task_history``.
 
@@ -17,6 +20,7 @@ known price, flagged ``partial`` when some responses have none.
 """
 from __future__ import annotations
 
+import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -95,9 +99,18 @@ def codex_sources(store=None):
     return events, history
 
 
-def load():
+def load(now=None):
     """Everything the report needs; a provider that fails is just missing."""
+    now = time.time() if now is None else now
     events, history, missing = [], [], []
+    activity = dict(turns=[], edits=[])
+    try:
+        import claude_recap
+        from claude_usage import default_home
+        since = min(period('week', now)[0], period('today', now)[2])
+        activity = claude_recap.activity(default_home(), since)
+    except Exception:
+        pass
     for name, source in (('claude', claude_sources), ('codex', codex_sources)):
         try:
             more_events, more_history = source()
@@ -107,7 +120,7 @@ def load():
         events += more_events
         history += more_history
     history.sort(key=lambda row: -(row.get('finished_at') or row.get('started_at') or 0))
-    return dict(events=events, history=history, missing=missing)
+    return dict(events=events, history=history, missing=missing, activity=activity)
 
 
 def _usage(events, start, end):
@@ -138,15 +151,17 @@ def summarize(data, notices, kind, now):
     providers, projects = _usage(data.get('events') or [], start, end)
     before, _ = _usage(data.get('events') or [], previous_start, previous_start + (end - start))
     counts = defaultdict(int)
-    files, seconds = set(), 0
+    activity = data.get('activity') or {}
+    seconds = sum(max(0.0, min(stop, end) - max(begin, start))
+                  for begin, stop, _project in activity.get('turns') or [])
+    files = {f'{project}/{path}' for at, project, path in activity.get('edits') or [] if start <= at < end}
     for notice in notices or []:
         if not start <= (notice.get('at') or 0) < end:
             continue
         counts[notice.get('kind')] += 1
         recap = parse_recap(notice.get('detail')) if notice.get('kind') == 'finished' else None
-        if recap:
+        if recap and notice.get('provider') == 'codex':
             files.update(f"{notice.get('project')}/{name}" for name in recap.get('names') or [])
-            seconds += _number(recap.get('seconds')) or 0
     tokens = sum(p['tokens'] for p in providers.values())
     previous_tokens = sum(p['tokens'] for p in before.values())
     return dict(kind=kind, start=start, end=end, providers=providers, projects=projects,

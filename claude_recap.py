@@ -159,3 +159,73 @@ def recap(home, session, finished_at=None):
     finished = finished_at if finished_at is not None else end
     return dict(files=files, started_at=start, finished_at=finished,
                 duration_s=max(0.0, finished - start), usd=usd)
+
+
+def _all_entries(path):
+    """Every complete user/assistant line of a transcript."""
+    return _entries(path, tail=1 << 40)
+
+
+def activity(home, since):
+    """Turns and successful file edits since ``since`` (epoch seconds), for
+    reports: ``turns`` are (start, end, project) from each real prompt to
+    the last reply before the next prompt; ``edits`` are (time, project,
+    relative path). Files untouched since ``since`` are skipped."""
+    projects = Path(home) / 'projects'
+    turns, edits = [], []
+    try:
+        mains = [p for p in projects.glob('*/*.jsonl') if p.stat().st_mtime >= since]
+    except OSError:
+        return dict(turns=turns, edits=edits)
+    for main in mains:
+        entries = _all_entries(main)
+        stamped = sorted(((_iso_epoch(e.get('timestamp')), e) for e in entries),
+                         key=lambda item: item[0] or 0)
+        start = cwd = None
+        last = None
+        for at, entry in stamped:
+            if at is None:
+                continue
+            if _is_prompt(entry):
+                if start is not None and last is not None and last >= since:
+                    turns.append((start, last, _project(cwd)))
+                start, cwd, last = at, entry.get('cwd'), None
+            elif entry.get('type') == 'assistant' and start is not None:
+                last = at
+        if start is not None and last is not None and last >= since:
+            turns.append((start, last, _project(cwd)))
+        # Successful edits, main transcript and its subagents.
+        folders = {}
+        for at, entry in stamped:
+            if at is not None and _is_prompt(entry):
+                folders[at] = entry.get('cwd')
+        prompt_times = sorted(folders)
+        for path_entries in [entries] + [_all_entries(p) for p in main.with_suffix('').glob('**/*.jsonl')]:
+            calls, results = {}, {}
+            for entry in path_entries:
+                at = _iso_epoch(entry.get('timestamp'))
+                content = _content(entry)
+                if at is None or not isinstance(content, list):
+                    continue
+                for block in content:
+                    if not isinstance(block, dict):
+                        continue
+                    if (entry.get('type') == 'assistant' and block.get('type') == 'tool_use'
+                            and block.get('name') in EDIT_TOOLS and at >= since):
+                        tool_input = block.get('input') or {}
+                        calls[block.get('id')] = (at, tool_input.get('file_path') or tool_input.get('notebook_path'))
+                    elif entry.get('type') == 'user' and block.get('type') == 'tool_result':
+                        results[block.get('tool_use_id')] = not block.get('is_error')
+            for key, (at, path) in calls.items():
+                if not results.get(key):
+                    continue
+                earlier = [t for t in prompt_times if t <= at]
+                cwd = folders[earlier[-1]] if earlier else None
+                relative = _relative(path, cwd)
+                if relative:
+                    edits.append((at, _project(cwd), relative))
+    return dict(turns=turns, edits=edits)
+
+
+def _project(cwd):
+    return PureWindowsPath(cwd).name if isinstance(cwd, str) and cwd else ''
