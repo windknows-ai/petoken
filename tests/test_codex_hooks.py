@@ -83,6 +83,19 @@ class InstallationTests(unittest.TestCase):
             hooks._write(self.path, {'hooks': {}}, b'older')
         self.assertEqual(self.path.read_text(), '{}')
 
+    def test_unowned_script_is_preserved_and_updates_change_definition_hash(self):
+        self.script.write_text('user script')
+        self.assertEqual(self.enable(), 'unreadable')
+        self.assertEqual(self.script.read_text(), 'user script')
+        self.assertFalse(self.path.exists())
+        self.script.unlink()
+        self.enable()
+        command = json.loads(self.path.read_text())['hooks']['Stop'][0]['hooks'][0]['command']
+        with patch('codex_hooks._SCRIPT', hooks._SCRIPT+'\n# update\n'):
+            self.enable()
+        updated = json.loads(self.path.read_text())['hooks']['Stop'][0]['hooks'][0]['command']
+        self.assertNotEqual(command, updated)
+
 
 class EventTests(unittest.TestCase):
     def record(self, event='Stop', **extra):
@@ -142,6 +155,23 @@ class EventTests(unittest.TestCase):
             new.write_text(json.dumps(self.record('UserPromptSubmit')) + '\n')
             new.replace(path)
             self.assertEqual([e['kind'] for e in reader.poll()], ['started'])
+
+    def test_explicit_launch_binding_is_separate_and_does_not_start_work(self):
+        record = self.record('SessionStart', kind='startup', external_id='todo-123')
+        self.assertIsNone(hooks.normalize(record))
+        self.assertEqual(hooks.launch_binding(record), dict(thread_id='synthetic-thread',
+            external_id='todo-123', at=100., project='project'))
+        for bad in (dict(record, kind='resume'), dict(record, external_id=None), dict(record, at=None)):
+            self.assertIsNone(hooks.launch_binding(bad))
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)/'events'
+            reader = hooks.CodexEventReader(path)
+            reader.poll()
+            path.write_text(json.dumps(record)+'\n'+json.dumps(self.record())+'\n')
+            self.assertEqual([e['kind'] for e in reader.poll()], ['finished'])
+            self.assertEqual(reader.launch_bindings, [hooks.launch_binding(record)])
+            reader.poll()
+            self.assertEqual(reader.launch_bindings, [])
 
 
 @unittest.skipUnless(os.name == 'nt' and shutil.which('powershell.exe'), 'Windows PowerShell')
@@ -271,6 +301,16 @@ class ScriptTests(unittest.TestCase):
             self.assertEqual(self.finish(process), b'')
         records = [json.loads(l) for l in (self.root/hooks.EVENTS_NAME).read_text().splitlines()]
         self.assertEqual({r['session'] for r in records}, {f'session-{i}' for i in range(6)})
+
+    def test_only_new_session_captures_explicit_environment_id(self):
+        for source in ('startup', 'resume', 'compact'):
+            with patch.dict(os.environ, PETOKEN_TODO_ID='todo-123'):
+                self.assertEqual(self.finish(self.start(dict(self.request,
+                    hook_event_name='SessionStart', source=source))), b'')
+        records = [json.loads(l) for l in (self.root/hooks.EVENTS_NAME).read_text().splitlines()]
+        self.assertEqual(records[0]['external_id'], 'todo-123')
+        self.assertNotIn('external_id', records[1])
+        self.assertNotIn('external_id', records[2])
 
 
 if __name__ == '__main__':

@@ -43,6 +43,19 @@ class LaunchTests(unittest.TestCase):
         command = codex_launch.launch_command(self.folder, 'Fix')
         self.assertEqual(command[:2], ['powershell.exe', '-NoLogo'])
 
+    def test_external_id_is_environment_data_not_prompt_or_cli_option(self):
+        command = codex_launch.launch_command(self.folder, 'Fix this', external_id='todo:123-ab')
+        data = payload(command)
+        self.assertEqual(data['external_id'], 'todo:123-ab')
+        self.assertNotIn('todo:123-ab', data['arguments'])
+        self.assertNotIn('todo:123-ab', base64.b64decode(command[-1]).decode('utf-16le'))
+        self.assertIsNone(payload(codex_launch.launch_command(self.folder, 'Fix'))['external_id'])
+
+    def test_external_id_rejects_text_and_shell_syntax(self):
+        for identifier in ('', 'a'*129, '$(whoami)', 'task;command', 'task\nnext', 'a\0b', True, 7):
+            with self.assertRaises(ValueError):
+                codex_launch.launch_command(self.folder, 'Fix', external_id=identifier)
+
     def test_generation_never_runs_any_process(self):
         with patch('codex_launch.subprocess.Popen') as start, patch('codex_launch.subprocess.run') as run:
             codex_launch.launch_command(self.folder, 'Fix')
@@ -114,6 +127,22 @@ class NativeArgumentTests(unittest.TestCase):
                            creationflags=subprocess.CREATE_NO_WINDOW)
             self.assertEqual(json.loads(output.read_text(encoding='utf-8')), arguments)
             self.assertFalse(sentinel.exists())
+
+    @unittest.skipUnless(sys.platform == 'win32' and shutil.which('powershell.exe'), 'Windows PowerShell')
+    def test_child_environment_id_is_scoped_and_stale_inheritance_removed(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root)
+            output = directory/'environment.json'
+            code = 'import os,json;from pathlib import Path;Path(' + repr(str(output)) + ').write_text(json.dumps(os.environ.get("PETOKEN_TODO_ID")))'
+            for identifier in ('todo-123', None):
+                script = codex_launch._encoded_script(dict(executable=sys.executable, folder=str(directory),
+                    arguments=subprocess.list2cmdline(['-c', code]), external_id=identifier))
+                with patch.dict('os.environ', PETOKEN_TODO_ID='unrelated-old-id'):
+                    subprocess.run([shutil.which('powershell.exe'), '-NoProfile', '-EncodedCommand', script],
+                                   capture_output=True, check=True, timeout=10,
+                                   creationflags=subprocess.CREATE_NO_WINDOW)
+                    self.assertEqual(json.loads(output.read_text()), identifier)
+                    self.assertEqual(__import__('os').environ['PETOKEN_TODO_ID'], 'unrelated-old-id')
 
 
 if __name__ == '__main__':

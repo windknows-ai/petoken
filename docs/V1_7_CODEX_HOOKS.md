@@ -66,6 +66,8 @@ codex_hooks.CodexEventReader().poll() # 自启动以来完整新行，不重播�
 
 state 是**配置安装状态，不是信任状态或实时可运行性**。enable 之后用户仍须在 Codex
 审核；定义变更需要重新审核。损坏/未知配置返回 unreadable，不覆盖。
+安装命令内含脚本文本 SHA256，脚本更新会改变定义，交由 Codex 重新审核。
+已有非 Petoken 脚本不覆盖。
 两次 enable 幂等；每次实际配置写入前有唯一备份；关闭保留用户 handler，
 包括用户与 Petoken 混在同一 group 中的 handler。保留脚本、日志和备份便于恢复。
 卸载后的原文件语义保持不变；需要字节级恢复时可手动使用对应备份，但不要覆盖后续用户修改。
@@ -122,10 +124,56 @@ Claude-only 字段剥离、空/坏答案、失效/消失心跳、缩短测试截
 安装命令的引号/百分号路径；所有测试用合成输入，无真实 Codex 数据依赖。
 随后增加超大未知时间值的同一测试断言，最终总回归会再核验。
 
+## 2. 派活与待办对应
+
+```python
+argv = codex_launch.launch_command(folder, prompt, external_id='todo-uuid')
+```
+
+新增可选 keyword 参数 external_id，旧双参数调用不变。只接受 1–128 字符
+ASCII ID（字母/数字/点/下划线/冒号/短横线），不接受正文、换行、NUL、shell
+表达式。ID 与需求均作为 JSON/Base64 数据传给 PowerShell，不拼进命令源码。
+Codex 的 --cd/--/prompt argv 完全不变，不向需求插入标签。
+
+生成脚本只在 Codex 子进程 ProcessStartInfo.EnvironmentVariables 设置
+PETOKEN_TODO_ID，不改父进程/用户/系统环境。未指定 ID 时删除继承的旧值，
+防止无关启动误配。优先 Windows Terminal 和安全 argv 行为保持原样。
+
+可信 SessionStart hook 只在 source=startup 时读取此环境 ID，写一条
+元数据关联；resume/compact 不重新绑定。用户 hook 信任、宿主环境快照传递
+都是前提；缺失就不返回关联，不能保证任意宿主会保留任意环境变量。
+
+Claude 读取方式：
+
+```python
+notifications = reader.poll()
+bindings = reader.launch_bindings  # 本次 poll，不是累积队列
+# [{thread_id, external_id, at, project}, ...]
+```
+
+也可 `codex_hooks.launch_binding(raw_record)` 单独转换。SessionStart 不生成
+started 通知，避免把打开/恢复会话误当工作。launch_bindings 每次 poll 重置，
+Claude 必须在同一次 poll 消费；reader 应在派活前创建并完成初次 poll。
+这里只生成命令，没有启动实际派活、保存待办或改共享模型。
+
+没有可信 hook/环境传递时，不声称精确对应。Claude 可在启动前记录
+external_id、启动 epoch、规范化完整 folder、SHA256(prompt)，筛选随后出现的
+主线程；仅在 folder/时间窗口匹配且能读到首条真实用户输入并核实 hash、
+候选唯一时关联。多个同目录任务或无 prompt 证据时必须等待选择。
+这是降级建议，本次没有增加 prompt 内容扫描或猜测式匹配。
+
+新增 3 个 launch 测试与 2 个 hooks 测试：ID 参数/注入拒绝、真实 PowerShell
+子进程环境隔离与旧值删除、SessionStart 元数据/读者与 resume 排除。
+`tests.test_codex_launch tests.test_codex_hooks` **34 PASS，8.877 s**。
+随后补充脚本所有权/更新 hash 检查，最终合并回归再次核验。
+两套 0.160.0 隔离 app-server 均实际把环境 todo-synthetic 带入启动 hook，
+生成的 thread_id 与 thread/start 返回值完全一致；没有把真实任务派给 Codex。
+
 ## Current execution state
 
-- Hooks implementation and scoped validation complete; next local item-1 commit.
-- IN PROGRESS: external-ID launch correlation, then approval reuse/performance.
+- Item 1 complete, local commit `d99c0d6`.
+- Launch correlation implemented; both isolated engines propagate the explicit ID.
+- IN PROGRESS: approval reuse/performance evaluation after item 2.
 
 ## Sources
 

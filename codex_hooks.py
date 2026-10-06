@@ -6,6 +6,7 @@ Codex's /hooks browser. Nothing here changes config.toml, notify or trust.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import math
 import ntpath
@@ -51,6 +52,10 @@ try {
         at = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() / 1000.0
         event = $event; kind = ''; session = $session
         turn = (Clean $data.turn_id); project = $project
+    }
+    if ($event -eq 'SessionStart' -and $data.source -eq 'startup') {
+        $externalId = Clean $env:PETOKEN_TODO_ID
+        if ($externalId) { $line['external_id'] = $externalId; $line['kind'] = 'startup' }
     }
     # Cross-process serialization keeps concurrent hooks from interleaving JSON.
     $hash = [Security.Cryptography.SHA256]::Create().ComputeHash($utf8.GetBytes($DataDir.ToLowerInvariant()))
@@ -145,7 +150,7 @@ def _ours(handler):
         script = base64.b64decode(command.split(' -EncodedCommand ', 1)[1], validate=True).decode('utf-16le')
     except (ValueError, IndexError, UnicodeError):
         return False
-    return script.startswith(f'# {MARKER}\n& ')
+    return bool(re.match(r'^# ' + MARKER + r'\n(?:# script sha256:[a-f0-9]{64}\n)?& ', script))
 
 
 def state(home=None):
@@ -201,9 +206,12 @@ def enable(home=None, *, script=None, target=None):
         target = Path(target) if target is not None else data_dir()
         script, target = script.absolute(), target.absolute()
         script.parent.mkdir(parents=True, exist_ok=True)
+        if script.exists() and not script.read_text(encoding='utf-8-sig').startswith(f'# {MARKER}:'):
+            raise ValueError('Refusing to overwrite an unowned hook script')
         script.write_text(_SCRIPT, encoding='utf-8-sig')
         literal = lambda p: "'" + str(p).replace("'", "''") + "'"
-        invoke = f'# {MARKER}\n& {literal(script)} -DataDir {literal(target)}'
+        digest = hashlib.sha256(_SCRIPT.encode('utf-8')).hexdigest()
+        invoke = f'# {MARKER}\n# script sha256:{digest}\n& {literal(script)} -DataDir {literal(target)}'
         encoded = base64.b64encode(invoke.encode('utf-16le')).decode('ascii')
         command = f'powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand {encoded}'
         hooks = data.setdefault('hooks', {})
@@ -271,14 +279,28 @@ def normalize(record):
                 source='app-server' if event == 'turn/completed' else 'hook')
 
 
+def launch_binding(record):
+    """Explicit SessionStart correlation, separate from notification semantics."""
+    if not isinstance(record, dict) or record.get('event') != 'SessionStart' or record.get('kind') != 'startup':
+        return None
+    session, external = _clean(record.get('session')), _clean(record.get('external_id'))
+    # Reuse timestamp/project validation without pretending a session is work.
+    validated = normalize(dict(record, event='UserPromptSubmit'))
+    if not session or not external or validated is None:
+        return None
+    return dict(thread_id=session, external_id=external, at=validated['at'], project=validated['project'])
+
+
 class CodexEventReader:
     """Tail complete new metadata lines; never replay history at startup."""
     def __init__(self, path=None):
         self.path = Path(path) if path is not None else events_path()
         self.offset = None
         self.identity = None
+        self.launch_bindings = []
 
     def poll(self):
+        self.launch_bindings = []
         try:
             stat = self.path.stat()
             identity = stat.st_dev, stat.st_ino
@@ -300,9 +322,13 @@ class CodexEventReader:
         events = []
         for raw in chunk[:complete].splitlines():
             try:
-                event = normalize(json.loads(raw.decode('utf-8-sig')))
+                record = json.loads(raw.decode('utf-8-sig'))
+                event = normalize(record)
+                binding = launch_binding(record)
             except (ValueError, UnicodeError):
                 continue
+            if binding is not None:
+                self.launch_bindings.append(binding)
             if event is not None:
                 events.append(event)
         return events
