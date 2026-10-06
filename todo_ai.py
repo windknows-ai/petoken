@@ -11,8 +11,11 @@ Give to AI…). ``TodoScheduler`` checks every TICK_MS:
 - The new task is matched to the todo: for Claude Code, the first session
   a person opened in that folder after the start (its live registry); for
   Codex, the newest thread in that folder that started after it.
-- When that task first finishes, the todo is ticked and a note records
-  what the AI did (files, time, cost); a failure is marked on the todo.
+- When that task first finishes, a note records what the AI did (files,
+  time, cost) and the todo waits for you to accept it (2.0): Accept ticks
+  it off; Redo hands it back with what to change. A failure is marked on
+  the todo; a run you interrupted (or Codex reports as interrupted or
+  failed) is not counted as done.
 """
 from __future__ import annotations
 
@@ -258,24 +261,30 @@ class TodoScheduler(QObject):
         for schedule in started:
             if (schedule['provider_id'], schedule['task_key']) != key:
                 continue
-            if kind == 'failed':
+            outcome = 'failed' if kind == 'failed' else self._outcome(schedule)
+            if outcome == 'failed':
                 self.store.update_schedule(schedule['todo_id'], state='failed')
-            elif self._interrupted(schedule):
+            elif outcome == 'interrupted':
                 continue   # You stopped it: not done; a later real finish still counts.
             else:
                 self._finish(schedule, event)
             self.changed.emit()
 
     @staticmethod
-    def _interrupted(schedule):
-        if schedule['provider_id'] != 'claude':
-            return False
+    def _outcome(schedule):
+        """'interrupted', 'failed', or None (finished, or nothing says otherwise)."""
         try:
-            import claude_recap
-            from claude_usage import default_home, strip_scope
-            return claude_recap.interrupted(default_home(), strip_scope(schedule['task_key']))
+            if schedule['provider_id'] == 'claude':
+                import claude_recap
+                from claude_usage import default_home, strip_scope
+                return ('interrupted' if claude_recap.interrupted(default_home(), strip_scope(schedule['task_key']))
+                        else None)
+            import codex_recap
+            from usage import CodexStore
+            outcome = codex_recap.turn_outcome(CodexStore().home, schedule['task_key'])
+            return outcome if outcome in ('interrupted', 'failed') else None
         except Exception:
-            return False
+            return None
 
     def _finish(self, schedule, event):
         store, prefs = self.store, self.panel.prefs
@@ -286,8 +295,48 @@ class TodoScheduler(QObject):
                                  getattr(self.panel, 'currency', 'USD'),
                                  (getattr(self.panel, 'fx', None) or {}).get('rates'))
         note = store.create_note(title, body, todo['project_id'])
+        # Done by the AI is not done for you yet: it waits for your review.
+        store.update_schedule(schedule['todo_id'], state='review', note_id=note['id'])
+        language = prefs.get('language')
+        self.panel.tray_notice(text('todo_review_notice', language, title=todo['title']),
+                               text('todo_review_notice_body', language))
+        pet = getattr(self.panel, 'pet', None)
+        if pet is not None:
+            pet.interact('hold_card', 4)
+
+    # Review -------------------------------------------------------------
+    def accept(self, todo_id, store=None):
+        """You checked the AI's work: tick the todo off."""
+        store = store or self.store
+        todo = next((t for t in store.list_todos() if t['id'] == todo_id), None)
+        schedule = store.get_schedule(todo_id)
+        if todo is None or schedule is None or schedule['state'] != 'review':
+            return False
         store.update_todo(todo['id'], todo['title'], todo['project_id'], True)
-        store.update_schedule(schedule['todo_id'], state='finished', note_id=note['id'])
+        store.update_schedule(todo_id, state='finished')
+        companion = getattr(self.panel, 'companion', None)
+        if companion is not None:
+            companion.award('todo_accepted', todo_id)
+            companion.todo_done(todo)
+        pet = getattr(self.panel, 'pet', None)
+        if pet is not None:
+            pet.interact('heart', 3)
+        self.changed.emit()
+        return True
+
+    def redo(self, todo_id, feedback, store=None):
+        """Not quite: hand it back to the same app with what to change."""
+        store = store or self.store
+        schedule = store.get_schedule(todo_id)
+        if schedule is None or schedule['state'] != 'review' or not feedback.strip():
+            return False
+        language = self.panel.prefs.get('language')
+        prompt = (schedule['prompt'].split('\n\n' + text('todo_redo_marker', language))[0]
+                  + '\n\n' + text('todo_redo_prompt', language, feedback=feedback.strip()))
+        store.schedule_todo(todo_id, time.time(), schedule['provider_id'], schedule['folder'],
+                            prompt[:8000], schedule.get('model') or '', schedule.get('effort') or '')
+        self.run(todo_id)
+        return True
 
 
 class GiveToAiDialog(QDialog):
@@ -420,6 +469,60 @@ class GiveToAiDialog(QDialog):
             self.accept()
             return
         self.error.show()
+
+
+class ReviewDialog(QDialog):
+    """What the AI did, then Accept, or Redo with what to change."""
+
+    def __init__(self, parent, panel, todo, schedule, note=None):
+        super().__init__(parent)
+        language = self.language = panel.prefs.get('language')
+        self.choice = None
+        self.setWindowTitle(text('todo_review_title', language))
+        self.setMinimumWidth(480)
+        layout = QVBoxLayout(self)
+        intro = QLabel(text('todo_review_intro', language, title=todo['title'],
+                            app=PROVIDER_NAMES.get(schedule['provider_id'], '')))
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+        self.body = QPlainTextEdit((note or {}).get('body') or text('todo_review_no_note', language))
+        self.body.setReadOnly(True)
+        self.body.setMinimumHeight(160)
+        layout.addWidget(self.body)
+        layout.addWidget(QLabel(text('todo_review_feedback', language)))
+        self.feedback = QPlainTextEdit()
+        self.feedback.setPlaceholderText(text('todo_review_feedback_hint', language))
+        self.feedback.setFixedHeight(64)
+        layout.addWidget(self.feedback)
+        self.error = QLabel('')
+        self.error.setStyleSheet('color:#8A2E4A;')
+        self.error.hide()
+        layout.addWidget(self.error)
+        row = QHBoxLayout()
+        cancel = QPushButton(text('launch_cancel', language))
+        cancel.clicked.connect(self.reject)
+        self.redo_button = QPushButton(text('todo_review_redo', language))
+        self.redo_button.clicked.connect(self._redo)
+        self.accept_button = QPushButton(text('todo_review_accept', language))
+        self.accept_button.setDefault(True)
+        self.accept_button.clicked.connect(self._accept)
+        row.addWidget(cancel)
+        row.addStretch(1)
+        row.addWidget(self.redo_button)
+        row.addWidget(self.accept_button)
+        layout.addLayout(row)
+
+    def _accept(self):
+        self.choice = 'accept'
+        self.accept()
+
+    def _redo(self):
+        if not self.feedback.toPlainText().strip():
+            self.error.setText(text('todo_review_need_feedback', self.language))
+            self.error.show()
+            return
+        self.choice = 'redo'
+        self.accept()
 
 
 def schedule_badge(schedule, language):

@@ -4600,6 +4600,13 @@ class Panel(QWidget):
         self.focus_mode.summary_ready.connect(self._focus_summary)
         self._focus_card = None
         self._focus_phase = 'idle'
+        # 2.0 points, stickers and weekly usage goals.
+        from companion import Companion
+        self.companion = Companion(self)
+        self.goal_clock = QTimer(self)
+        self.goal_clock.timeout.connect(self.check_goals)
+        if live:
+            self.goal_clock.start(10 * 60 * 1000)
         # 2.0 continuation card: "where was I?" when you come back to a project.
         from project_start import ContinuationWatcher
         self.continuation = ContinuationWatcher(self)
@@ -5591,6 +5598,8 @@ class Panel(QWidget):
 
     def _focus_changed(self):
         phase = self.focus_mode.phase
+        if self._focus_phase == 'break' and phase == 'idle' and self.focus_mode.break_completed:
+            self.companion.award('break_taken', f'{self.focus_mode.started:.0f}')
         pet = getattr(self, 'pet', None)
         if pet is not None:
             if phase == 'break' and self._focus_phase == 'focus':
@@ -5599,8 +5608,20 @@ class Panel(QWidget):
             pet.update()
         self._focus_phase = phase
 
+    def check_goals(self):
+        """Compare this week's project usage with the goals (cached report data)."""
+        if self.closing:
+            return
+        cache = self.report_cache
+        if cache.data is not None:
+            self.companion.check_goals(cache.data.get('events') or [])
+        if cache.stale():
+            cache.refresh()
+
     def _focus_ended(self, summary):
         from focus_mode import FocusCard
+        if summary['completed'] and summary.get('session'):
+            self.companion.award('focus_done', summary['session'])
         pet = getattr(self, 'pet', None)
         if pet is not None and summary['completed']:
             pet.interact('focus_done', 4)
@@ -5881,6 +5902,7 @@ class Panel(QWidget):
         self.notify_clock.stop()
         self.approvals.stop()
         self.updates.stop()
+        self.goal_clock.stop()
         self.focus_mode.abandon()
         for card in (self._focus_card, self._continuation_card):
             if card is not None:

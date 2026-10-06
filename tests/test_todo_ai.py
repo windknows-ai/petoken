@@ -120,7 +120,7 @@ class SchedulerTests(unittest.TestCase):
         self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'started')
         self.assertEqual(self.launched, [['go']])
 
-    def test_finished_task_ticks_the_todo_and_writes_a_note(self):
+    def test_finished_task_waits_for_review_with_a_note(self):
         self.store.schedule_todo(self.todo['id'], NOW, 'claude', str(self.folder), 'Add dark mode')
         self.store.update_schedule(self.todo['id'], state='started', started_at=NOW, task_key='claude:s1')
         scheduler = self.scheduler()
@@ -129,8 +129,9 @@ class SchedulerTests(unittest.TestCase):
         detail = recap_detail(dict(files=['src/theme.css'], duration_s=95, usd=0.2))
         scheduler.on_event(dict(kind='finished', provider='claude', task_key='claude:s1', detail=detail))
         schedule = self.store.get_schedule(self.todo['id'])
-        self.assertEqual(schedule['state'], 'finished')
-        self.assertTrue(self.store.list_todos()[0]['done'])
+        self.assertEqual(schedule['state'], 'review')       # 2.0: done by the AI, not yet by you.
+        self.assertFalse(self.store.list_todos()[0]['done'])
+        self.assertEqual(scheduler.panel.notices[-1], 'Ready for your review: Add dark mode')
         note = self.store.get_note(schedule['note_id'])
         self.assertEqual(note['title'], 'AI finished: Add dark mode')
         self.assertIn('src/theme.css', note['body'])
@@ -162,6 +163,34 @@ class SchedulerTests(unittest.TestCase):
         self.assertFalse(self.store.list_todos()[0]['done'])
         with patch('claude_recap.interrupted', return_value=False):
             self.scheduler().on_event(dict(kind='finished', provider='claude', task_key='claude:s1', detail=''))
+        self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'review')
+
+    def test_codex_outcome_decides_interrupted_or_failed(self):
+        for outcome, state in (('interrupted', 'started'), ('failed', 'failed'), ('completed', 'review'),
+                               (None, 'review')):
+            self.store.schedule_todo(self.todo['id'], NOW, 'codex', str(self.folder), 'x')
+            self.store.update_schedule(self.todo['id'], state='started', started_at=NOW, task_key='thread-1')
+            with patch('codex_recap.turn_outcome', return_value=outcome):
+                self.scheduler().on_event(dict(kind='finished', provider='codex', task_key='thread-1', detail=''))
+            self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], state, outcome)
+
+    def test_accept_ticks_and_redo_hands_it_back_with_feedback(self):
+        self.store.schedule_todo(self.todo['id'], NOW, 'claude', str(self.folder), 'Add dark mode', 'opus', 'high')
+        self.store.update_schedule(self.todo['id'], state='review')
+        scheduler = self.scheduler()
+        self.assertFalse(scheduler.redo(self.todo['id'], '   '))
+        with patch('quick_launch.build_command', return_value=['go']) as build:
+            self.assertTrue(scheduler.redo(self.todo['id'], 'use the brand colours'))
+            self.store.update_schedule(self.todo['id'], state='review')
+            self.assertTrue(scheduler.redo(self.todo['id'], 'and add tests'))
+        prompt = build.call_args.args[2]
+        self.assertEqual(prompt, 'Add dark mode' + chr(10) * 2 + 'My feedback on the last attempt: and add tests')
+        self.assertEqual(build.call_args.kwargs['model'], 'opus')
+        self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'started')
+        self.assertFalse(scheduler.accept(self.todo['id']))       # Only a todo waiting for review.
+        self.store.update_schedule(self.todo['id'], state='review')
+        self.assertTrue(scheduler.accept(self.todo['id']))
+        self.assertTrue(self.store.list_todos()[0]['done'])
         self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'finished')
 
     def test_failed_task_is_marked(self):

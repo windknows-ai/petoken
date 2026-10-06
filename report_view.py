@@ -177,6 +177,10 @@ class ReportPage(QWidget):
         self.render()
 
     def set_kind(self, kind):
+        if kind == 'week':
+            companion = getattr(self.panel, 'companion', None)
+            if companion is not None:
+                companion.earn('first_weekly')
         self.kind = kind
         self.render()
 

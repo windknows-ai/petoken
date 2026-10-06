@@ -77,7 +77,7 @@ Petoken 2.0（路线图上原本的 1.8「陪伴感」阶段）让人物更有�
 |---|---|---|
 | 配饰图层 | 1254×1254 透明 PNG，**和 `idle.png` 完全对齐**，只画配饰本身（其余全透明），文件名 `accessory_<名称>.png` | 贝雷帽 `beret`、围巾 `scarf`、圆眼镜 `glasses`、花朵发夹 `hairpin`、猫耳耳机 `cat_headphones` |
 | 桌边摆件 | 512×512 透明 PNG，`desk_<名称>.png`，和人物同样的画风和配色 | 小盆栽 `plant`、咖啡杯 `mug`、一摞书 `books`、星星台灯 `lamp` |
-| 纪念贴纸 | 256×256 透明 PNG，圆形或徽章形，`sticker_<名称>.png`，不要文字 | 第一个项目完成 `first_project`、第一份周报 `first_weekly`、连续 7 天专注 `streak_7`、完成 100 个待办 `todos_100` |
+| 纪念贴纸 | 256×256 透明 PNG，圆形或徽章形，`sticker_<名称>.png`，不要文字 | 第一个项目完成 `first_project`、第一份周报 `first_weekly`、完成 10 轮专注 `focus_10`、连续 7 天专注 `streak_7`、一周没超出用量目标 `goal_week`、完成 100 个待办 `todos_100`（没有图时程序先画一个圆形徽章代替） |
 
 ## 三、交付
 

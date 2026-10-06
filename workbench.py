@@ -218,7 +218,14 @@ class WorkbenchWindow(QWidget):
         self._build_projects()
         self._build_notifications()
         self._build_reports()
-        for index, name in enumerate(('home', 'todos', 'notes', 'projects', 'notifications', 'reports')):
+        from collection_view import CollectionPage
+        self.collection_page = CollectionPage(self)
+        self.tabs.addTab(self.collection_page, '')
+        self.collection_tab = self.tabs.count() - 1
+        self.tabs.currentChanged.connect(
+            lambda index: self.collection_page.refresh() if index == self.collection_tab else None)
+        for index, name in enumerate(('home', 'todos', 'notes', 'projects', 'notifications', 'reports',
+                                      'collection')):
             self.tabs.setTabIcon(index, QIcon(str(ASSETS_DIR / f'workbench-{name}.svg')))
         self.status = QLabel('')
         self.status.setWordWrap(True)
@@ -373,17 +380,22 @@ class WorkbenchWindow(QWidget):
         self.projects_table.setRootIsDecorated(False)
         self.projects_table.setUniformRowHeights(True)
         self.projects_table.setWordWrap(False)
-        self.projects_table.setColumnCount(2)
+        self.projects_table.setColumnCount(3)
         self.projects_table.setColumnWidth(0, 180)
+        self.projects_table.setColumnWidth(1, 300)
         self.projects_table.itemSelectionChanged.connect(self._update_actions)
         layout.addWidget(self.projects_table, 1)
         self.projects_empty = self.caption('wb_empty_projects', 'muted')
         layout.addWidget(self.projects_empty)
+        work = QHBoxLayout()
+        self.project_start_button = self.button(work, 'preset_start', self.start_selected_project, True)
+        self.project_preset_button = self.button(work, 'wb_preset', self.edit_preset)
+        self.project_card_button = self.button(work, 'wb_continuation', self.show_continuation)
+        self.project_goal_button = self.button(work, 'wb_goal', self.edit_goal)
+        work.addStretch()
+        layout.addLayout(work)
         actions = QHBoxLayout()
         self.button(actions, 'wb_new_project', lambda: self.edit_project(), True)
-        self.project_start_button = self.button(actions, 'preset_start', self.start_selected_project, True)
-        self.project_preset_button = self.button(actions, 'wb_preset', self.edit_preset)
-        self.project_card_button = self.button(actions, 'wb_continuation', self.show_continuation)
         self.project_edit_button = self.button(actions, 'wb_edit', self.edit_selected_project)
         self.project_folder_button = self.button(actions, 'wb_folder_open', self.open_folder)
         actions.addStretch()
@@ -438,8 +450,12 @@ class WorkbenchWindow(QWidget):
         if not dirty:
             self._combo(self.note_project, self.note_project.currentData())
         self.projects_table.clear()
+        try:
+            goals = {g['project_id']: g for g in self.store.list_goals()}
+        except WorkbenchError:
+            goals = {}
         for project in self._projects:
-            item = QTreeWidgetItem([project['name'], project['directory']])
+            item = QTreeWidgetItem([project['name'], project['directory'], self._goal_text(project, goals.get(project['id']))])
             item.setData(0, Qt.UserRole, project['id'])
             item.setToolTip(0, project['name'])
             item.setToolTip(1, project['directory'])
@@ -812,6 +828,16 @@ class WorkbenchWindow(QWidget):
         ok, _ = self._attempt(self.store.update_todo, record['id'], record['title'],
                               record['project_id'], done)
         if ok:
+            if done and not record['done']:
+                try:
+                    schedule = self.store.get_schedule(record['id'])
+                    if schedule and schedule['state'] == 'review':
+                        self.store.update_schedule(record['id'], state='finished')   # Ticked: accepted.
+                except WorkbenchError:
+                    pass
+                companion = getattr(self.panel, 'companion', None)
+                if companion is not None:
+                    companion.todo_done(record)
             self.refresh()
         else:
             self.todo_list.blockSignals(True)
@@ -885,7 +911,7 @@ class WorkbenchWindow(QWidget):
                 (self.todo_ai_button, bool(todo)),
                 (self.project_edit_button, bool(project)), (self.project_delete_button, bool(project)),
                 (self.project_start_button, bool(project)), (self.project_preset_button, bool(project)),
-                (self.project_card_button, bool(project)),
+                (self.project_card_button, bool(project)), (self.project_goal_button, bool(project)),
                 (self.project_folder_button, bool(project and project['directory'])),
                 (self.note_delete_button, selected_note)]:
             button.setVisible(available)
@@ -898,7 +924,11 @@ class WorkbenchWindow(QWidget):
             except WorkbenchError:
                 schedule = None
             active = bool(schedule and schedule['state'] in ('waiting', 'started'))
-        self.todo_ai_button.setText(self.tr('todo_ai_take_back' if active else 'todo_ai_button'))
+            review = bool(schedule and schedule['state'] == 'review')
+        else:
+            review = False
+        self.todo_ai_button.setText(self.tr('todo_review_button' if review else
+                                            'todo_ai_take_back' if active else 'todo_ai_button'))
         self.todo_ai_button.setToolTip(self.tr('todo_ai_take_back_tip') if active else '')
 
     def edit_todo(self):
@@ -926,6 +956,9 @@ class WorkbenchWindow(QWidget):
             self._attempt(self.store.unschedule, record['id'])
             self.refresh()
             return
+        if schedule and schedule['state'] == 'review':
+            self.review_todo(record, schedule)
+            return
         project = next((p for p in self._projects if p['id'] == record['project_id']), None)
         folders = ([project['directory']] if project and project['directory'] else []) + known_folders(self.panel.prefs)
         dialog = GiveToAiDialog(self, self.panel, record, schedule, folders)
@@ -943,6 +976,24 @@ class WorkbenchWindow(QWidget):
             scheduler = getattr(self.panel, 'todo_ai', None)
             if scheduler is not None:
                 scheduler.run(record['id'])
+        self.refresh()
+
+    def review_todo(self, record, schedule):
+        """The AI is done: see what it did, then accept it or ask for a redo."""
+        from todo_ai import ReviewDialog
+        note = None
+        if schedule.get('note_id'):
+            note = self._attempt(self.store.get_note, schedule['note_id'])[1]
+        dialog = ReviewDialog(self, self.panel, record, schedule, note)
+        if dialog.exec() != QDialog.Accepted:
+            return
+        scheduler = getattr(self.panel, 'todo_ai', None)
+        if scheduler is None:
+            return
+        if dialog.choice == 'accept':
+            self._attempt(scheduler.accept, record['id'], self.store)
+        elif dialog.choice == 'redo':
+            self._attempt(scheduler.redo, record['id'], dialog.feedback.toPlainText(), self.store)
         self.refresh()
 
     def delete_todo(self):
@@ -1129,6 +1180,38 @@ class WorkbenchWindow(QWidget):
             self.status.setText(self.tr('handoff_empty'))
             self.status.show()
 
+    def _goal_text(self, project, goal):
+        """'1.2M / 2M (60%)' this week, or '' without a goal."""
+        if not goal:
+            return ''
+        import time as _time
+        from companion import goal_ratio, project_usage, week_start
+        from token_format import format_token_value
+        events = (getattr(self.panel, 'report_cache', None) and self.panel.report_cache.data or {}).get('events') or []
+        now = _time.time()
+        tokens, usd, _ = project_usage(events, project, week_start(now), now + 1)
+        ratio = goal_ratio(goal, tokens, usd)
+        parts = []
+        if goal.get('weekly_tokens'):
+            parts.append(f"{format_token_value(tokens, 'compact')} / {format_token_value(goal['weekly_tokens'], 'compact')}")
+        if goal.get('weekly_usd'):
+            parts.append(f"${usd:.2f} / ${goal['weekly_usd']:.2f}")
+        return ' · '.join(parts) + (f' ({ratio:.0%})' if ratio is not None else '')
+
+    def edit_goal(self):
+        from collection_view import GoalDialog
+        record = self._selected_project()
+        if not record:
+            return
+        ok, goal = self._attempt(self.store.get_goal, record['id'])
+        if not ok:
+            return
+        dialog = GoalDialog(self, self.language, record, goal)
+        if dialog.exec() == QDialog.Accepted:
+            values = dialog.values()
+            self._attempt(self.store.set_goal, record['id'], values['weekly_tokens'], values['weekly_usd'])
+            self.refresh()
+
     def edit_selected_project(self):
         record = self._selected_project()
         if record:
@@ -1157,10 +1240,11 @@ class WorkbenchWindow(QWidget):
         for widget, key in self._captions:
             widget.setText(self.tr(key))
         for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects', 'wb_notifications',
-                                     'wb_reports']):
+                                     'wb_reports', 'wb_collection']):
             self.tabs.setTabText(index, self.tr(key))
         self.report_page.apply_language()
-        self.projects_table.setHeaderLabels([self.tr('wb_name'), self.tr('wb_folder')])
+        self.collection_page.apply_language()
+        self.projects_table.setHeaderLabels([self.tr('wb_name'), self.tr('wb_folder'), self.tr('wb_goal_column')])
         for index, key in enumerate(('wb_notify_all',) + tuple(f'notify_kind_{k}' for k in NOTIFY_KINDS)):
             self.notify_filter.setItemText(index, self.tr(key))
         self.note_title.setPlaceholderText(self.tr('wb_note_title'))

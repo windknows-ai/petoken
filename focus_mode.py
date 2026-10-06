@@ -66,6 +66,7 @@ class FocusMode(QObject):
         self.project_id = None
         self.todo_id = None
         self.rounds = 0
+        self.break_completed = False      # The last break ran its full time.
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.tick)
@@ -93,6 +94,7 @@ class FocusMode(QObject):
     # Phases ---------------------------------------------------------------
     def start(self, minutes, project_id=None, todo_id=None):
         now = self.clock()
+        self.break_completed = False
         self.phase, self.started, self.planned = 'focus', now, float(minutes) * 60
         self.ends = now + self.planned
         self.project_id, self.todo_id = project_id, todo_id
@@ -125,6 +127,7 @@ class FocusMode(QObject):
 
     def skip_break(self):
         if self.phase == 'break':
+            self.break_completed = False
             self._idle()
 
     def tick(self):
@@ -132,6 +135,7 @@ class FocusMode(QObject):
         if self.phase == 'focus' and now >= self.ends:
             self._finish(completed=True)
         elif self.phase == 'break' and now >= self.ends:
+            self.break_completed = True
             self._idle()
             language = self.panel.prefs.get('language')
             self.panel.tray_notice(text('focus_break_over', language), text('focus_break_over_body', language))
