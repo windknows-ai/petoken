@@ -14,6 +14,7 @@ piped to ffmpeg (imageio-ffmpeg or --ffmpeg).
 """
 import argparse
 import math
+import re
 import random
 import struct
 import subprocess
@@ -64,7 +65,7 @@ TEXT = {
         ring1='Blue for Codex, gold for Claude Code.', ring2='Click a star for its details.',
         pages='8+ tasks? I page them.',
         limits1='I watch your limits...', limits_note='Only for the apps you have open',
-        bar_ctx='Context', bar_5h='5-hour', bar_week='Weekly', left='left',
+        bar_ctx='Context', bar_5h='5-hour', bar_week='Weekly', left='left', left_fmt='{v}% left',
         sync='Claude Pro/Max limits: one switch in Settings',
         stats1='...and count every token, honestly.', tokens='tokens', scopes=['Conversation', 'Project', 'Global'],
         breakdown='By model · conversation · date',
@@ -80,12 +81,46 @@ TEXT = {
         outro='Get me free on GitHub!', product='Petoken v1.5', url='github.com/windknows-ai/petoken',
         platform='Windows 10 / 11', app='Petoken',
     ),
+    'zh_CN': dict(
+        boot='> petoken.exe',
+        hi='嗨！', hello='我是 Petoken！', buddy='你的桌面 AI 小伙伴，支持',
+        codex='Codex', claude='Claude Code', amp='&',
+        react_title='你忙的时候，我也在',
+        typing='你打字，我也打字。', music='放音乐？我跟着摇摆～', song='Lo-fi Beats · 深夜学习',
+        mic='在开会？麦克风已就位！',
+        term1='把任务交给 Codex 或 Claude……', term2='……它就会变成我的一颗星星！',
+        cmd_claude='claude "给网站加上深色模式"', out_claude=['正在读取 12 个文件……', '已更新 styles.css'],
+        cmd_codex='codex "修复 api-server 的登录 bug"', out_codex=['正在运行测试……', '42 项通过'],
+        ring1='蓝色是 Codex，金色是 Claude Code。', ring2='点一下星星，就能看详情。',
+        pages='任务超过 8 个？我会分页。',
+        limits1='我帮你盯着额度……', limits_note='只显示你正开着的 App',
+        bar_ctx='上下文', bar_5h='5 小时', bar_week='1 周', left='剩余', left_fmt='剩 {v}%',
+        sync='Claude Pro/Max 额度：设置里一键同步',
+        stats1='……每个 token 都算得清清楚楚。', tokens='tokens', scopes=['对话', '项目', '全部'],
+        breakdown='按模型 · 对话 · 日期统计',
+        notify=[('完成了？我欢呼！', 'Claude Code 任务完成', 'website'),
+                ('出错了？我告诉你。', 'Claude Code 任务出错了', 'docs · rate_limit'),
+                ('要你确认？我招手！', 'Codex 在等你确认', 'api-server')],
+        dnd='免打扰 · 22:00-08:00', low='5 小时额度快用完？我提醒你。',
+        wb='待办、便签和提醒，' + NL + '我也帮你记着。',
+        wb_tags=['项目', '待办', '便签', '提醒', '新手教程'],
+        custom='把我变成你喜欢的样子！', size='大小', ontop='始终置顶',
+        local='所有数据都只留在你的电脑上。',
+        local_points=['不上传任何数据', '不保存对话内容', '免费开源'],
+        outro='去 GitHub 免费领养我吧！', product='Petoken v1.5', url='github.com/windknows-ai/petoken',
+        platform='Windows 10 / 11', app='Petoken',
+    ),
 }
 
 
 # --- basics -----------------------------------------------------------------
+FONT_MAP = {}   # Filled per language: Latin face -> a face that has the script.
+ZH_FONTS = {'segoeuib.ttf': 'msyhbd.ttc', 'seguisb.ttf': 'msyhbd.ttc', 'segoeui.ttf': 'msyh.ttc',
+            'segoeuil.ttf': 'msyhl.ttc', 'consola.ttf': 'msyh.ttc', 'consolab.ttf': 'msyhbd.ttc'}
+
+
 def font(name, size):
-    return ImageFont.truetype(str(FONT_DIR / name), size)
+    return ImageFont.truetype(str(FONT_DIR / FONT_MAP.get(name, name)), size)
 
 
 def clamp(x, lo=0.0, hi=1.0):
@@ -242,14 +277,19 @@ class Words:
         y = width = 0
         for line in value.split(NL):
             x = 0
-            for word in line.split(' '):
+            for word in re.findall(r"[A-Za-z0-9.,'!?&%/:+-]+| +|[^ ]", line):
                 adv = fnt.getlength(word)
+                if word.isspace():
+                    x += adv
+                    continue
                 img = Image.new('RGBA', (int(adv) + 12, line_h + 8), (0, 0, 0, 0))
                 ImageDraw.Draw(img).text((6, 4 + ascent), word, font=fnt, fill=fill, anchor='ls')
                 self.items.append((img, x - 6, y))
-                x += adv + space
-            width = max(width, x - space)
+                x += adv
+            width = max(width, x)
             y += line_h + line_gap
+        if len(self.items) > 10:        # Long CJK lines: keep the whole pop under a second.
+            self.gap = min(gap, 0.75 / len(self.items))
         self.width, self.height = width, y
 
     def draw(self, frame, t, start, x0, y0, alpha=1.0):
@@ -740,7 +780,7 @@ def render(a, t):
                 else:
                     pd.rounded_rectangle((40, y + 56, 40 + width, y + 80), 12,
                                          fill=(220, 232, 255) if kind == '5h' else VIOLET, outline=(129, 119, 159), width=2)
-            pd.text((780, y + 2), f'{int(value * clamp(grow)):d}% {T["left"]}', font=a.f_pill, fill=INK, anchor='ra')
+            pd.text((780, y + 2), T['left_fmt'].format(v=int(value * clamp(grow))), font=a.f_pill, fill=INK, anchor='ra')
             if reset and k > at:
                 left = reset - int(k - at)
                 dd, rem = divmod(left, 86400)
@@ -1055,6 +1095,8 @@ def main():
     parser.add_argument('--ffmpeg', default=None)
     parser.add_argument('--preview', type=float, nargs='*', help='Save stills at these seconds and exit')
     args = parser.parse_args()
+    if args.language == 'zh_CN':
+        FONT_MAP.update(ZH_FONTS)
     assets = Assets(args.assets, args.language)
     if args.preview:
         for sec in args.preview:

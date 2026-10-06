@@ -123,12 +123,16 @@ def main():
         panel.open_workbench()
         window = panel.workbench_window
         store = window.store
+        zh = args.language == 'zh_CN'
         project = store.create_project('Petoken')
-        store.create_project('Study')
-        for title in ('Review the Codex result', 'Plan the next release', 'Reply to issues'):
+        store.create_project('学习' if zh else 'Study')
+        todos = (('看看 Codex 的结果', '规划下一个版本', '回复 issue') if zh else
+                 ('Review the Codex result', 'Plan the next release', 'Reply to issues'))
+        for title in todos:
             store.create_todo(title, project['id'])
-        store.create_note('Release checklist', 'Run the tests, build, publish.', project['id'])
-        window.add_reminder('Stretch and drink water', 'daily',
+        store.create_note('发布清单' if zh else 'Release checklist',
+                          '跑测试、打包、发布。' if zh else 'Run the tests, build, publish.', project['id'])
+        window.add_reminder('起来活动一下，喝口水' if zh else 'Stretch and drink water', 'daily',
                             datetime.datetime.now() + datetime.timedelta(hours=2))
         window.resize(1060, 720)
         window.refresh()
