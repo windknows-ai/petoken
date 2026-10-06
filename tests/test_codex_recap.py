@@ -1,10 +1,13 @@
 import json
 from contextlib import closing
+import os
 from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 
+import codex_recap
 from codex_recap import epoch, recap, thread_rows
 
 
@@ -267,6 +270,178 @@ class RecapTests(unittest.TestCase):
             connection.execute('CREATE TABLE threads (id INTEGER, source TEXT)')
             connection.commit()
         self.assertEqual(thread_rows(self.home), [])
+
+
+class ActivityTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.home = Path(temp.name)
+        self.fixture = RecapFixture(self.home)
+
+    def test_each_completed_turn_and_cutoff_use_end_not_start(self):
+        self.fixture.add(events=[event('turn_started', 100, turn_id='a'),
+            event('task_complete', 120, turn_id='a'),
+            event('task_started', 200, turn_id='b'), event('turn_complete', 240, turn_id='b'),
+            event('turn_started', 300, turn_id='c')])
+        self.assertEqual(codex_recap.activity(self.home, 120),
+                         dict(turns=[(100., 120., 'Project'), (200., 240., 'Project')], edits=[]))
+        self.assertEqual(codex_recap.activity(self.home, 121)['turns'], [(200., 240., 'Project')])
+
+    def test_all_top_level_sources_and_terminal_tags(self):
+        for index, source in enumerate(('desktop', 'vscode', 'cli', 'exec')):
+            self.fixture.add(source, source, events=[event('turn_started', 100 + index),
+                event(('task_complete', 'turn_complete', 'turn_aborted', 'task_complete')[index], 120 + index)])
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'],
+                         [(100. + i, 120. + i, 'Project') for i in range(4)])
+
+    def test_turn_identity_missing_starts_and_duplicate_completions(self):
+        self.fixture.add(events=[event('task_complete', 95, started_at=90),
+            event('turn_started', 100, turn_id='a'), event('turn_complete', 105, turn_id='other'),
+            event('turn_complete', 120, turn_id='a'), event('task_complete', 130, turn_id='a'),
+            event('turn_started', 140, turn_id='b'), event('turn_complete', None, turn_id='b'),
+            event('turn_complete', 150, turn_id='b')])
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Project')])
+
+    def test_unknown_invalid_reversed_and_explicit_times(self):
+        self.fixture.add(events=[event('turn_started', None), event('task_complete', 110),
+            event('turn_started', 150), event('turn_complete', 140),
+            event('turn_started', '2026-10-06T00:00:00'), event('task_complete', 200),
+            event('turn_started', None, started_at=210), event('task_complete', None, completed_at=230),
+            event('patch_apply_end', None, success=True, changes={'unknown.py': {'type': 'add'}}),
+            event('patch_apply_end', True, success=True, changes={'invalid.py': {'type': 'add'}})])
+        self.assertEqual(codex_recap.activity(self.home, 0),
+                         dict(turns=[(210., 230., 'Project')], edits=[]))
+
+    def test_successful_edits_have_per_event_times_and_inclusive_cutoff(self):
+        self.fixture.add(events=[event('patch_apply_end', 109, success=True, changes={'old.py': {'type': 'add'}}),
+            event('patch_apply_end', 110, success=True, changes={
+                'z.py': {'type': 'delete'}, 'a.py': {'type': 'update', 'move_path': 'b.py'}}),
+            event('item_completed', 120, item=dict(type='FileChange', status='completed',
+                changes={'a.py': {'type': 'update', 'unified_diff': 'PRIVATE'}})),
+            event('patch_apply_end', 130, success=False, changes={'failed.py': {'type': 'add'}}),
+            event('patch_apply_end', 140, success=True, status='declined', changes={'declined.py': {'type': 'add'}}),
+            event('item_completed', 150, item=dict(type='FileChange', status='inProgress',
+                changes={'proposed.py': {'type': 'add'}}))])
+        result = codex_recap.activity(self.home, 110)
+        self.assertEqual(result, dict(turns=[], edits=[(110., 'Project', 'a.py'),
+            (110., 'Project', 'b.py'), (110., 'Project', 'z.py'), (120., 'Project', 'a.py')]))
+        self.assertNotIn('PRIVATE', json.dumps(result))
+
+    def test_iso_timestamps_and_posix_paths(self):
+        self.fixture.add(cwd='/project', events=[
+            event('turn_started', '2026-10-06T00:00:00Z'),
+            event('patch_apply_end', '2026-10-06T00:00:01+00:00', success=True,
+                  changes={'/project/a.py': {'type': 'delete'}}),
+            event('turn_complete', '2026-10-06T00:00:02Z')])
+        self.assertEqual(codex_recap.activity(self.home, '2026-10-06T00:00:01Z'),
+                         dict(turns=[(1791244800., 1791244802., 'project')],
+                              edits=[(1791244801., 'project', 'a.py')]))
+
+    def test_unconfirmed_tool_output_is_not_a_structured_edit(self):
+        self.fixture.add(events=[dict(type='response_item', timestamp=100,
+            payload=dict(type='custom_tool_call', name='apply_patch', call_id='p')),
+            dict(type='response_item', timestamp=110,
+            payload=dict(type='custom_tool_call_output', call_id='p',
+                         output='Success. Updated the following files:\nM a.py\n'))])
+        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[], edits=[]))
+
+    def test_huge_and_nonfinite_event_times_are_unknown(self):
+        for index, value in enumerate((10**400, float('inf'), float('nan'), True)):
+            self.fixture.add(str(index), events=[event('turn_started', value),
+                event('turn_complete', 120), event('patch_apply_end', value, success=True,
+                                              changes={'unknown.py': {'type': 'add'}})])
+        self.assertIsNone(epoch(10**400))
+        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[], edits=[]))
+
+    def test_edit_paths_are_deduplicated_within_event_not_across_events(self):
+        changes = {'a.py': {'type': 'update', 'move_path': 'a.py'},
+                   'D:/Project/a.py': {'type': 'update'}}
+        self.fixture.add(events=[event('patch_apply_end', 110, success=True, changes=changes),
+                                 event('patch_apply_end', 120, success=True, changes=changes)])
+        self.assertEqual(codex_recap.activity(self.home, 0)['edits'],
+                         [(110., 'Project', 'a.py'), (120., 'Project', 'a.py')])
+
+    def test_extended_drive_unc_and_changed_cwd_paths(self):
+        for index, (root, cwd, absolute) in enumerate([
+            (r'\\?\D:\Project', r'D:\Project\src', r'D:\Project\b.py'),
+            (r'\\?\UNC\server\share\Project', r'\\server\share\Project\src',
+             r'\\server\share\Project\b.py'),
+        ]):
+            self.fixture.add(str(index), cwd=root, events=[
+                dict(type='turn_context', payload=dict(cwd=cwd)),
+                event('patch_apply_end', 100 + index, success=True, changes={
+                    'a.py': {'type': 'add'}, absolute: {'type': 'update'},
+                    r'..\..\outside.py': {'type': 'add'}, r'E:\outside.py': {'type': 'add'}})])
+        self.assertEqual(codex_recap.activity(self.home, 0)['edits'],
+                         [(100., 'Project', 'b.py'), (100., 'Project', 'src/a.py'),
+                          (101., 'Project', 'b.py'), (101., 'Project', 'src/a.py')])
+
+    def test_old_rollout_is_not_opened_and_mtime_boundary_is_inclusive(self):
+        old = self.fixture.add('old', events=[event('turn_started', 100), event('task_complete', 200)])
+        recent = self.fixture.add('recent', events=[event('turn_started', 100), event('task_complete', 120)])
+        os.utime(old, (99, 99))
+        os.utime(recent, (100, 100))
+        with patch('codex_recap._rollout_events', wraps=codex_recap._rollout_events) as read:
+            self.assertEqual(codex_recap.activity(self.home, 100)['turns'], [(100., 120., 'Project')])
+        self.assertEqual([call.args[0]['id'] for call in read.call_args_list], ['recent'])
+
+    def test_fork_copied_history_is_excluded(self):
+        self.fixture.add(meta=dict(forked_from_id='parent', timestamp=150), events=[
+            event('turn_started', 100), event('patch_apply_end', 110, success=True,
+                changes={'copied.py': {'type': 'add'}}), event('task_complete', 120),
+            event('turn_started', 160), event('patch_apply_end', 170, success=True,
+                changes={'own.py': {'type': 'add'}}), event('task_complete', 180)])
+        self.assertEqual(codex_recap.activity(self.home, 0),
+                         dict(turns=[(160., 180., 'Project')], edits=[(170., 'Project', 'own.py')]))
+
+    def test_duplicates_archived_and_distinct_subagent_turns(self):
+        self.fixture.add(events=[event('turn_started', 100), event('task_complete', 120)])
+        self.fixture.add('child', source='{"subagent":{"thread_spawn":{"parent_thread_id":"task"}}}',
+                         events=[event('turn_started', 100), event('task_complete', 120)])
+        self.fixture.add('conflict', events=[event('turn_started', 200), event('task_complete', 220)])
+        with closing(sqlite3.connect(self.fixture.db)) as connection:
+            connection.execute("UPDATE threads SET archived=1 WHERE id='task'")
+            connection.execute("INSERT INTO threads SELECT * FROM threads WHERE id='task'")
+            connection.execute("INSERT INTO threads SELECT id,source,cwd,'other.jsonl',title,name,project_id,archived FROM threads WHERE id='conflict'")
+            connection.commit()
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'],
+                         [(100., 120., 'Project'), (100., 120., 'Project')])
+
+    def test_project_name_uses_existing_assignment_metadata(self):
+        self.fixture.add(events=[event('turn_started', 100), event('task_complete', 120)])
+        (self.home/'.codex-global-state.json').write_text(json.dumps({
+            'thread-project-assignments': {'task': {'projectId': 'p'}},
+            'local-projects': {'p': {'name': 'Named Project'}}}), encoding='utf-8')
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Named Project')])
+
+    def test_absent_project_stays_none_and_wrong_thread_events_are_skipped(self):
+        self.fixture.add(cwd='', events=[event('turn_started', 100),
+            event('patch_apply_end', 110, success=True, changes={'a.py': {'type': 'add'}}),
+            event('turn_complete', 115, thread_id='other'), event('task_complete', 120)])
+        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[(100., 120., None)], edits=[]))
+
+    def test_corrupt_incomplete_and_mismatched_rollouts_fail_closed(self):
+        for name, meta, suffix in [('corrupt', {}, '{bad}\n'), ('partial', {}, '{"type":'),
+                                   ('wrong', {'id': 'other'}, ''),
+                                   ('fork', {'forked_from_id': 'parent', 'timestamp': None}, '')]:
+            path = self.fixture.add(name, meta=meta, events=[event('turn_started', 100), event('task_complete', 120)])
+            with path.open('a', encoding='utf-8') as stream:
+                stream.write(suffix)
+        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[], edits=[]))
+
+    def test_invalid_since_missing_sources_and_readonly_files(self):
+        path = self.fixture.add(events=[event('turn_started', 100), event('task_complete', 120)])
+        before = {file.name: (file.read_bytes(), file.stat().st_mtime_ns) for file in self.home.iterdir()}
+        for since in (None, True, -1, float('nan'), float('inf'), 10**400, 'unknown'):
+            self.assertEqual(codex_recap.activity(self.home, since), dict(turns=[], edits=[]))
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Project')])
+        self.assertEqual({file.name: (file.read_bytes(), file.stat().st_mtime_ns) for file in self.home.iterdir()}, before)
+        path.unlink()
+        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[], edits=[]))
+        self.fixture.db.unlink()
+        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[], edits=[]))
+        self.assertFalse(self.fixture.db.exists())
 
 
 if __name__ == '__main__':
