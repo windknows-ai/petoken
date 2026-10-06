@@ -1,0 +1,1251 @@
+{
+  "assets": [
+    {
+      "file": "sleep_1.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        40,
+        287,
+        1214,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "734eea6981869bba2ee681aac5e8d5ec6399198fc64e7d68a57e7c8621da6bec",
+      "generation": {
+        "name": "sleep_1",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px, lying face-down on her stomach on a small round lavender cushion, cheek resting on her folded arms, legs stretched out behind and slightly bent up at the knees, eyes peacefully closed, relaxed sleeping face, viewed from the front-side. FRAME 1 of breathing: back gently raised on inhale. Two small hollow lavender breath bubbles above, SYMBOLS ONLY, absolutely no Zzz letters. A clearly low HORIZONTAL sleeping silhouette, head on viewer-left, torso and raised feet extending toward viewer-right, no tucked knees seated pose. Keep visible crescent/star fabric and stocking star motifs. Cushion entirely inside canvas, its bottom at y1218. Input image role: idle.png is ONLY a CHARACTER DESIGN / COSTUME / LINEWORK reference, NOT an edit target. RE-DRAW EVERY PART IN THIS NEW FULL-BODY POSE, not a local face/hand edit of idle. Keep original hair curls, feather ornament, deep indigo clothing with white silver trim, bare shoulders and gloves, crescent and star designs, avoid costume redesign. Single full sprite, 1254x1254 transparent RGBA canvas; no rectangular backdrop, checkerboard, floor, ground, cast shadow, text or watermark. Entire character and props within x40..1214, y24..1218, lowest contact pixel about y1218, large enough to read at128px. Transparent area above horizontal poses is expected; don't stretch anatomy vertically to fill it. Exactly two arms/two legs. This is a new full-body first frame.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-dc6b8fb3-f9d0-4406-99f8-91f3b32db07f.png"
+      },
+      "normalization": {
+        "name": "sleep_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-dc6b8fb3-f9d0-4406-99f8-91f3b32db07f.png",
+        "source_bbox": [
+          26,
+          218,
+          1238,
+          1180
+        ],
+        "scale": 0.9686468646864687,
+        "offset": [
+          40,
+          287
+        ],
+        "alpha_bbox": [
+          40,
+          287,
+          1214,
+          1219
+        ]
+      }
+    },
+    {
+      "file": "sleep_2.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        40,
+        287,
+        1214,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "72e14f45089bf4cc9b647bf0bef2d7b721421ae3a3736bb5f60e32074c2e1054",
+      "generation": {
+        "name": "sleep_2",
+        "parent": "sleep_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Breathing FRAME2 exhale: lower the back and rear shoulder curve very gently about 6 pixels, keep resting head, closed eyelids, folded forearms, cushion and BOTH legs/feet frozen. The two breath bubbles drift 8 pixels UP without changing their shape. Only the back/upper torso near x785..1085 y785..980 and isolated bubbles x118..224 y490..650 change. No whole-body translation. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-af7663d6-37b7-4051-aa89-051b1d061a70.png"
+      },
+      "composition": {
+        "name": "sleep_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-af7663d6-37b7-4051-aa89-051b1d061a70.png",
+        "parent": "sleep_1",
+        "parts": [
+          [
+            [
+              785,
+              819
+            ],
+            [
+              845,
+              785
+            ],
+            [
+              927,
+              778
+            ],
+            [
+              1020,
+              821
+            ],
+            [
+              1085,
+              928
+            ],
+            [
+              1030,
+              969
+            ],
+            [
+              950,
+              990
+            ],
+            [
+              844,
+              953
+            ],
+            [
+              780,
+              923
+            ]
+          ],
+          [
+            118,
+            490,
+            224,
+            650
+          ]
+        ],
+        "symbol": {
+          "rect": [
+            118,
+            490,
+            224,
+            650
+          ],
+          "offset": [
+            0,
+            -8
+          ]
+        },
+        "feather_px": 2,
+        "mask_bbox": [
+          113,
+          485,
+          1091,
+          996
+        ],
+        "alpha_bbox": [
+          40,
+          287,
+          1214,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        132,
+        485,
+        1088,
+        994
+      ],
+      "changed_pixels": 53802
+    },
+    {
+      "file": "sleep_3.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        40,
+        287,
+        1214,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "916560be9d19c33330f0dd2caaa6e73688012b6aab5eb9b4cfe49b9b2e9859a3",
+      "generation": {
+        "name": "sleep_3",
+        "parent": "sleep_1",
+        "prompt": "Precise LOCAL animation edit of this locked sleeping first-frame sprite. Keep the entire head, closed eyes, hair, outfit, cushion, bubbles, BOTH arms, back, other leg, scale and position EXACTLY unchanged. Change ONLY the far-right raised stocking boot and its bent calf: tilt this boot slightly INWARD toward the other boot, about 10 pixels, making a gentle ankle wiggle. Crucial: the entire boot contour must stay inside x1214, leave at least 40 transparent pixels at the right canvas edge; DO NOT swing outward or clip the toe. Preserve white four-point star motif and matching dark stocking. Do not add a third boot. No changes to cushion baseline y1218. Only x1030..1210 y600..950 may move. 1254x1254 transparent RGBA full sprite, no text, no shadows or background, no global translation.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-b84c3e46-cb5d-4875-acb9-93382b1ecd32.png",
+        "stage": "inward-foot correction"
+      },
+      "composition": {
+        "name": "sleep_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-b84c3e46-cb5d-4875-acb9-93382b1ecd32.png",
+        "parent": "sleep_1",
+        "parts": [
+          [
+            [
+              1110,
+              590
+            ],
+            [
+              1205,
+              590
+            ],
+            [
+              1210,
+              741
+            ],
+            [
+              1207,
+              908
+            ],
+            [
+              1164,
+              958
+            ],
+            [
+              1110,
+              943
+            ],
+            [
+              1105,
+              855
+            ],
+            [
+              1105,
+              742
+            ]
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          1100,
+          585,
+          1216,
+          964
+        ],
+        "alpha_bbox": [
+          40,
+          287,
+          1214,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        1100,
+        595,
+        1213,
+        961
+      ],
+      "changed_pixels": 25952
+    },
+    {
+      "file": "bored_1.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "d9655a8311f7bf64fd3b9981fd5b63e94f59e7371cdd5c988db32c1880e1f63e",
+      "generation": {
+        "name": "bored_1",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px, lying on her stomach propped up on both elbows, chin resting in both hands, legs bent up behind her and crossed at the ankles, half-lidded bored violet eyes looking off to the side, small flat pouty mouth. Elbows support the large head HIGH above her reclining torso, head toward viewer-right and feet curl up behind toward viewer-left; no cushion or furniture. Distinct arch-shaped propped posture, not sleeping flat, not seated. FRAME 1 legs centered, hands support chin, stockings white four-point stars visible. Input image role: idle.png is ONLY a CHARACTER DESIGN / COSTUME / LINEWORK reference, NOT an edit target. RE-DRAW EVERY PART IN THIS NEW FULL-BODY POSE, not a local face/hand edit of idle. Keep original hair curls, feather ornament, deep indigo clothing with white silver trim, bare shoulders and gloves, crescent and star designs, avoid costume redesign. Single full sprite, 1254x1254 transparent RGBA canvas; no rectangular backdrop, checkerboard, floor, ground, cast shadow, text or watermark. Entire character and props within x40..1214, y24..1218, lowest contact pixel about y1218, large enough to read at128px. Transparent area above horizontal poses is expected; don't stretch anatomy vertically to fill it. Exactly two arms/two legs. This is a new full-body first frame.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-6d531211-a246-43d5-868a-2aa46e6a7383.png"
+      },
+      "normalization": {
+        "name": "bored_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-6d531211-a246-43d5-868a-2aa46e6a7383.png",
+        "source_bbox": [
+          12,
+          90,
+          1246,
+          1182
+        ],
+        "scale": 0.9513776337115073,
+        "offset": [
+          40,
+          180
+        ],
+        "alpha_bbox": [
+          40,
+          180,
+          1214,
+          1219
+        ]
+      }
+    },
+    {
+      "file": "bored_2.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "4b67fda97f77b183a55cf59c23676a55ba19c3494a633f43fcd8952c44ba3cdf",
+      "generation": {
+        "name": "bored_2",
+        "parent": "bored_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Bored idle FRAME2: BOTH crossed bent-up lower legs swing together gently 20 pixels toward viewer-left, pivot at knees, ankles still crossed. Keep head, both elbows, chin-in-hands, half-lidded violet eyes, mouth, all hair and torso exactly the same. Edit only the two legs on LEFT approximately x90..435 y435..1055. No extra legs or props, preserve stocking white star symbols. Torso/elbows lowest at y1218 fixed. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-68e3c2fa-0a3b-4abd-8a39-3f4843af5404.png"
+      },
+      "composition": {
+        "name": "bored_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-68e3c2fa-0a3b-4abd-8a39-3f4843af5404.png",
+        "parent": "bored_1",
+        "parts": [
+          [
+            [
+              55,
+              430
+            ],
+            [
+              370,
+              405
+            ],
+            [
+              520,
+              492
+            ],
+            [
+              534,
+              702
+            ],
+            [
+              425,
+              875
+            ],
+            [
+              370,
+              935
+            ],
+            [
+              326,
+              1055
+            ],
+            [
+              216,
+              1075
+            ],
+            [
+              55,
+              1066
+            ],
+            [
+              55,
+              930
+            ],
+            [
+              113,
+              728
+            ]
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          50,
+          400,
+          540,
+          1081
+        ],
+        "alpha_bbox": [
+          40,
+          180,
+          1214,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        50,
+        478,
+        538,
+        1078
+      ],
+      "changed_pixels": 168016
+    },
+    {
+      "file": "bored_3.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "c531061efec2448f53330440a98677860eff507a4419b42b432b85532e43b594",
+      "generation": {
+        "name": "bored_3",
+        "parent": "bored_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Bored idle FRAME3: BOTH crossed bent-up lower legs swing together 20 pixels toward viewer-right, pivot at knees; ankles remain crossed, as opposite phase to left swing. Freeze head/elbows/hands/eyes/mouth/hair/torso and overall position. Only legs in x90..435 y435..1055 are moving. Same thigh-high stockings and white stars. No new body, boots, hair or props. Torso/elbows baseline stays y1218. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-4a96a775-04f2-4ca0-8c94-dd004003d023.png"
+      },
+      "composition": {
+        "name": "bored_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-4a96a775-04f2-4ca0-8c94-dd004003d023.png",
+        "parent": "bored_1",
+        "parts": [
+          [
+            [
+              55,
+              430
+            ],
+            [
+              370,
+              405
+            ],
+            [
+              520,
+              492
+            ],
+            [
+              534,
+              702
+            ],
+            [
+              425,
+              875
+            ],
+            [
+              370,
+              935
+            ],
+            [
+              326,
+              1055
+            ],
+            [
+              216,
+              1075
+            ],
+            [
+              55,
+              1066
+            ],
+            [
+              55,
+              930
+            ],
+            [
+              113,
+              728
+            ]
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          50,
+          400,
+          540,
+          1081
+        ],
+        "alpha_bbox": [
+          40,
+          180,
+          1214,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        50,
+        476,
+        538,
+        1078
+      ],
+      "changed_pixels": 169614
+    },
+    {
+      "file": "bored_blink.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "ce5bfc71a2470397969bcff6bf14b391f3e0412227b514cbf5848c1e436acd45",
+      "generation": {
+        "name": "bored_blink",
+        "parent": "bored_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Eye-only blink: close BOTH half-lidded violet eyes into soft gently curved closed eyelash lines, entirely remove violet iris from each eye. Keep brows at exact original locations and keep all fringe, cheeks, tiny pout mouth, hands/elbows/legs/stocking stars unchanged. Left eye x725..921 y773..892, right eye x975..1140 y717..875. Only eyes change; no extra brow lines. No happy smile: preserve bored neutral expression. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-a09d4836-4799-48d6-8a5b-24169c3b813f.png"
+      },
+      "composition": {
+        "name": "bored_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-a09d4836-4799-48d6-8a5b-24169c3b813f.png",
+        "parent": "bored_1",
+        "parts": [
+          [
+            [
+              725,
+              773
+            ],
+            [
+              841,
+              766
+            ],
+            [
+              917,
+              787
+            ],
+            [
+              921,
+              839
+            ],
+            [
+              898,
+              884
+            ],
+            [
+              759,
+              892
+            ],
+            [
+              727,
+              851
+            ]
+          ],
+          [
+            [
+              982,
+              738
+            ],
+            [
+              1070,
+              717
+            ],
+            [
+              1140,
+              735
+            ],
+            [
+              1140,
+              821
+            ],
+            [
+              1102,
+              875
+            ],
+            [
+              1008,
+              872
+            ],
+            [
+              976,
+              813
+            ]
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          720,
+          712,
+          1146,
+          898
+        ],
+        "alpha_bbox": [
+          40,
+          180,
+          1214,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        721,
+        713,
+        1145,
+        897
+      ],
+      "changed_pixels": 46036
+    },
+    {
+      "file": "yawn_1.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        103,
+        24,
+        1150,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "f15d6216cb313779d26e3d0ac1b4eaaff8c87fdb4ee3ad2600e899e36f9a096d",
+      "generation": {
+        "name": "yawn_1",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px, sitting with both legs folded to one side, one gloved arm stretched high above her head, the other gloved hand covering a yawning mouth, eyes squeezed shut, small tear at the corner of one eye. FRAME 1 beginning yawn, medium-open mouth and raised arm bent slightly at elbow ready to extend higher; huge sleepy head leaning to viewer-left, knees and both booted stocking legs folded toward viewer-right. Asymmetric TALL SIDE-SEATED silhouette, very different from idle tucked-knees ball. Raised arm and ornament must fit fully in canvas. Input image role: idle.png is ONLY a CHARACTER DESIGN / COSTUME / LINEWORK reference, NOT an edit target. RE-DRAW EVERY PART IN THIS NEW FULL-BODY POSE, not a local face/hand edit of idle. Keep original hair curls, feather ornament, deep indigo clothing with white silver trim, bare shoulders and gloves, crescent and star designs, avoid costume redesign. Single full sprite, 1254x1254 transparent RGBA canvas; no rectangular backdrop, checkerboard, floor, ground, cast shadow, text or watermark. Entire character and props within x40..1214, y24..1218, lowest contact pixel about y1218, large enough to read at128px. Transparent area above horizontal poses is expected; don't stretch anatomy vertically to fill it. Exactly two arms/two legs. This is a new full-body first frame.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-160e801a-2cca-42d9-8543-671f326548c5.png"
+      },
+      "normalization": {
+        "name": "yawn_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-160e801a-2cca-42d9-8543-671f326548c5.png",
+        "source_bbox": [
+          91,
+          16,
+          1164,
+          1241
+        ],
+        "scale": 0.9755102040816327,
+        "offset": [
+          103,
+          24
+        ],
+        "alpha_bbox": [
+          103,
+          24,
+          1150,
+          1219
+        ]
+      }
+    },
+    {
+      "file": "yawn_2.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        103,
+        24,
+        1150,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "655baf818fe933df4a5bf97c5622e3e1960992faebff9e7c3551371fde41ee74",
+      "generation": {
+        "name": "yawn_2",
+        "parent": "yawn_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Yawn FRAME2 at peak: stretch the viewer-left raised arm HIGHER by straightening elbow and lift fist about 90 pixels, make visible yawning mouth a bit wider/larger, while covering viewer-right hand stays exactly same, eyes squeezed shut and tear unchanged. Head/hair/feather/torso/side-folded legs fixed. Only raised arm path x230..610 y220..835 and mouth x650..774 y643..757 change; keep top of ornament fully in canvas at y24 and feet y1218. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-818e6357-6139-47dc-ba34-a5b10a097bf6.png"
+      },
+      "composition": {
+        "name": "yawn_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-818e6357-6139-47dc-ba34-a5b10a097bf6.png",
+        "parent": "yawn_1",
+        "parts": [
+          [
+            [
+              232,
+              125
+            ],
+            [
+              450,
+              125
+            ],
+            [
+              500,
+              383
+            ],
+            [
+              594,
+              612
+            ],
+            [
+              630,
+              798
+            ],
+            [
+              552,
+              854
+            ],
+            [
+              472,
+              785
+            ],
+            [
+              440,
+              703
+            ],
+            [
+              393,
+              604
+            ],
+            [
+              332,
+              536
+            ],
+            [
+              243,
+              478
+            ]
+          ],
+          [
+            650,
+            643,
+            774,
+            757
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          227,
+          120,
+          780,
+          860
+        ],
+        "alpha_bbox": [
+          103,
+          24,
+          1150,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        283,
+        149,
+        780,
+        856
+      ],
+      "changed_pixels": 132013
+    },
+    {
+      "file": "yawn_3.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        103,
+        24,
+        1150,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "4af1fe8ea8ace2c7c6e375c8b217dde59891a25fe8f2cf4f6b60295b2f18896b",
+      "generation": {
+        "name": "yawn_3",
+        "parent": "yawn_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Yawn FRAME3 ending: lower viewer-left raised arm to about halfway, elbow bent and fist near shoulder/side of head around x345 y585, close yawning mouth into a tiny relaxed line beneath the same covering hand. Eyes remain peacefully shut, tear unchanged. Restore the original hair visible behind where old raised arm was, matching fixed neighboring hair lineart precisely. NO changes to head silhouette/ornament, covering hand, torso, seated side legs or baseline. Edit only raised arm corridor x230..610 y315..835 and tiny mouth x650..774 y643..757. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-71771b8d-14ef-4e42-a7f3-7df4e5cbdf30.png"
+      },
+      "composition": {
+        "name": "yawn_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-71771b8d-14ef-4e42-a7f3-7df4e5cbdf30.png",
+        "parent": "yawn_1",
+        "parts": [
+          [
+            225,
+            290,
+            625,
+            845
+          ],
+          [
+            650,
+            643,
+            774,
+            757
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          220,
+          285,
+          780,
+          851
+        ],
+        "alpha_bbox": [
+          103,
+          24,
+          1150,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        220,
+        285,
+        779,
+        851
+      ],
+      "changed_pixels": 212143
+    },
+    {
+      "file": "peek_1.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        51,
+        24,
+        1203,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "ec5a54f3829006ea36b5f165e6340812b5737f904bfac659f9708994fd1f31c4",
+      "generation": {
+        "name": "peek_1",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px, hiding in a LOW crouch behind a big round lavender cushion, only her mischievous watchful violet eyes, the top of her head and her ice-blue hair ornament visible ABOVE its upper edge, fingertips gripping the cushion edge. Cushion covers mouth, chest, and ALL lower body; do not show legs or sitting lap; no extra character. FRAME 1 head low behind cushion with both open eyes clearly visible. Broad cushion dominates lower silhouette, character top and hair feather above it. Full object entirely inside canvas, lowest cushion edge at y1218. Input image role: idle.png is ONLY a CHARACTER DESIGN / COSTUME / LINEWORK reference, NOT an edit target. RE-DRAW EVERY PART IN THIS NEW FULL-BODY POSE, not a local face/hand edit of idle. Keep original hair curls, feather ornament, deep indigo clothing with white silver trim, bare shoulders and gloves, crescent and star designs, avoid costume redesign. Single full sprite, 1254x1254 transparent RGBA canvas; no rectangular backdrop, checkerboard, floor, ground, cast shadow, text or watermark. Entire character and props within x40..1214, y24..1218, lowest contact pixel about y1218, large enough to read at128px. Transparent area above horizontal poses is expected; don't stretch anatomy vertically to fill it. Exactly two arms/two legs. This is a new full-body first frame.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d74e7fe1-2be8-43c4-bc97-d21b09551b39.png"
+      },
+      "normalization": {
+        "name": "peek_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d74e7fe1-2be8-43c4-bc97-d21b09551b39.png",
+        "source_bbox": [
+          31,
+          9,
+          1223,
+          1245
+        ],
+        "scale": 0.9668284789644013,
+        "offset": [
+          51,
+          24
+        ],
+        "alpha_bbox": [
+          51,
+          24,
+          1203,
+          1219
+        ]
+      }
+    },
+    {
+      "file": "peek_2.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        51,
+        15,
+        1203,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "62f04590af634283884ca4350fc11810595289db346fc0efb77d937874c7d326",
+      "generation": {
+        "name": "peek_2",
+        "parent": "peek_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Peek FRAME2: lift ONLY the exposed head and its hair ornament about 12 pixels above the cushion, so a little more upper cheeks become visible. Same open violet eyes peek mischievously. Cushion exact original shape, crescent design, folds, border and lowest y1218 are LOCKED. Fingertips stay gripping same cushion edge. Change only above/along top cushion edge, roughly x72..1178 y5..797. No body or legs suddenly appear. Maintain identical character scale, don't redraw cushion. Ornament not clipped at top; y>=5. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-dbf779d8-17d2-4bdc-8ec9-ea5ebcd70228.png"
+      },
+      "composition": {
+        "name": "peek_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-dbf779d8-17d2-4bdc-8ec9-ea5ebcd70228.png",
+        "parent": "peek_1",
+        "parts": [
+          [
+            72,
+            5,
+            1178,
+            797
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          67,
+          0,
+          1184,
+          803
+        ],
+        "alpha_bbox": [
+          51,
+          15,
+          1203,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        86,
+        15,
+        1184,
+        803
+      ],
+      "changed_pixels": 529674
+    },
+    {
+      "file": "pout_1.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        132,
+        24,
+        1122,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "a8dcef2eead8a94e11fe59718ae809813738d09b0f88bb20504f25dfdc30c32d",
+      "generation": {
+        "name": "pout_1",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px, standing upright with arms crossed tightly, cheeks puffed out, eyebrows furrowed, open violet eyes glaring cutely, one foot raised mid-stomp, small cartoon anger vein symbol beside her head. FRAME 1 raised viewer-left boot and firmly planted viewer-right boot. Full small standing torso and two short legs, tiny body under HUGE head, original star/moon outfit and dark stockings, no tucked-up knees or cushion. Cute defiant 'hmph', not sad or teary. Distinct vertical STANDING one-foot silhouette; planted boot lowest y1218. Input image role: idle.png is ONLY a CHARACTER DESIGN / COSTUME / LINEWORK reference, NOT an edit target. RE-DRAW EVERY PART IN THIS NEW FULL-BODY POSE, not a local face/hand edit of idle. Keep original hair curls, feather ornament, deep indigo clothing with white silver trim, bare shoulders and gloves, crescent and star designs, avoid costume redesign. Single full sprite, 1254x1254 transparent RGBA canvas; no rectangular backdrop, checkerboard, floor, ground, cast shadow, text or watermark. Entire character and props within x40..1214, y24..1218, lowest contact pixel about y1218, large enough to read at128px. Transparent area above horizontal poses is expected; don't stretch anatomy vertically to fill it. Exactly two arms/two legs. This is a new full-body first frame.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-626a984a-fbc1-473c-9a7f-76c76aef99d6.png"
+      },
+      "normalization": {
+        "name": "pout_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-626a984a-fbc1-473c-9a7f-76c76aef99d6.png",
+        "source_bbox": [
+          131,
+          12,
+          1147,
+          1239
+        ],
+        "scale": 0.973920130399348,
+        "offset": [
+          132,
+          24
+        ],
+        "alpha_bbox": [
+          132,
+          24,
+          1122,
+          1219
+        ]
+      }
+    },
+    {
+      "file": "pout_2.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        132,
+        24,
+        1122,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "f2918d506c57dbe4553d00a2f8eca6fa01475c9b28e27990afefe17fda8ff6ea",
+      "generation": {
+        "name": "pout_2",
+        "parent": "pout_1",
+        "prompt": "Use case: precise-object-edit. Animation sprite local edit. Image 1 is THIS ACTION'S LOCKED FIRST FRAME, NOT idle. Preserve its exact newly drawn whole-body pose, character/style/costume, 1254x1254 RGBA transparent canvas and fixed pixel positions outside the stated moving part. Never change scale, crop, resize, rotate or redraw the whole character. Pout FRAME2 stomp: lower the raised viewer-left leg onto the same baseline y1218 so BOTH feet are down now, knee straightening, left boot near x505 y1200; puff cheeks a bit more. Arms remain tightly crossed, eyes angry-cute open unchanged, exact eyebrows, hair, moon/star clothes and planted viewer-right leg frozen. Only moving left leg x395..670 y787..1218 and cheek/mouth x550..870 y550..690 repaint. Reconstruct small background/hair/hem exposed by moving former raised boot. No ground/shadow, no extra foot or third leg, don't translate whole body. Return one complete transparent 1254x1254 sprite, not an eye/foot crop, no background, checkerboard, floor, shadow, writing or Zzz, no new costume. Same clean thick navy outlines and soft lavender cel shading. No anti-alias dirty points in empty background.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-2ccf2dde-202c-4b63-ad92-1ffd715d166e.png"
+      },
+      "composition": {
+        "name": "pout_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-2ccf2dde-202c-4b63-ad92-1ffd715d166e.png",
+        "parent": "pout_1",
+        "parts": [
+          [
+            [
+              390,
+              801
+            ],
+            [
+              575,
+              780
+            ],
+            [
+              635,
+              820
+            ],
+            [
+              653,
+              905
+            ],
+            [
+              641,
+              992
+            ],
+            [
+              625,
+              1100
+            ],
+            [
+              605,
+              1230
+            ],
+            [
+              405,
+              1230
+            ],
+            [
+              384,
+              985
+            ]
+          ],
+          [
+            [
+              547,
+              551
+            ],
+            [
+              646,
+              536
+            ],
+            [
+              710,
+              559
+            ],
+            [
+              772,
+              573
+            ],
+            [
+              848,
+              581
+            ],
+            [
+              872,
+              641
+            ],
+            [
+              844,
+              677
+            ],
+            [
+              720,
+              695
+            ],
+            [
+              593,
+              665
+            ],
+            [
+              551,
+              621
+            ]
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          379,
+          531,
+          878,
+          1219
+        ],
+        "alpha_bbox": [
+          132,
+          24,
+          1122,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        381,
+        533,
+        875,
+        1219
+      ],
+      "changed_pixels": 121577
+    },
+    {
+      "file": "pout_blink.png",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_bbox": [
+        132,
+        24,
+        1122,
+        1219
+      ],
+      "baseline_y": 1218,
+      "sha256": "8b22f371990a041430a4df0f54cd53942394c5a4a35619142d6a4eb10085abc6",
+      "generation": {
+        "name": "pout_blink",
+        "parent": "pout_1",
+        "prompt": "Animation production eye-only blink of the attached locked full sprite. Do NOT move or redraw eyebrows: copy the ORIGINAL thin furrowed left eyebrow diagonal on the fringe at approximately x608..687 y439..515, and original right eyebrow x785..889 y492..542 EXACTLY. Do not add any extra eyebrow below the original. Close ONLY the open violet eyes into simple curved closed eyelash arcs, removing violet irises. Left eye lash should close around y548, right around y588. Preserve identical cheek outlines, mouth, blush, all hair/fringe lines and shading, crossed hands, pose, feet, feather, anger symbol and costume. Both eyes must remain grumpy-neutral, not a happy grin. Left eye's extreme lash tip extends to x510: remove all old open lash pixels, don't leave a detached triangular lash fragment. Full 1254x1254 transparent RGBA canvas and baseline y1218 exactly unchanged. This is only eyelid redraw. No background/text/shadow.",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-2f3d18a0-154d-4a8a-a79f-3c55950897bd.png",
+        "stage": "eyelash and eyebrow correction"
+      },
+      "composition": {
+        "name": "pout_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-2f3d18a0-154d-4a8a-a79f-3c55950897bd.png",
+        "parent": "pout_1",
+        "parts": [
+          [
+            [
+              501,
+              451
+            ],
+            [
+              626,
+              445
+            ],
+            [
+              709,
+              492
+            ],
+            [
+              723,
+              553
+            ],
+            [
+              691,
+              596
+            ],
+            [
+              553,
+              600
+            ],
+            [
+              510,
+              535
+            ]
+          ],
+          [
+            [
+              775,
+              515
+            ],
+            [
+              855,
+              496
+            ],
+            [
+              922,
+              525
+            ],
+            [
+              927,
+              574
+            ],
+            [
+              887,
+              624
+            ],
+            [
+              803,
+              619
+            ],
+            [
+              769,
+              582
+            ]
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          496,
+          440,
+          933,
+          630
+        ],
+        "alpha_bbox": [
+          132,
+          24,
+          1122,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        497,
+        442,
+        931,
+        628
+      ],
+      "changed_pixels": 46346
+    }
+  ],
+  "independent_first_pose_silhouettes": [
+    {
+      "actions": [
+        "sleep",
+        "bored"
+      ],
+      "different_silhouette_pixels": 260984
+    },
+    {
+      "actions": [
+        "sleep",
+        "yawn"
+      ],
+      "different_silhouette_pixels": 350871
+    },
+    {
+      "actions": [
+        "sleep",
+        "peek"
+      ],
+      "different_silhouette_pixels": 315930
+    },
+    {
+      "actions": [
+        "sleep",
+        "pout"
+      ],
+      "different_silhouette_pixels": 483576
+    },
+    {
+      "actions": [
+        "bored",
+        "yawn"
+      ],
+      "different_silhouette_pixels": 330725
+    },
+    {
+      "actions": [
+        "bored",
+        "peek"
+      ],
+      "different_silhouette_pixels": 309146
+    },
+    {
+      "actions": [
+        "bored",
+        "pout"
+      ],
+      "different_silhouette_pixels": 484576
+    },
+    {
+      "actions": [
+        "yawn",
+        "peek"
+      ],
+      "different_silhouette_pixels": 137283
+    },
+    {
+      "actions": [
+        "yawn",
+        "pout"
+      ],
+      "different_silhouette_pixels": 245741
+    },
+    {
+      "actions": [
+        "peek",
+        "pout"
+      ],
+      "different_silhouette_pixels": 282246
+    }
+  ],
+  "baseline_y": 1218,
+  "validated": 15
+}
