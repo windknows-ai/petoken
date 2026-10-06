@@ -52,6 +52,8 @@ BAR_H = 5
 BAR_GAP = 3
 RESET_H = 13
 SECTION_H = HEADER_H + VALUE_H + BAR_GAP + BAR_H + BAR_GAP + RESET_H
+HINT_H = 15                    # Optional advice line under a section (forecast.py).
+HINT = QColor('#B07612')
 SECTION_GAP = 7
 GAP_ABOVE_SPRITE = 2
 MIN_SCALE = 90
@@ -63,6 +65,7 @@ FONTS = {
     'value': (12, 11, 'Segoe UI'),
     'reset': (10, 10, 'Segoe UI'),
     'note': (10, 10, 'Microsoft YaHei UI'),
+    'hint': (10, 10, 'Microsoft YaHei UI'),
 }
 
 
@@ -123,18 +126,36 @@ def provider_section(provider, limits, context_used, project, language, now,
 
 
 def _working_task(panel, provider):
-    """Most recent running task of ``provider`` (context and project)."""
+    """Most recent running task of ``provider``: context, project, task key."""
     universe = getattr(getattr(panel, 'task_manager', None), '_universe', None) or {}
     tasks = [task for task in universe.values()
              if (task or {}).get('provider_id') == provider]
     if tasks:
         task = max(tasks, key=lambda t: _number(t.get('activity_at')) or 0)
         return ((task.get('presentation') or {}).get('context'),
-                (task.get('display') or {}).get('project'))
+                (task.get('display') or {}).get('project'), task.get('task_key'))
     working = (getattr(panel, 'snapshot', None) or {}).get('working_context') or {}
     if working.get('provider_id', (panel.snapshot or {}).get('provider_id')) == provider:
-        return working.get('context'), working.get('project')
-    return None, None
+        return working.get('context'), working.get('project'), None
+    return None, None, None
+
+
+def section_hint(assistant, provider, task_key, context, quotas, language, now):
+    """One line of advice for a section, or None."""
+    advice = assistant.hint(provider, task_key, context, quotas, now) if assistant else None
+    if advice is None:
+        return None
+    key, values = advice
+    values = dict(values)
+    if 'time' in values:
+        values['time'] = format_duration(values['time'])
+    if 'other' in values:
+        values['other'] = PROVIDER_NAMES.get(values['other'], values['other'])
+    if 'left' in values:
+        values['left'] = f"{values['left']:.0f}"
+    if 'minutes' in values:
+        values['minutes'] = f"{values['minutes']:.0f}"
+    return text(key, language, **values)
 
 
 def build_sections(panel, presence, now=None):
@@ -146,11 +167,12 @@ def build_sections(panel, presence, now=None):
         # Process list unreadable: fall back to the apps with running tasks.
         universe = getattr(getattr(panel, 'task_manager', None), '_universe', None) or {}
         apps = {(task or {}).get('provider_id') for task in universe.values()}
-    sections = []
+    sections, quotas, tasks = [], {}, {}
     for provider in PROVIDER_ORDER:
         if provider not in apps:
             continue
-        context, project = _working_task(panel, provider)
+        context, project, task_key = _working_task(panel, provider)
+        tasks[provider] = (task_key, context)
         if provider == 'codex':
             quota = getattr(panel, 'quota', None) or {}
             usable = (getattr(panel, 'quota_provider', None) or 'codex') == 'codex'
@@ -162,8 +184,16 @@ def build_sections(panel, presence, now=None):
             limits, stale = presence.claude_limits, False
             note = text('usage_claude_sync_on' if presence.claude_sync == 'on'
                         else 'usage_claude_sync_off', language)
+        if not stale:
+            quotas[provider] = limits
         sections.append(provider_section(provider, limits, context, project,
                                          language, now, note=note, stale=stale))
+    assistant = (getattr(panel, 'assistant', None)
+                 if panel.prefs.get('assistant_hints', True) else None)
+    for section in sections:
+        task_key, context = tasks[section['provider']]
+        section['hint'] = section_hint(assistant, section['provider'], task_key, context,
+                                       quotas, language, now)
     return sections
 
 
@@ -262,7 +292,8 @@ class UsageOverlay(QWidget):
             return  # Nothing changed this second: no relayout or repaint.
         self.sections, self.scale = sections, scale
         count = len(sections)
-        height = 2 * PAD + count * SECTION_H + max(0, count - 1) * SECTION_GAP
+        height = (2 * PAD + count * SECTION_H + max(0, count - 1) * SECTION_GAP
+                  + sum(HINT_H for section in sections if section.get('hint')))
         size = QSize(round(self._u(WIDTH)), round(self._u(height)))
         if self.size() != size:
             self.setFixedSize(size)
@@ -315,6 +346,13 @@ class UsageOverlay(QWidget):
                 y += u(SECTION_GAP)
             self._paint_section(p, section, y)
             y += u(SECTION_H)
+            if section.get('hint'):
+                p.setFont(self._font('hint', bold=True))
+                p.setPen(HINT)
+                width = self.width() - 2 * u(PAD)
+                p.drawText(QRectF(u(PAD), y, width, u(HINT_H)), Qt.AlignLeft | Qt.AlignVCenter,
+                           p.fontMetrics().elidedText(section['hint'], Qt.ElideRight, int(width)))
+                y += u(HINT_H)
 
     def _paint_section(self, p, section, y):
         u = self._u

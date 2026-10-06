@@ -224,7 +224,8 @@ class DesktopPet(QWidget):
         self.update()
 
     REACTIONS={'finished':('celebrate',6),'failed':('sad',8),'needs_approval':('wave',12),
-               'quota_low':('sad',6),'reminder':('wave',8)}
+               'quota_low':('sad',6),'reminder':('wave',8),'forecast':('wave',8),
+               'context_full':('wave',8),'stuck':('sad',6),'quota_back':('celebrate',6)}
 
     def react(self,kind):
         """Play the pose for a notification for a few seconds."""

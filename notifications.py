@@ -28,7 +28,9 @@ from PySide6.QtCore import QObject, Signal
 
 from usage import quota_window
 
-KINDS = ('finished', 'failed', 'needs_approval', 'quota_low', 'reminder')
+KINDS = ('finished', 'failed', 'needs_approval', 'quota_low', 'reminder',
+         # V1.6 predictions and suggestions (forecast.py).
+         'forecast', 'context_full', 'stuck', 'quota_back')
 REPEATS = ('once', 'daily', 'weekly')
 RETENTION_DAYS = 30
 DUPLICATE_WINDOW_S = 120

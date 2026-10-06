@@ -20,7 +20,8 @@ from workbench_store import WorkbenchError
 from notifications import KINDS as NOTIFY_KINDS, REPEATS
 
 NOTIFY_COLORS = dict(finished='#3E7D61', failed=theme.DANGER_TEXT, needs_approval='#C98A1E',
-                     quota_low=theme.VIOLET, reminder=theme.ICE)
+                     quota_low=theme.VIOLET, reminder=theme.ICE, forecast='#C98A1E',
+                     context_full=theme.INK, stuck=theme.DANGER_TEXT, quota_back='#3E7D61')
 _DOTS = {}
 
 
@@ -539,11 +540,11 @@ class WorkbenchWindow(QWidget):
             provider = PROVIDER_NAMES.get(event['provider'], '')
             kind = self.tr(f"notify_kind_{event['kind']}")
             detail = event['detail'] if event['kind'] in ('failed', 'reminder') else (
-                f"{event['detail']}%" if event['kind'] == 'quota_low' else '')
+                f"{event['detail']}%" if event['kind'] in ('quota_low', 'context_full') else '')
             parts = [self._when(event['at']), provider, kind, event['project'], detail]
             item = QListWidgetItem(_kind_dot(event['kind']), ' · '.join(part for part in parts if part))
             item.setData(Qt.UserRole, event)
-            if event['kind'] == 'needs_approval':
+            if event['kind'] in ('needs_approval', 'stuck', 'context_full'):
                 item.setToolTip(self.tr('wb_notify_open_hint'))
             self.notify_list.addItem(item)
             if selected and event['dedupe'] == selected:

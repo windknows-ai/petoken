@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
 
 import claude_events
 import claude_statusline
+from forecast import Assistant
 from notifications import NotificationCenter, NotificationStore
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import quota_window, sample_age
@@ -3757,6 +3758,10 @@ class Settings(QDialog):
         self.claude_notify.setEnabled(self._claude_notify_state != 'unreadable')
         self.claude_notify_label = label()
         self.form.addRow(self.claude_notify_label, self.claude_notify)
+        self.assistant_hints = QCheckBox()
+        self.assistant_hints.setChecked(bool(panel.prefs.get('assistant_hints', True)))
+        self.assistant_hints_label = label()
+        self.form.addRow(self.assistant_hints_label, self.assistant_hints)
         self.dnd = QCheckBox()
         self.dnd.setChecked(bool(panel.prefs.get('dnd_enabled')))
         self.dnd_label = label()
@@ -3886,6 +3891,10 @@ class Settings(QDialog):
             '\n' + t('claude_usage_sync_unreadable') if self._claude_notify_state == 'unreadable' else '')
         self.claude_notify.setToolTip(notify_tip)
         self.claude_notify_label.setToolTip(notify_tip)
+        self.assistant_hints_label.setText(t('assistant_hints'))
+        self.assistant_hints.setAccessibleName(t('assistant_hints'))
+        self.assistant_hints.setToolTip(t('assistant_hints_tip'))
+        self.assistant_hints_label.setToolTip(t('assistant_hints_tip'))
         self.dnd_label.setText(t('dnd'))
         self.dnd.setAccessibleName(t('dnd'))
         self.dnd.setToolTip(t('dnd_tip'))
@@ -3942,6 +3951,7 @@ class Settings(QDialog):
                      currency=self.currency.currentData(),
                      always_on_top=self.topmost.isChecked(),
                      star_ring_enabled=self.star_ring.isChecked(),
+                     assistant_hints=self.assistant_hints.isChecked(),
                      dnd_enabled=self.dnd.isChecked(),
                      dnd_scheduled=self.dnd_scheduled.isChecked(),
                      dnd_start=self.dnd_start.time().toString('HH:mm'),
@@ -4273,6 +4283,7 @@ class Panel(QWidget):
         self.notifications.recorded.connect(self._notifications_recorded)
         self.tray.messageClicked.connect(self.open_last_notification)
         self._last_notice = None
+        self.assistant = Assistant()
         self._slow_notify_at = 0.0
         self._claude_hooks_on = claude_events.state() == 'on'
         self.claude_events = claude_events.ClaudeEventReader() if live else None
@@ -4720,6 +4731,10 @@ class Panel(QWidget):
             self.notifications.observe_tasks(
                 tasks or [], preference,
                 hooks_providers=('claude',) if self._claude_hooks_on else ())
+            events = self.assistant.observe_tasks(tasks or [])
+            if self.prefs.get('assistant_hints', True):
+                for event in events:
+                    self.notifications.ingest(event)
         self.refresh_task_controls(data)
         self.task_manager.sync_motion()
 
@@ -4931,18 +4946,27 @@ class Panel(QWidget):
         if self.closing:
             return
         center = self.notifications
+        presence = getattr(getattr(self, 'pet', None), 'presence', None)
         if self.claude_events is not None:
             for event in self.claude_events.poll():
+                self.assistant.note_event(event)
+                if event.get('kind') == 'failed' and event.get('detail') == 'rate_limit':
+                    self.assistant.expect_reset('claude', getattr(presence, 'claude_limits', None))
                 center.ingest(event)
         now = time.time() if now is None else now
         if now - self._slow_notify_at < 30:
             return
         self._slow_notify_at = now
         self._claude_hooks_on = claude_events.state() == 'on'
+        quotas = {'claude': getattr(presence, 'claude_limits', None)}
         if (self.quota_provider or 'codex') == 'codex':
-            center.observe_quota('codex', (self.quota or {}).get('limits'), now)
-        presence = getattr(getattr(self, 'pet', None), 'presence', None)
-        center.observe_quota('claude', getattr(presence, 'claude_limits', None), now)
+            quotas['codex'] = (self.quota or {}).get('limits')
+        for provider, limits in quotas.items():
+            center.observe_quota(provider, limits, now)
+        events = self.assistant.observe_quota(quotas, now)
+        if self.prefs.get('assistant_hints', True):
+            for event in events:
+                center.ingest(event)
         center.fire_reminders(now)
 
     def notification_text(self, event):
@@ -4954,6 +4978,24 @@ class Panel(QWidget):
             return self.tr_text('notify_reminder'), event.get('detail') or ''
         if kind == 'quota_low':
             return self.tr_text('notify_quota_low', provider=provider, left=event.get('detail') or '?'), ''
+        if kind == 'forecast':
+            from usage_overlay import format_duration
+            seconds, _, other = (event.get('detail') or '').partition('|')
+            try:
+                when = format_duration(float(seconds))
+            except ValueError:
+                when = '?'
+            body = (self.tr_text('notify_forecast_switch', other=PROVIDER_NAMES.get(other, other))
+                    if other else '')
+            return self.tr_text('notify_forecast', provider=provider, time=when), body
+        if kind == 'context_full':
+            body = self.tr_text('notify_context_full_body', left=event.get('detail') or '?')
+            return (self.tr_text('notify_context_full', provider=provider),
+                    ' · '.join(part for part in (project, body) if part))
+        if kind == 'stuck':
+            return self.tr_text('notify_stuck', provider=provider, minutes=event.get('detail') or '?'), project
+        if kind == 'quota_back':
+            return self.tr_text('notify_quota_back', provider=provider), ''
         title = self.tr_text(f'notify_{kind}', provider=provider)
         detail = event.get('detail') if kind == 'failed' else ''
         return title, ' · '.join(part for part in (project, detail) if part)
@@ -4977,7 +5019,8 @@ class Panel(QWidget):
         identity = ((event or {}).get('provider'), (event or {}).get('task_key'))
         # Finished, failed and reminder events are history; only a pending
         # approval still has something to act on.
-        if (event or {}).get('kind') == 'needs_approval' and identity in self.task_manager._universe:
+        if ((event or {}).get('kind') in ('needs_approval', 'stuck', 'context_full')
+                and identity in self.task_manager._universe):
             self.task_manager.activate_task(identity, keyboard=True)
             return
         self.open_workbench()

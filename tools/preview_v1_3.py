@@ -94,6 +94,16 @@ def fixture_tasks(count=3, case='known', source='mixed'):
 
 
 PLANS = ('plus', 'pro')
+# Synthetic forecast.py advice for the usage card (applies to every section).
+PREVIEW_HINTS = {
+    'none': None,
+    'run_out_switch': ('hint_run_out_switch', dict(time=48 * 60, other='codex')),
+    'run_out': ('hint_run_out', dict(time=95 * 60)),
+    'out_switch': ('hint_out_switch', dict(other='claude')),
+    'context_full': ('hint_context_full', dict(left=7)),
+    'week_run_out': ('hint_week_run_out', dict(time=86400 + 5 * 3600)),
+    'stuck': ('hint_stuck', dict(minutes=23)),
+}
 
 
 class SyntheticPresence:
@@ -214,10 +224,15 @@ class Preview(QWidget):
         # V1.6: synthetic notifications show the pop-up, the pet reaction
         # and the workbench Notifications list without running a task.
         self.panel.preview_toasts = True
-        self.notify_kind = self.combo(('finished', 'failed', 'needs_approval', 'quota_low', 'reminder'), 'finished')
+        from notifications import KINDS
+        self.notify_kind = self.combo(KINDS, 'finished')
         notify_button = QPushButton('Send test notification / 发送测试通知')
         notify_button.clicked.connect(self.send_notification)
         layout.addRow(self.notify_kind, notify_button)
+        # V1.6 A: the advice line under a usage-card section.
+        self.hint = self.combo(tuple(PREVIEW_HINTS), 'none')
+        self.hint.currentTextChanged.connect(self.set_hint)
+        layout.addRow('Card hint / 卡片提示', self.hint)
         quit_button = QPushButton('Exit preview / 退出预览')
         quit_button.clicked.connect(self.close)
         layout.addRow(quit_button)
@@ -368,8 +383,15 @@ class Preview(QWidget):
         self.panel.notifications.ingest(dict(
             kind=kind, provider=identity[0], task_key=identity[1], at=time.time(),
             project='SYNTHETIC QA', detail={'failed': 'rate_limit', 'quota_low': '18',
-                                            'reminder': 'SYNTHETIC reminder / 合成提醒'}.get(kind, ''),
+                                            'reminder': 'SYNTHETIC reminder / 合成提醒',
+                                            'forecast': f'{40 * 60}|codex', 'context_full': '8',
+                                            'stuck': '20'}.get(kind, ''),
             dedupe=f'preview:{self._notice_count}'), now=time.time() + self._notice_count * 1000)
+
+    def set_hint(self, name):
+        advice = PREVIEW_HINTS.get(name)
+        self.panel.assistant.hint = lambda *args, **kwargs: advice
+        self.pet.sync_usage_overlay()
 
     def set_scene_visible(self, visible):
         self.panel.set_panel_pinned(visible)

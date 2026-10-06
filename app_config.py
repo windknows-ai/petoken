@@ -32,6 +32,7 @@ DEFAULT_PREFERENCES = {
     "dnd_scheduled": False,
     "dnd_start": "22:00",
     "dnd_end": "08:00",
+    "assistant_hints": True,
 }
 
 
@@ -73,6 +74,8 @@ def normalize_preferences(data):
         preferences["star_ring_enabled"] = True
     if not isinstance(preferences.get("workbench_tutorial_seen"), bool):
         preferences["workbench_tutorial_seen"] = False
+    if not isinstance(preferences.get("assistant_hints"), bool):
+        preferences["assistant_hints"] = True
     for key in ("dnd_enabled", "dnd_scheduled"):
         if not isinstance(preferences.get(key), bool):
             preferences[key] = False
