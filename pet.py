@@ -265,6 +265,8 @@ class DesktopPet(QWidget):
             self.update_mood(now,task)
         focus=getattr(getattr(self.panel,'focus_mode',None),'phase','idle')
         focus_pose={'focus':'focus_read','break':'focus_tea'}.get(focus)
+        if task=='music' and int(time.time()//120)%2:
+            task='guitar'   # Every other two minutes of music she plays along.
         # Being dragged > notification > preview > interaction > focus > task > mood.
         state=(('dragged' if self.dragging and 'dragged' in self.sprites else None)
                or self.reaction_state or self.preview_state or self.interaction_state
@@ -318,6 +320,19 @@ class DesktopPet(QWidget):
             self.panel.prefs['mood_greeted_day']=self.mood.greeted_day
             self.panel.persist()
 
+    def demo_pose(self,pose,seconds=3.5):
+        """Show ``pose`` now for a few seconds (the pose guide's Show me)."""
+        token=object()
+        self._demo=token
+        self.preview_state=pose
+        self.update_activity()
+
+        def done():
+            if getattr(self,'_demo',None) is token:
+                self.preview_state=None
+                self.update_activity()
+        QTimer.singleShot(int(seconds*1000),done)
+
     def interact(self,pose,seconds):
         """Show an interaction pose for a moment; she notices you."""
         now=time.monotonic()
@@ -330,11 +345,25 @@ class DesktopPet(QWidget):
 
     REACTIONS={'finished':('celebrate',6),'failed':('sad',8),'needs_approval':('wave',12),
                'quota_low':('sad',6),'reminder':('wave',8),'forecast':('wave',8),
-               'context_full':('wave',8),'stuck':('sad',6),'quota_back':('celebrate',6)}
+               'context_full':('wave',8),'stuck':('sad',6),'quota_back':('celebrate',6),
+               'question':('thinking',12)}
 
-    def react(self,kind):
-        """Play the pose for a notification for a few seconds."""
+    def react(self,kind,event=None):
+        """Play the pose for a notification for a few seconds.
+
+        A finished task: surprised when it took under a minute, otherwise
+        cheering and a thumbs-up take turns.
+        """
         pose,seconds=self.REACTIONS.get(kind,(None,0))
+        if kind=='finished':
+            from notifications import parse_recap
+            took=(parse_recap((event or {}).get('detail')) or {}).get('seconds')
+            if isinstance(took,(int,float)) and took<60:
+                pose='surprised'
+            else:
+                turn=getattr(self,'_finish_turn',False)
+                pose='thumbs_up' if turn else 'celebrate'
+                self._finish_turn=not turn
         if pose is None or pose not in self.sprites:
             return
         self.reaction_state=pose

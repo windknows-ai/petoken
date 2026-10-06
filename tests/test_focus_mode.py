@@ -186,6 +186,9 @@ class FocusPetTests(unittest.TestCase):
         self.assertIn(self.pet.tr_text('focus_menu'), titles)
         menu.deleteLater()
         self.panel.start_focus(25)
+        self.assertEqual(self.pet.current_state, 'cheer')          # Go for it, then she reads.
+        self.pet.interaction_state = None
+        self.pet.update_activity()
         self.assertEqual(self.pet.current_state, 'focus_read')
         self.assertTrue(self.pet.focus_subtitle().startswith('Focus · 2'))
         with patch.object(self.pet, 'token_bubble_visible', return_value=True):
@@ -194,7 +197,7 @@ class FocusPetTests(unittest.TestCase):
             self.panel.announce(dict(kind='finished', provider='claude'))
             react.assert_not_called()
             self.panel.announce(dict(kind='failed', provider='claude'))
-            react.assert_called_once_with('failed')
+            react.assert_called_once_with('failed', dict(kind='failed', provider='claude'))
         menu = self.pet.context_menu()
         self.assertFalse(any(a.text().startswith('End focus') for a in menu.actions()))   # Not in the menu.
         menu.deleteLater()

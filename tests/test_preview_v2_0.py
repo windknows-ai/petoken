@@ -48,6 +48,8 @@ class PreviewV20Tests(unittest.TestCase):
         preview = self.preview
         preview.clock.set_speed(60)
         preview.panel.start_focus(25)
+        preview.pet.interaction_state = None              # After the cheer, she reads.
+        preview.pet.update_activity()
         self.assertEqual(preview.pet.current_state, 'focus_read')
         preview.focus_now()
         self.assertEqual(preview.panel.focus_mode.phase, 'break')
@@ -121,6 +123,8 @@ class CombinedPreviewTests(unittest.TestCase):
             base.pose.setCurrentText('idle')
             preview.pet.interaction_state = None          # The pat is over.
             preview.panel.start_focus(25)
+            preview.pet.interaction_state = None          # After the cheer, she reads.
+            preview.pet.update_activity()
             self.assertEqual(preview.pet.current_state, 'focus_read')
             preview.make_review()
         finally:

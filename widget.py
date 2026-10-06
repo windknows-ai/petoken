@@ -3721,7 +3721,8 @@ SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'about')
 
 # Which options each page shows, in order (row label attributes).
 SETTINGS_LAYOUT = (
-    ('general', ('language_label', 'pet_scale_label', 'clinginess_label', 'topmost_label', 'star_ring_label',
+    ('general', ('language_label', 'pet_scale_label', 'clinginess_label', 'poses_label', 'topmost_label',
+                 'star_ring_label',
                  'update_label', 'onboarding_label')),
     ('tracking', ('tracking_label', 'task_label', 'scope_label', 'token_format_label', 'currency_label')),
     ('claude', ('claude_sync_label', 'claude_notify_label', 'claude_approval_label', 'codex_hooks_label',
@@ -3734,7 +3735,8 @@ SETTINGS_LAYOUT = (
 SETTING_DESCRIPTIONS = (
     ('general', 'token_format_label', 'token_format'), ('general', 'currency_label', 'currency'),
     ('general', 'topmost_label', 'topmost'), ('general', 'star_ring_label', 'star_ring'),
-    ('general', 'clinginess_label', 'clinginess'), ('general', 'update_label', 'update'),
+    ('general', 'clinginess_label', 'clinginess'), ('general', 'poses_label', 'poses'),
+    ('general', 'update_label', 'update'),
     ('general', 'onboarding_label', 'onboarding'),
     ('tracking', 'task_label', 'task'), ('tracking', 'scope_label', 'scope'),
     ('tracking', 'tracking_label', 'tracking'),
@@ -3950,6 +3952,10 @@ class Settings(QDialog):
             panel.prefs.get('clinginess', 'moderate'))))
         self.clinginess_label = label()
         self.forms['general'].addRow(self.clinginess_label, self.clinginess)
+        self.poses_button = QPushButton()
+        self.poses_button.clicked.connect(self.open_pose_guide)
+        self.poses_label = label()
+        self.forms['general'].addRow(self.poses_label, self.poses_button)
         self.update_check = QCheckBox()
         self.update_check.setChecked(bool(panel.prefs.get('update_check', True)))
         self.update_auto = QCheckBox()
@@ -4078,6 +4084,10 @@ class Settings(QDialog):
                     row.addWidget(holder, 0, Qt.AlignRight | Qt.AlignVCenter)
                 column.addWidget(card)
             self.forms[page].insertRow(0, cards)
+
+    def open_pose_guide(self):
+        from pose_guide import PoseGuide
+        PoseGuide(self, self.parentWidget()).exec()
 
     def _describe_clinginess(self):
         for note, key in self.descriptions:
@@ -4249,6 +4259,9 @@ class Settings(QDialog):
         self.dnd_scheduled.setToolTip(t('dnd_tip'))
         self.pet_scale_label.setText(t('character_size'))
         self.clinginess_label.setText(t('clinginess'))
+        from pose_guide import pose_count
+        self.poses_label.setText(t('setting_poses'))
+        self.poses_button.setText(t('setting_poses_open', count=pose_count()))
         for index, key in enumerate(('quiet', 'moderate', 'clingy')):
             self.clinginess.setItemText(index, t(f'clinginess_{key}'))
         self.clinginess.setToolTip(t('clinginess_tip'))
@@ -5224,6 +5237,8 @@ class Panel(QWidget):
             project = self.continuation.observe(tasks or [])
             if project is not None:
                 self.show_continuation(project)
+            elif self.continuation.fresh and getattr(self, 'pet', None) is not None:
+                self.pet.interact('curious', 2.5)   # A new AI task: she leans in.
             events = self.assistant.observe_tasks(tasks or [])
             if self.prefs.get('assistant_hints', True):
                 for event in events:
@@ -5616,7 +5631,9 @@ class Panel(QWidget):
     def _approval_requested(self, request):
         pet = getattr(self, 'pet', None)
         if pet is not None and not quiet_now(self.prefs):
-            pet.react('needs_approval')
+            # A question or a plan to confirm: she thinks it over with you.
+            asks = (request or {}).get('tool') in ('AskUserQuestion', 'ExitPlanMode')
+            pet.react('question' if asks else 'needs_approval')
 
     def notification_text(self, event):
         """Title and body of a notification, in the UI language."""
@@ -5658,7 +5675,7 @@ class Panel(QWidget):
             return  # Focusing: recorded in Notifications, but no pop-up or reaction.
         pet = getattr(self, 'pet', None)
         if pet is not None:
-            pet.react(event.get('kind'))
+            pet.react(event.get('kind'), event)
         carded = (event.get('kind') == 'needs_approval' and self.approvals.active
                   and ((event.get('provider') == 'claude' and event.get('detail') != 'permission_prompt')
                        or (event.get('provider') == 'codex' and event.get('source') == 'hook'
@@ -5766,6 +5783,9 @@ class Panel(QWidget):
         if self._focus_card is not None:
             self._focus_card.close()
         self.focus_mode.start(minutes, todo)
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            pet.interact('cheer', 2.5)
 
     def _focus_todo_done(self, todo_id):
         store = self.workbench_store()
@@ -5873,6 +5893,9 @@ class Panel(QWidget):
             return
         if card is not None:
             card.set_note(note)
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            pet.interact('packing', 2.5)
         self._workbench_changed()
 
     def _delete_handoff(self, store, project, note_id, card=None):
