@@ -61,10 +61,17 @@ def epoch(value):
     return None
 
 
+def _without_extended_prefix(path):
+    if path[:8].upper() == '\\\\?\\UNC\\':
+        return '\\\\' + path[8:]
+    return path[4:] if path.startswith('\\\\?\\') else path
+
+
 def _relative(path, root, cwd):
     if not all(isinstance(value, str) and value and '\0' not in value
                for value in (path, root, cwd)):
         return None
+    path, root, cwd = map(_without_extended_prefix, (path, root, cwd))
     paths = ntpath if ntpath.splitdrive(root)[0] else posixpath
     if not paths.isabs(root) or not paths.isabs(cwd):
         return None
