@@ -159,6 +159,9 @@ class WorkbenchWindow(QWidget):
             QPushButton#danger:hover {{background:{theme.DANGER_HOVER_BG}; border-color:{theme.DANGER_TEXT};}}
             QPushButton#danger:pressed {{background:{theme.DANGER_HOVER_BG}; border-bottom-width:1px; padding-top:7px;}}
             QCheckBox {{spacing:8px; padding:5px;}}
+            QCheckBox::indicator {{width:16px; height:16px; border:1px solid {theme.BORDER_CONTROL}; border-radius:5px; background:{theme.CONTROL_BG};}}
+            QCheckBox::indicator:checked {{background:{theme.CHECK_BG}; border-color:{theme.VIOLET}; image:url("{ASSETS_DIR.as_posix()}/checkmark.svg");}}
+            QCheckBox::indicator:hover {{border-color:{theme.VIOLET};}}
             QHeaderView::section {{background:{theme.TABLE_HEADER}; color:{theme.INK}; padding:9px; border:0;}}
             QScrollBar:vertical {{background:transparent; width:9px;}}
             QScrollBar::handle:vertical {{background:{theme.BORDER}; min-height:24px; border-radius:5px;}}
@@ -171,6 +174,15 @@ class WorkbenchWindow(QWidget):
             QAbstractScrollArea::corner {{background:transparent;}}
             QSplitter::handle {{background:transparent;}}
             QComboBox {{padding:6px 30px 6px 10px;}}
+            QComboBox::drop-down {{subcontrol-origin:padding; subcontrol-position:center right; width:28px;
+                                   border:0; background:transparent;}}
+            QComboBox::down-arrow {{image:url("{ASSETS_DIR.as_posix()}/chevron-down.svg"); width:12px; height:12px;}}
+            QComboBox QAbstractItemView {{background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_CONTROL};
+                                          selection-background-color:{theme.TAB_SELECTED_BG}; selection-color:{theme.INK};
+                                          outline:0; padding:4px;}}
+            QPushButton::menu-indicator {{image:url("{ASSETS_DIR.as_posix()}/chevron-down.svg"); width:10px; height:10px;
+                                          subcontrol-origin:padding; subcontrol-position:center right; right:8px;}}
+            QPushButton[menuButton="true"] {{padding-right:26px;}}
             QWidget#projectShelf {{background:{theme.SURFACE_TOP}; border:1px solid {theme.BORDER_SOFT}; border-radius:12px;}}
             QListWidget#projectSpaces {{background:transparent; border:0; padding:4px 0px;}}
             QListWidget#projectSpaces::item {{padding:10px 7px; border-radius:7px;}}
@@ -299,6 +311,7 @@ class WorkbenchWindow(QWidget):
             self._tips.append((action, tip))
             setattr(self, attr, action)
         button.setMenu(menu)
+        button.setProperty('menuButton', True)
         layout.addWidget(button)
         return button
 
