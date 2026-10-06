@@ -239,6 +239,133 @@ class FocusMode(QObject):
             pass
 
 
+class FocusTag(QWidget):
+    """The countdown and its End button in a small window above her head.
+
+    Above the usage card when it shows, otherwise just above her head: the
+    task stars and the page buttons circle her feet, so nothing covers it.
+    """
+
+    GAP = 4
+
+    def __init__(self, pet):
+        super().__init__(None)
+        self.pet = pet
+        flags = Qt.Tool | Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus
+        if pet.panel.prefs.get('always_on_top', True):
+            flags |= Qt.WindowStaysOnTopHint
+        self.setWindowFlags(flags)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setMouseTracking(True)
+        self.text = ''
+        self.label = ''
+        self.hover = False
+        self.tag_rect = self.stop_rect = None
+
+    def _font(self):
+        from PySide6.QtGui import QFont
+        font = QFont('Segoe UI', self.pet._px(8))
+        font.setWeight(QFont.DemiBold)
+        return font
+
+    def sync(self):
+        """Show, update or hide to match the focus state; follow her."""
+        pet = self.pet
+        text = pet.focus_subtitle() if pet.isVisible() else None
+        if text is None:
+            if self.isVisible():
+                self.hide()
+            return
+        from PySide6.QtCore import QRectF, QSize
+        from PySide6.QtGui import QFontMetrics
+        mode = pet.panel.focus_mode
+        label = text_for(pet, 'focus_end_button' if mode.phase == 'focus' else 'focus_end_break_button')
+        if (text, label) != (self.text, self.label) or self.tag_rect is None:
+            self.text, self.label = text, label
+            metrics = QFontMetrics(self._font())
+            h, gap = pet._px(24), pet._px(5)
+            shown = metrics.elidedText(text, Qt.ElideRight, pet._px(200))
+            w = metrics.horizontalAdvance(shown) + pet._px(24)
+            bw = metrics.horizontalAdvance(label) + pet._px(20)
+            self.shown = shown
+            self.tag_rect = QRectF(.5, .5, w, h - 1)
+            self.stop_rect = QRectF(w + gap, .5, bw, h - 1)
+            size = QSize(int(w + gap + bw + 1), h)
+            if self.size() != size:
+                self.setFixedSize(size)
+            self.update()
+        self.follow()
+        if not self.isVisible():
+            self.show()
+            self.raise_()
+
+    def follow(self):
+        pet = self.pet
+        overlay = getattr(pet, 'usage_overlay', None)
+        if overlay is not None and overlay.isVisible():
+            top = overlay.y()
+        else:
+            top = pet.y() + pet._px(56)       # Just above her head.
+        x = pet.x() + (pet.width() - self.width()) // 2
+        y = top - self.height() - self.GAP
+        screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()
+        x = max(screen.left(), min(x, screen.right() - self.width() + 1))
+        y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))
+        if self.pos() != QPoint(x, y):
+            self.move(x, y)
+
+    def paintEvent(self, event):
+        from PySide6.QtGui import QColor, QPainter, QPen
+        if self.tag_rect is None:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setFont(self._font())
+        fill = QColor(theme.CARD)
+        fill.setAlpha(245)
+        p.setPen(QPen(QColor(theme.VIOLET), 1))
+        p.setBrush(fill)
+        radius = self.tag_rect.height() / 2
+        p.drawRoundedRect(self.tag_rect, radius, radius)
+        p.setPen(QColor(theme.VIOLET))
+        p.drawText(self.tag_rect, Qt.AlignCenter, self.shown)
+        p.setPen(QPen(QColor(theme.PRIMARY_FILL_PRESSED), 1))
+        p.setBrush(QColor(theme.PRIMARY_FILL_HOVER if self.hover else theme.PRIMARY_FILL))
+        p.drawRoundedRect(self.stop_rect, radius, radius)
+        p.setPen(QColor(theme.PRIMARY_TEXT))
+        p.drawText(self.stop_rect, Qt.AlignCenter, self.label)
+
+    def mouseMoveEvent(self, event):
+        hover = self.stop_rect is not None and self.stop_rect.contains(event.position())
+        if hover != self.hover:
+            self.hover = hover
+            self.setCursor(Qt.PointingHandCursor if hover else Qt.ArrowCursor)
+            self.update()
+
+    def leaveEvent(self, event):
+        if self.hover:
+            self.hover = False
+            self.update()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self.stop_rect is not None \
+                and self.stop_rect.contains(event.position()):
+            self.end()
+
+    def end(self):
+        mode = self.pet.panel.focus_mode
+        if mode.phase == 'focus':
+            mode.stop()
+        else:
+            mode.skip_break()
+        self.sync()
+
+
+def text_for(pet, key):
+    return text(key, pet.panel.prefs.get('language'))
+
+
 class FocusDialog(QDialog):
     """How long, on which todo (optional), and how breaks go."""
 

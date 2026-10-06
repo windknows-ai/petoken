@@ -198,17 +198,18 @@ class FocusPetTests(unittest.TestCase):
         menu = self.pet.context_menu()
         self.assertFalse(any(a.text().startswith('End focus') for a in menu.actions()))   # Not in the menu.
         menu.deleteLater()
-        # The End focus button sits beside the countdown at her feet.
+        # The countdown and its End focus button float above her head, in their own window.
+        self.pet.show()
+        self.pet.update_activity()
+        tag = self.pet.focus_tag
+        self.assertTrue(tag.isVisible())
+        self.assertLess(tag.geometry().bottom(), self.pet.y() + self.pet._px(64))
+        self.assertGreater(tag.stop_rect.left(), tag.tag_rect.right())
         from PySide6.QtCore import QEvent, QPointF, Qt
-        from PySide6.QtGui import QImage, QMouseEvent
-        image = QImage(self.pet.size(), QImage.Format_ARGB32_Premultiplied)
-        self.pet.render(image)
-        tag, stop, *_ = self.pet.focus_tag_layout()
-        self.assertGreater(stop.left(), tag.right())
-        self.assertLessEqual(stop.right(), self.pet.width())
-        point = stop.center()
-        self.pet.mousePressEvent(QMouseEvent(QEvent.MouseButtonPress, point, QPointF(self.pet.mapToGlobal(point.toPoint())),
-                                             Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+        from PySide6.QtGui import QMouseEvent
+        point = tag.stop_rect.center()
+        tag.mousePressEvent(QMouseEvent(QEvent.MouseButtonPress, point, QPointF(tag.mapToGlobal(point.toPoint())),
+                                        Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
         self.assertIsNotNone(self.panel._focus_card)
         self.assertIsNone(self.pet.focus_subtitle())
         self.panel._focus_card.close()

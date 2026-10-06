@@ -77,8 +77,7 @@ class DesktopPet(QWidget):
         self._pat_started=None
         self._pat_seen=0.0
         self._long_fired=False
-        self._focus_stop_rect=None
-        self._stop_hover=False
+        self.focus_tag=None
         self.long_press=QTimer(self)
         self.long_press.setSingleShot(True)
         self.long_press.setInterval(700)
@@ -196,6 +195,8 @@ class DesktopPet(QWidget):
 
     def hideEvent(self,event):
         self.timer.stop()
+        if self.focus_tag is not None:
+            self.focus_tag.hide()
         if self.usage_overlay is not None:
             self.usage_overlay.hide()
 
@@ -231,6 +232,10 @@ class DesktopPet(QWidget):
             self.usage_overlay.close()
             self.usage_overlay.deleteLater()
             self.usage_overlay=None
+        if self.focus_tag is not None:
+            self.focus_tag.close()
+            self.focus_tag.deleteLater()
+            self.focus_tag=None
         screen = getattr(self, '_halo_screen', None)
         if screen is not None:
             try:
@@ -268,6 +273,7 @@ class DesktopPet(QWidget):
             self.update()
         if self.usage_overlay_wanted()!=self.usage_overlay_visible():
             self.sync_usage_overlay()
+        self.sync_focus_tag()
 
     def update_data(self,data):
         if (data or {}).get('provider_id', 'codex') not in PROVIDER_REGISTRY:
@@ -358,7 +364,6 @@ class DesktopPet(QWidget):
             p.drawText(QRectF(pill_x,pill_y,pill_w,pill_h),Qt.AlignCenter,shown)
         if self.motion and self.frame is not None:
             self.paint_animated(p,self.frame)
-            self.paint_focus_tag(p)
             return
         bob_amp, typing_amp = geometry.scaled_amplitudes(self.pet_scale)
         offset=math.sin(self.phase)*bob_amp if self.motion else 0
@@ -392,54 +397,15 @@ class DesktopPet(QWidget):
             y=round((sy+sh-size.height())*dpr)/dpr
             p.drawPixmap(QPointF(x,y),rendered)
         p.restore()
-        self.paint_focus_tag(p)
 
-    def focus_tag_layout(self):
-        """(tag rect, stop button rect, tag text, button text) at her feet, or None."""
-        tag=self.focus_subtitle()
-        if tag is None:
-            return None
-        mode=self.panel.focus_mode
-        label=self.tr_text('focus_end_button' if mode.phase=='focus' else 'focus_end_break_button')
-        font=QFont('Segoe UI',self._px(8))
-        font.setWeight(QFont.DemiBold)
-        metrics=QFontMetrics(font)
-        h=self._px(22)
-        gap=self._px(4)
-        bw=metrics.horizontalAdvance(label)+self._px(18)
-        room=self.width()-bw-gap-self._px(8)
-        shown=metrics.elidedText(tag,Qt.ElideRight,max(self._px(60),room-self._px(22)))
-        w=min(room,metrics.horizontalAdvance(shown)+self._px(22))
-        x=(self.width()-(w+gap+bw))/2
-        y=self.height()-h-self._px(2)
-        return QRectF(x,y,w,h),QRectF(x+w+gap,y,bw,h),shown,label,font
-
-    def paint_focus_tag(self,p):
-        layout=self.focus_tag_layout()
-        self._focus_stop_rect=layout[1] if layout else None
-        if layout is None:
-            return
-        tag,stop,shown,label,font=layout
-        p.save()
-        p.setFont(font)
-        p.setPen(QPen(QColor(theme.VIOLET),1))
-        fill=QColor(theme.CARD)
-        fill.setAlpha(242)
-        p.setBrush(fill)
-        p.drawRoundedRect(tag,tag.height()/2,tag.height()/2)
-        p.setPen(QColor(theme.VIOLET))
-        p.drawText(tag,Qt.AlignCenter,shown)
-        # A real button: the way to end focus or a break, right where you look.
-        p.setPen(QPen(QColor(theme.PRIMARY_FILL_PRESSED),1))
-        p.setBrush(QColor(theme.PRIMARY_FILL_HOVER if self._stop_hover else theme.PRIMARY_FILL))
-        p.drawRoundedRect(stop,stop.height()/2,stop.height()/2)
-        p.setPen(QColor(theme.PRIMARY_TEXT))
-        p.drawText(stop,Qt.AlignCenter,label)
-        p.restore()
-
-    def _on_stop(self,point):
-        rect=getattr(self,'_focus_stop_rect',None)
-        return rect is not None and self.focus_subtitle() is not None and rect.contains(QPointF(point))
+    def sync_focus_tag(self):
+        """The countdown window above her head (created on first focus)."""
+        if self.focus_tag is None:
+            if self.focus_subtitle() is None:
+                return
+            from focus_mode import FocusTag
+            self.focus_tag=FocusTag(self)
+        self.focus_tag.sync()
 
     def pose_pixmap(self,state,index=0,blink=False):
         """The image for one pose frame: blink, frame, then the still pose."""
@@ -564,6 +530,8 @@ class DesktopPet(QWidget):
         super().moveEvent(event)
         if self.usage_overlay_visible():
             self.usage_overlay.follow()
+        if self.focus_tag is not None and self.focus_tag.isVisible():
+            self.focus_tag.follow()
         if self.panel.isVisible():
             self.panel.anchor_to_pet()
         manager = getattr(self.panel, 'task_manager', None)
@@ -576,14 +544,6 @@ class DesktopPet(QWidget):
         return ((point.x()-sx)/sw,(point.y()-sy)/sh)
 
     def mousePressEvent(self,event):
-        if event.button()==Qt.LeftButton and self._on_stop(event.position()):
-            mode=self.panel.focus_mode
-            if mode.phase=='focus':
-                mode.stop()
-            else:
-                mode.skip_break()
-            self.update()
-            return
         if event.button()==Qt.LeftButton:
             self.pressed=event.globalPosition().toPoint()
             self.original=self.pos()
@@ -612,11 +572,6 @@ class DesktopPet(QWidget):
                     self.animator.drag((point.x()-last_x)/(now-last_t)/(self.pet_scale/100))
                     self._drag_last=(point.x(),now)
         elif not event.buttons():
-            hover=self._on_stop(event.position())
-            if hover!=self._stop_hover:
-                self._stop_hover=hover
-                self.setCursor(Qt.PointingHandCursor if hover else Qt.ArrowCursor)
-                self.update()
             self.track_pat(event.position())
 
     def mouseReleaseEvent(self,event):

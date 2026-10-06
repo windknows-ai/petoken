@@ -101,7 +101,10 @@ class CompanionPortrait(QWidget):
 
 class WorkbenchWindow(QWidget):
     def __init__(self, panel, store):
-        super().__init__(panel, Qt.Window)
+        # Its own top-level window: owned by the always-on-top panel, Windows
+        # would keep it above every other app too.
+        super().__init__(None, Qt.Window)
+        panel.destroyed.connect(self.deleteLater)
         self.panel, self.store = panel, store
         self.project_scope = None
         self.note_id = None
