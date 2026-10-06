@@ -2,12 +2,14 @@
 
 No daemon startup, thread resume, subscriptions, or approval decisions. The
 native Codex proxy preserves the server's private Unix-socket access checks.
-Queries keep short-lived proxies because the store has no connection teardown
-hook; snapshots and failed attempts are throttled within each reader instead.
+One proxy is reused per reader while tasks are present. Snapshots and failed
+attempts remain throttled; empty tasks, endpoint changes, disconnects and close
+dispose of the connection. Never answer server requests on this connection.
 """
 from __future__ import annotations
 
 import base64
+import atexit
 import hashlib
 import json
 import os
@@ -18,6 +20,17 @@ import struct
 import subprocess
 import threading
 import time
+import weakref
+
+_READERS = weakref.WeakSet()
+
+
+def _close_readers():
+    for reader in list(_READERS):
+        reader.close()
+
+
+atexit.register(_close_readers)
 
 
 def approval_state(status):
@@ -60,6 +73,7 @@ class _ControlConnection:
         self.buffer = bytearray()
         self.blocks = queue.Queue(maxsize=32)
         self.stopped = threading.Event()
+        self.disconnected = threading.Event()
         self.reader = threading.Thread(target=self._pump, daemon=True)
         self.reader.start()
 
@@ -81,6 +95,12 @@ class _ControlConnection:
                     self.blocks.put_nowait(b'')
                 except queue.Full:
                     pass
+        finally:
+            self.disconnected.set()
+
+    def healthy(self):
+        return (not self.stopped.is_set() and not self.disconnected.is_set()
+                and self.process.poll() is None)
 
     def _exact(self, size):
         while len(self.buffer) < size:
@@ -204,30 +224,58 @@ class CodexApprovalReader:
         self._next_query = 0.
         self._states = {}
         self._socket_identity = None
+        self._connection = None
+        self._request_id = 0
+        _READERS.add(self)
+
+    def _drop_connection(self):
+        connection, self._connection = self._connection, None
+        if connection is not None:
+            connection.close()
+
+    def close(self):
+        """Release only this reader's proxy; safe on idle, shutdown and repeat calls."""
+        with self._lock:
+            self._drop_connection()
+            self._states = dict.fromkeys(self._states)
+            self._socket_identity = None
+
+    def __del__(self):
+        if hasattr(self, '_lock'):
+            self.close()
 
     def read(self, thread_ids):
         """Return a copied snapshot, querying at most once per five seconds.
 
         Task/endpoint changes discard the snapshot without bypassing the
-        throttle. An unobservable disconnect is detected on the next query.
+        throttle. Proxy exit/transport EOF immediately invalidate cached positives;
+        a silent network failure is detected within the next five-second query.
         """
         states = {tid: None for tid in thread_ids if isinstance(tid, str) and tid}
         path = self.home / 'app-server-control/app-server-control.sock'
         with self._lock:
             if not states:
+                self._drop_connection()
                 self._states = {}
                 self._socket_identity = None
                 return states
             try:
                 stat = path.stat()
             except OSError:
+                self._drop_connection()
                 self._states = dict(states)
                 self._socket_identity = None
                 return states
             identity = (stat.st_dev, stat.st_ino, stat.st_ctime_ns)
-            if identity != self._socket_identity or states.keys() != self._states.keys():
+            if identity != self._socket_identity:
+                self._drop_connection()
+                self._states = dict(states)
+            if states.keys() != self._states.keys():
                 self._states = dict(states)
             self._socket_identity = identity
+            if self._connection is not None and not self._connection.healthy():
+                self._drop_connection()
+                self._states = dict(states)
             now = time.monotonic()
             if now >= self._next_query:
                 # Failed attempts are throttled too; clear old positives first.
@@ -237,33 +285,39 @@ class CodexApprovalReader:
             return dict(self._states)
 
     def _query(self, states, path):
-        connection = None
         try:
-            binary = self.binary or _proxy_binary()
-            if not binary:
-                return states
-            process = subprocess.Popen([str(binary), 'app-server', 'proxy', '--sock', str(path)],
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                env=dict(os.environ, CODEX_HOME=str(self.home)),
-                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-            connection = _ControlConnection(process, time.monotonic() + self.timeout)
-            connection.handshake()
-            if not isinstance(connection.request(1, 'initialize',
-                    dict(clientInfo=dict(name='petoken_approval_reader', version='1.6'))), dict):
-                return states
-            connection.send(dict(method='initialized', params={}))
-            loaded = connection.request(2, 'thread/loaded/list', {})
+            if self._connection is None:
+                binary = self.binary or _proxy_binary()
+                if not binary:
+                    return states
+                process = subprocess.Popen([str(binary), 'app-server', 'proxy', '--sock', str(path)],
+                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                    env=dict(os.environ, CODEX_HOME=str(self.home)),
+                    creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                self._connection = _ControlConnection(process, time.monotonic() + self.timeout)
+                self._connection.handshake()
+                if not isinstance(self._request('initialize',
+                        dict(clientInfo=dict(name='petoken_approval_reader', version='1.7'))), dict):
+                    raise ValueError('Unknown initialize response')
+                self._connection.send(dict(method='initialized', params={}))
+            else:
+                # Each batch gets a fresh bounded budget, not the first batch's deadline.
+                self._connection.deadline = time.monotonic() + self.timeout
+            loaded = self._request('thread/loaded/list', {})
             ids = loaded.get('data') if isinstance(loaded, dict) else None
             if not isinstance(ids, list) or not all(isinstance(tid, str) for tid in ids):
-                return states
-            for number, tid in enumerate((tid for tid in ids if tid in states and len(tid) <= 128), 3):
-                result = connection.request(number, 'thread/read', dict(threadId=tid, includeTurns=False))
+                raise ValueError('Unknown loaded threads response')
+            for tid in (tid for tid in ids if tid in states and len(tid) <= 128):
+                result = self._request('thread/read', dict(threadId=tid, includeTurns=False))
                 thread = result.get('thread') if isinstance(result, dict) else None
-                if isinstance(thread, dict) and thread.get('id') == tid:
-                    states[tid] = approval_state(thread.get('status'))
+                if not isinstance(thread, dict) or thread.get('id') != tid:
+                    raise ValueError('Unknown thread response')
+                states[tid] = approval_state(thread.get('status'))
         except (OSError, ValueError, TypeError, KeyError, IndexError, queue.Empty, TimeoutError):
+            self._drop_connection()
             return dict.fromkeys(states)  # Never keep a prior True after disconnect/error.
-        finally:
-            if connection is not None:
-                connection.close()
         return states
+
+    def _request(self, method, params):
+        self._request_id += 1
+        return self._connection.request(self._request_id, method, params)

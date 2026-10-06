@@ -111,6 +111,11 @@ class ControlConnectionTests(unittest.TestCase):
         with self.assertRaises(TimeoutError):
             connection.receive()
 
+    def test_transport_eof_is_visible_without_a_status_query(self):
+        connection = self.connection(b'')
+        self.assertTrue(connection.disconnected.wait(timeout=1))
+        self.assertFalse(connection.healthy())
+
 
 class ApprovalReaderTests(unittest.TestCase):
     def setUp(self):
@@ -121,14 +126,18 @@ class ApprovalReaderTests(unittest.TestCase):
         path.parent.mkdir()
         path.touch()
         self.reader = CodexApprovalReader(self.home, binary='synthetic-codex.exe')
+        self.addCleanup(self.reader.close)
         self.connection = Mock()
+        self.connection.healthy.return_value = True
         self.popen = patch('codex_approval.subprocess.Popen', return_value=Mock()).start()
         self.addCleanup(patch.stopall)
         patch('codex_approval._ControlConnection', return_value=self.connection).start()
         self.clock = patch('codex_approval.time.monotonic', return_value=100.).start()
 
-    def responses(self, statuses):
-        self.connection.request.side_effect = [{}, {'data': list(statuses)}]+[
+    def responses(self, statuses, reader=None):
+        reader = reader or self.reader
+        initialized = [] if reader._connection is not None else [{}]
+        self.connection.request.side_effect = initialized + [{'data': list(statuses)}]+[
             {'thread': {'id': tid, 'status': status}} for tid, status in statuses.items()]
 
     def test_batch_is_thread_scoped_and_only_reads(self):
@@ -143,7 +152,7 @@ class ApprovalReaderTests(unittest.TestCase):
         self.assertTrue(all(call.args[2]['includeTurns'] is False for call in calls[2:]))
         self.assertEqual(self.popen.call_args.args[0][1:4], ['app-server', 'proxy', '--sock'])
         self.assertEqual(self.popen.call_args.kwargs['env']['CODEX_HOME'], str(self.home))
-        self.connection.close.assert_called_once()
+        self.connection.close.assert_not_called()
 
     def test_disconnect_clears_even_partially_received_true(self):
         self.connection.request.side_effect = [{}, {'data': ['yes', 'other']},
@@ -154,11 +163,11 @@ class ApprovalReaderTests(unittest.TestCase):
     def test_no_stale_positive_on_next_poll(self):
         self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
         self.assertIs(self.reader.read(['yes'])['yes'], True)
-        self.connection.handshake.side_effect = OSError('disconnected')
+        self.connection.request.side_effect = OSError('disconnected')
         self.clock.return_value += 5
         self.assertIsNone(self.reader.read(['yes'])['yes'])
         self.assertIsNone(self.reader.read(['yes'])['yes'])
-        self.assertEqual(self.popen.call_count, 2)
+        self.assertEqual(self.popen.call_count, 1)
 
     def test_same_tasks_are_cached_until_five_seconds(self):
         self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']},
@@ -172,15 +181,15 @@ class ApprovalReaderTests(unittest.TestCase):
         self.responses({'yes': {'type': 'idle'}, 'no': {'type': 'idle'}})
         self.clock.return_value = 105.
         self.assertEqual(self.reader.read(['yes', 'no']), {'yes': False, 'no': False})
-        self.assertEqual(self.popen.call_count, 2)
-        self.assertEqual(self.connection.close.call_count, 2)
+        self.assertEqual(self.popen.call_count, 1)
+        self.connection.close.assert_not_called()
 
     def test_sustained_polling_does_not_spawn_per_poll(self):
         for poll in range(1000):
             self.clock.return_value = 100. + poll / 100.
             self.responses({'yes': {'type': 'idle'}})
             self.assertEqual(self.reader.read(['yes']), {'yes': False})
-        self.assertEqual(self.popen.call_count, 2)
+        self.assertEqual(self.popen.call_count, 1)
 
     def test_concurrent_polls_share_one_query(self):
         self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
@@ -199,7 +208,7 @@ class ApprovalReaderTests(unittest.TestCase):
         self.clock.return_value = 105.
         self.responses({'yes': {'type': 'idle'}, 'new': {'type': 'idle'}})
         self.assertEqual(self.reader.read(['yes', 'new']), {'yes': False, 'new': False})
-        self.assertEqual(self.popen.call_count, 2)
+        self.assertEqual(self.popen.call_count, 1)
 
     def test_empty_tasks_clear_cache_without_resetting_throttle(self):
         self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
@@ -255,16 +264,17 @@ class ApprovalReaderTests(unittest.TestCase):
         self.responses({})
         self.assertEqual(self.reader.read(['yes']), {'yes': None})
         self.assertEqual(self.reader.read(['yes']), {'yes': None})
-        self.assertEqual(self.popen.call_count, 2)
+        self.assertEqual(self.popen.call_count, 1)
 
     def test_rpc_errors_and_timeouts_replace_positive_cache_with_unknown(self):
         for error in (None, {'thread': {'id': 'wrong'}}, TimeoutError('timed out'), queue.Empty()):
             with self.subTest(error=error):
                 reader = CodexApprovalReader(self.home, binary='synthetic-codex.exe')
-                self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+                self.addCleanup(reader.close)
+                self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}}, reader)
                 self.assertEqual(reader.read(['yes']), {'yes': True})
                 self.clock.return_value += 5
-                self.connection.request.side_effect = [{}, {'data': ['yes']}, error]
+                self.connection.request.side_effect = [{'data': ['yes']}, error]
                 self.assertEqual(reader.read(['yes']), {'yes': None})
                 launches = self.popen.call_count
                 self.assertEqual(reader.read(['yes']), {'yes': None})
@@ -302,6 +312,57 @@ class ApprovalReaderTests(unittest.TestCase):
             self.assertEqual(self.reader.read(['yes']), {'yes': None})
         self.popen.assert_not_called()
 
+    def test_reuse_across_a_minute_has_unique_ids_and_fresh_deadlines(self):
+        ids = []
+        for second in range(0, 61, 5):
+            self.clock.return_value = 100. + second
+            self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+            self.assertEqual(self.reader.read(['yes']), {'yes': True})
+            if second:
+                self.assertEqual(self.connection.deadline, 100. + second + .75)
+        ids = [call.args[0] for call in self.connection.request.call_args_list]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual([c.args[1] for c in self.connection.request.call_args_list].count('initialize'), 1)
+        self.popen.assert_called_once()
+        self.connection.handshake.assert_called_once()
+
+    def test_dead_proxy_immediately_clears_true_and_retries_only_after_interval(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': True})
+        self.connection.healthy.return_value = False
+        self.clock.return_value += 1
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.connection.close.assert_called_once()
+        self.popen.assert_called_once()
+        self.clock.return_value = 105.
+        self.connection.healthy.return_value = True
+        self.responses({'yes': {'type': 'idle'}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': False})
+        self.assertEqual(self.popen.call_count, 2)
+
+    def test_empty_or_close_disposes_once_without_killing_server(self):
+        self.responses({'yes': {'type': 'idle'}})
+        self.reader.read(['yes'])
+        self.reader.read([])
+        self.reader.close()
+        self.reader.close()
+        self.connection.close.assert_called_once()
+        self.assertIsNone(self.reader._connection)
+        self.clock.return_value = 105.
+        self.responses({'yes': {'type': 'idle'}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': False})
+        self.assertEqual(self.popen.call_count, 2)
+
+    def test_rpc_error_after_partial_positive_closes_and_clears_batch(self):
+        self.responses({'yes': {'type': 'idle'}, 'other': {'type': 'idle'}})
+        self.reader.read(['yes','other'])
+        self.clock.return_value = 105.
+        self.connection.request.side_effect = [{'data':['yes','other']},
+            {'thread': {'id':'yes','status':{'type':'active','activeFlags':['waitingOnApproval']}}}, None]
+        self.assertEqual(self.reader.read(['yes','other']), {'yes':None,'other':None})
+        self.connection.close.assert_called_once()
+        self.assertIsNone(self.reader._connection)
+
 
 class UsageApprovalIntegrationTests(unittest.TestCase):
     def test_usage_polls_reuse_the_readers_throttled_snapshot(self):
@@ -309,6 +370,7 @@ class UsageApprovalIntegrationTests(unittest.TestCase):
             fixture = ScopeFixture(root)
             fixture.add('synthetic', 'Synthetic', 100, working=True)
             store = fixture.finish()
+            self.addCleanup(store.approval.close)
             path = Path(root)/'app-server-control/app-server-control.sock'
             path.parent.mkdir()
             path.touch()
@@ -329,11 +391,11 @@ class UsageApprovalIntegrationTests(unittest.TestCase):
                     self.assertIs(current['active_tasks'][0]['awaiting_approval'], True)
                 self.assertEqual(popen.call_count, 1)
                 clock.return_value = 105.
-                connection.handshake.side_effect = OSError('disconnected')
+                connection.request.side_effect = OSError('disconnected')
                 current = store.read(scope='global')
                 self.assertIsNone(current['active_tasks'][0]['awaiting_approval'])
                 self.assertEqual(current['tokens'], first['tokens'])
-                self.assertEqual(popen.call_count, 2)
+                self.assertEqual(popen.call_count, 1)
 
     def test_new_field_is_additive_for_desktop_vscode_cli_and_exec(self):
         with tempfile.TemporaryDirectory() as root:
