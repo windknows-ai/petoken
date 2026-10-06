@@ -1,0 +1,60 @@
+{
+  "note": "Saved verbatim follow-up and final correction prompts. First-frame directions are summarized in GENERATION.md.",
+  "prompts": [
+    {
+      "file": "coquettish_2.png",
+      "parent": "coquettish_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Make coquettish loop FRAME2, the LEFT phase: move ONLY the clasped gloved hands/forearms about 16 pixels toward viewer-left, with a very slight upper-chest lean inside its existing area, fingers stay clasped. Same pleading watery violet eyes, eyebrows, blush and tiny pout as target, absolutely unchanged facial expression/head/hair. Hands remain tucked below chin. Only moving hands/chest approximately x520..865 y785..975 repaint. No added props or symbols/background/text."
+    },
+    {
+      "file": "coquettish_3.png",
+      "parent": "coquettish_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Make coquettish loop FRAME3, the center-return phase: same clasped hands return to central position but relax about 6 pixels DOWN, slight shoulder release, the tiny pout becomes a small soft pleading o mouth. Move ONLY hands/forearms and tiny mouth; preserve eyes/brows/cheeks and every hair/fringe pixel. Keep original exact costume and coherent mitten fingers; no huge deformation. Local arms x520..865 y785..975 and mouth x730..773 y740..767 only. No other changes, no symbols/text."
+    },
+    {
+      "file": "coquettish_4.png",
+      "parent": "coquettish_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Make coquettish loop FRAME4, the RIGHT phase: move ONLY clasped gloves/forearms about 16 pixels toward viewer-right, slight upper-chest lean, fingers remain clasped just under chin. Same exact original face and glistening eyes, eyebrows, tiny pout, blush; head/hair/feet completely stationary. Only repaint moving hands/chest x520..865 y785..975. Same costume. No new decoration/symbols/text/background."
+    },
+    {
+      "file": "coquettish_blink.png",
+      "parent": "coquettish_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. EYE-ONLY blink variant of this exact coquettish FRAME1: close BOTH currently open watery lilac eyes, replacing full irises/highlights with gently shut curved dark navy anime lashes. Preserve pleading eyebrows, mouth/pout, cheeks, all fringe contours, chin and every other pixel including clasped hands/body. Closing should be clearly different from the open frame. Do not relocate eyes or add different lashes style. Only eyes approximately left x530..745 y575..730 and right x806..951 y622..748. No other changes, no added symbols."
+    },
+    {
+      "file": "headpat_happy_2.png",
+      "parent": "headpat_happy_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Headpat happy FRAME2, soft nuzzle/inhale: slightly narrow the two half-open smiling crescent eyes, joyful mouth a little wider, mittens on top of knees lift about 6 pixels as chest gently rises. Head/face outline and hair never move; give nuzzling feeling through eyes/mouth/hand flex ONLY. Move the same TWO pink hearts up about 9 pixels in existing upper-left empty area, identical shapes/colors, no extra hearts. Original costume preserved. Do not alter eyebrows or cheeks. No new props/background/text."
+    },
+    {
+      "file": "headpat_happy_3.png",
+      "parent": "headpat_happy_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Headpat happy FRAME3, delighted relaxed peak: the two crescent violet eyes open very slightly wider (still narrow, gentle happy arcs), the small open smile becomes a closed upturned smile; knee-resting mittens flex inward about 5 pixels, no crossing hands. Head/fringe/outline/feet remain fixed. Existing two lavender-pink hearts drift UP 16 pixels from their original position, retain exact shape and size and location family upper-left. Repaint ONLY eyes, mouth, gloves/chest and hearts. No new decoration/words."
+    },
+    {
+      "file": "headpat_happy_4.png",
+      "parent": "headpat_happy_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Headpat happy FRAME4, return/exhale: knee-resting gloved fists settle about 4 pixels DOWN and relax, small open joyful smile a bit softer, half-open narrow smiling violet crescent eyes match target. Preserve every eyebrow/blush/face boundary/hair pixel and original costume. Existing TWO upper-left hearts drift back to 5 pixels above initial position, same exact shapes. Only local gloves/chest/mouth/hearts changed, preparing loop back to target frame1. No other changes or text."
+    },
+    {
+      "file": "headpat_happy_blink.png",
+      "parent": "headpat_happy_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Eye-only closed blink variant of headpat_happy FRAME1: close BOTH tiny half-open violet eye slits completely into smooth upward happy crescent dark-navy lashes, NO iris or eye highlight remaining. Preserve original eyebrows, blush, mouth/smile, face outline, all hair/fringe, hearts at original positions, resting hands, costume and body pixel geometry. Only the two eye regions change. Do not make a winking face; both eyes shut. No other changes."
+    },
+    {
+      "file": "sleep_2.png",
+      "parent": "sleep_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Sleep breathing FRAME2, gentle inhale: ONLY upper chest/shoulder fabric and loosely lap-resting gloved hands rise about 4 pixels; the tiny relaxed breathing mouth gets a little rounder/open by a few pixels. Face/closed eyelids/brows/cheeks/head/fringe and ALL hair remain exact target. Same TWO pale-lavender breath bubbles drift upward 8 pixels, keep their size and clean smooth outlined shapes. Feet/lower legs fixed. No whole-body bob, pillow, words/Zzz/shadow/background."
+    },
+    {
+      "file": "sleep_3.png",
+      "parent": "sleep_1.png",
+      "prompt": "Precise local animation edit, one 1254x1254 transparent RGBA full sprite. Image 1 is the LOCKED edit target, already finalized. Do not redraw it. Copy ALL nonmoving pixels, preserve exact silver/lavender hair/fringe/blue crystal ornament, original face/jaw shape, lower body/legs/feet/clothing decorations, scale and silhouette; baseline y1221. No global translation, zoom, rescale or rotation. Preserve the same original chibi line art, exact palette and soft cel shading. Sleep breathing FRAME3, easing into exhale: ONLY upper chest/shoulder fabric/gloved lap hands relax to 2 pixels above base, mouth becomes almost closed with a tiny soft dot. Closed eyelids/brows/cheeks/head/fringe/hair/feet all exact target, keep same costume. Same TWO upper-left pale-lavender breath bubbles drift 4 pixels up and become slightly smaller/softer, clean smooth contours with no flecks. Quiet breathing loop 1->2->3->1, no translation of whole pet, no words/Zzz/background/props."
+    },
+    {
+      "file": "coquettish_blink.png",
+      "stage": "final correction",
+      "prompt": "Create an exact local blink edit of IMAGE 1 (the open-eyed coquettish sprite). IMAGE 2 shows the desired closed eyelids ONLY, not eyebrow placement. Do not copy IMAGE 2's shifted eyebrows. In IMAGE 1 preserve the existing eyebrow artwork pixel-for-pixel: the left worried eyebrow across the hair fringe at x600-740 y550-572, the right worried eyebrow at x864-938 y592-634. No new brow lines below them, no duplicate brow. Change ONLY the two open violet eye areas into closed eyelids like IMAGE 2, remove irises completely. Keep all hair fringe, skin blush, pout mouth, hands, costume, lower body, silhouette, position and 1254x1254 transparent RGBA canvas identical to IMAGE 1. Left closed lashes around y653, right closed lashes around y710. The skin between each original eyebrow and the new closed lash must be clean, with no extra horizontal purple line. This is an animation eye-layer edit, not a redraw. No text, background, shadow or particles."
+    }
+  ]
+}
