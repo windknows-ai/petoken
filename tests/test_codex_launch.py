@@ -26,7 +26,12 @@ class LaunchTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.folder = Path(temp.name)/'项目 $name ; space'
         self.folder.mkdir()
+        self.home = Path(temp.name)/'codex home'
+        self.daemon = self.home/'packages/app-server-daemon/current/bin/codex.exe'
+        self.daemon.parent.mkdir(parents=True)
+        self.daemon.touch()
         self.addCleanup(patch.stopall)
+        patch.dict('os.environ', CODEX_HOME=str(self.home)).start()
         self.executables_patcher = patch('codex_launch._executables', return_value=('C:/tools/codex.exe', 'powershell.exe'))
         self.executables = self.executables_patcher.start()
         self.which = patch('codex_launch.shutil.which', return_value='wt.exe').start()
@@ -43,6 +48,105 @@ class LaunchTests(unittest.TestCase):
         self.which.return_value = None
         command = codex_launch.launch_command(self.folder, 'Fix')
         self.assertEqual(command[:2], ['powershell.exe', '-NoLogo'])
+
+    @unittest.skipUnless(sys.platform == 'win32', 'Windows native argv parser')
+    def test_missing_daemon_adds_official_flag_before_prompt_without_changing_metadata(self):
+        self.daemon.unlink()
+        catalog = {'model-a': ['high']}
+        for terminal in ('wt.exe', None):
+            self.which.return_value = terminal
+            with patch('codex_launch._model_catalog', return_value=catalog), \
+                    patch('codex_launch.subprocess.run', return_value=Mock(
+                        returncode=0, stdout='Options:\n      --no-daemon\n          Run embedded\n')) as probe:
+                prompt = '--no-daemon --remote ws://attacker ; $(whoami) "quoted"\n新任务'
+                data = payload(codex_launch.launch_command(self.folder, prompt,
+                    external_id='todo-42', model='model-a', effort='high'))
+                self.assertEqual(_argv('codex.exe '+data['arguments']),
+                    ['codex.exe', '--cd', str(self.folder.resolve()), '-m', 'model-a',
+                     '-c', 'model_reasoning_effort="high"', '--no-daemon', '--', prompt])
+                self.assertEqual(data['external_id'], 'todo-42')
+                self.assertEqual(data['executable'], 'C:/tools/codex.exe')
+                self.assertEqual(probe.call_args.args[0], ['C:/tools/codex.exe', '--help'])
+
+    @unittest.skipUnless(sys.platform == 'win32', 'Windows native argv parser')
+    def test_installed_daemon_keeps_argv_and_never_probes_or_starts_it(self):
+        with patch('codex_launch.subprocess.run') as run, patch('codex_launch.subprocess.Popen') as start:
+            data = payload(codex_launch.launch_command(self.folder, '--no-daemon'))
+        self.assertEqual(_argv('codex.exe '+data['arguments']),
+            ['codex.exe', '--cd', str(self.folder.resolve()), '--', '--no-daemon'])
+        run.assert_not_called()
+        start.assert_not_called()
+
+    def test_legacy_daemon_layout_requires_real_launch_markers(self):
+        self.daemon.unlink()
+        self.daemon.parent.rmdir()
+        self.daemon.parent.parent.rmdir()
+        legacy = self.home/'packages/standalone/current/codex.exe'
+        legacy.parent.mkdir(parents=True)
+        legacy.touch()
+        state = self.home/'app-server-daemon'
+        state.mkdir()
+        (state/'settings.json').touch()
+        with patch('codex_launch.subprocess.run', return_value=Mock(
+                returncode=0, stdout='      --no-daemon\n')) as probe:
+            self.assertEqual(codex_launch._daemon_flags('codex.exe', self.folder), ['--no-daemon'])
+            (state/'app-server.stderr.log').touch()
+            probe.reset_mock()
+            self.assertEqual(codex_launch._daemon_flags('codex.exe', self.folder), [])
+            probe.assert_not_called()
+
+    def test_dedicated_install_takes_precedence_over_legacy_daemon(self):
+        self.daemon.unlink()
+        legacy = self.home/'packages/standalone/current/bin/codex.exe'
+        legacy.parent.mkdir(parents=True)
+        legacy.touch()
+        state = self.home/'app-server-daemon'
+        state.mkdir()
+        (state/'app-server.pid').touch()
+        with patch('codex_launch.subprocess.run', return_value=Mock(
+                returncode=0, stdout='      --no-daemon\n')):
+            self.assertEqual(codex_launch._daemon_flags('codex.exe', self.folder), ['--no-daemon'])
+
+    def test_legacy_executable_inside_dedicated_package_is_preserved(self):
+        self.daemon.unlink()
+        self.daemon.parent.parent.joinpath('codex.exe').touch()
+        with patch('codex_launch.subprocess.run') as probe:
+            self.assertEqual(codex_launch._daemon_flags('codex.exe', self.folder), [])
+        probe.assert_not_called()
+
+    def test_default_empty_and_relative_codex_home_are_resolved_for_child_cwd(self):
+        profile = self.folder/'profile'
+        default_daemon = profile/'.codex/packages/app-server-daemon/current/bin/codex.exe'
+        default_daemon.parent.mkdir(parents=True)
+        default_daemon.touch()
+        for name in ('relative', ' relative'):
+            relative_daemon = self.folder/name/'packages/app-server-daemon/current/bin/codex.exe'
+            relative_daemon.parent.mkdir(parents=True)
+            relative_daemon.touch()
+        with patch('codex_launch.Path.home', return_value=profile), \
+                patch('codex_launch.subprocess.run') as probe:
+            for value in ('', 'relative', ' relative'):
+                with patch.dict('os.environ', CODEX_HOME=value):
+                    self.assertEqual(codex_launch._daemon_flags('codex.exe', self.folder), [])
+            with patch.dict('os.environ') as environment:
+                environment.pop('CODEX_HOME', None)
+                self.assertEqual(codex_launch._daemon_flags('codex.exe', self.folder), [])
+            probe.assert_not_called()
+
+    def test_older_cli_without_official_flag_keeps_existing_startup(self):
+        self.daemon.unlink()
+        with patch('codex_launch.subprocess.run', return_value=Mock(
+                returncode=0, stdout='Options:\n      --model <MODEL>\n')):
+            self.assertEqual(codex_launch._daemon_flags('codex.exe', self.folder), [])
+
+    def test_failed_support_probe_does_not_attempt_normal_missing_daemon_launch(self):
+        self.daemon.unlink()
+        for failure in (OSError('synthetic'), subprocess.TimeoutExpired('codex --help', 2)):
+            with patch('codex_launch.subprocess.run', side_effect=failure), self.assertRaises(RuntimeError):
+                codex_launch.launch_command(self.folder, 'Fix')
+        with patch('codex_launch.subprocess.run', return_value=Mock(returncode=1)), \
+                self.assertRaises(RuntimeError):
+            codex_launch.launch_command(self.folder, 'Fix')
 
     def test_external_id_is_environment_data_not_prompt_or_cli_option(self):
         command = codex_launch.launch_command(self.folder, 'Fix this', external_id='todo:123-ab')
@@ -285,7 +389,7 @@ class NativeArgumentTests(unittest.TestCase):
             output, sentinel = directory/'argv.json', directory/'must-not-exist.txt'
             prompt = '"quoted" 日本語 ; $(New-Item ' + str(sentinel) + ') & %PATH%\nline\\'
             arguments = ['--cd', str(directory), '-m', 'model-a',
-                         '-c', 'model_reasoning_effort="high"', '--', prompt]
+                         '-c', 'model_reasoning_effort="high"', '--no-daemon', '--', prompt]
             code = 'import json,sys;from pathlib import Path;Path(' + repr(str(output)) + ').write_text(json.dumps(sys.argv[1:],ensure_ascii=False),encoding="utf-8")'
             script = codex_launch._encoded_script(dict(executable=sys.executable, folder=str(directory),
                 arguments=subprocess.list2cmdline(['-c', code, *arguments])))
