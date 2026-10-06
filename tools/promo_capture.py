@@ -95,6 +95,13 @@ def main():
         panel.connection.setText('')
         settle(app)
         panel.grab().save(str(out / 'hub.png'))
+        panel.open_analytics()
+        settle(app, 40)
+        if panel.analytics_window is not None:
+            panel.analytics_window.resize(1100, 720)
+            settle(app, 20)
+            panel.analytics_window.grab().save(str(out / 'analytics.png'))
+            panel.analytics_window.close()
         panel.set_panel_pinned(False)
         panel.hide()
         key = manager.task_identities()[0]
