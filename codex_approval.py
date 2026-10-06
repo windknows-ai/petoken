@@ -2,6 +2,8 @@
 
 No daemon startup, thread resume, subscriptions, or approval decisions. The
 native Codex proxy preserves the server's private Unix-socket access checks.
+Queries keep short-lived proxies because the store has no connection teardown
+hook; snapshots and failed attempts are throttled within each reader instead.
 """
 from __future__ import annotations
 
@@ -193,19 +195,50 @@ class _ControlConnection:
 
 
 class CodexApprovalReader:
+    QUERY_INTERVAL = 5.
+
     def __init__(self, home, *, binary=None, timeout=.75):
         self.home = Path(home).absolute()
         self.binary, self.timeout = binary, timeout
+        self._lock = threading.Lock()
+        self._next_query = 0.
+        self._states = {}
+        self._socket_identity = None
 
     def read(self, thread_ids):
+        """Return a copied snapshot, querying at most once per five seconds.
+
+        Task/endpoint changes discard the snapshot without bypassing the
+        throttle. An unobservable disconnect is detected on the next query.
+        """
         states = {tid: None for tid in thread_ids if isinstance(tid, str) and tid}
         path = self.home / 'app-server-control/app-server-control.sock'
-        if not states:
-            return states
+        with self._lock:
+            if not states:
+                self._states = {}
+                self._socket_identity = None
+                return states
+            try:
+                stat = path.stat()
+            except OSError:
+                self._states = dict(states)
+                self._socket_identity = None
+                return states
+            identity = (stat.st_dev, stat.st_ino, stat.st_ctime_ns)
+            if identity != self._socket_identity or states.keys() != self._states.keys():
+                self._states = dict(states)
+            self._socket_identity = identity
+            now = time.monotonic()
+            if now >= self._next_query:
+                # Failed attempts are throttled too; clear old positives first.
+                self._next_query = now + self.QUERY_INTERVAL
+                self._states = dict(states)
+                self._states = self._query(states, path)
+            return dict(self._states)
+
+    def _query(self, states, path):
         connection = None
         try:
-            if not path.exists():
-                return states
             binary = self.binary or _proxy_binary()
             if not binary:
                 return states

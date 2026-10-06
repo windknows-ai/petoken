@@ -1,4 +1,5 @@
 import base64
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import io
 import json
@@ -7,6 +8,7 @@ import queue
 import struct
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -123,6 +125,7 @@ class ApprovalReaderTests(unittest.TestCase):
         self.popen = patch('codex_approval.subprocess.Popen', return_value=Mock()).start()
         self.addCleanup(patch.stopall)
         patch('codex_approval._ControlConnection', return_value=self.connection).start()
+        self.clock = patch('codex_approval.time.monotonic', return_value=100.).start()
 
     def responses(self, statuses):
         self.connection.request.side_effect = [{}, {'data': list(statuses)}]+[
@@ -152,13 +155,128 @@ class ApprovalReaderTests(unittest.TestCase):
         self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
         self.assertIs(self.reader.read(['yes'])['yes'], True)
         self.connection.handshake.side_effect = OSError('disconnected')
+        self.clock.return_value += 5
         self.assertIsNone(self.reader.read(['yes'])['yes'])
+        self.assertIsNone(self.reader.read(['yes'])['yes'])
+        self.assertEqual(self.popen.call_count, 2)
+
+    def test_same_tasks_are_cached_until_five_seconds(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']},
+                        'no': {'type': 'idle'}})
+        first = self.reader.read(['yes', 'no'])
+        first['yes'] = False
+        self.clock.return_value += 4.999
+        self.assertEqual(self.reader.read(iter(['no', 'yes', 'yes'])),
+                         {'no': False, 'yes': True})
+        self.popen.assert_called_once()
+        self.responses({'yes': {'type': 'idle'}, 'no': {'type': 'idle'}})
+        self.clock.return_value = 105.
+        self.assertEqual(self.reader.read(['yes', 'no']), {'yes': False, 'no': False})
+        self.assertEqual(self.popen.call_count, 2)
+        self.assertEqual(self.connection.close.call_count, 2)
+
+    def test_sustained_polling_does_not_spawn_per_poll(self):
+        for poll in range(1000):
+            self.clock.return_value = 100. + poll / 100.
+            self.responses({'yes': {'type': 'idle'}})
+            self.assertEqual(self.reader.read(['yes']), {'yes': False})
+        self.assertEqual(self.popen.call_count, 2)
+
+    def test_concurrent_polls_share_one_query(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            results = list(executor.map(lambda _: self.reader.read(['yes']), range(16)))
+        self.assertEqual(results, [{'yes': True}] * 16)
+        self.popen.assert_called_once()
+
+    def test_task_changes_cannot_bypass_throttle_or_resurrect_true(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': True})
+        self.clock.return_value += 1
+        self.assertEqual(self.reader.read(['yes', 'new']), {'yes': None, 'new': None})
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.popen.assert_called_once()
+        self.clock.return_value = 105.
+        self.responses({'yes': {'type': 'idle'}, 'new': {'type': 'idle'}})
+        self.assertEqual(self.reader.read(['yes', 'new']), {'yes': False, 'new': False})
+        self.assertEqual(self.popen.call_count, 2)
+
+    def test_empty_tasks_clear_cache_without_resetting_throttle(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': True})
+        self.assertEqual(self.reader.read([]), {})
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.popen.assert_called_once()
+
+    def test_socket_disappearance_immediately_clears_cached_true(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': True})
+        path = self.home/'app-server-control/app-server-control.sock'
+        path.unlink()
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        path.touch()
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.popen.assert_called_once()
+
+    def test_socket_replacement_immediately_clears_cached_true(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': True})
+        original = (self.home/'app-server-control/app-server-control.sock').stat()
+        replacement = SimpleNamespace(st_dev=original.st_dev, st_ino=original.st_ino + 1,
+                                      st_ctime_ns=original.st_ctime_ns)
+        with patch('codex_approval.Path.stat', return_value=replacement):
+            self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.popen.assert_called_once()
+
+    def test_socket_error_immediately_clears_cached_true(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': True})
+        with patch('codex_approval.Path.stat', side_effect=PermissionError('unreadable')):
+            self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.popen.assert_called_once()
+
+    def test_failed_launch_is_throttled_and_retried(self):
+        self.popen.side_effect = OSError('not executable')
+        for _ in range(10):
+            self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.popen.assert_called_once()
+        self.clock.return_value += 5
+        self.popen.side_effect = None
+        self.responses({'yes': {'type': 'idle'}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': False})
+        self.assertEqual(self.popen.call_count, 2)
+
+    def test_unloaded_thread_does_not_keep_cached_true(self):
+        self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+        self.assertEqual(self.reader.read(['yes']), {'yes': True})
+        self.clock.return_value += 5
+        self.responses({})
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.assertEqual(self.popen.call_count, 2)
+
+    def test_rpc_errors_and_timeouts_replace_positive_cache_with_unknown(self):
+        for error in (None, {'thread': {'id': 'wrong'}}, TimeoutError('timed out'), queue.Empty()):
+            with self.subTest(error=error):
+                reader = CodexApprovalReader(self.home, binary='synthetic-codex.exe')
+                self.responses({'yes': {'type': 'active', 'activeFlags': ['waitingOnApproval']}})
+                self.assertEqual(reader.read(['yes']), {'yes': True})
+                self.clock.return_value += 5
+                self.connection.request.side_effect = [{}, {'data': ['yes']}, error]
+                self.assertEqual(reader.read(['yes']), {'yes': None})
+                launches = self.popen.call_count
+                self.assertEqual(reader.read(['yes']), {'yes': None})
+                self.assertEqual(self.popen.call_count, launches)
 
     def test_wrong_thread_or_schema_is_unknown(self):
         for response in (None, {}, {'thread': {'id': 'wrong', 'status': {'type': 'idle'}}},
                          {'thread': {'id': 'yes', 'status': {'type': 'notLoaded'}}}):
+            self.clock.return_value += 5
             self.connection.request.side_effect = [{}, {'data': ['yes']}, response]
             self.assertIsNone(self.reader.read(['yes'])['yes'])
+        self.assertEqual(self.popen.call_count, 4)
 
     def test_missing_socket_empty_tasks_and_missing_binary_do_not_launch(self):
         self.assertEqual(self.reader.read([]), {})
@@ -174,16 +292,49 @@ class ApprovalReaderTests(unittest.TestCase):
 
     def test_invalid_loaded_list_cannot_borrow_another_threads_status(self):
         for loaded in (None, {}, {'data': {}}, {'data': [True]}, {'data': [{'id': 'yes'}]}):
+            self.clock.return_value += 5
             self.connection.request.side_effect = [{}, loaded]
             self.assertEqual(self.reader.read(['yes']), {'yes': None})
+        self.assertEqual(self.popen.call_count, 5)
 
     def test_unreadable_socket_is_unknown(self):
-        with patch('codex_approval.Path.exists', side_effect=PermissionError('unreadable')):
+        with patch('codex_approval.Path.stat', side_effect=PermissionError('unreadable')):
             self.assertEqual(self.reader.read(['yes']), {'yes': None})
         self.popen.assert_not_called()
 
 
 class UsageApprovalIntegrationTests(unittest.TestCase):
+    def test_usage_polls_reuse_the_readers_throttled_snapshot(self):
+        with tempfile.TemporaryDirectory() as root:
+            fixture = ScopeFixture(root)
+            fixture.add('synthetic', 'Synthetic', 100, working=True)
+            store = fixture.finish()
+            path = Path(root)/'app-server-control/app-server-control.sock'
+            path.parent.mkdir()
+            path.touch()
+            store.approval.binary = 'synthetic-codex.exe'
+            connection = Mock()
+            connection.request.side_effect = [{}, {'data': ['synthetic']},
+                {'thread': {'id': 'synthetic', 'status':
+                            {'type': 'active', 'activeFlags': ['waitingOnApproval']}}}]
+            with patch('codex_approval.time.monotonic', return_value=100.) as clock, \
+                    patch('codex_approval.subprocess.Popen', return_value=Mock()) as popen, \
+                    patch('codex_approval._ControlConnection', return_value=connection):
+                first = store.read(scope='global')
+                for _ in range(4):
+                    clock.return_value += 1
+                    current = store.read(scope='global')
+                    self.assertEqual(current['tokens'], first['tokens'])
+                    self.assertEqual(current['active_tasks'], first['active_tasks'])
+                    self.assertIs(current['active_tasks'][0]['awaiting_approval'], True)
+                self.assertEqual(popen.call_count, 1)
+                clock.return_value = 105.
+                connection.handshake.side_effect = OSError('disconnected')
+                current = store.read(scope='global')
+                self.assertIsNone(current['active_tasks'][0]['awaiting_approval'])
+                self.assertEqual(current['tokens'], first['tokens'])
+                self.assertEqual(popen.call_count, 2)
+
     def test_new_field_is_additive_for_desktop_vscode_cli_and_exec(self):
         with tempfile.TemporaryDirectory() as root:
             fixture = ScopeFixture(root)
