@@ -272,6 +272,117 @@ class RecapTests(unittest.TestCase):
         self.assertEqual(thread_rows(self.home), [])
 
 
+class TurnOutcomeTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.home = Path(temp.name)
+        self.fixture = RecapFixture(self.home)
+
+    def test_sources_and_explicit_terminal_states(self):
+        for index, source in enumerate(('desktop', 'vscode', 'cli', 'exec')):
+            for status in ('completed', 'interrupted', 'failed'):
+                key = str(index) + status
+                self.fixture.add(key, source, [event('task_started', turn_id='a'),
+                    event('task_complete', 120, turn_id='a', status=status)])
+                self.assertEqual(codex_recap.turn_outcome(self.home, key), status)
+
+    def test_terminal_error_and_abort(self):
+        self.fixture.add('failed', events=[event('turn_started'),
+            event('turn_complete', 120, error={'message': 'Synthetic terminal failure'})])
+        self.fixture.add('aborted', events=[event('task_started'), event('turn_aborted', 120, reason='interrupted')])
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'failed'), 'failed')
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'aborted'), 'interrupted')
+        self.assertEqual([t[3] for t in codex_recap.activity(self.home, 0)['turns']], ['failed', 'interrupted'])
+
+    def test_latest_running_turn_does_not_inherit_previous_outcome(self):
+        self.fixture.add(events=[event('turn_started', turn_id='old'),
+            event('turn_complete', 120, turn_id='old'), event('turn_started', 150, turn_id='new'),
+            event('turn_complete', 160, turn_id='old')])
+        self.assertIsNone(codex_recap.turn_outcome(self.home, 'task'))
+
+    def test_each_turn_retains_its_own_outcome(self):
+        self.fixture.add(events=[event('turn_started', 100), event('turn_complete', 120),
+            event('turn_started', 130), event('turn_aborted', 140),
+            event('turn_started', 150), event('turn_complete', 160, error={'message': 'Failure'})])
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'task'), 'failed')
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [
+            (100., 120., 'Project', 'completed'), (130., 140., 'Project', 'interrupted'),
+            (150., 160., 'Project', 'failed')])
+
+    def test_error_without_terminal_is_not_finished(self):
+        self.fixture.add(events=[event('turn_started'), event('error', 120, message='Failed')])
+        self.assertIsNone(codex_recap.turn_outcome(self.home, 'task'))
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [])
+
+    def test_legacy_explicit_error_followed_by_completion_is_failed(self):
+        self.fixture.add(events=[event('turn_started'), event('error', 110, message='Failure',
+            codex_error_info='UsageLimitExceeded'), event('task_complete', 120)])
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'task'), 'failed')
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'][0][3], 'failed')
+
+    def test_control_errors_retries_and_tool_failure_are_not_turn_failure(self):
+        self.fixture.add(events=[event('turn_started'), event('error', 105, message='Control error',
+            codex_error_info={'ActiveTurnNotSteerable': {'turn_kind': 'review'}}),
+            event('error', 106, message='Rollback', codex_error_info='ThreadRollbackFailed'),
+            event('error', 107, message='Retry', willRetry=True),
+            event('stream_error', 108, message='Retry'), event('exec_command_end', 109, exit_code=1),
+            event('patch_apply_end', 110, success=False), event('task_complete', 120)])
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'task'), 'completed')
+
+    def test_unknown_status_or_error_is_unknown(self):
+        for key, fields in [('status', {'status': 'futureStatus'}), ('error', {'error': {}}),
+                            ('invalid', {'error': 'bad shape'})]:
+            self.fixture.add(key, events=[event('turn_started'), event('turn_complete', 120, **fields)])
+            self.assertIsNone(codex_recap.turn_outcome(self.home, key))
+        self.fixture.add('new-error', events=[event('turn_started'),
+            event('error', 110, message='New', codex_error_info='FutureError'), event('turn_complete', 120)])
+        self.assertIsNone(codex_recap.turn_outcome(self.home, 'new-error'))
+
+    def test_unknown_times_do_not_invalidate_known_outcome(self):
+        self.fixture.add(events=[event('task_complete', None, turn_id='a')])
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'task'), 'completed')
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [])
+
+    def test_duplicate_terminal_does_not_change_first_explicit_outcome(self):
+        self.fixture.add(events=[event('turn_started', turn_id='a'),
+            event('turn_aborted', 110, turn_id='a'), event('turn_complete', 120, turn_id='a')])
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'task'), 'interrupted')
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 110., 'Project', 'interrupted')])
+
+    def test_error_is_reset_for_next_turn(self):
+        self.fixture.add(events=[event('turn_started', 100, turn_id='a'),
+            event('error', 105, message='Fatal', codex_error_info='Other'),
+            event('task_complete', 110, turn_id='a'), event('turn_started', 120, turn_id='b'),
+            event('task_complete', 130, turn_id='b')])
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'task'), 'completed')
+        self.assertEqual([t[3] for t in codex_recap.activity(self.home, 0)['turns']], ['failed', 'completed'])
+
+    def test_fork_inherited_terminal_does_not_finish_child(self):
+        self.fixture.add(meta=dict(forked_from_id='parent', timestamp=150), events=[
+            event('turn_started', 100), event('turn_complete', 120)])
+        self.assertIsNone(codex_recap.turn_outcome(self.home, 'task'))
+
+    def test_missing_corrupt_partial_and_mismatched_data_fail_closed(self):
+        self.assertIsNone(codex_recap.turn_outcome(self.home, 'missing'))
+        for key, meta, suffix in [('bad', {}, '{bad}\n'), ('partial', {}, '{'),
+                                  ('mismatch', {'id': 'other'}, '')]:
+            path = self.fixture.add(key, meta=meta, events=[event('task_complete')])
+            with path.open('a', encoding='utf-8') as stream:
+                stream.write(suffix)
+            self.assertIsNone(codex_recap.turn_outcome(self.home, key))
+        self.fixture.add('other-event', events=[event('turn_complete', thread_id='other')])
+        self.assertIsNone(codex_recap.turn_outcome(self.home, 'other-event'))
+
+    def test_readonly_and_no_ledger_or_server_side_effects(self):
+        self.fixture.add(events=[event('turn_complete')])
+        before = {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in self.home.iterdir()}
+        self.assertEqual(codex_recap.turn_outcome(self.home, 'task'), 'completed')
+        self.assertEqual({p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in self.home.iterdir()}, before)
+        self.assertIsNone(codex_recap.turn_outcome(self.home, None))
+        self.assertIsNone(codex_recap.turn_outcome(self.home, ''))
+
+
 class ActivityTests(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
@@ -285,15 +396,15 @@ class ActivityTests(unittest.TestCase):
             event('task_started', 200, turn_id='b'), event('turn_complete', 240, turn_id='b'),
             event('turn_started', 300, turn_id='c')])
         self.assertEqual(codex_recap.activity(self.home, 120),
-                         dict(turns=[(100., 120., 'Project'), (200., 240., 'Project')], edits=[]))
-        self.assertEqual(codex_recap.activity(self.home, 121)['turns'], [(200., 240., 'Project')])
+                         dict(turns=[(100., 120., 'Project', 'completed'), (200., 240., 'Project', 'completed')], edits=[]))
+        self.assertEqual(codex_recap.activity(self.home, 121)['turns'], [(200., 240., 'Project', 'completed')])
 
     def test_all_top_level_sources_and_terminal_tags(self):
         for index, source in enumerate(('desktop', 'vscode', 'cli', 'exec')):
             self.fixture.add(source, source, events=[event('turn_started', 100 + index),
                 event(('task_complete', 'turn_complete', 'turn_aborted', 'task_complete')[index], 120 + index)])
         self.assertEqual(codex_recap.activity(self.home, 0)['turns'],
-                         [(100. + i, 120. + i, 'Project') for i in range(4)])
+                         [(100. + i, 120. + i, 'Project', 'interrupted' if i == 2 else 'completed') for i in range(4)])
 
     def test_turn_identity_missing_starts_and_duplicate_completions(self):
         self.fixture.add(events=[event('task_complete', 95, started_at=90),
@@ -301,7 +412,7 @@ class ActivityTests(unittest.TestCase):
             event('turn_complete', 120, turn_id='a'), event('task_complete', 130, turn_id='a'),
             event('turn_started', 140, turn_id='b'), event('turn_complete', None, turn_id='b'),
             event('turn_complete', 150, turn_id='b')])
-        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Project')])
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Project', 'completed')])
 
     def test_unknown_invalid_reversed_and_explicit_times(self):
         self.fixture.add(events=[event('turn_started', None), event('task_complete', 110),
@@ -311,7 +422,7 @@ class ActivityTests(unittest.TestCase):
             event('patch_apply_end', None, success=True, changes={'unknown.py': {'type': 'add'}}),
             event('patch_apply_end', True, success=True, changes={'invalid.py': {'type': 'add'}})])
         self.assertEqual(codex_recap.activity(self.home, 0),
-                         dict(turns=[(210., 230., 'Project')], edits=[]))
+                         dict(turns=[(210., 230., 'Project', 'completed')], edits=[]))
 
     def test_successful_edits_have_per_event_times_and_inclusive_cutoff(self):
         self.fixture.add(events=[event('patch_apply_end', 109, success=True, changes={'old.py': {'type': 'add'}}),
@@ -335,7 +446,7 @@ class ActivityTests(unittest.TestCase):
                   changes={'/project/a.py': {'type': 'delete'}}),
             event('turn_complete', '2026-10-06T00:00:02Z')])
         self.assertEqual(codex_recap.activity(self.home, '2026-10-06T00:00:01Z'),
-                         dict(turns=[(1791244800., 1791244802., 'project')],
+                         dict(turns=[(1791244800., 1791244802., 'project', 'completed')],
                               edits=[(1791244801., 'project', 'a.py')]))
 
     def test_unconfirmed_tool_output_is_not_a_structured_edit(self):
@@ -383,7 +494,7 @@ class ActivityTests(unittest.TestCase):
         os.utime(old, (99, 99))
         os.utime(recent, (100, 100))
         with patch('codex_recap._rollout_events', wraps=codex_recap._rollout_events) as read:
-            self.assertEqual(codex_recap.activity(self.home, 100)['turns'], [(100., 120., 'Project')])
+            self.assertEqual(codex_recap.activity(self.home, 100)['turns'], [(100., 120., 'Project', 'completed')])
         self.assertEqual([call.args[0]['id'] for call in read.call_args_list], ['recent'])
 
     def test_fork_copied_history_is_excluded(self):
@@ -393,7 +504,7 @@ class ActivityTests(unittest.TestCase):
             event('turn_started', 160), event('patch_apply_end', 170, success=True,
                 changes={'own.py': {'type': 'add'}}), event('task_complete', 180)])
         self.assertEqual(codex_recap.activity(self.home, 0),
-                         dict(turns=[(160., 180., 'Project')], edits=[(170., 'Project', 'own.py')]))
+                         dict(turns=[(160., 180., 'Project', 'completed')], edits=[(170., 'Project', 'own.py')]))
 
     def test_duplicates_archived_and_distinct_subagent_turns(self):
         self.fixture.add(events=[event('turn_started', 100), event('task_complete', 120)])
@@ -406,20 +517,20 @@ class ActivityTests(unittest.TestCase):
             connection.execute("INSERT INTO threads SELECT id,source,cwd,'other.jsonl',title,name,project_id,archived FROM threads WHERE id='conflict'")
             connection.commit()
         self.assertEqual(codex_recap.activity(self.home, 0)['turns'],
-                         [(100., 120., 'Project'), (100., 120., 'Project')])
+                         [(100., 120., 'Project', 'completed'), (100., 120., 'Project', 'completed')])
 
     def test_project_name_uses_existing_assignment_metadata(self):
         self.fixture.add(events=[event('turn_started', 100), event('task_complete', 120)])
         (self.home/'.codex-global-state.json').write_text(json.dumps({
             'thread-project-assignments': {'task': {'projectId': 'p'}},
             'local-projects': {'p': {'name': 'Named Project'}}}), encoding='utf-8')
-        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Named Project')])
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Named Project', 'completed')])
 
     def test_absent_project_stays_none_and_wrong_thread_events_are_skipped(self):
         self.fixture.add(cwd='', events=[event('turn_started', 100),
             event('patch_apply_end', 110, success=True, changes={'a.py': {'type': 'add'}}),
             event('turn_complete', 115, thread_id='other'), event('task_complete', 120)])
-        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[(100., 120., None)], edits=[]))
+        self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[(100., 120., None, 'completed')], edits=[]))
 
     def test_corrupt_incomplete_and_mismatched_rollouts_fail_closed(self):
         for name, meta, suffix in [('corrupt', {}, '{bad}\n'), ('partial', {}, '{"type":'),
@@ -435,7 +546,7 @@ class ActivityTests(unittest.TestCase):
         before = {file.name: (file.read_bytes(), file.stat().st_mtime_ns) for file in self.home.iterdir()}
         for since in (None, True, -1, float('nan'), float('inf'), 10**400, 'unknown'):
             self.assertEqual(codex_recap.activity(self.home, since), dict(turns=[], edits=[]))
-        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Project')])
+        self.assertEqual(codex_recap.activity(self.home, 0)['turns'], [(100., 120., 'Project', 'completed')])
         self.assertEqual({file.name: (file.read_bytes(), file.stat().st_mtime_ns) for file in self.home.iterdir()}, before)
         path.unlink()
         self.assertEqual(codex_recap.activity(self.home, 0), dict(turns=[], edits=[]))

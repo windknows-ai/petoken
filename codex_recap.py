@@ -245,10 +245,86 @@ def _rollout_summary(row):
                 started_at=start, finished_at=finish, duration_s=duration), lifecycle
 
 
+def _turn_error(payload):
+    """Protocol ErrorEvent affects replayed turn status, excluding control errors."""
+    if not isinstance(payload, dict) or not isinstance(payload.get('message'), str):
+        return None
+    if payload.get('willRetry') is True:
+        return False
+    info = payload.get('codex_error_info')
+    if info is None:
+        return True
+    name = info if isinstance(info, str) else next(iter(info), None) if isinstance(info, dict) and len(info) == 1 else None
+    if not isinstance(name, str):
+        return None
+    name = name.replace('_', '').lower()
+    if name in ('threadrollbackfailed', 'activeturnnotsteerable'):
+        return False
+    return True if name in (
+        'contextwindowexceeded', 'sessionbudgetexceeded', 'usagelimitexceeded', 'ratelimitexceeded',
+        'flexunavailable', 'serveroverloaded', 'cyberpolicy', 'biopolicy', 'misalignmentpolicyviolation',
+        'toomanydenials', 'httpconnectionfailed', 'responsestreamconnectionfailed', 'internalservererror',
+        'unauthorized', 'badrequest', 'invalidprompt', 'sandboxerror', 'responsestreamdisconnected',
+        'responsetoomanyfailedattempts', 'other') else None
+
+
+def _terminal_outcome(payload, error=False):
+    """Only terminal lifecycle events, never an individual tool/error event."""
+    if payload.get('type') not in ('task_complete', 'turn_complete', 'turn_aborted'):
+        return None
+    if 'status' in payload:
+        status = payload['status']
+        return status if status in ('completed', 'failed', 'interrupted') else None
+    if payload.get('type') == 'turn_aborted':
+        return 'interrupted'
+    if payload.get('error') is not None:
+        error = _turn_error(payload['error'])
+    return 'failed' if error is True else 'completed' if error is False else None
+
+
+def turn_outcome(home, thread_id):
+    """Latest explicit local turn outcome; a subsequent start resets it to None.
+
+    Does not connect to app-server or infer completion from time/inactivity.
+    Missing, corrupt, incomplete or mismatched rollouts return None.
+    """
+    row = thread_info(home, thread_id)
+    if not row or not row.get('rollout_path'):
+        return None
+    outcome = active_turn = None
+    started = False
+    in_turn = False
+    error = False
+    try:
+        for event, payload, _root, _cwd, _stamp in _rollout_events(row):
+            if event.get('type') != 'event_msg':
+                continue
+            tag = payload.get('type')
+            if tag in ('task_started', 'turn_started'):
+                active_turn = payload.get('turn_id')
+                started = True
+                in_turn = True
+                outcome = None
+                error = False
+            elif tag == 'error' and in_turn and payload.get('turn_id', active_turn) == active_turn:
+                current = _turn_error(payload)
+                if current is not False and error is not True:
+                    error = current
+            elif tag in ('task_complete', 'turn_complete', 'turn_aborted'):
+                if started and (not in_turn or payload.get('turn_id') != active_turn):
+                    continue
+                outcome = _terminal_outcome(payload, error)
+                in_turn = False
+    except (OSError, ValueError, TypeError):
+        return None
+    return outcome
+
+
 def _rollout_activity(row, since, project):
     turns, edits = [], []
     started = active_turn = None
     in_turn = False
+    error = False
     for event, payload, root, cwd, stamp in _rollout_events(row):
         if event.get('type') != 'event_msg':
             continue
@@ -258,12 +334,17 @@ def _rollout_activity(row, since, project):
             started = stamp if value is None else value
             active_turn = payload.get('turn_id')
             in_turn = True
+            error = False
+        elif tag == 'error' and in_turn and payload.get('turn_id', active_turn) == active_turn:
+            current = _turn_error(payload)
+            if current is not False and error is not True:
+                error = current
         elif tag in ('task_complete', 'turn_complete', 'turn_aborted'):
             if in_turn and payload.get('turn_id') == active_turn:
                 value = epoch(payload.get('completed_at'))
                 ended = stamp if value is None else value
                 if started is not None and ended is not None and ended >= max(since, started):
-                    turns.append((started, ended, project))
+                    turns.append((started, ended, project, _terminal_outcome(payload, error)))
                 in_turn = False
         if stamp is not None and stamp >= since:
             changed = _changed_paths(payload, root, cwd)
@@ -274,6 +355,8 @@ def _rollout_activity(row, since, project):
 
 def activity(home, since):
     """Explicit per-turn and edit activity, sorted by UTC epoch seconds.
+
+    Turns are (start, end, project, outcome), with an unknown outcome as None.
 
     Only rollouts with filesystem mtime >= since are read. task_started is
     accepted as the local Codex alias of turn_started. Running/unknown turns
