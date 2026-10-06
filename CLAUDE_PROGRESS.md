@@ -1,6 +1,21 @@
 # Claude progress
 
-## Released — v1.4.0 (2026-10-05)
+## Released — v1.5.0 (2026-10-05)
+
+Notifications and reminders (roadmap phase "1.6"), published from `5ed41d7`
+(tag `v1.5.0`, Latest). ZIP SHA256 `881c725465e9f4a5558ae221b5be302e7668ff38274bf73b9a3978b2947d1ee6`;
+exe `dd5b9afabf78c258bc04234b8db5e6e4853f0456e0305e93fc0c98548d8533ef`; downloaded asset re-verified.
+Full suite 983 tests pass (172 s).
+- Modules: `claude_events.py` (opt-in Claude Code hooks -> `%LOCALAPPDATA%\CodexWisp\claude-events.jsonl`),
+  `notifications.py` (history/dedupe/quiet hours/reminders/polling fallback), Codex `codex_approval.py`
+  (`awaiting_approval` via control socket; desktop app returns None).
+- Sprites are decoded once per process (`pet_assets.load_sprites`): per-pet decoding made the full suite
+  crash once reaction poses were added (40+ MB per leaked test pet).
+- Known gaps: Codex desktop approval/failure not exposed; Claude desktop's own completion notices can only
+  be turned off in the Claude app; Codex approval reader spawns a proxy process per poll while tasks run.
+- Local: kept app `petoken-takeover-backups\Petoken-v1.5.0\`; QA package removed after release.
+
+## History — v1.4.0 (2026-10-05)
 
 Re-published from `8ab13de` (tag `v1.4.0` moved there at the user's request; assets replaced): English default, idle-pose app icon (`assets/petoken.ico`), download holds only program/licences/user docs, OpenCode adapter and its tests removed. ZIP SHA256 `4106d3e4a87f8fd7f1ef820c848ddf9ed8181ca4fe54964e1af6a912073ffade`; exe `36cb9b889e611e20e38815dc57ed647fc64c4d1448f5fff946b2fc906d642df6`; downloaded asset re-verified. Full suite 935 tests pass. Run only related tests for small changes (see memory).
 
