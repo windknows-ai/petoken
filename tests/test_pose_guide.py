@@ -1,5 +1,6 @@
-"""Every pose has a trigger, and the guide in Settings lists them all."""
+"""Every pose has a trigger, and the workbench Guide explains them and the clinginess levels."""
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -45,17 +46,37 @@ class PoseGuideTests(unittest.TestCase):
             for table in (ZH_CN, EN):
                 self.assertIn(f'pose_name_{state}', table)
                 self.assertIn(f'pose_when_{state}', table)
-        guide = pose_guide.PoseGuide(None, self.panel)
+        guide = pose_guide.GuidePage(self.panel)
+        guide.apply_language()
         self.assertEqual(len(guide.show_buttons), len(listed))
         guide.show_buttons['sleep'].click()
         self.assertEqual(self.pet.current_state, 'sleep')
         guide.deleteLater()
 
-    def test_settings_has_a_card_for_the_guide(self):
-        from widget import Settings
-        settings = Settings(self.panel)
-        self.assertIn(str(pose_guide.pose_count()), settings.poses_button.text())
-        settings.deleteLater()
+    def test_levels_explained_and_switchable(self):
+        for level in pose_guide.LEVELS:
+            self.assertIn(f'guide_level_{level}', ZH_CN)
+            self.assertIn(f'guide_level_{level}', EN)
+        guide = pose_guide.GuidePage(self.panel)
+        guide.apply_language()
+        self.assertFalse(guide.level_buttons['moderate'].isEnabled())     # In use.
+        guide.level_buttons['clingy'].click()
+        self.assertEqual(self.panel.prefs['clinginess'], 'clingy')
+        self.assertEqual(self.pet.mood.clinginess, 'clingy')
+        self.assertFalse(guide.level_buttons['clingy'].isEnabled())
+        self.assertTrue(guide.level_buttons['moderate'].isEnabled())
+        guide.deleteLater()
+
+    def test_guide_is_a_workbench_tab(self):
+        from workbench import WorkbenchWindow
+        from workbench_store import WorkbenchStore
+        self.panel.prefs['language'] = 'en'
+        store = WorkbenchStore(Path(self.temp.name) / 'w.sqlite3')
+        window = WorkbenchWindow(self.panel, store)
+        self.assertIs(window.tabs.widget(window.guide_tab), window.guide_page)
+        self.assertEqual(window.tabs.tabText(window.guide_tab), 'Guide')
+        window.shutdown()
+        window.deleteLater()
 
     def test_new_triggers(self):
         quick = dict(kind='finished', detail=recap_detail(dict(files=[], duration_s=30, usd=None)))
@@ -75,7 +96,7 @@ class PoseGuideTests(unittest.TestCase):
         self.panel.focus_mode.abandon()
         self.pet.interaction_state = None
         self.pet.panel.activity.state.stable['music'] = True
-        self.pet.panel.activity.state.sampled = __import__('time').monotonic()
+        self.pet.panel.activity.state.sampled = time.monotonic()
         with patch('pet.time.time', return_value=120 * 3):
             self.pet.update_activity()
         self.assertEqual(self.pet.current_state, 'guitar')

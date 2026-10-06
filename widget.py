@@ -3721,12 +3721,12 @@ SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'about')
 
 # Which options each page shows, in order (row label attributes).
 SETTINGS_LAYOUT = (
-    ('general', ('language_label', 'pet_scale_label', 'clinginess_label', 'poses_label', 'topmost_label',
+    ('general', ('language_label', 'pet_scale_label', 'clinginess_label', 'topmost_label',
                  'star_ring_label',
                  'update_label', 'onboarding_label')),
     ('tracking', ('tracking_label', 'task_label', 'scope_label', 'token_format_label', 'currency_label')),
-    ('claude', ('claude_sync_label', 'claude_notify_label', 'claude_approval_label', 'codex_hooks_label',
-                'mute_claude_toasts_label')),
+    ('claude', ('claude_sync_label', 'claude_probe_label', 'claude_notify_label', 'claude_approval_label',
+                'codex_hooks_label', 'mute_claude_toasts_label')),
     ('assistant', ('assistant_hints_label', 'continuation_card_label', 'dnd_label', 'dnd_scheduled_label',
                    'schedule_missed_label', 'quick_launch_hotkey_label')),
 )
@@ -3735,7 +3735,7 @@ SETTINGS_LAYOUT = (
 SETTING_DESCRIPTIONS = (
     ('general', 'token_format_label', 'token_format'), ('general', 'currency_label', 'currency'),
     ('general', 'topmost_label', 'topmost'), ('general', 'star_ring_label', 'star_ring'),
-    ('general', 'clinginess_label', 'clinginess'), ('general', 'poses_label', 'poses'),
+    ('general', 'clinginess_label', 'clinginess'),
     ('general', 'update_label', 'update'),
     ('general', 'onboarding_label', 'onboarding'),
     ('tracking', 'task_label', 'task'), ('tracking', 'scope_label', 'scope'),
@@ -3743,6 +3743,7 @@ SETTING_DESCRIPTIONS = (
     ('claude', 'claude_sync_label', 'claude_sync'), ('claude', 'claude_notify_label', 'claude_notify'),
     ('claude', 'claude_approval_label', 'claude_approval'), ('claude', 'codex_hooks_label', 'codex_hooks'),
     ('claude', 'mute_claude_toasts_label', 'mute_claude_toasts'),
+    ('claude', 'claude_probe_label', 'claude_probe'),
     ('assistant', 'quick_launch_hotkey_label', 'hotkey'), ('assistant', 'schedule_missed_label', 'schedule_missed'),
     ('assistant', 'assistant_hints_label', 'assistant_hints'),
     ('assistant', 'continuation_card_label', 'continuation'), ('assistant', 'dnd_label', 'dnd'),
@@ -3883,6 +3884,14 @@ class Settings(QDialog):
         self.mute_claude_toasts.setChecked(bool(panel.prefs.get('mute_claude_toasts', True)))
         self.mute_claude_toasts_label = label()
         self.forms['claude'].addRow(self.mute_claude_toasts_label, self.mute_claude_toasts)
+        from claude_probe import INTERVALS
+        self.claude_probe = QComboBox()
+        for minutes in INTERVALS:
+            self.claude_probe.addItem('', minutes)
+        self.claude_probe.setCurrentIndex(max(0, self.claude_probe.findData(
+            panel.prefs.get('claude_probe_minutes', 0))))
+        self.claude_probe_label = label()
+        self.forms['claude'].addRow(self.claude_probe_label, self.claude_probe)
         from quick_launch import HOTKEYS
         self.quick_launch_hotkey = QComboBox()
         for name in (*HOTKEYS, 'off'):
@@ -3952,10 +3961,6 @@ class Settings(QDialog):
             panel.prefs.get('clinginess', 'moderate'))))
         self.clinginess_label = label()
         self.forms['general'].addRow(self.clinginess_label, self.clinginess)
-        self.poses_button = QPushButton()
-        self.poses_button.clicked.connect(self.open_pose_guide)
-        self.poses_label = label()
-        self.forms['general'].addRow(self.poses_label, self.poses_button)
         self.update_check = QCheckBox()
         self.update_check.setChecked(bool(panel.prefs.get('update_check', True)))
         self.update_auto = QCheckBox()
@@ -4085,14 +4090,11 @@ class Settings(QDialog):
                 column.addWidget(card)
             self.forms[page].insertRow(0, cards)
 
-    def open_pose_guide(self):
-        from pose_guide import PoseGuide
-        PoseGuide(self, self.parentWidget()).exec()
-
     def _describe_clinginess(self):
         for note, key in self.descriptions:
             if key == 'clinginess':
-                note.setText(self.tr_text(f'clinginess_desc_{self.clinginess.currentData()}'))
+                note.setText(self.tr_text(f'clinginess_desc_{self.clinginess.currentData()}')
+                             + ' ' + self.tr_text('clinginess_more'))
 
     def tr_text(self, key, **values):
         return text(key, self.language.currentData(), **values)
@@ -4224,6 +4226,12 @@ class Settings(QDialog):
         self.codex_hooks.setToolTip(codex_tip)
         self.codex_hooks_label.setToolTip(codex_tip)
         self.mute_claude_toasts_label.setText(t('mute_claude_toasts'))
+        self.claude_probe_label.setText(t('claude_probe'))
+        self.claude_probe.setToolTip(t('claude_probe_tip'))
+        for index in range(self.claude_probe.count()):
+            minutes = self.claude_probe.itemData(index)
+            self.claude_probe.setItemText(index, t('claude_probe_off') if not minutes
+                                          else t('claude_probe_every', minutes=minutes))
         self.mute_claude_toasts.setAccessibleName(t('mute_claude_toasts'))
         self.mute_claude_toasts.setToolTip(t('mute_claude_toasts_tip'))
         self.mute_claude_toasts_label.setToolTip(t('mute_claude_toasts_tip'))
@@ -4259,9 +4267,6 @@ class Settings(QDialog):
         self.dnd_scheduled.setToolTip(t('dnd_tip'))
         self.pet_scale_label.setText(t('character_size'))
         self.clinginess_label.setText(t('clinginess'))
-        from pose_guide import pose_count
-        self.poses_label.setText(t('setting_poses'))
-        self.poses_button.setText(t('setting_poses_open', count=pose_count()))
         for index, key in enumerate(('quiet', 'moderate', 'clingy')):
             self.clinginess.setItemText(index, t(f'clinginess_{key}'))
         self.clinginess.setToolTip(t('clinginess_tip'))
@@ -4335,6 +4340,7 @@ class Settings(QDialog):
                      star_ring_enabled=self.star_ring.isChecked(),
                      assistant_hints=self.assistant_hints.isChecked(),
                      mute_claude_toasts=self.mute_claude_toasts.isChecked(),
+                     claude_probe_minutes=self.claude_probe.currentData(),
                      update_check=self.update_check.isChecked(),
                      schedule_missed=self.schedule_missed.currentData(),
                      update_auto=self.update_auto.isChecked(),
@@ -4776,6 +4782,9 @@ class Panel(QWidget):
         self.focus_mode.summary_ready.connect(self._focus_summary)
         self._focus_card = None
         self._focus_phase = 'idle'
+        # 2.0 opt-in background refresh of Claude's limits.
+        from claude_probe import ClaudeProbe
+        self.claude_probe = ClaudeProbe(self)
         # 2.0 points, stickers and weekly usage goals.
         from companion import Companion
         self.companion = Companion(self)
@@ -5367,6 +5376,8 @@ class Panel(QWidget):
     def refresh_status(self):
         if self.closing:
             return
+        if self.live:
+            self.claude_probe.tick()
         # Both providers share the same visual-clock arming path.
         try:
             self.task_manager.sync_motion()

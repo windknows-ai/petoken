@@ -2,6 +2,28 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.0.0 — 2026-10-06
+
+The companionship release: she comes alive. Human QA on 2026-10-06.
+
+### Added
+- **Real-time animation** (breathing, blinks, springs, pose blending, frames) and **32 new full-body poses**; **Guide** tab with all 41 poses, when each appears, Show me, and the clinginess levels explained.
+- **Interactions and moods**: head pats, pokes, long press, drag and landing; greetings, yawns, boredom, sleep, wake-up, welcome back; Clinginess setting (Quiet / Moderate / Clingy).
+- **Focus companion mode** with a countdown and End button under her, a summary card and configurable breaks.
+- **Project start settings**, **Start Work**, **Where I Left Off** cards with notes and note history.
+- **Review before done** for todos the AI finishes (Accept / Redo with feedback).
+- **Weekly usage goals**, **companionship points** and **stickers** (Collection tab).
+- **Reports**: data board for any day or the last weeks; **Analysis** line charts (7 / 30 days, 12 weeks); focus time.
+- Optional **background refresh of Claude's limits** (a tiny Haiku request every 1 / 5 / 15 minutes).
+- Adjustable synthetic-data test build (`--preview-v2-0`).
+
+### Changed
+- **Usage card** redesigned as ring gauges; no project name; Codex Pro's 5-hour window shows N/A.
+- A left click is for her; the usage panel opens from the right-click menu.
+- Settings as option cards with a description each; workbench pages explain themselves; seven-step tutorial; wheel guard on drop-downs; workbench is no longer always on top; workbench schema 4 (migrated with a backup).
+
+See [release notes](docs/RELEASE_NOTES_v2.0.0.md).
+
 ## V1.7.1 — 2026-10-06
 
 ### Fixed

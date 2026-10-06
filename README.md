@@ -31,9 +31,9 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v1.7.1
+## Latest stable release: v2.0.0
 
-Download the **one-click installer** [Petoken-Setup-v1.7.1.exe](https://github.com/windknows-ai/petoken/releases/download/v1.7.1/Petoken-Setup-v1.7.1.exe) from the [v1.7.1 release](https://github.com/windknows-ai/petoken/releases/tag/v1.7.1) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v2.0.0.exe](https://github.com/windknows-ai/petoken/releases/download/v2.0.0/Petoken-Setup-v2.0.0.exe) from the [v2.0.0 release](https://github.com/windknows-ai/petoken/releases/tag/v2.0.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -117,6 +117,41 @@ back when Petoken exits).
   reply), files changed, tokens, API-equivalent cost and the change against the
   previous period, followed by a searchable history of Claude sessions and Codex
   threads. Double-click a row to jump to its window.
+
+### New in v2.0: she comes alive
+
+- **A living character.** Real-time animation: she breathes, blinks, sways,
+  hops and squashes; pose changes blend; 32 new full-body poses with their
+  own frames (asleep on her stomach, bored with her chin in her hands,
+  yawning, peeking, pouting, reading at a desk…). Workbench > Guide lists
+  all 41 poses, when each appears, and plays any of them for you.
+- **Touch and mood.** Rub her head, poke her, hold the mouse on her to see
+  her act cute, drag her around. She greets you in the morning, yawns late
+  at night, gets bored, falls asleep when you are away and welcomes you back.
+  How much she does on her own follows Clinginess (Quiet / Moderate /
+  Clingy), explained in the Guide. A left click no longer opens the panel:
+  it is in the right-click menu.
+- **Focus with her.** Right-click > Focus: she reads beside you, only urgent
+  notices pop up, a countdown with an End button sits under her; afterwards
+  a card shows what got done and a break follows (lengths are yours).
+- **Projects pick up where you left off.** Start Work opens Claude Code or
+  Codex with each project's own settings and your last note; Where I Left Off
+  shows your note, the last AI task and unfinished work, and pops up when you
+  come back to a project after a while.
+- **AI work waits for your review.** A todo the AI finishes is not ticked off
+  until you look: Accept, or Redo with what to change.
+- **Usage goals, points and stickers.** Weekly token or dollar goals per
+  project (she worries at 80%); companionship points and stickers from todos,
+  focus and breaks, never from tokens.
+- **Reports with charts.** A data board for any day or any of the last weeks,
+  and line charts of tokens, cost, AI time and tasks over 7 days, 30 days or
+  12 weeks.
+- **A new usage card.** Ring gauges for context, 5 hours and the week, amber
+  and red as they run low; Codex Pro shows the 5-hour ring as N/A. Optional:
+  refresh Claude's limits in the background (Settings > Claude and Codex).
+- **Clearer everywhere.** Settings and every workbench page explain
+  themselves; a seven-step tutorial; the mouse wheel no longer changes
+  drop-downs by accident.
 
 ### New in v1.7
 

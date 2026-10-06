@@ -1,6 +1,6 @@
 ; Petoken one-click installer (Inno Setup 6).
 ; Built by build.ps1 -Installer, or by hand:
-;   ISCC.exe /DAppVersion=1.7.1 /DSourceDir=dist\petoken /DOutputDir=dist installer\petoken.iss
+;   ISCC.exe /DAppVersion=2.0.0 /DSourceDir=dist\petoken /DOutputDir=dist installer\petoken.iss
 ; Installs per user (no administrator rights) into %LOCALAPPDATA%\Programs\Petoken,
 ; adds Start menu / optional desktop shortcuts and an uninstaller. Settings and
 ; workbench data in %LOCALAPPDATA%\CodexWisp are kept on uninstall.

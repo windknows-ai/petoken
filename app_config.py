@@ -12,7 +12,7 @@ from provider_selection import (DEFAULT_TRACKING_PROVIDER,
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 from pet_geometry import PET_SCALE_DEFAULT, normalize_pet_scale
 
-APP_VERSION = "1.7.1"
+APP_VERSION = "2.0.0"
 # 2: V1.5 Codex + Claude Code. Earlier builds offered no provider choice and
 # saved the forced "codex" value, so that value migrates once to Auto.
 SETTINGS_SCHEMA_VERSION = 2
@@ -29,6 +29,7 @@ DEFAULT_PREFERENCES = {
     "pet_motion": True,
     "clinginess": "moderate",
     "continuation_card": True,
+    "claude_probe_minutes": 0,
     "star_ring_enabled": True,
     "workbench_tutorial_seen": False,
     "dnd_enabled": False,
@@ -83,6 +84,8 @@ def normalize_preferences(data):
         preferences["panel_pinned"] = False
     if not isinstance(preferences.get("pet_motion"), bool):
         preferences["pet_motion"] = True
+    if preferences.get("claude_probe_minutes") not in (0, 1, 5, 15):
+        preferences["claude_probe_minutes"] = 0
     if not isinstance(preferences.get("continuation_card"), bool):
         preferences["continuation_card"] = True
     if preferences.get("clinginess") not in ("quiet", "moderate", "clingy"):

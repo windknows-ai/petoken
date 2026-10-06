@@ -241,8 +241,14 @@ class WorkbenchWindow(QWidget):
         self.collection_tab = self.tabs.count() - 1
         self.tabs.currentChanged.connect(
             lambda index: self.collection_page.refresh() if index == self.collection_tab else None)
+        from pose_guide import GuidePage
+        self.guide_page = GuidePage(panel)
+        self.tabs.addTab(self.guide_page, '')
+        self.guide_tab = self.tabs.count() - 1
+        self.tabs.currentChanged.connect(
+            lambda index: self.guide_page.refresh() if index == self.guide_tab else None)
         for index, name in enumerate(('home', 'todos', 'notes', 'projects', 'notifications', 'reports',
-                                      'collection')):
+                                      'collection', 'guide')):
             self.tabs.setTabIcon(index, QIcon(str(ASSETS_DIR / f'workbench-{name}.svg')))
         self.status = QLabel('')
         self.status.setWordWrap(True)
@@ -1336,11 +1342,12 @@ class WorkbenchWindow(QWidget):
         for widget, key in self._tips:
             widget.setToolTip(self.tr(key))
         for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects', 'wb_notifications',
-                                     'wb_reports', 'wb_collection']):
+                                     'wb_reports', 'wb_collection', 'wb_guide']):
             self.tabs.setTabText(index, self.tr(key))
             self.tabs.setTabToolTip(index, self.tr(key + '_tab_tip'))
         self.report_page.apply_language()
         self.collection_page.apply_language()
+        self.guide_page.apply_language()
         self.projects_table.setHeaderLabels([self.tr('wb_name'), self.tr('wb_folder'), self.tr('wb_goal_column')])
         for index, key in enumerate(('wb_notify_all',) + tuple(f'notify_kind_{k}' for k in NOTIFY_KINDS)):
             self.notify_filter.setItemText(index, self.tr(key))
