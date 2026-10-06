@@ -33,6 +33,8 @@ DEFAULT_PREFERENCES = {
     "dnd_start": "22:00",
     "dnd_end": "08:00",
     "assistant_hints": True,
+    "quick_launch_hotkey": "Ctrl+Alt+Space",
+    "launch_folders": [],
 }
 
 
@@ -76,6 +78,14 @@ def normalize_preferences(data):
         preferences["workbench_tutorial_seen"] = False
     if not isinstance(preferences.get("assistant_hints"), bool):
         preferences["assistant_hints"] = True
+    if preferences.get("quick_launch_hotkey") not in ("Ctrl+Alt+Space", "Alt+Shift+Space",
+                                                      "Ctrl+Alt+K", "off"):
+        preferences["quick_launch_hotkey"] = "Ctrl+Alt+Space"
+    folders = preferences.get("launch_folders")
+    preferences["launch_folders"] = ([f for f in folders if isinstance(f, str) and f][:8]
+                                     if isinstance(folders, list) else [])
+    if preferences.get("launch_app") not in ("claude", "codex"):
+        preferences.pop("launch_app", None)
     for key in ("dnd_enabled", "dnd_scheduled"):
         if not isinstance(preferences.get(key), bool):
             preferences[key] = False

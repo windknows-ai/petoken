@@ -367,6 +367,7 @@ class DesktopPet(QWidget):
         usage.setChecked(self.panel.is_pinned())
         usage.setToolTip(self.tr_text('panel_pinned_help'))
         usage.toggled.connect(self.panel.set_panel_pinned)
+        menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch)
         menu.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
         menu.addAction(self.tr_text('workbench_open'),self.panel.open_workbench)
         menu.addAction(self.tr_text('wb_tutorial'),self.panel.open_workbench_tutorial)

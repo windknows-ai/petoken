@@ -3782,6 +3782,14 @@ class Settings(QDialog):
         approval_row.addStretch(1)
         self.claude_approval_label = label()
         self.form.addRow(self.claude_approval_label, approval_row)
+        from quick_launch import HOTKEYS
+        self.quick_launch_hotkey = QComboBox()
+        for name in (*HOTKEYS, 'off'):
+            self.quick_launch_hotkey.addItem(name, name)
+        self.quick_launch_hotkey.setCurrentIndex(max(0, self.quick_launch_hotkey.findData(
+            panel.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space'))))
+        self.quick_launch_hotkey_label = label()
+        self.form.addRow(self.quick_launch_hotkey_label, self.quick_launch_hotkey)
         self.assistant_hints = QCheckBox()
         self.assistant_hints.setChecked(bool(panel.prefs.get('assistant_hints', True)))
         self.assistant_hints_label = label()
@@ -3926,6 +3934,18 @@ class Settings(QDialog):
         self.claude_approval.setToolTip(approval_tip)
         self.claude_approval_label.setToolTip(approval_tip)
         self.claude_approval_rules.setText(t('approval_rules'))
+        hotkey = getattr(self.parentWidget(), 'hotkey', None)
+        chosen = self.quick_launch_hotkey.currentData()
+        active = getattr(hotkey, 'registered', None)
+        self.quick_launch_hotkey.setItemText(self.quick_launch_hotkey.count() - 1, t('launch_hotkey_off'))
+        self.quick_launch_hotkey_label.setText(t('launch_hotkey'))
+        self.quick_launch_hotkey.setAccessibleName(t('launch_hotkey'))
+        hotkey_tip = t('launch_hotkey_tip', combo=active or chosen)
+        if self.parentWidget().live and chosen != 'off' and hotkey is not None and active != chosen:
+            hotkey_tip += '\n' + (t('launch_hotkey_moved', combo=chosen, active=active) if active
+                                  else t('launch_hotkey_taken', combo=chosen))
+        self.quick_launch_hotkey.setToolTip(hotkey_tip)
+        self.quick_launch_hotkey_label.setToolTip(hotkey_tip)
         self.assistant_hints_label.setText(t('assistant_hints'))
         self.assistant_hints.setAccessibleName(t('assistant_hints'))
         self.assistant_hints.setToolTip(t('assistant_hints_tip'))
@@ -3987,6 +4007,7 @@ class Settings(QDialog):
                      always_on_top=self.topmost.isChecked(),
                      star_ring_enabled=self.star_ring.isChecked(),
                      assistant_hints=self.assistant_hints.isChecked(),
+                     quick_launch_hotkey=self.quick_launch_hotkey.currentData(),
                      dnd_enabled=self.dnd.isChecked(),
                      dnd_scheduled=self.dnd_scheduled.isChecked(),
                      dnd_start=self.dnd_start.time().toString('HH:mm'),
@@ -4020,6 +4041,7 @@ class Settings(QDialog):
             except (OSError, ValueError):
                 pass
         panel.sync_approvals()
+        panel.sync_hotkey()
         panel.task_manager.set_visible(prefs['star_ring_enabled'])
         # Every save retires outstanding requests for the previous
         # settings, even when only scope/pinned changed: the new epoch
@@ -4284,6 +4306,7 @@ class Panel(QWidget):
         self.tray_actions = {
             'show_hide': menu.addAction('', self.toggle_visible),
             'show_hide_pet': menu.addAction('', self.toggle_pet),
+            'launch_menu': menu.addAction('', self.open_quick_launch),
             'workbench_open': menu.addAction('', self.open_workbench),
             'wb_tutorial': menu.addAction('', self.open_workbench_tutorial),
             'analytics_button': menu.addAction('', self.open_analytics),
@@ -4337,6 +4360,12 @@ class Panel(QWidget):
         self.notify_clock.timeout.connect(self.poll_notifications)
         if live:
             self.notify_clock.start(2000)
+        from quick_launch import GlobalHotkey
+        self.quick_launch_window = None
+        self.hotkey = GlobalHotkey()
+        QApplication.instance().installNativeEventFilter(self.hotkey.filter)
+        self.hotkey.pressed.connect(self.open_quick_launch)
+        self.sync_hotkey()
         from approval_card import ApprovalController
         self.approvals = ApprovalController(self)
         self.approvals.requested.connect(self._approval_requested)
@@ -5055,6 +5084,26 @@ class Panel(QWidget):
             return None
         return dict(files=recap['files'], duration_s=None, usd=None)
 
+    def sync_hotkey(self):
+        """Ctrl+Alt+Space opens quick launch while the setting is on."""
+        wanted = self.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space')
+        if self.live and not self.closing and wanted != 'off':
+            self.hotkey.register(wanted)
+        else:
+            self.hotkey.unregister()
+
+    def open_quick_launch(self):
+        if self.closing:
+            return
+        from quick_launch import QuickLaunchDialog
+        window = self.quick_launch_window
+        if window is None or not window.isVisible():
+            window = self.quick_launch_window = QuickLaunchDialog(self)
+            window.setStyleSheet(STYLE)
+        window.show()
+        window.raise_()
+        window.activateWindow()
+
     def sync_approvals(self):
         """Answer Claude Code's permission requests while the hook is installed."""
         wanted = self.live and not self.closing and claude_approval.state() == 'on'
@@ -5384,6 +5433,7 @@ class Panel(QWidget):
         self.closing = True
         self.notify_clock.stop()
         self.approvals.stop()
+        self.hotkey.unregister()
         self.stop.set()
         self.active.stop.set()
         self.activity.close()
