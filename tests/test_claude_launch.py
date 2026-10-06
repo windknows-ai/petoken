@@ -8,6 +8,7 @@ import unittest
 from ctypes import wintypes
 
 import claude_launch
+import claude_models
 
 
 def split_windows(command_line):
@@ -48,12 +49,15 @@ class LaunchCommandTests(unittest.TestCase):
 
     def test_model_and_effort_come_before_the_prompt(self):
         argv = claude_launch.launch_command(self.temp.name, '-p looks like a flag', cli='c.exe', shell='ps.exe',
-                                            terminal='', model='opus', effort='xhigh')
+                                            terminal='', model='claude-opus-5-5', effort='xhigh',
+                                            models=claude_models.FALLBACK)
         self.assertEqual(split_windows(payload(argv)['arguments']),
-                         ['--model', 'opus', '--effort', 'xhigh', '--', '-p looks like a flag'])
-        for bad in (dict(model='gpt-9'), dict(effort='ludicrous'), dict(model='opus --dangerously-skip-permissions')):
+                         ['--model', 'claude-opus-5-5', '--effort', 'xhigh', '--', '-p looks like a flag'])
+        for bad in (dict(model='gpt-9'), dict(effort='ludicrous'), dict(model='claude-opus-5-5 --dangerously-skip-permissions'),
+                    dict(model='claude-haiku-4-5', effort='high')):      # Haiku takes no effort.
             with self.assertRaises(ValueError):
-                claude_launch.launch_command(self.temp.name, 'hi', cli='c.exe', shell='ps.exe', terminal='', **bad)
+                claude_launch.launch_command(self.temp.name, 'hi', cli='c.exe', shell='ps.exe', terminal='',
+                                             models=claude_models.FALLBACK, **bad)
 
     def test_powershell_fallback_and_validation(self):
         argv = claude_launch.launch_command(self.temp.name, 'hi', cli='c.exe', shell='ps.exe', terminal='')

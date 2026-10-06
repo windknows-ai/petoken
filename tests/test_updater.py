@@ -149,6 +149,26 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(panel.shut, 1)          # Petoken closes so the installer can replace it.
 
 
+class ModalTests(unittest.TestCase):
+    def test_update_dialog_sits_on_an_open_modal_window(self):
+        from PySide6.QtCore import QTimer
+        from PySide6.QtWidgets import QDialog
+        from update_ui import UpdateController
+        settings, seen = QDialog(), {}
+        control = UpdateController(FakePanel(), check=lambda: None)
+
+        def during():
+            control.show(dict(version='99.0.0', notes=''))
+            seen['parent'] = control.dialog.parent()
+            seen['blocked'] = not control.dialog.isEnabled()
+            control.dialog.reject()
+            settings.reject()
+        QTimer.singleShot(50, during)
+        settings.exec()          # Like Settings: application-modal.
+        self.assertIs(seen['parent'], settings)
+        self.assertFalse(seen['blocked'])
+
+
 class OnboardingPrefTests(unittest.TestCase):
     def test_only_a_first_start_gets_the_guide(self):
         self.assertFalse(normalize_preferences({})['onboarding_done'])

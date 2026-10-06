@@ -7,6 +7,8 @@ from unittest.mock import patch
 
 from PySide6.QtWidgets import QApplication
 
+import claude_launch
+import claude_models
 import quick_launch
 
 APP = QApplication.instance() or QApplication([])
@@ -65,19 +67,25 @@ class DialogTests(unittest.TestCase):
         self.assertEqual(self.panel.saved, 1)
 
     def test_model_effort_and_chat_mode(self):
-        models = [self.dialog.model.itemData(i) for i in range(self.dialog.model.count())]
-        efforts = [self.dialog.effort.itemData(i) for i in range(self.dialog.effort.count())]
-        self.assertEqual(models, ['', 'fable', 'opus', 'sonnet', 'haiku'])
-        self.assertEqual(efforts, ['', 'low', 'medium', 'high', 'xhigh', 'max'])
-        self.dialog.model.setCurrentIndex(self.dialog.model.findData('opus'))
-        self.dialog.effort.setCurrentIndex(self.dialog.effort.findData('high'))
+        with patch('claude_models.catalog', return_value=[dict(m) for m in claude_models.FALLBACK]):
+            self.dialog._fill_options()
+            models = [self.dialog.model.itemData(i) for i in range(self.dialog.model.count())]
+            self.assertEqual(models, ['', *(m['id'] for m in claude_models.FALLBACK)])
+            self.assertEqual(self.dialog.model.itemText(self.dialog.model.findData('claude-opus-5-5')), 'Opus 5.5')
+            self.assertIn('usage credits', self.dialog.model.itemText(self.dialog.model.findData('claude-fable-5-1')))
+            self.dialog.model.setCurrentIndex(self.dialog.model.findData('claude-haiku-4-5'))
+            self.assertFalse(self.dialog.effort.isEnabled())             # Haiku takes no effort.
+            self.dialog.model.setCurrentIndex(self.dialog.model.findData('claude-opus-5'))
+            self.assertTrue(self.dialog.effort.isEnabled())
+            self.dialog.effort.setCurrentIndex(self.dialog.effort.findData('high'))
+            self.assertEqual(self.dialog.effort.currentText(), 'High')
         self.dialog.prompt.setPlainText('What is a monad?')
         self.dialog.chat.setChecked(True)
         self.assertFalse(self.dialog.folder.isEnabled())
         with patch('quick_launch.chat_folder', return_value=self.temp.name),                 patch('quick_launch.build_command', return_value=['x']) as build:
             self.assertTrue(self.dialog.launch(lambda argv: None))
-        build.assert_called_once_with('claude', self.temp.name, 'What is a monad?', model='opus', effort='high')
-        self.assertEqual(self.panel.prefs['launch_options']['claude'], dict(model='opus', effort='high'))
+        build.assert_called_once_with('claude', self.temp.name, 'What is a monad?', model='claude-opus-5', effort='high')
+        self.assertEqual(self.panel.prefs['launch_options']['claude'], dict(model='claude-opus-5', effort='high'))
         self.assertEqual(self.panel.prefs['launch_folders'], [self.temp.name])   # Chats are not remembered.
 
     def test_missing_codex_cannot_be_chosen(self):

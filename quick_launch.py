@@ -94,20 +94,42 @@ def codex_available():
         return False
 
 
-def launch_options(app):
-    """(models, efforts) the app's CLI accepts; empty means only its own default.
+def _badge(badge, language):
+    # Claude's catalog speaks English; its one known badge is translated.
+    if badge == 'Requires usage credits':
+        return text('launch_model_credits_badge', language)
+    return badge
 
-    Claude: ``claude_launch.MODELS`` / ``EFFORTS``. Codex: whatever Codex's
-    ``codex_launch.options()`` reports, once it provides one.
-    """
+
+def launch_options(app, language=None):
+    """The app's own model list: [dict(id, label, efforts)], read fresh each
+    time so new models appear and retired ones go (Claude: its model
+    catalog; Codex: Codex's ``model/list``). ``efforts`` are (id, label)
+    pairs for that model; an empty list means only the app's default."""
     if app == 'claude':
-        return list(claude_launch.MODELS), list(claude_launch.EFFORTS)
+        import claude_models
+        return [dict(id=m['id'], label=m['name'] + (f" · {_badge(m['badge'], language)}" if m['badge'] else ''),
+                     efforts=list(m['efforts'])) for m in claude_models.catalog()]
     try:
         import codex_launch
         found = codex_launch.options() if hasattr(codex_launch, 'options') else {}
-        return list(found.get('models') or []), list(found.get('efforts') or [])
     except Exception:
-        return [], []
+        return []
+    efforts = [(effort, effort) for effort in found.get('efforts') or []]
+    return [dict(id=model, label=model, efforts=efforts) for model in found.get('models') or []]
+
+
+def default_efforts(app):
+    """Efforts offered while the app's default model is kept."""
+    if app == 'claude':
+        import claude_models
+        return list(claude_models.GENERIC_EFFORTS)
+    try:
+        import codex_launch
+        found = codex_launch.options() if hasattr(codex_launch, 'options') else {}
+        return [(effort, effort) for effort in found.get('efforts') or []]
+    except Exception:
+        return []
 
 
 def chat_folder():
@@ -196,6 +218,7 @@ class QuickLaunchDialog(QDialog):
         choices.addWidget(self.effort, 1)
         layout.addLayout(choices)
         self.claude.toggled.connect(lambda _: self._fill_options())
+        self.model.currentIndexChanged.connect(lambda _: self._fill_efforts())
         self._fill_options()
         self.error = QLabel('')
         self.error.setWordWrap(True)
@@ -223,17 +246,34 @@ class QuickLaunchDialog(QDialog):
             widget.setEnabled(not on)
 
     def _fill_options(self):
-        """Model and effort lists follow the chosen app; the last choice is kept."""
+        """Models follow the chosen app (fresh list each time); efforts follow
+        the chosen model. The last choice is kept when still offered."""
         app = self.app() or 'claude'
-        models, efforts = launch_options(app)
+        self._models = launch_options(app, self.language)
         saved = (self.panel.prefs.get('launch_options') or {}).get(app) or {}
-        for box, values, key in ((self.model, models, 'model'), (self.effort, efforts, 'effort')):
-            box.clear()
-            box.addItem(text(f'launch_{key}_default', self.language), '')
-            for value in values:
-                box.addItem(value.capitalize() if app == 'claude' and key == 'model' else value, value)
-            box.setCurrentIndex(max(0, box.findData(saved.get(key, ''))))
-            box.setToolTip('' if values else text('launch_options_unavailable', self.language))
+        self.model.blockSignals(True)
+        self.model.clear()
+        self.model.addItem(text('launch_model_default', self.language), '')
+        for model in self._models:
+            self.model.addItem(model['label'], model['id'])
+        self.model.setCurrentIndex(max(0, self.model.findData(saved.get('model', ''))))
+        self.model.setToolTip('' if self._models else text('launch_options_unavailable', self.language))
+        self.model.blockSignals(False)
+        self._fill_efforts(saved.get('effort', ''))
+
+    def _fill_efforts(self, keep=None):
+        keep = self.effort.currentData() if keep is None else keep
+        app = self.app() or 'claude'
+        chosen = self.model.currentData()
+        model = next((m for m in getattr(self, '_models', []) if m['id'] == chosen), None)
+        efforts = model['efforts'] if model else default_efforts(app)
+        self.effort.clear()
+        self.effort.addItem(text('launch_effort_default', self.language), '')
+        for value, label in efforts:
+            self.effort.addItem(label, value)
+        self.effort.setCurrentIndex(max(0, self.effort.findData(keep or '')))
+        self.effort.setEnabled(bool(efforts))
+        self.effort.setToolTip('' if efforts else text('launch_effort_none', self.language))
 
     def browse(self):
         folder = QFileDialog.getExistingDirectory(self, text('launch_folder', self.language),
@@ -264,7 +304,10 @@ class QuickLaunchDialog(QDialog):
             argv = build_command(app, folder, prompt, model=model, effort=effort)
             (starter or claude_launch.launch)(argv)
         except ValueError:
-            return self.fail('launch_too_long' if len(prompt) > 8000 else 'launch_need_folder')
+            if len(prompt) > 8000:
+                return self.fail('launch_too_long')
+            # A model / effort pair the app does not offer (Codex checks per model).
+            return self.fail('launch_bad_choice' if model or effort else 'launch_need_folder')
         except (RuntimeError, OSError):
             return self.fail('launch_failed')
         if not chatting:

@@ -19,11 +19,9 @@ import sys
 from pathlib import Path
 
 MAX_COMMAND = 32767
-# What `claude --model` / `--effort` accept (claude --help, Claude Code
-# 2.1.286). Aliases follow the newest model of each family; leaving either
-# unset keeps the user's own Claude Code setting.
-MODELS = ('fable', 'opus', 'sonnet', 'haiku')
-EFFORTS = ('low', 'medium', 'high', 'xhigh', 'max')
+# Models and effort levels come from Claude Code's own model catalog
+# (claude_models.py), so the choices match Claude's picker and follow its
+# updates. Leaving either unset keeps the user's own Claude Code setting.
 
 
 def executable():
@@ -61,12 +59,20 @@ $taskProcess.WaitForExit()
     return base64.b64encode(script.encode('utf-16le')).decode('ascii')
 
 
-def launch_command(folder, prompt, cli=None, shell=None, terminal=None, model=None, effort=None):
-    """argv for Popen(shell=False); raises ValueError / RuntimeError."""
-    if model is not None and model not in MODELS:
-        raise ValueError('Unknown Claude model')
-    if effort is not None and effort not in EFFORTS:
-        raise ValueError('Unknown effort level')
+def launch_command(folder, prompt, cli=None, shell=None, terminal=None, model=None, effort=None,
+                   models=None):
+    """argv for Popen(shell=False); raises ValueError / RuntimeError.
+
+    ``model`` / ``effort`` must be offered by Claude's catalog (``models``
+    overrides it, for tests); the effort must suit that model.
+    """
+    if model is not None or effort is not None:
+        import claude_models
+        models = claude_models.catalog() if models is None else models
+        if model is not None and claude_models.find(model, models) is None:
+            raise ValueError('Claude Code does not offer this model')
+        if effort is not None and effort not in {e for e, _ in claude_models.efforts_for(model, models)}:
+            raise ValueError('This effort level does not suit the model')
     if not isinstance(prompt, str) or not prompt.strip() or '\0' in prompt:
         raise ValueError('A nonempty prompt without NUL is required')
     try:

@@ -879,7 +879,7 @@ class WorkbenchWindow(QWidget):
         for button, available in [
                 (self.task_detail_button, bool(task)), (self.task_link_button, linkable),
                 (self.todo_edit_button, bool(todo)), (self.todo_delete_button, bool(todo)),
-                (self.todo_ai_button, bool(todo and not todo['done'])),
+                (self.todo_ai_button, bool(todo)),
                 (self.project_edit_button, bool(project)), (self.project_delete_button, bool(project)),
                 (self.project_folder_button, bool(project and project['directory'])),
                 (self.note_delete_button, selected_note)]:
@@ -918,6 +918,8 @@ class WorkbenchWindow(QWidget):
         if result != QDialog.Accepted:
             return
         values = dialog.values()
+        if record['done']:   # Giving a finished todo to AI means it is open again.
+            self._attempt(self.store.update_todo, record['id'], record['title'], record['project_id'], False)
         import time as _time
         saved, _ = self._attempt(self.store.schedule_todo, record['id'], values['run_at'] or _time.time(),
                                  values['provider_id'], values['folder'], values['prompt'])

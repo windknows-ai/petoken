@@ -13,8 +13,8 @@ import threading
 import time
 
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
-from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QPushButton, QTextBrowser,
-                               QVBoxLayout)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QHBoxLayout, QLabel, QPushButton,
+                               QTextBrowser, QVBoxLayout)
 
 import updater
 from app_config import APP_VERSION
@@ -26,12 +26,15 @@ TICK_MS = 3600_000
 
 class UpdateDialog(QDialog):
     def __init__(self, controller, release):
-        super().__init__(None)
+        # Child of an open modal window (Settings), so it is on top and
+        # clickable instead of being blocked behind it.
+        super().__init__(QApplication.activeModalWidget())
         self.controller = controller
         self.release = release
         language = self.language = controller.panel.prefs.get('language')
         self.setWindowTitle(text('update_title', language, version=release['version']))
-        self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+        if self.parent() is None:
+            self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
         self.resize(520, 440)
         layout = QVBoxLayout(self)
         head = QLabel(text('update_heading', language, version=release['version'], current=APP_VERSION))
@@ -166,6 +169,8 @@ class UpdateController(QObject):
             return
         self.dialog = UpdateDialog(self, release)
         self.dialog.show()
+        self.dialog.raise_()
+        self.dialog.activateWindow()
         self.panel.tray_notice(text('update_title', self.panel.prefs.get('language'),
                                     version=release['version']), '')
 
