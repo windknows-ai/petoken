@@ -40,21 +40,21 @@ class TutorialTests(unittest.TestCase):
 
     def test_action_routes_to_todos_and_can_resume_same_step(self):
         self.window.open_tutorial()
-        self.window.tutorial.set_step(2)
+        self.window.tutorial.set_step(3)
         with patch.object(self.window, '_record_dialog', return_value=True) as dialog:
             self.window.tutorial.perform_action()
         dialog.assert_called_once()  # The step opens the Add todo dialog.
         self.assertEqual(self.window.tabs.currentIndex(), 1)
         self.assertFalse(self.window.tutorial.isVisible())
         self.window.open_tutorial()
-        self.assertEqual(self.window.tutorial.step, 2)
+        self.assertEqual(self.window.tutorial.step, 3)
         self.assertEqual(self.store.list_todos(), [])
 
     def test_note_action_cancel_preserves_draft_and_guide(self):
         self.window.new_note(self.window.tr('wb_untitled'))
         self.window.note_body.setPlainText('Keep draft')
         self.window.open_tutorial()
-        self.window.tutorial.set_step(3)
+        self.window.tutorial.set_step(4)
         with patch('workbench.QMessageBox.question', return_value=QMessageBox.Cancel):
             self.window.tutorial.perform_action()
         self.assertTrue(self.window.tutorial.isVisible())
@@ -67,7 +67,7 @@ class TutorialTests(unittest.TestCase):
         self.window.open_tutorial()
         self.panel.prefs['language'] = 'en'
         self.window.apply_language()
-        self.assertEqual(self.window.tutorial.title.text(), 'A small place to start')
+        self.assertEqual(self.window.tutorial.title.text(), 'What the workbench is for')
         with patch('workbench.QMessageBox.question', return_value=QMessageBox.Cancel):
             self.assertFalse(self.window.close())
         self.assertTrue(self.window.tutorial.isVisible())
@@ -87,6 +87,18 @@ class TutorialTests(unittest.TestCase):
         self.app.processEvents()
         self.assertFalse(self.window.tutorial.isVisible())
 
+    def test_every_step_has_text_and_a_safe_action(self):
+        from workbench import TUTORIAL_STEPS
+        self.window.open_tutorial()
+        with patch.object(self.window, '_record_dialog', return_value=False),                 patch.object(self.panel, 'open_focus_dialog', create=True) as focus:
+            for step in range(TUTORIAL_STEPS):
+                self.window.tutorial.set_step(step)
+                self.assertTrue(self.window.tutorial.body.text().strip(), step)
+                self.assertNotEqual(self.window.tutorial.action.text(), f'wb_tutorial_action_{step}')
+                if step != 4:      # Step 4 (a new note) is covered above.
+                    self.window.tutorial.perform_action()
+        focus.assert_called_once()
+
     def test_next_back_and_completion_do_not_create_samples(self):
         self.panel.persist = Mock(return_value=True)
         self.window.open_tutorial()
@@ -94,7 +106,8 @@ class TutorialTests(unittest.TestCase):
         self.assertEqual(self.window.tutorial.step, 1)
         self.window.tutorial.back.click()
         self.assertEqual(self.window.tutorial.step, 0)
-        for _ in range(5):
+        from workbench import TUTORIAL_STEPS
+        for _ in range(TUTORIAL_STEPS):
             self.window.tutorial.advance()
         self.assertTrue(self.panel.prefs['workbench_tutorial_seen'])
         self.assertFalse(self.window.tutorial.isVisible())

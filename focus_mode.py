@@ -284,6 +284,19 @@ class FocusDialog(QDialog):
         form.addRow(text('focus_long_break_length', language), self.long_rest)
         form.addRow(text('focus_long_break_every', language), self.every)
         layout.addLayout(form)
+        # The whole plan in one sentence, following the numbers as you change them.
+        self.plan = QLabel()
+        self.plan.setWordWrap(True)
+        self.plan.setStyleSheet(f'background:{theme.BADGE_BG}; border-radius:8px; padding:8px 10px;'
+                                f' color:{theme.VIOLET}; font-weight:600;')
+        layout.addWidget(self.plan)
+        explain = QLabel(text('focus_break_explain', language))
+        explain.setWordWrap(True)
+        explain.setObjectName('muted')
+        layout.addWidget(explain)
+        for spin in (self.minutes, self.rest, self.long_rest, self.every):
+            spin.valueChanged.connect(lambda _: self._update_plan())
+        self._update_plan()
         buttons = QHBoxLayout()
         buttons.addStretch(1)
         cancel = QPushButton(text('launch_cancel', language))
@@ -295,6 +308,17 @@ class FocusDialog(QDialog):
         buttons.addWidget(start)
         layout.addLayout(buttons)
         self.setMinimumWidth(400)
+
+    def _update_plan(self):
+        focus, rest, long_rest, every = (self.minutes.value(), self.rest.value(),
+                                         self.long_rest.value(), self.every.value())
+        if not rest and not (every and long_rest):
+            key = 'focus_plan_none'
+        elif every and long_rest:
+            key = 'focus_plan_long' if rest else 'focus_plan_long_only'
+        else:
+            key = 'focus_plan_rest'
+        self.plan.setText(text(key, self.language, focus=focus, rest=rest, long=long_rest, every=every))
 
     @staticmethod
     def _spin(low, high, value, suffix, zero):

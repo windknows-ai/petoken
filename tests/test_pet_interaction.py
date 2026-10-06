@@ -90,6 +90,20 @@ class PetInteractionTests(unittest.TestCase):
             self.mouse(QEvent.MouseButtonRelease, local, Qt.NoButton)
         toggle.assert_not_called()
 
+    def test_after_a_long_press_moving_the_mouse_does_not_drag(self):
+        local = QPoint(136, 200)
+        before = self.pet.pos()
+        self.mouse(QEvent.MouseButtonPress, local)
+        self.pet.long_press.stop()
+        self.pet._long_pressed()
+        self.mouse(QEvent.MouseMove, local + QPoint(40, 10))
+        self.assertFalse(self.pet.dragging)
+        self.assertEqual(self.pet.pos(), before)
+        self.assertEqual(self.pet.current_state, 'coquettish')
+        with patch.object(self.panel, 'persist') as persist:
+            self.mouse(QEvent.MouseButtonRelease, local + QPoint(40, 10), Qt.NoButton)
+        persist.assert_not_called()
+
     def test_drag_shows_dragged_then_lands(self):
         start = QPoint(136, 120)
         with patch.object(self.panel, 'persist'):

@@ -120,6 +120,7 @@ class Preview(QWidget):
         (root / 'petoken' / 'HANDOFF.md').write_text('# 交接\n- 下一步：做用量目标的界面\n- 注意：先跑测试\n',
                                                     encoding='utf-8')
         self.idle_minutes = 0
+        self._demo = None
         self.hour = None
         self.mood_on = False
         self._build()
@@ -171,8 +172,13 @@ class Preview(QWidget):
                         button('通知：要审批', lambda: self.notify('needs_approval'))))
 
         # Mood.
-        form = group('心情（按模拟的时间和空闲） / Mood')
-        enable = QCheckBox('启用心情（真实版本里一直开着）')
+        form = group('心情 / Mood')
+        why = QLabel('真实使用时，心情动作只在没有 AI 任务、你也没在打字时出现（任务状态优先）。'
+                     '下面的「演示」按钮直接显示动作；勾选「模拟心情」会暂时把 1.x 窗口的任务数设为 0，'
+                     '再按你设的时刻和离开时间让心情自己变化。')
+        why.setWordWrap(True)
+        form.addRow(why)
+        enable = QCheckBox('模拟心情（按下面的时刻和离开时间）')
         enable.toggled.connect(self.set_mood)
         form.addRow(enable)
         self.clinginess = QComboBox()
@@ -182,6 +188,11 @@ class Preview(QWidget):
         self.clinginess.currentIndexChanged.connect(
             lambda _: self.pet.mood.set_clinginess(self.clinginess.currentData()))
         form.addRow('粘人程度', self.clinginess)
+        self.clinginess_note = QLabel()
+        self.clinginess_note.setWordWrap(True)
+        form.addRow(self.clinginess_note)
+        self.clinginess.currentIndexChanged.connect(lambda _: self._describe())
+        self._describe()
         hour = QSpinBox()
         hour.setRange(-1, 23)
         hour.setSpecialValueText('现在')
@@ -193,6 +204,7 @@ class Preview(QWidget):
         idle.setSuffix(' 分钟')
         idle.valueChanged.connect(lambda value: setattr(self, 'idle_minutes', value))
         form.addRow('模拟你离开电脑多久', idle)
+        form.addRow(QLabel('演示（直接显示这个动作几秒）：'))
         form.addRow(row(button('早安', lambda: self.mood_pose('greet_morning')),
                         button('打哈欠', lambda: self.mood_pose('yawn')),
                         button('发呆', lambda: self.mood_pose('bored')),
@@ -313,6 +325,14 @@ class Preview(QWidget):
         import pet as pet_module
         self.mood_on = enabled
         self.pet.mood_enabled = enabled
+        self.pet._mood_next = 0
+        if self.base is not None:
+            # Mood is the lowest layer: tasks would cover it.
+            if enabled:
+                self._tasks_before = self.base.count.value()
+                self.base.count.setValue(0)
+            else:
+                self.base.count.setValue(getattr(self, '_tasks_before', 3))
         preview = self
 
         class Clock(datetime):
@@ -325,12 +345,23 @@ class Preview(QWidget):
         if not enabled:
             self.pet.mood.pose = None
 
+    def _describe(self):
+        from localization import text
+        self.clinginess_note.setText(text(f'clinginess_desc_{self.clinginess.currentData()}',
+                                          self.panel.prefs.get('language')))
+
     def mood_pose(self, pose, seconds=4):
-        self.pet.mood_enabled = True
-        self.pet.mood.pose, self.pet.mood.until = pose, time.monotonic() + seconds
+        """Show a mood pose for a few seconds, above the synthetic tasks."""
+        token = object()
+        self._demo = token
+        self.pet.preview_state = pose
         self.pet.update_activity()
-        if not self.mood_on:
-            QTimer.singleShot(int(seconds * 1000), lambda: setattr(self.pet, 'mood_enabled', False))
+
+        def restore():
+            if self._demo is token:
+                self.pet.preview_state = None
+                self.pet.update_activity()
+        QTimer.singleShot(int(seconds * 1000), restore)
 
     def focus_now(self):
         mode = self.panel.focus_mode

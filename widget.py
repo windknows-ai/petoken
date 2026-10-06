@@ -3698,6 +3698,24 @@ class TaskPanelManager(HaloScene):
 SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'about')
 
 
+# (page, row label attribute, description key): the line shown under each option.
+SETTING_DESCRIPTIONS = (
+    ('general', 'token_format_label', 'token_format'), ('general', 'currency_label', 'currency'),
+    ('general', 'topmost_label', 'topmost'), ('general', 'star_ring_label', 'star_ring'),
+    ('general', 'clinginess_label', 'clinginess'), ('general', 'update_label', 'update'),
+    ('general', 'onboarding_label', 'onboarding'),
+    ('tracking', 'task_label', 'task'), ('tracking', 'scope_label', 'scope'),
+    ('tracking', 'tracking_label', 'tracking'),
+    ('claude', 'claude_sync_label', 'claude_sync'), ('claude', 'claude_notify_label', 'claude_notify'),
+    ('claude', 'claude_approval_label', 'claude_approval'), ('claude', 'codex_hooks_label', 'codex_hooks'),
+    ('claude', 'mute_claude_toasts_label', 'mute_claude_toasts'),
+    ('assistant', 'quick_launch_hotkey_label', 'hotkey'), ('assistant', 'schedule_missed_label', 'schedule_missed'),
+    ('assistant', 'assistant_hints_label', 'assistant_hints'),
+    ('assistant', 'continuation_card_label', 'continuation'), ('assistant', 'dnd_label', 'dnd'),
+    ('assistant', 'dnd_scheduled_label', 'dnd_scheduled'),
+)
+
+
 class Settings(QDialog):
     def __init__(self, panel):
         super().__init__(panel)
@@ -3719,9 +3737,19 @@ class Settings(QDialog):
         for key in SETTINGS_PAGES:
             page = QWidget()
             self.pages[key] = page
-            self.tabs.addTab(page, '')
             if key == 'about':
+                self.tabs.addTab(page, '')
                 continue   # Text, not a form: laid out below.
+            # Each option carries a one-line description, so a page may scroll.
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.NoFrame)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            page.setObjectName('settingsPage')
+            page.setStyleSheet('QWidget#settingsPage { background:transparent; }')
+            scroll.setWidget(page)
+            self.tabs.addTab(scroll, '')
+            self.pages[key] = scroll    # The tab itself (for setCurrentWidget).
             form = QFormLayout(page)
             form.setContentsMargins(14, 14, 14, 10)
             form.setVerticalSpacing(9)
@@ -3954,8 +3982,25 @@ class Settings(QDialog):
         reset_row.addStretch()
         reset_row.addWidget(self.buttons)
         layout.addLayout(reset_row)
+        # Under each option, one short line on what it does (details stay in tooltips).
+        self.descriptions = []
+        for form_key, attr, key in SETTING_DESCRIPTIONS:
+            row_label = getattr(self, attr)
+            form = self.forms[form_key]
+            row, _ = form.getWidgetPosition(row_label)
+            note = label('', 'muted')
+            note.setWordWrap(True)
+            note.setStyleSheet(f'color:{theme.MUTED}; font-size:11px; padding:0 0 4px 0;')
+            form.insertRow(row + 1, note)
+            self.descriptions.append((note, key))
+        self.clinginess.currentIndexChanged.connect(lambda _: self._describe_clinginess())
         self.language.currentIndexChanged.connect(self.apply_language)
         self.apply_language()
+
+    def _describe_clinginess(self):
+        for note, key in self.descriptions:
+            if key == 'clinginess':
+                note.setText(self.tr_text(f'clinginess_desc_{self.clinginess.currentData()}'))
 
     def tr_text(self, key, **values):
         return text(key, self.language.currentData(), **values)
@@ -4145,6 +4190,11 @@ class Settings(QDialog):
         for index in range(4):
             self.about_titles[index].setText(f"{index + 1}. {t(f'about_{index + 1}_title')}")
             self.about_bodies[index].setText(t(f'about_{index + 1}_body'))
+        for note, key in getattr(self, 'descriptions', []):
+            if key != 'clinginess':
+                note.setText(t(f'setting_desc_{key}'))
+        if getattr(self, 'descriptions', None):
+            self._describe_clinginess()
         self.buttons.button(QDialogButtonBox.Save).setText(t('save'))
         self.buttons.button(QDialogButtonBox.Cancel).setText(t('cancel'))
         self.reset_button.setText(t('confirm_reset' if self.reset_armed else 'reset_defaults'))
@@ -5584,9 +5634,11 @@ class Panel(QWidget):
         """The running app's workbench database (None in tests and previews)."""
         return self.todo_ai.store if self.live else None
 
-    def open_focus_dialog(self):
+    def open_focus_dialog(self, todo_id=None):
         from focus_mode import FocusDialog
         dialog = FocusDialog(self, self.workbench_store(), QApplication.activeModalWidget())
+        if todo_id:
+            dialog.todo.setCurrentIndex(max(0, dialog.todo.findData(todo_id)))
         if dialog.exec() == QDialog.Accepted:
             values = dialog.values()
             for key in ('focus_break', 'focus_long_break', 'focus_long_every'):

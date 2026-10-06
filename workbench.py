@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QUrl, QTimer, QRectF, QSize, QDateTime
 from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut, QPainter, QPainterPath, QColor, QPen, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
-    QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMenu,
     QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTabWidget,
     QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget, QScrollArea, QProgressBar,
     QDateTimeEdit,
@@ -111,6 +111,7 @@ class WorkbenchWindow(QWidget):
         self._shutdown = False
         self._tutorial_auto_shown = False
         self._captions = []
+        self._tips = []
         self.setObjectName('workbench')
         self.setWindowIcon(panel.windowIcon())
         self.setMinimumSize(680, 460)
@@ -199,6 +200,7 @@ class WorkbenchWindow(QWidget):
         side = QVBoxLayout(sidebar)
         side.setContentsMargins(10, 12, 10, 10)
         side.addWidget(self.caption('wb_spaces', 'section'))
+        side.addWidget(self.caption('wb_spaces_hint', 'muted'))
         self.project_list = QListWidget()
         self.project_list.setObjectName('projectSpaces')
         self.project_list.setMinimumWidth(155)
@@ -262,7 +264,7 @@ class WorkbenchWindow(QWidget):
         self._captions.append((label, key))
         return label
 
-    def button(self, layout, key, callback, primary=False, danger=False):
+    def button(self, layout, key, callback, primary=False, danger=False, tip=None):
         button = QPushButton()
         button.setCursor(Qt.PointingHandCursor)
         if primary:
@@ -270,7 +272,30 @@ class WorkbenchWindow(QWidget):
         elif danger:
             button.setObjectName('danger')
         self._captions.append((button, key))
+        if tip:
+            self._tips.append((button, tip))
         button.clicked.connect(callback)
+        layout.addWidget(button)
+        return button
+
+    def more_button(self, layout, items):
+        """'More ▾' with occasional actions; ``items`` are (attribute, text, callback, tip) or None."""
+        button = QPushButton()
+        button.setCursor(Qt.PointingHandCursor)
+        self._captions.append((button, 'wb_more'))
+        menu = QMenu(button)
+        menu.setToolTipsVisible(True)
+        for item in items:
+            if item is None:
+                menu.addSeparator()
+                continue
+            attr, key, callback, tip = item
+            action = menu.addAction('')
+            action.triggered.connect(lambda _=False, c=callback: c())
+            self._captions.append((action, key))
+            self._tips.append((action, tip))
+            setattr(self, attr, action)
+        button.setMenu(menu)
         layout.addWidget(button)
         return button
 
@@ -284,6 +309,7 @@ class WorkbenchWindow(QWidget):
 
     def _build_home(self):
         layout = self.page()
+        layout.addWidget(self.caption('wb_home_intro', 'muted'))
         self.summary = QLabel()
         self.summary.setObjectName('summary')
         self.summary.setWordWrap(False)  # One line: the pill sizes to its text.
@@ -309,14 +335,36 @@ class WorkbenchWindow(QWidget):
             columns.addWidget(card)
         columns.setSizes([300, 300])
         layout.addWidget(columns, 1)
-        self.pending_list.itemDoubleClicked.connect(lambda _: self.tabs.setCurrentIndex(1))
+        self.pending_list.itemDoubleClicked.connect(self._open_pending)
         self.task_list.itemDoubleClicked.connect(lambda _: self.open_selected_task())
+
+    def _open_pending(self, item):
+        """Home: a review opens the review; any other todo opens Todos on it."""
+        todo_id = item.data(Qt.UserRole)
+        record = self._todos.get(todo_id)
+        try:
+            schedule = self.store.get_schedule(todo_id) if record else None
+        except WorkbenchError:
+            schedule = None
+        if record and schedule and schedule['state'] == 'review':
+            self.review_todo(record, schedule)
+            return
+        self.tabs.setCurrentIndex(1)
+        for row in range(self.todo_list.count()):
+            if self.todo_list.item(row).data(Qt.UserRole) == todo_id:
+                self.todo_list.setCurrentRow(row)
+                break
+
+    def focus_selected_todo(self):
+        record = self._selected_todo()
+        if record:
+            self.panel.open_focus_dialog(record['id'])
 
     def _build_todos(self):
         layout = self.page()
         layout.addWidget(self.caption('wb_todo_intro', 'muted'))
         add = QHBoxLayout()
-        self.button(add, 'wb_add_todo', lambda: self.add_todo(), True)
+        self.button(add, 'wb_add_todo', lambda: self.add_todo(), True, tip='tip_add_todo')
         add.addStretch()
         layout.addLayout(add)
         self.todo_list = QListWidget()
@@ -332,20 +380,26 @@ class WorkbenchWindow(QWidget):
         self.show_completed.toggled.connect(lambda _: self.refresh())
         actions.addWidget(self.show_completed)
         actions.addStretch()
-        self.todo_ai_button = self.button(actions, 'todo_ai_button', self.give_to_ai)
-        self.todo_edit_button = self.button(actions, 'wb_edit', self.edit_todo)
-        self.todo_delete_button = self.button(actions, 'wb_delete', self.delete_todo, danger=True)
+        self.todo_hint = self.caption('wb_todo_hint', 'muted')
+        actions.addWidget(self.todo_hint)
+        self.todo_ai_button = self.button(actions, 'todo_ai_button', self.give_to_ai, True, tip='tip_give_ai')
+        self.todo_focus_button = self.button(actions, 'wb_focus_todo', self.focus_selected_todo, tip='tip_focus_todo')
+        self.todo_more = self.more_button(actions, [
+            ('todo_edit_button', 'wb_edit_dots', self.edit_todo, 'tip_edit_todo'), None,
+            ('todo_delete_button', 'wb_delete_todo', self.delete_todo, 'tip_delete_todo')])
         layout.addLayout(actions)
 
     def _build_notes(self):
         layout = self.page()
+        layout.addWidget(self.caption('wb_notes_intro', 'muted'))
         actions = QHBoxLayout()
         # A lambda: clicked(bool) would otherwise arrive as the note title.
-        self.new_note_button = self.button(actions, 'wb_new_note', lambda: self.new_note())
+        self.new_note_button = self.button(actions, 'wb_new_note', lambda: self.new_note(), tip='tip_new_note')
         actions.addStretch()
         # While editing, saving is the main action; a new note is secondary.
-        self.save_button = self.button(actions, 'wb_save', self.save_note, True)
-        self.note_delete_button = self.button(actions, 'wb_delete', self.delete_note, danger=True)
+        self.save_button = self.button(actions, 'wb_save', self.save_note, True, tip='tip_save_note')
+        self.note_delete_button = self.button(actions, 'wb_delete', self.delete_note, danger=True,
+                                              tip='tip_delete_note')
         layout.addLayout(actions)
         split = QSplitter()
         self.notes_list = QListWidget()
@@ -387,19 +441,21 @@ class WorkbenchWindow(QWidget):
         layout.addWidget(self.projects_table, 1)
         self.projects_empty = self.caption('wb_empty_projects', 'muted')
         layout.addWidget(self.projects_empty)
-        work = QHBoxLayout()
-        self.project_start_button = self.button(work, 'preset_start', self.start_selected_project, True)
-        self.project_preset_button = self.button(work, 'wb_preset', self.edit_preset)
-        self.project_card_button = self.button(work, 'wb_continuation', self.show_continuation)
-        self.project_goal_button = self.button(work, 'wb_goal', self.edit_goal)
-        work.addStretch()
-        layout.addLayout(work)
         actions = QHBoxLayout()
-        self.button(actions, 'wb_new_project', lambda: self.edit_project(), True)
-        self.project_edit_button = self.button(actions, 'wb_edit', self.edit_selected_project)
-        self.project_folder_button = self.button(actions, 'wb_folder_open', self.open_folder)
+        self.button(actions, 'wb_new_project', lambda: self.edit_project(), True, tip='tip_new_project')
         actions.addStretch()
-        self.project_delete_button = self.button(actions, 'wb_delete', self.delete_project, danger=True)
+        self.project_hint = self.caption('wb_project_hint', 'muted')
+        actions.addWidget(self.project_hint)
+        self.project_start_button = self.button(actions, 'preset_start', self.start_selected_project, True,
+                                                tip='tip_start_work')
+        self.project_card_button = self.button(actions, 'wb_continuation', self.show_continuation,
+                                               tip='tip_continuation')
+        self.project_more = self.more_button(actions, [
+            ('project_preset_button', 'wb_preset_dots', self.edit_preset, 'tip_preset'),
+            ('project_goal_button', 'wb_goal_dots', self.edit_goal, 'tip_goal'),
+            ('project_edit_button', 'wb_edit_dots', self.edit_selected_project, 'tip_edit_project'),
+            ('project_folder_button', 'wb_folder_open', self.open_folder, 'tip_folder'), None,
+            ('project_delete_button', 'wb_delete_project', self.delete_project, 'tip_delete_project')])
         layout.addLayout(actions)
 
     def _attempt(self, callback, *args, **kwargs):
@@ -485,8 +541,16 @@ class WorkbenchWindow(QWidget):
             item.setCheckState(Qt.Checked if record['done'] else Qt.Unchecked)
             item.setToolTip(record['title'])
             self.todo_list.addItem(item)
-        for record in pending:
-            item = QListWidgetItem(record['title'])
+        # AI work waiting for your review comes first: it needs you.
+        reviews = [r for r in pending if (schedules.get(r['id']) or {}).get('state') == 'review']
+        for record in reviews + [r for r in pending if r not in reviews]:
+            item = QListWidgetItem(self.tr('wb_review_item', title=record['title']) if record in reviews
+                                   else record['title'])
+            if record in reviews:
+                font = item.font()
+                font.setBold(True)
+                item.setFont(font)
+                item.setForeground(QColor(theme.VIOLET))
             item.setData(Qt.UserRole, record['id'])
             self.pending_list.addItem(item)
         self.todo_empty.setVisible(self.todo_list.count() == 0)
@@ -917,11 +981,15 @@ class WorkbenchWindow(QWidget):
                 (self.project_edit_button, bool(project)), (self.project_delete_button, bool(project)),
                 (self.project_start_button, bool(project)), (self.project_preset_button, bool(project)),
                 (self.project_card_button, bool(project)), (self.project_goal_button, bool(project)),
+                (self.project_more, bool(project)), (self.todo_focus_button, bool(todo)),
+                (self.todo_more, bool(todo)),
                 (self.project_folder_button, bool(project and project['directory'])),
                 (self.note_delete_button, selected_note)]:
             button.setVisible(available)
             button.setEnabled(available)
         self.save_button.setVisible(self.note_id is not None)
+        self.project_hint.setVisible(not project and bool(self._projects))
+        self.todo_hint.setVisible(not todo and self.todo_list.count() > 0)
         active = False
         if todo:
             try:
@@ -1249,9 +1317,12 @@ class WorkbenchWindow(QWidget):
         self.setWindowTitle(self.tr('workbench_open') + ' · Petoken')
         for widget, key in self._captions:
             widget.setText(self.tr(key))
+        for widget, key in self._tips:
+            widget.setToolTip(self.tr(key))
         for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects', 'wb_notifications',
                                      'wb_reports', 'wb_collection']):
             self.tabs.setTabText(index, self.tr(key))
+            self.tabs.setTabToolTip(index, self.tr(key + '_tab_tip'))
         self.report_page.apply_language()
         self.collection_page.apply_language()
         self.projects_table.setHeaderLabels([self.tr('wb_name'), self.tr('wb_folder'), self.tr('wb_goal_column')])
@@ -1300,6 +1371,9 @@ class WorkbenchWindow(QWidget):
         return True
 
 
+TUTORIAL_STEPS = 7
+
+
 class WorkbenchTutorial(QDialog):
     """Nonmodal first-use guide; actions reuse the actual workbench controls."""
     def __init__(self, owner):
@@ -1320,7 +1394,7 @@ class WorkbenchTutorial(QDialog):
         self.title.setWordWrap(True)
         layout.addWidget(self.title)
         self.progress = QProgressBar()
-        self.progress.setRange(0, 5)
+        self.progress.setRange(0, TUTORIAL_STEPS)
         self.progress.setTextVisible(False)
         self.progress.setFixedHeight(5)
         self.progress.setStyleSheet(f'QProgressBar {{border:0; background:{theme.TRACK};}} '
@@ -1365,14 +1439,14 @@ class WorkbenchTutorial(QDialog):
     def apply_language(self):
         tr = self.owner.tr
         self.setWindowTitle(tr('wb_tutorial') + ' · Petoken')
-        self.position_label.setText(tr('wb_tutorial_step', n=self.step + 1))
+        self.position_label.setText(tr('wb_tutorial_step', n=self.step + 1, total=TUTORIAL_STEPS))
         self.title.setText(tr(f'wb_tutorial_title_{self.step}'))
         self.body.setText(tr(f'wb_tutorial_body_{self.step}'))
         self.action.setText(tr(f'wb_tutorial_action_{self.step}'))
         self.hint.setText(tr('wb_tutorial_hint'))
         self.skip.setText(tr('wb_tutorial_skip'))
         self.back.setText(tr('wb_tutorial_back'))
-        self.next.setText(tr('wb_tutorial_done' if self.step == 4 else 'wb_tutorial_next'))
+        self.next.setText(tr('wb_tutorial_done' if self.step == TUTORIAL_STEPS - 1 else 'wb_tutorial_next'))
         self.error.setText(tr('settings_save_failed'))
         self.back.setEnabled(self.step > 0)
         self.progress.setValue(self.step + 1)
@@ -1380,11 +1454,11 @@ class WorkbenchTutorial(QDialog):
             button.setAccessibleName(button.text())
 
     def set_step(self, step):
-        self.step = max(0, min(4, step))
+        self.step = max(0, min(TUTORIAL_STEPS - 1, step))
         self.apply_language()
 
     def advance(self):
-        if self.step == 4:
+        if self.step == TUTORIAL_STEPS - 1:
             self.finish()
         else:
             self.set_step(self.step + 1)
@@ -1419,18 +1493,24 @@ class WorkbenchTutorial(QDialog):
         self.hide()
         window = self.owner
         window.raise_()
-        if self.step == 1:
+        step = self.step
+        if step == 1:
             window.tabs.setCurrentIndex(3)
             if not window.edit_project():
                 self.open_guide()
-        elif self.step == 2:
+        elif step == 2:
+            window.tabs.setCurrentIndex(3)
+        elif step == 3:
             window.tabs.setCurrentIndex(1)
             if not window.add_todo():
                 self.open_guide()
-        elif self.step == 3:
+        elif step == 4:
+            window.tabs.setCurrentIndex(2)
             if not window.new_note():
                 self.open_guide()
+        elif step == 5:
+            window.panel.open_focus_dialog()
+        elif step == 6:
+            window.tabs.setCurrentIndex(getattr(window, 'collection_tab', 0))
         else:
             window.tabs.setCurrentIndex(0)
-            if self.step == 4:
-                window.task_list.setFocus()

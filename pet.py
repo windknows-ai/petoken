@@ -559,6 +559,8 @@ class DesktopPet(QWidget):
 
     def mouseMoveEvent(self,event):
         if self.pressed is not None and event.buttons() & Qt.LeftButton:
+            if self._long_fired:
+                return   # Holding her to be cute: this press never turns into a drag.
             point=event.globalPosition().toPoint()
             self.move_clamped(self.original+point-self.pressed)
             now=time.monotonic()
@@ -582,6 +584,8 @@ class DesktopPet(QWidget):
             self.long_press.stop()
             moved=(event.globalPosition().toPoint()-self.pressed).manhattanLength()
             self.pressed=None
+            if self._long_fired:
+                return
             now=time.monotonic()
             if self.dragging:
                 self.dragging=False
@@ -674,7 +678,7 @@ class DesktopPet(QWidget):
         usage.setToolTip(self.tr_text('panel_pinned_help'))
         usage.toggled.connect(self.panel.set_panel_pinned)
         # Everyday actions on top; occasional ones and toggles under More.
-        menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch)
+        menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch).setToolTip(self.tr_text('menu_tip_launch'))
         mode=getattr(self.panel,'focus_mode',None)
         if mode is not None:
             from focus_mode import CHOICES, clock_text
@@ -684,14 +688,15 @@ class DesktopPet(QWidget):
                 menu.addAction(self.tr_text('focus_skip_break'),mode.skip_break)
             else:
                 focus=menu.addMenu(self.tr_text('focus_menu'))
+                focus.menuAction().setToolTip(self.tr_text('menu_tip_focus'))
                 focus.setStyleSheet(self.panel.styleSheet())
                 for minutes in CHOICES:
                     focus.addAction(self.tr_text('focus_minutes',minutes=minutes),
                                     lambda m=minutes:self.panel.start_focus(m))
                 focus.addSeparator()
                 focus.addAction(self.tr_text('focus_custom'),self.panel.open_focus_dialog)
-        menu.addAction(self.tr_text('workbench_open'),self.panel.open_workbench)
-        menu.addAction(self.tr_text('wb_reports'),self.panel.open_reports)
+        menu.addAction(self.tr_text('menu_workbench'),self.panel.open_workbench).setToolTip(self.tr_text('menu_tip_workbench'))
+        menu.addAction(self.tr_text('wb_reports'),self.panel.open_reports).setToolTip(self.tr_text('menu_tip_reports'))
         menu.addSeparator()
         more=menu.addMenu(self.tr_text('menu_more'))
         more.setStyleSheet(self.panel.styleSheet())
@@ -704,7 +709,7 @@ class DesktopPet(QWidget):
         motion=more.addAction(self.tr_text('idle_motion'));motion.setCheckable(True);motion.setChecked(self.motion)
         motion.triggered.connect(self.toggle_motion)
         more.addAction(self.tr_text('hide_pet'),self.hide)
-        menu.addAction(self.tr_text('pet_settings'),self.panel.open_settings)
+        menu.addAction(self.tr_text('pet_settings'),self.panel.open_settings).setToolTip(self.tr_text('menu_tip_settings'))
         menu.addSeparator();menu.addAction(self.tr_text('exit'),self.panel.shutdown)
         return menu
 
