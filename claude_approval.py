@@ -51,6 +51,7 @@ WAIT_S = 45                # The pet's turn; then Claude Code asks itself.
 QUESTION_WAIT_S = 300      # Claude's questions (AskUserQuestion) need time to think.
 HOOK_TIMEOUT_S = 330       # Claude Code's limit for the hook, above both waits.
 QUESTION_TOOL = 'AskUserQuestion'
+PLAN_TOOL = 'ExitPlanMode'         # "Claude has a plan": accept, accept and allow edits, or revise.
 ALIVE_STALE_S = 10
 SHELL_TOOLS = ('Bash', 'PowerShell')
 EDIT_TOOLS = ('Edit', 'Write', 'MultiEdit', 'NotebookEdit')
@@ -75,7 +76,7 @@ $decision = Join-Path $folder "$id.decision.json"
 [IO.File]::WriteAllText("$request.tmp", $raw, $utf8)
 Move-Item -LiteralPath "$request.tmp" -Destination $request -Force
 $wait = __WAIT__
-if ($raw -match '"tool_name"\s*:\s*"AskUserQuestion"') { $wait = __QUESTION_WAIT__ }
+if ($raw -match '"tool_name"\s*:\s*"(AskUserQuestion|ExitPlanMode)"') { $wait = __QUESTION_WAIT__ }
 $deadline = [DateTime]::UtcNow.AddSeconds($wait)
 while ([DateTime]::UtcNow -lt $deadline) {
     if (Test-Path -LiteralPath $decision) {
@@ -229,6 +230,12 @@ def parse_request(request_id, raw, at):
         return None
     tool_input = data.get('tool_input') if isinstance(data.get('tool_input'), dict) else {}
     cwd = _text(data.get('cwd'), 1000)
+    if tool == PLAN_TOOL:
+        plan = _text(tool_input.get('plan'), 20000)
+        return dict(id=request_id, at=at, session=_text(data.get('session_id'), 128), cwd=cwd,
+                    project=Path(cwd).name if cwd else '', tool=tool, summary=plan, description='',
+                    suggestions=[], rule=None, can_always=False, plan=plan,
+                    plan_file=_text(tool_input.get('planFilePath'), 1000), wait=QUESTION_WAIT_S)
     if tool == QUESTION_TOOL:
         questions = parse_questions(tool_input.get('questions'))
         if not questions:
@@ -265,6 +272,17 @@ def decision(request, choice, answers=None):
     'answer' (``answers``: question text -> label, labels or typed text)."""
     if choice == 'ask':
         return None
+    if choice in ('accept', 'accept_edits') and request.get('tool') == PLAN_TOOL:
+        body = dict(behavior='allow')
+        if choice == 'accept_edits':
+            # Same as Claude's "accept and allow edits": edits stop asking for this session.
+            body['updatedPermissions'] = [dict(type='setMode', mode='acceptEdits', destination='session')]
+        return dict(hookSpecificOutput=dict(hookEventName='PermissionRequest', decision=body))
+    if choice == 'revise' and request.get('tool') == PLAN_TOOL:
+        feedback = (answers or '').strip() if isinstance(answers, str) else ''
+        body = dict(behavior='deny', message=(f'The user wants changes to the plan: {feedback}' if feedback
+                                              else 'The user rejected the plan. Ask what to change.'))
+        return dict(hookSpecificOutput=dict(hookEventName='PermissionRequest', decision=body))
     if choice == 'answer':
         if not answers or request.get('tool') != QUESTION_TOOL:
             return None

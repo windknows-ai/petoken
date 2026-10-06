@@ -28,6 +28,7 @@ POLL_MS = 400
 HEARTBEAT_S = 2.0
 CARD_WIDTH = 300
 QUESTION_WIDTH = 340
+PLAN_LINES = 8
 SUMMARY_LINES = 4
 GAP = 8
 
@@ -327,6 +328,91 @@ class QuestionCard(QWidget):
     place_beside = ApprovalCard.place_beside
 
 
+class PlanCard(QWidget):
+    """Claude's plan (ExitPlanMode): accept, accept and allow edits, or ask
+    for changes with a note Claude reads. Takes keyboard focus once
+    clicked so the note can be typed."""
+
+    answered = Signal(str, str, object)   # request id, choice, feedback text
+
+    def __init__(self, language, request):
+        super().__init__(None)
+        self.language = language
+        self.request = request
+        self.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setStyleSheet(STYLE)
+        self.setFixedWidth(QUESTION_WIDTH)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        frame = QFrame()
+        frame.setObjectName('approval')
+        outer.addWidget(frame)
+        layout = QVBoxLayout(frame)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6)
+        title = QLabel(text('plan_title', language, provider=PROVIDER_NAMES.get('claude', 'Claude Code')))
+        title.setObjectName('title')
+        layout.addWidget(title)
+        if request.get('project'):
+            project = QLabel(text('approval_project', language, project=request['project']))
+            project.setObjectName('muted')
+            layout.addWidget(project)
+        summary = QLabel()
+        summary.setObjectName('summary')
+        summary.setTextFormat(Qt.PlainText)
+        summary.ensurePolished()
+        summary.setText(elide_lines(request.get('plan') or '', QFontMetrics(summary.font()),
+                                    QUESTION_WIDTH - 46, lines=PLAN_LINES))
+        summary.setToolTip((request.get('plan') or '')[:3000])
+        layout.addWidget(summary)
+        if request.get('plan_file'):
+            open_file = QPushButton(text('plan_open', language))
+            open_file.setObjectName('link')
+            open_file.setCursor(Qt.PointingHandCursor)
+            open_file.clicked.connect(self.open_plan)
+            layout.addWidget(open_file, 0, Qt.AlignLeft)
+        self.feedback = QLineEdit()
+        self.feedback.setPlaceholderText(text('plan_feedback', language))
+        layout.addWidget(self.feedback)
+        row = QHBoxLayout()
+        row.setSpacing(6)
+        self.revise = QPushButton(text('plan_revise', language))
+        self.revise.setObjectName('deny')
+        self.accept = QPushButton(text('plan_accept', language))
+        self.accept_edits = QPushButton(text('plan_accept_edits', language))
+        self.accept_edits.setObjectName('allow')
+        self.accept_edits.setToolTip(text('plan_accept_edits_tip', language))
+        for button, choice in ((self.revise, 'revise'), (self.accept, 'accept'),
+                               (self.accept_edits, 'accept_edits')):
+            button.setCursor(Qt.PointingHandCursor)
+            button.clicked.connect(lambda _=False, c=choice: self.answered.emit(
+                request['id'], c, self.feedback.text() if c == 'revise' else None))
+            row.addWidget(button)
+        layout.addLayout(row)
+        foot = QHBoxLayout()
+        ask = QPushButton(text('approval_ask', language))
+        ask.setObjectName('link')
+        ask.setCursor(Qt.PointingHandCursor)
+        ask.clicked.connect(lambda: self.answered.emit(request['id'], 'ask', None))
+        self.countdown = QLabel()
+        self.countdown.setObjectName('muted')
+        foot.addWidget(ask)
+        foot.addStretch(1)
+        foot.addWidget(self.countdown)
+        layout.addLayout(foot)
+        self.adjustSize()
+
+    def open_plan(self):
+        from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+        QDesktopServices.openUrl(QUrl.fromLocalFile(self.request['plan_file']))
+
+    show_request = QuestionCard.show_request
+    place_beside = ApprovalCard.place_beside
+
+
 class ApprovalController(QObject):
     """Runs the exchange while the hook is installed."""
 
@@ -385,13 +471,14 @@ class ApprovalController(QObject):
             self._hide()
             return
         request = self.queue[0]
-        if request.get('questions'):
+        kind = QuestionCard if request.get('questions') else PlanCard if request.get('plan') is not None else None
+        if kind is not None:
             if self.card is None or getattr(self.card, 'request', None) is not request \
-                    or not isinstance(self.card, QuestionCard) or self.card.language != self._language():
+                    or not isinstance(self.card, kind) or self.card.language != self._language():
                 self._hide()
-                self.card = QuestionCard(self._language(), request)
+                self.card = kind(self._language(), request)
                 self.card.answered.connect(self.answer)
-        elif (self.card is None or isinstance(self.card, QuestionCard)
+        elif (self.card is None or isinstance(self.card, (QuestionCard, PlanCard))
               or self.card.language != self._language()):
             self._hide()
             self.card = ApprovalCard(self._language())

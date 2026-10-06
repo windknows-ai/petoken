@@ -84,6 +84,17 @@ class CardTests(unittest.TestCase):
                          {'Which database?': 'Postgres', 'Which extras?': 'Payments'})
         self.assertIsNone(self.controller.card)
 
+    def test_plan_card_accepts_and_revises(self):
+        self.put('e' * 32, tool_name='ExitPlanMode', tool_input=dict(plan='# Plan\n' + 'step\n' * 30))
+        self.controller.tick()
+        card = self.controller.card
+        self.assertEqual(type(card).__name__, 'PlanCard')
+        card.feedback.setText('smaller steps')
+        card.revise.click()
+        answer = json.loads((self.broker.folder / f"{'e' * 32}.decision.json").read_text(encoding='utf-8'))
+        self.assertIn('smaller steps', answer['hookSpecificOutput']['decision']['message'])
+        self.assertIsNone(self.controller.card)
+
     def test_titles_and_eliding(self):
         self.assertEqual(request_title(dict(tool='Write'), 'zh_CN'), 'Claude Code 想修改文件')
         self.assertEqual(request_title(dict(tool='mcp__x__y'), 'en'), 'Claude Code wants to use mcp__x__y')

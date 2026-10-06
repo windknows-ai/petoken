@@ -125,6 +125,25 @@ class QuestionTests(unittest.TestCase):
         self.assertIsNone(ca.parse_request('f' * 32, json.dumps(data), 1))
 
 
+class PlanTests(unittest.TestCase):
+    def test_plan_choices(self):
+        data = dict(session_id='s', cwd=r'C:\w\site', hook_event_name='PermissionRequest', tool_name='ExitPlanMode',
+                    tool_input=dict(plan='# Plan\n1. Add a file', planFilePath=r'C:\plans\p.md'))
+        request = ca.parse_request('e' * 32, json.dumps(data), 1.0)
+        self.assertEqual((request['plan'], request['plan_file'], request['wait']),
+                         ('# Plan\n1. Add a file', r'C:\plans\p.md', ca.QUESTION_WAIT_S))
+        decision = lambda *a: ca.decision(request, *a)['hookSpecificOutput']['decision']
+        self.assertEqual(decision('accept'), dict(behavior='allow'))
+        self.assertEqual(decision('accept_edits')['updatedPermissions'],
+                         [dict(type='setMode', mode='acceptEdits', destination='session')])
+        revise = decision('revise', 'use SQLite instead')
+        self.assertEqual(revise['behavior'], 'deny')
+        self.assertIn('use SQLite instead', revise['message'])
+        self.assertEqual(decision('revise', '')['behavior'], 'deny')
+        self.assertIsNone(ca.decision(request, 'ask'))
+        self.assertIn('ExitPlanMode', ca.script_text('x'))
+
+
 class BrokerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

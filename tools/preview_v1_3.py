@@ -104,6 +104,11 @@ PREVIEW_REQUESTS = {
                  '  Remove-Item -WhatIf'),
         description='Find large log files')),
     'web': dict(tool_name='WebFetch', tool_input=dict(url='https://docs.python.org/3/library/json.html')),
+    'plan': dict(tool_name='ExitPlanMode', tool_input=dict(
+        plan=('# Dark mode for the website' + chr(10) + chr(10) + '1. Add CSS variables for colours' + chr(10)
+              + '2. Add a toggle in the header' + chr(10) + '3. Remember the choice in localStorage' + chr(10)
+              + '4. Test both themes on every page'),
+        planFilePath='C:/Users/you/.claude/plans/dark-mode.md')),
     'question': dict(tool_name='AskUserQuestion', tool_input=dict(questions=[
         dict(question='Which database should the new API use?', header='Database', multiSelect=False,
              options=[dict(label='SQLite', description='One local file, no server'),
@@ -432,7 +437,8 @@ class Preview(QWidget):
         def expire():   # What the hook script does when nobody answers.
             if not (path.with_name(f'{request_id}.decision.json')).exists():
                 path.unlink(missing_ok=True)
-        wait = (claude_approval.QUESTION_WAIT_S if data['tool_name'] == claude_approval.QUESTION_TOOL
+        wait = (claude_approval.QUESTION_WAIT_S
+                if data['tool_name'] in (claude_approval.QUESTION_TOOL, claude_approval.PLAN_TOOL)
                 else claude_approval.WAIT_S)
         QTimer.singleShot(wait * 1000, expire)
 
