@@ -17,6 +17,7 @@ from providers import PROVIDER_CODEX, active_task
 from codex_compat import (THREAD_REQUIRED, THREAD_OPTIONAL, TURN_REQUIRED,
                           installed_version, inspect_table, log_fingerprint,
                           probe_database, state_database, version_string)
+from codex_approval import CodexApprovalReader
 
 
 def quota_window(limits, minutes, now=None):
@@ -740,6 +741,7 @@ class CodexStore:
         # thread_history_1.sqlite from this store's own canonical
         # home (never a separately injected path).
         self.activity = CodexActivityDetector(self.home)
+        self.approval = CodexApprovalReader(self.home)
         self._read_paths = set()
         self._scope_sessions = ()
         self.compatibility = self._probe_compatibility()
@@ -921,6 +923,9 @@ class CodexStore:
             if row is None:
                 continue
             active_tasks.append(self._task_context(row, item, state))
+        approval_states = self.approval.read(task['task_key'] for task in active_tasks)
+        for task in active_tasks:
+            task['awaiting_approval'] = approval_states.get(task['task_key'])
         if scope != 'global' and not chosen:
             identity = dict(scope_type=scope, unavailable=True)
             if scope == 'conversation':
