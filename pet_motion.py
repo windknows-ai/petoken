@@ -75,6 +75,10 @@ class Profile:
     fps: float = 5.0              # Frame-sequence rate.
     loop: bool = True
     particles: str = ''           # hearts, zzz, sparkles, sweat, question, notes
+    # Until a pose has its own picture it borrows a V1.1 one; these make the
+    # borrowed picture read differently (a steady lean, sinking lower).
+    lean: float = 0.0             # Degrees, clockwise.
+    sink: float = 0.0             # Logical px down.
 
 
 PROFILES = {
@@ -91,35 +95,35 @@ PROFILES = {
     # 2.0 companionship poses.
     'coquettish': Profile(sway=2.4, sway_period=1.4, fps=5, particles='hearts'),
     'headpat_happy': Profile(hop=120, fps=6, particles='hearts'),
-    'shy': Profile(sway=1.0, sway_period=2.2, breath_period=2.6),
-    'pout': Profile(breath_period=2.2, breath_depth=.016),
+    'shy': Profile(sway=1.0, sway_period=2.2, breath_period=2.6, fps=1.5, lean=-3, sink=3),
+    'pout': Profile(breath_period=1.2, breath_depth=.02, fps=3.0, bounce=1.5, bounce_period=.35),
     'poked': Profile(loop=False),
     'dragged': Profile(breath_period=1.2, breath_depth=.008, fps=8, particles='sweat'),
     'landing': Profile(loop=False),
-    'curious': Profile(sway=1.6, sway_period=3.0, particles='question'),
-    'thinking': Profile(sway=.8, sway_period=4.0, particles='question'),
-    'bored': Profile(breath_period=5.0, breath_depth=.016),
-    'yawn': Profile(breath_period=5.0, breath_depth=.022, loop=False),
-    'sleep': Profile(breath_period=5.5, breath_depth=.022, fps=1.0, particles='zzz'),
-    'wake_stretch': Profile(hop=110, loop=False),
-    'hug': Profile(hop=150, particles='hearts'),
+    'curious': Profile(sway=1.6, sway_period=3.0, fps=1.5, particles='question', lean=-5),
+    'thinking': Profile(sway=.8, sway_period=4.0, fps=1.2, particles='question', lean=4),
+    'bored': Profile(breath_period=5.0, breath_depth=.016, fps=1.2, sway=1.5, sway_period=7.0, lean=-4, sink=4),
+    'yawn': Profile(breath_period=2.4, breath_depth=.045, fps=2.0, loop=False, lean=3),
+    'sleep': Profile(breath_period=5.5, breath_depth=.026, fps=1.0, particles='zzz', lean=5, sink=8),
+    'wake_stretch': Profile(hop=110, fps=2.0, loop=False, breath_depth=.03, breath_period=2.0),
+    'hug': Profile(hop=150, fps=2.0, particles='hearts'),
     'heart': Profile(hop=170, particles='hearts'),
-    'greet_morning': Profile(hop=110, sway=1.2, sway_period=1.2, particles='sparkles'),
-    'greet_night': Profile(breath_period=4.6, breath_depth=.018, particles='zzz'),
+    'greet_morning': Profile(hop=110, sway=1.2, sway_period=1.2, fps=3.0, particles='sparkles'),
+    'greet_night': Profile(breath_period=4.6, breath_depth=.018, fps=3.0, particles='zzz', lean=3),
     'surprised': Profile(hop=240),
     'thumbs_up': Profile(hop=130, particles='sparkles'),
-    'cheer': Profile(bounce=2.5, bounce_period=.6),
+    'cheer': Profile(bounce=2.5, bounce_period=.6, fps=2.5),
     'clap': Profile(fps=7, bounce=2, bounce_period=.42, particles='sparkles'),
-    'peek': Profile(sway=1.0, sway_period=3.0),
-    'grievance': Profile(breath_period=4.4, particles='sweat'),
+    'peek': Profile(sway=1.0, sway_period=3.0, fps=1.0, lean=5, sink=10),
+    'grievance': Profile(breath_period=4.4, fps=1.0, particles='sweat', lean=-3, sink=4),
     'focus_read': Profile(breath_period=4.2, fps=.4),
-    'focus_tea': Profile(breath_period=4.6, breath_depth=.016),
+    'focus_tea': Profile(breath_period=4.6, breath_depth=.016, fps=1.5),
     'focus_done': Profile(hop=170, particles='sparkles'),
-    'stretch_break': Profile(sway=2.0, sway_period=3.0),
+    'stretch_break': Profile(sway=2.0, sway_period=3.0, fps=1.2),
     'hold_card': Profile(),
     'packing': Profile(),
     'ready_go': Profile(hop=150),
-    'worried': Profile(breath_period=2.2, particles='sweat'),
+    'worried': Profile(breath_period=1.6, fps=2.0, particles='sweat', sway=1.2, sway_period=.9),
     'proud': Profile(hop=140, particles='sparkles'),
 }
 
@@ -202,9 +206,11 @@ class Animator:
     motion itself.
     """
 
-    def __init__(self, frame_count=lambda state: 0, has_blink=lambda state: False, rng=None):
+    def __init__(self, frame_count=lambda state: 0, has_blink=lambda state: False, rng=None,
+                 own_art=lambda state: True):
         self.frame_count = frame_count
         self.has_blink = has_blink
+        self.own_art = own_art
         self.rng = rng or random.Random()
         self.squash = Spring(260, 13)       # Positive: shorter and wider.
         self.tilt = Spring(110, 8.5)        # Degrees.
@@ -325,6 +331,9 @@ class Animator:
         if not self.dragging:
             angle += profile.sway * math.sin(self.sway_phase)
         lift = max(-4.0, self.lift.value)
+        if (profile.lean or profile.sink) and not self.own_art(self.state):
+            angle += profile.lean
+            lift -= profile.sink
         if profile.bounce and not self.dragging:
             lift += profile.bounce * abs(math.sin(math.pi * t / profile.bounce_period))
 

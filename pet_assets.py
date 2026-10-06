@@ -76,26 +76,26 @@ REGISTRY = (
 )
 
 # 2.0 companionship poses: (name, frames, the V1.1 pose shown until the art
-# exists, has an eyes-closed image). See docs/V2_0_ART_LIST.md.
+# exists, has an eyes-closed image). See docs/V2_0_ART_PROMPTS.md.
 _COMPANION = (
     ("coquettish", 4, "wave", True), ("headpat_happy", 4, "celebrate", True),
-    ("shy", 1, "idle", True), ("pout", 1, "sad", True), ("poked", 1, "idle", True),
-    ("dragged", 4, "wave", True), ("landing", 1, "idle", True),
-    ("curious", 1, "working", True), ("thinking", 1, "working", True),
-    ("bored", 1, "idle", True), ("yawn", 1, "idle", False), ("sleep", 3, "idle", False),
-    ("wake_stretch", 1, "celebrate", False), ("hug", 1, "wave", True),
-    ("heart", 1, "celebrate", True), ("greet_morning", 1, "wave", True),
-    ("greet_night", 1, "wave", True), ("surprised", 1, "celebrate", True),
-    ("thumbs_up", 1, "celebrate", True), ("cheer", 1, "celebrate", True),
-    ("clap", 3, "celebrate", True), ("peek", 1, "idle", True), ("grievance", 1, "sad", True),
-    ("focus_read", 4, "working", True), ("focus_tea", 1, "idle", False),
-    ("focus_done", 1, "celebrate", True), ("stretch_break", 1, "celebrate", True),
-    ("hold_card", 1, "wave", True), ("packing", 1, "idle", True),
-    ("ready_go", 1, "wave", True), ("worried", 1, "sad", True), ("proud", 1, "celebrate", True),
+    ("sleep", 3, "idle", False), ("bored", 3, "idle", True), ("yawn", 3, "idle", False),
+    ("wake_stretch", 2, "celebrate", False), ("curious", 2, "working", True),
+    ("thinking", 2, "working", True), ("shy", 2, "idle", False), ("pout", 2, "sad", True),
+    ("poked", 1, "idle", False), ("dragged", 4, "wave", False), ("landing", 1, "idle", True),
+    ("hug", 2, "wave", True), ("heart", 1, "celebrate", False), ("greet_morning", 2, "wave", True),
+    ("greet_night", 2, "wave", False), ("surprised", 1, "celebrate", False),
+    ("thumbs_up", 1, "celebrate", True), ("cheer", 2, "celebrate", True), ("clap", 3, "celebrate", True),
+    ("peek", 2, "idle", False), ("grievance", 2, "sad", False),
+    ("focus_read", 4, "working", True), ("focus_tea", 2, "idle", False),
+    ("focus_done", 1, "celebrate", True), ("stretch_break", 2, "celebrate", True),
+    ("hold_card", 1, "wave", True), ("packing", 1, "idle", True), ("ready_go", 1, "wave", True),
+    ("worried", 2, "sad", True), ("proud", 1, "celebrate", True),
 )
+# Every pose may arrive as <name>.png or <name>_1.png (and further frames).
 COMPANION_REGISTRY = tuple(
     AssetEntry(name, f"assets/v2_0/{name}.png", f"assets/v1_1/{fallback}.png",
-               frames=_v2(name, frames) if frames > 1 else (),
+               frames=_v2(name, frames),
                blink=f"assets/v2_0/{name}_blink.png" if blink else "")
     for name, frames, fallback, blink in _COMPANION)
 

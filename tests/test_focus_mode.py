@@ -196,9 +196,19 @@ class FocusPetTests(unittest.TestCase):
             self.panel.announce(dict(kind='failed', provider='claude'))
             react.assert_called_once_with('failed')
         menu = self.pet.context_menu()
-        self.assertTrue(any(a.text().startswith('End focus') for a in menu.actions()))
+        self.assertFalse(any(a.text().startswith('End focus') for a in menu.actions()))   # Not in the menu.
         menu.deleteLater()
-        self.panel.focus_mode.stop()
+        # The End focus button sits beside the countdown at her feet.
+        from PySide6.QtCore import QEvent, QPointF, Qt
+        from PySide6.QtGui import QImage, QMouseEvent
+        image = QImage(self.pet.size(), QImage.Format_ARGB32_Premultiplied)
+        self.pet.render(image)
+        tag, stop, *_ = self.pet.focus_tag_layout()
+        self.assertGreater(stop.left(), tag.right())
+        self.assertLessEqual(stop.right(), self.pet.width())
+        point = stop.center()
+        self.pet.mousePressEvent(QMouseEvent(QEvent.MouseButtonPress, point, QPointF(self.pet.mapToGlobal(point.toPoint())),
+                                             Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
         self.assertIsNotNone(self.panel._focus_card)
         self.assertIsNone(self.pet.focus_subtitle())
         self.panel._focus_card.close()
