@@ -73,7 +73,9 @@ class TypingInteractionTests(unittest.TestCase):
 
     def test_typing_frames_resolve_through_registry(self):
         entry = entry_for('typing')
-        self.assertEqual(entry.frames, ('assets/v1_1/typing_1.png', 'assets/v1_1/typing_2.png'))
+        self.assertEqual(entry.frames[:2], ('assets/v1_1/typing_1.png', 'assets/v1_1/typing_2.png'))
+        # 2.0 frames 3 and 4 join the loop once their art exists.
+        self.assertEqual(entry.frames[2:], ('assets/v2_0/typing_3.png', 'assets/v2_0/typing_4.png'))
         self.assertEqual(len(existing_frames(entry)), 2)
         self.assertIsNotNone(frame_for('typing', 0))
         self.assertIsNotNone(frame_for('typing', 1))

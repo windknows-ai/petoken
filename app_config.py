@@ -27,6 +27,7 @@ DEFAULT_PREFERENCES = {
     "panel_pinned": False,
     "pet_scale_percent": PET_SCALE_DEFAULT,
     "pet_motion": True,
+    "clinginess": "moderate",
     "star_ring_enabled": True,
     "workbench_tutorial_seen": False,
     "dnd_enabled": False,
@@ -81,6 +82,8 @@ def normalize_preferences(data):
         preferences["panel_pinned"] = False
     if not isinstance(preferences.get("pet_motion"), bool):
         preferences["pet_motion"] = True
+    if preferences.get("clinginess") not in ("quiet", "moderate", "clingy"):
+        preferences["clinginess"] = "moderate"
     if not isinstance(preferences.get("star_ring_enabled"), bool):
         preferences["star_ring_enabled"] = True
     if not isinstance(preferences.get("workbench_tutorial_seen"), bool):

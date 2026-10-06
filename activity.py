@@ -44,6 +44,7 @@ class ActivityState:
         self.stable={'microphone':False,'music':False}
         self.pending={}
         self.tap_phase=0
+        self.tap_count=0
         self.last_tap_change=float('-inf')
 
     def key(self,now=None):
@@ -53,6 +54,7 @@ class ActivityState:
         self.last_key=now
         if now-self.last_tap_change>=TAP_MIN_INTERVAL:
             self.tap_phase^=1
+            self.tap_count+=1
             self.last_tap_change=now
 
     def sample(self,microphone,music,now=None):

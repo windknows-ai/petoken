@@ -3879,6 +3879,13 @@ class Settings(QDialog):
         scale_box.setLayout(scale_row)
         self.pet_scale_label = label()
         self.forms['general'].addRow(self.pet_scale_label, scale_box)
+        self.clinginess = QComboBox()
+        for key in ('quiet', 'moderate', 'clingy'):
+            self.clinginess.addItem('', key)
+        self.clinginess.setCurrentIndex(max(0, self.clinginess.findData(
+            panel.prefs.get('clinginess', 'moderate'))))
+        self.clinginess_label = label()
+        self.forms['general'].addRow(self.clinginess_label, self.clinginess)
         self.update_check = QCheckBox()
         self.update_check.setChecked(bool(panel.prefs.get('update_check', True)))
         self.update_auto = QCheckBox()
@@ -4106,6 +4113,11 @@ class Settings(QDialog):
         self.dnd_scheduled.setAccessibleName(t('dnd_scheduled'))
         self.dnd_scheduled.setToolTip(t('dnd_tip'))
         self.pet_scale_label.setText(t('character_size'))
+        self.clinginess_label.setText(t('clinginess'))
+        for index, key in enumerate(('quiet', 'moderate', 'clingy')):
+            self.clinginess.setItemText(index, t(f'clinginess_{key}'))
+        self.clinginess.setToolTip(t('clinginess_tip'))
+        self.clinginess.setAccessibleName(t('clinginess'))
         self.pet_scale.setToolTip(t('character_size'))
         self.pet_scale.setAccessibleName(t('character_size'))
         self.pet_scale_value.setText(f'{int(self.pet_scale.value())}%')
@@ -4153,6 +4165,7 @@ class Settings(QDialog):
         self.dnd_start.setTime(QTime(22, 0))
         self.dnd_end.setTime(QTime(8, 0))
         self.pet_scale.setValue(pet_geometry.PET_SCALE_DEFAULT)
+        self.clinginess.setCurrentIndex(self.clinginess.findData('moderate'))
         self.apply_language()
 
     def save(self):
@@ -4177,7 +4190,8 @@ class Settings(QDialog):
                      dnd_scheduled=self.dnd_scheduled.isChecked(),
                      dnd_start=self.dnd_start.time().toString('HH:mm'),
                      dnd_end=self.dnd_end.time().toString('HH:mm'),
-                     pet_scale_percent=int(self.pet_scale.value()))
+                     pet_scale_percent=int(self.pet_scale.value()),
+                     clinginess=self.clinginess.currentData())
         # Legacy `manual_fx` / `prices` keys stay untouched in the file for
         # backward-compatible loading, but no longer drive pricing or FX.
         try:
@@ -4186,6 +4200,9 @@ class Settings(QDialog):
             self.error.setText(self.tr_text('settings_save_error'))
             return
         panel.prefs = prefs
+        pet = getattr(panel, 'pet', None)
+        if pet is not None and hasattr(pet, 'mood'):
+            pet.mood.set_clinginess(prefs['clinginess'])
         wanted = self.claude_sync.isChecked()
         if self.claude_sync.isEnabled() and wanted != (self._claude_sync_state == 'on'):
             try:
