@@ -1,5 +1,25 @@
 # Claude progress
 
+## Released — v1.7.0 (2026-10-06)
+
+Published from `3ac2095` (tag `v1.7.0`, Latest), installer only:
+`Petoken-Setup-v1.7.0.exe` SHA256 `484aa0421bc37560158e7978d7e467e24ca3fc756e50a2eedd3d1ec72451efc2`;
+downloaded asset re-verified; the real update feed offers 1.7.0 to 1.6.0 and nothing to 1.7.0. Full suite 1244 tests.
+- D: Pillow 12.3.0 and excluded from the package; `reports.ReportCache` (warmed 90 s after start);
+  `diagnostics.py` (errors.log + Export diagnostics with preview).
+- B: `updater.py` / `update_ui.py` (daily GitHub check, SHA256 verified, `/SILENT /RELAUNCH=1`, installer
+  [Run] Check WantRelaunch; automatic updates only while idle; `PETOKEN_UPDATE_FEED` for QA); `onboarding.py`
+  (first start only: `onboarding_done` is True for any existing prefs file).
+- C: `todo_ai.py` + workbench schema 3 `todo_schedules` (model/effort columns; test-build table rebuilt by
+  `_migrate_v3_preview`); Claude match via registry, Codex via codex_hooks launch bindings (external_id);
+  15-min match timeout; interrupted Claude turns (`claude_recap.interrupted`) don't tick todos.
+- A: Codex's `codex_hooks.py` (hooks.json, events, approvals via the shared exchange, allow once only);
+  approval cards keep `provider`.
+- Quick launch: `claude_models.py` reads `~/.claude/cache/model-catalog` (cc, then ccd; fallback list);
+  Codex `codex_launch.options()` (model/list), `--no-daemon` when the daemon is missing.
+- Known limits: Codex questions/plans not answerable externally; Codex interrupt not detected for todos;
+  approval policy `never` means no Codex approval cards.
+
 ## Released — v1.6.0 (2026-10-06)
 
 Time-saving assistant, published from `a3be462` (tag `v1.6.0`, Latest). Installer only (no ZIP from now on):
