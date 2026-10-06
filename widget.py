@@ -426,6 +426,8 @@ class TaskPanelWindow(QWidget):
         self.title_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
         self.title_label.setStyleSheet('font-size:13px;font-weight:600;')
         head.addWidget(self.title_label, 1)
+        self.window_button = button('↗', '', self.go_to_window)
+        head.addWidget(self.window_button)
         self.collapse_button = button('', '', self.collapse)
         head.addWidget(self.collapse_button)
         layout.addLayout(head)
@@ -486,6 +488,12 @@ class TaskPanelWindow(QWidget):
     def _row_keys(self):
         return ('total', 'input', 'output', 'model', 'effort', 'context')
 
+    def go_to_window(self):
+        panel = getattr(self.manager, 'panel', None)
+        identity = (self.provider_id, (self.entry or {}).get('task_key'))
+        if panel is not None and identity[1]:
+            panel.focus_task(identity)
+
     def collapse(self):
         if self.manager is not None:
             self.manager.collapse_detail()
@@ -519,6 +527,9 @@ class TaskPanelWindow(QWidget):
         self.collapse_button.setText('×')
         self.collapse_button.setToolTip(collapse)
         self.collapse_button.setAccessibleName(collapse)
+        jump = text('task_go_to_window', language)
+        self.window_button.setToolTip(jump)
+        self.window_button.setAccessibleName(jump)
         metrics = format_task_metrics(self.provider_id, presentation, language, token_style)
         metrics['effort'] = (presentation.get('effort') or text('unknown', language), '')
         context = presentation.get('context')
@@ -4032,6 +4043,8 @@ class Settings(QDialog):
 
 
 class Panel(QWidget):
+    focus_failed = Signal(object)   # Fallback to run on the UI thread.
+
     def __init__(self, live=True):
         super().__init__()
         # Live panels run background loops and the shared star-motion
@@ -4311,6 +4324,7 @@ class Panel(QWidget):
         self.notifications = NotificationCenter(
             NotificationStore(notify_dir / 'notifications.sqlite3'), lambda: self.prefs)
         self.notifications.enrich = self.recap_event
+        self.focus_failed.connect(lambda fallback: fallback() if not self.closing else None)
         self.notifications.fired.connect(self.announce)
         self.notifications.recorded.connect(self._notifications_recorded)
         self.tray.messageClicked.connect(self.open_last_notification)
@@ -5013,9 +5027,33 @@ class Panel(QWidget):
             import claude_recap
             from claude_usage import default_home, strip_scope
             recap = claude_recap.recap(default_home(), strip_scope(key))
+        elif provider == 'codex' and key:
+            recap = self._codex_recap(key)
         if recap:
             event['detail'] = recap_detail(recap)
         return event
+
+    @staticmethod
+    def _codex_recap(thread_id, wait=1.5):
+        """Files a Codex thread changed. Its elapsed time spans the whole
+        thread (all turns and pauses), so it is not shown as this task's.
+        Large logs may take a while: give up after ``wait`` seconds."""
+        import codex_recap
+        from usage import CodexStore
+        found = {}
+
+        def work():
+            try:
+                found['recap'] = codex_recap.recap(CodexStore().home, thread_id)
+            except Exception:
+                pass
+        worker = threading.Thread(target=work, daemon=True)
+        worker.start()
+        worker.join(wait)
+        recap = found.get('recap')
+        if not recap or recap.get('files') is None:
+            return None
+        return dict(files=recap['files'], duration_s=None, usd=None)
 
     def sync_approvals(self):
         """Answer Claude Code's permission requests while the hook is installed."""
@@ -5081,8 +5119,38 @@ class Panel(QWidget):
         if window is not None and window.isVisible():
             window.refresh_notifications()
 
+    def focus_task(self, identity, fallback=None):
+        """Raise the window a task runs in (in a worker: Codex lookups can
+        take seconds); run ``fallback`` on the UI thread if that fails."""
+        provider, key = identity
+
+        def work():
+            result = None
+            try:
+                if provider == 'claude':
+                    import claude_focus
+                    from claude_usage import strip_scope
+                    result = claude_focus.focus(strip_scope(key))
+                elif provider == 'codex':
+                    import codex_focus
+                    from usage import CodexStore
+                    result = codex_focus.focus(CodexStore().home, key)
+            except Exception:
+                result = None
+            if result is None and fallback is not None:
+                self.focus_failed.emit(fallback)
+        threading.Thread(target=work, daemon=True).start()
+
     def open_notice(self, event):
-        """Open the task an event belongs to, or the notification list."""
+        """Jump to the task's window; otherwise open the task or the list."""
+        identity = ((event or {}).get('provider'), (event or {}).get('task_key'))
+        if (self.live and identity[0] in ('claude', 'codex') and identity[1]
+                and (event or {}).get('kind') in ('finished', 'failed', 'needs_approval', 'stuck', 'context_full')):
+            self.focus_task(identity, fallback=lambda: self._open_notice_here(event))
+            return
+        self._open_notice_here(event)
+
+    def _open_notice_here(self, event):
         identity = ((event or {}).get('provider'), (event or {}).get('task_key'))
         # Finished, failed and reminder events are history; only a pending
         # approval still has something to act on.

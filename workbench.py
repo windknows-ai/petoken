@@ -586,12 +586,16 @@ class WorkbenchWindow(QWidget):
         self.reminder_delete_button.setEnabled(available)
 
     def _open_notice_item(self, item):
-        """Only a pending approval whose task still runs is worth opening;
-        everything else is history, and the list stays where it is."""
+        """A task that still needs you opens (its window, else its star); a
+        finished one jumps to its window if it is still open. Everything
+        else is history, and the list stays where it is."""
         event = item.data(Qt.UserRole) or {}
         identity = (event.get('provider'), event.get('task_key'))
-        if event.get('kind') == 'needs_approval' and identity in self.panel.task_manager._universe:
+        if (event.get('kind') in ('needs_approval', 'stuck', 'context_full')
+                and identity in self.panel.task_manager._universe):
             self.panel.open_notice(event)
+        elif event.get('kind') in ('finished', 'failed') and identity[1] and self.panel.live:
+            self.panel.focus_task(identity)
 
     def _reminder_dialog(self):
         """Content, repeat, time and linked todo, or None when cancelled."""
