@@ -33,6 +33,9 @@ from providers import PROVIDER_NAMES
 TICK_MS = 30_000
 MISSED_AFTER_S = 10 * 60
 MATCH_WINDOW_S = 6 * 3600
+# A started todo whose task never shows up (the CLI failed to start, the
+# window was closed at once) stops waiting after this long.
+MATCH_TIMEOUT_S = 15 * 60
 MISSED_POLICIES = ('ask', 'run')
 
 
@@ -166,7 +169,14 @@ class TodoScheduler(QObject):
                 missed.append(schedule)
             else:
                 self.run(schedule['todo_id'], now)
-        unmatched = [s for s in started if not s['task_key']]
+        lost = [s for s in started if not s['task_key'] and now - (s['started_at'] or now) > MATCH_TIMEOUT_S]
+        for schedule in lost:
+            self.store.update_schedule(schedule['todo_id'], state='failed', task_key='')
+        if lost:
+            language = self.panel.prefs.get('language')
+            self.panel.tray_notice(text('todo_ai_lost', language, count=len(lost)), text('todo_ai_lost_body', language))
+            self.changed.emit()
+        unmatched = [s for s in started if not s['task_key'] and s not in lost]
         if unmatched and not self._matching:
             # Reading Codex threads can take a moment: never on the UI thread.
             self._matching = True
@@ -218,7 +228,8 @@ class TodoScheduler(QObject):
             from quick_launch import build_command
             import claude_launch
             argv = build_command(schedule['provider_id'], schedule['folder'], schedule['prompt'],
-                                 external_id=todo_id)
+                                 external_id=todo_id, model=schedule.get('model') or None,
+                                 effort=schedule.get('effort') or None)
             (self.launcher or claude_launch.launch)(argv)
         except (ValueError, RuntimeError, OSError):
             self.store.update_schedule(todo_id, state='failed')
@@ -298,6 +309,18 @@ class GiveToAiDialog(QDialog):
         (self.codex if (schedule or {}).get('provider_id', panel.prefs.get('launch_app')) == 'codex'
          else self.claude).setChecked(True)
         layout.addLayout(apps)
+        choices = QHBoxLayout()
+        self.model = QComboBox()
+        self.effort = QComboBox()
+        choices.addWidget(QLabel(text('launch_model', language)))
+        choices.addWidget(self.model, 1)
+        choices.addWidget(QLabel(text('launch_effort', language)))
+        choices.addWidget(self.effort, 1)
+        layout.addLayout(choices)
+        self._saved = dict(model=(schedule or {}).get('model') or '', effort=(schedule or {}).get('effort') or '')
+        self.claude.toggled.connect(lambda _: self._fill_options())
+        self.model.currentIndexChanged.connect(lambda _: self._fill_efforts())
+        self._fill_options()
         when = QHBoxLayout()
         self.now = QRadioButton(text('todo_ai_now', language))
         self.later = QRadioButton(text('todo_ai_at', language))
@@ -324,24 +347,50 @@ class GiveToAiDialog(QDialog):
         note.setWordWrap(True)
         layout.addWidget(note)
         row = QHBoxLayout()
-        self.remove = QPushButton(text('todo_ai_remove', language))
-        self.remove.setVisible(bool(schedule))
-        self.remove.clicked.connect(lambda: self.done(2))
         cancel = QPushButton(text('launch_cancel', language))
         cancel.clicked.connect(self.reject)
         ok = QPushButton(text('todo_ai_ok', language))
         ok.setDefault(True)
         ok.clicked.connect(self._ok)
-        row.addWidget(self.remove)
         row.addStretch(1)
         row.addWidget(cancel)
         row.addWidget(ok)
         layout.addLayout(row)
 
+    def _app(self):
+        return 'codex' if self.codex.isChecked() else 'claude'
+
+    def _fill_options(self):
+        from quick_launch import launch_options
+        app = self._app()
+        self._models = launch_options(app, self.language)
+        saved = self._saved   # A model the other app lacks just falls back to its default.
+        self.model.blockSignals(True)
+        self.model.clear()
+        self.model.addItem(text('launch_model_default', self.language), '')
+        for model in self._models:
+            self.model.addItem(model['label'], model['id'])
+        self.model.setCurrentIndex(max(0, self.model.findData(saved.get('model', ''))))
+        self.model.blockSignals(False)
+        self._fill_efforts(saved.get('effort', ''))
+
+    def _fill_efforts(self, keep=None):
+        from quick_launch import default_efforts
+        keep = self.effort.currentData() if keep is None else keep
+        model = next((m for m in self._models if m['id'] == self.model.currentData()), None)
+        efforts = model['efforts'] if model else default_efforts(self._app())
+        self.effort.clear()
+        self.effort.addItem(text('launch_effort_default', self.language), '')
+        for value, label in efforts:
+            self.effort.addItem(label, value)
+        self.effort.setCurrentIndex(max(0, self.effort.findData(keep or '')))
+        self.effort.setEnabled(bool(efforts))
+
     def values(self):
         from quick_launch import _clean_folder
         return dict(prompt=self.prompt.toPlainText().strip(), folder=_clean_folder(self.folder.currentText()),
-                    provider_id='codex' if self.codex.isChecked() else 'claude',
+                    provider_id=self._app(), model=self.model.currentData() or '',
+                    effort=self.effort.currentData() or '',
                     run_at=None if self.now.isChecked() else float(self.at.dateTime().toSecsSinceEpoch()))
 
     def _ok(self):

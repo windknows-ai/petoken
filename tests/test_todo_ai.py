@@ -96,7 +96,8 @@ class SchedulerTests(unittest.TestCase):
             self.assertEqual(self.launched, [])                 # Not yet.
             scheduler.tick(NOW + 5)
             scheduler.tick(NOW + 35)                           # The next check finds its task.
-        build.assert_called_once_with('claude', str(self.folder), 'Add dark mode', external_id=self.todo['id'])
+        build.assert_called_once_with('claude', str(self.folder), 'Add dark mode', external_id=self.todo['id'],
+                                      model=None, effort=None)
         self.assertEqual(self.launched, [['wt.exe', 'go']])
         deadline = time.time() + 3
         while not self.store.get_schedule(self.todo['id'])['task_key'] and time.time() < deadline:
@@ -135,6 +136,23 @@ class SchedulerTests(unittest.TestCase):
         self.assertIn('src/theme.css', note['body'])
         self.assertIn('1m 35s', note['body'])
 
+    def test_model_and_effort_reach_the_command(self):
+        self.store.schedule_todo(self.todo['id'], NOW, 'claude', str(self.folder), 'x', 'claude-opus-5', 'high')
+        with patch('quick_launch.build_command', return_value=['go']) as build:
+            self.scheduler().tick(NOW + 1)
+        self.assertEqual(build.call_args.kwargs['model'], 'claude-opus-5')
+        self.assertEqual(build.call_args.kwargs['effort'], 'high')
+
+    def test_a_task_that_never_shows_up_stops_waiting(self):
+        self.store.schedule_todo(self.todo['id'], NOW, 'codex', str(self.folder), 'x')
+        self.store.update_schedule(self.todo['id'], state='started', started_at=NOW)
+        panel = FakePanel()
+        self.scheduler(panel).tick(NOW + todo_ai.MATCH_TIMEOUT_S - 60)
+        self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'started')
+        self.scheduler(panel).tick(NOW + todo_ai.MATCH_TIMEOUT_S + 60)
+        self.assertEqual(self.store.get_schedule(self.todo['id'])['state'], 'failed')
+        self.assertEqual(len(panel.notices), 1)
+
     def test_failed_task_is_marked(self):
         self.store.schedule_todo(self.todo['id'], NOW, 'codex', str(self.folder), 'x')
         self.store.update_schedule(self.todo['id'], state='started', started_at=NOW, task_key='thread-1')
@@ -167,3 +185,35 @@ class MatchTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DialogAndButtonTests(unittest.TestCase):
+    def test_dialog_offers_model_and_effort(self):
+        import claude_models
+        todo = dict(id='t', title='Write docs', project_id=None)
+        with patch('claude_models.catalog', return_value=[dict(m) for m in claude_models.FALLBACK]):
+            dialog = todo_ai.GiveToAiDialog(None, FakePanel(), todo, None, [r'C:\work'])
+            dialog.model.setCurrentIndex(dialog.model.findData('claude-sonnet-5-5'))
+            dialog.effort.setCurrentIndex(dialog.effort.findData('low'))
+            values = dialog.values()
+        self.assertEqual((values['model'], values['effort']), ('claude-sonnet-5-5', 'low'))
+        dialog.close()
+
+    def test_button_takes_back_an_active_hand_off(self):
+        import widget
+        panel = widget.Panel(live=False)
+        panel.prefs['language'] = 'en'
+        panel.open_workbench()
+        window = panel.workbench_window
+        todo = window.store.create_todo('Ship it')
+        window.store.schedule_todo(todo['id'], NOW, 'claude', r'C:\work', 'Ship it')
+        window.refresh()
+        window.todo_list.setCurrentRow(0)
+        self.assertEqual(window.todo_ai_button.text(), 'Take back')
+        window.todo_ai_button.click()
+        self.assertIsNone(window.store.get_schedule(todo['id']))
+        window.todo_list.setCurrentRow(0)
+        self.assertEqual(window.todo_ai_button.text(), 'Give to AI…')
+        window.shutdown()
+        panel.shutdown()
+

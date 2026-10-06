@@ -886,6 +886,15 @@ class WorkbenchWindow(QWidget):
             button.setVisible(available)
             button.setEnabled(available)
         self.save_button.setVisible(self.note_id is not None)
+        active = False
+        if todo:
+            try:
+                schedule = self.store.get_schedule(todo['id'])
+            except WorkbenchError:
+                schedule = None
+            active = bool(schedule and schedule['state'] in ('waiting', 'started'))
+        self.todo_ai_button.setText(self.tr('todo_ai_take_back' if active else 'todo_ai_button'))
+        self.todo_ai_button.setToolTip(self.tr('todo_ai_take_back_tip') if active else '')
 
     def edit_todo(self):
         record = self._selected_todo()
@@ -907,14 +916,15 @@ class WorkbenchWindow(QWidget):
             schedule = self.store.get_schedule(record['id'])
         except WorkbenchError:
             schedule = None
+        if schedule and schedule['state'] in ('waiting', 'started'):
+            # Already with the AI: this button takes it back, no dialog.
+            self._attempt(self.store.unschedule, record['id'])
+            self.refresh()
+            return
         project = next((p for p in self._projects if p['id'] == record['project_id']), None)
         folders = ([project['directory']] if project and project['directory'] else []) + known_folders(self.panel.prefs)
         dialog = GiveToAiDialog(self, self.panel, record, schedule, folders)
         result = dialog.exec()
-        if result == 2:
-            self._attempt(self.store.unschedule, record['id'])
-            self.refresh()
-            return
         if result != QDialog.Accepted:
             return
         values = dialog.values()
@@ -922,7 +932,8 @@ class WorkbenchWindow(QWidget):
             self._attempt(self.store.update_todo, record['id'], record['title'], record['project_id'], False)
         import time as _time
         saved, _ = self._attempt(self.store.schedule_todo, record['id'], values['run_at'] or _time.time(),
-                                 values['provider_id'], values['folder'], values['prompt'])
+                                 values['provider_id'], values['folder'], values['prompt'],
+                                 values['model'], values['effort'])
         if saved and values['run_at'] is None:
             scheduler = getattr(self.panel, 'todo_ai', None)
             if scheduler is not None:

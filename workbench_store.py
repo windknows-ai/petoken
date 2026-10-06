@@ -46,10 +46,20 @@ _SCHEMA = {
         run_at REAL NOT NULL,
         provider_id TEXT NOT NULL CHECK (provider_id IN ('codex', 'claude')),
         folder TEXT NOT NULL, prompt TEXT NOT NULL,
+        model TEXT NOT NULL DEFAULT '', effort TEXT NOT NULL DEFAULT '',
         state TEXT NOT NULL CHECK (state IN ('waiting', 'started', 'finished', 'failed', 'missed')),
         started_at REAL, task_key TEXT,
         note_id TEXT REFERENCES notes(id) ON DELETE SET NULL)''',
 }
+# The first schema-3 table in V1.7 test builds, before model and effort.
+_SCHEDULES_PREVIEW = '''CREATE TABLE todo_schedules (
+        todo_id TEXT PRIMARY KEY NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+        run_at REAL NOT NULL,
+        provider_id TEXT NOT NULL CHECK (provider_id IN ('codex', 'claude')),
+        folder TEXT NOT NULL, prompt TEXT NOT NULL,
+        state TEXT NOT NULL CHECK (state IN ('waiting', 'started', 'finished', 'failed', 'missed')),
+        started_at REAL, task_key TEXT,
+        note_id TEXT REFERENCES notes(id) ON DELETE SET NULL)'''
 # Schema 2 (V1.5/V1.6): no schedules. Kept to recognize and migrate it.
 _SCHEMA_V2 = {name: sql for name, sql in _SCHEMA.items() if name != 'todo_schedules'}
 # Schema 1 (V1.4): Codex-only task links. Kept to recognize and migrate it.
@@ -118,6 +128,7 @@ class WorkbenchStore:
             self.migration_backup = None
             self._migrate_v1()
             self._migrate_v2()
+            self._migrate_v3_preview()
             self._validate_schema()
         except (OSError, ValueError, TypeError, sqlite3.Error, WorkbenchError) as error:
             self.close()
@@ -153,6 +164,31 @@ class WorkbenchStore:
                     return  # Another opener migrated it meanwhile.
                 connection.execute(_SCHEMA['todo_schedules'])
                 connection.execute('PRAGMA user_version=3')
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
+
+    def _migrate_v3_preview(self):
+        """Rebuild a test build's schedule table with model and effort columns."""
+        connection = self._connection
+        if (connection.execute('PRAGMA application_id').fetchone()[0] != _APPLICATION_ID
+                or connection.execute('PRAGMA user_version').fetchone()[0] != 3):
+            return
+        row = connection.execute("SELECT sql FROM sqlite_master WHERE name='todo_schedules'").fetchone()
+        if row is None or ' '.join(row[0].split()) != ' '.join(_SCHEDULES_PREVIEW.split()):
+            return
+        self._validate_schema(dict(_SCHEMA, todo_schedules=_SCHEDULES_PREVIEW), 3)
+        self._backup('v3-preview')
+        columns = 'todo_id, run_at, provider_id, folder, prompt, state, started_at, task_key, note_id'
+        try:
+            with connection:
+                connection.execute('BEGIN IMMEDIATE')
+                count = connection.execute('SELECT COUNT(*) FROM todo_schedules').fetchone()[0]
+                connection.execute('ALTER TABLE todo_schedules RENAME TO todo_schedules_preview')
+                connection.execute(_SCHEMA['todo_schedules'])
+                connection.execute(f'INSERT INTO todo_schedules ({columns}) SELECT {columns} FROM todo_schedules_preview')
+                connection.execute('DROP TABLE todo_schedules_preview')
+                if connection.execute('SELECT COUNT(*) FROM todo_schedules').fetchone()[0] != count:
+                    raise WorkbenchError('Workbench migration changed the schedule count')
         except sqlite3.Error as error:
             raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
 
@@ -304,22 +340,25 @@ class WorkbenchStore:
         self._delete('todos', id)
 
     # Todos handed to AI -----------------------------------------------------
-    def schedule_todo(self, todo_id, run_at, provider_id, folder, prompt):
-        """Hand a todo to Claude Code or Codex at ``run_at`` (epoch seconds)."""
+    def schedule_todo(self, todo_id, run_at, provider_id, folder, prompt, model='', effort=''):
+        """Hand a todo to Claude Code or Codex at ``run_at`` (epoch seconds);
+        empty ``model`` / ``effort`` keep the app's own default."""
         self._record('todos', todo_id)
         if provider_id not in LINK_PROVIDERS:
             raise WorkbenchError('Only Codex and Claude Code can take a todo')
         if isinstance(run_at, bool) or not isinstance(run_at, (int, float)) or run_at != run_at:
             raise WorkbenchError('Invalid time')
         values = (todo_id, float(run_at), provider_id, _text(folder, 'folder', 2000, True),
-                  _text(prompt, 'prompt', 8000, True))
+                  _text(prompt, 'prompt', 8000, True), _text(model or '', 'model', 120),
+                  _text(effort or '', 'effort', 40))
         try:
             with self._open() as connection:
                 connection.execute(
-                    'INSERT INTO todo_schedules (todo_id, run_at, provider_id, folder, prompt, state) '
-                    "VALUES (?,?,?,?,?,'waiting') ON CONFLICT(todo_id) DO UPDATE SET run_at=excluded.run_at, "
+                    'INSERT INTO todo_schedules (todo_id, run_at, provider_id, folder, prompt, model, effort, state) '
+                    "VALUES (?,?,?,?,?,?,?,'waiting') ON CONFLICT(todo_id) DO UPDATE SET run_at=excluded.run_at, "
                     'provider_id=excluded.provider_id, folder=excluded.folder, prompt=excluded.prompt, '
-                    "state='waiting', started_at=NULL, task_key=NULL", values)
+                    "model=excluded.model, effort=excluded.effort, state='waiting', started_at=NULL, task_key=NULL",
+                    values)
         except sqlite3.Error as error:
             raise WorkbenchError(f'Cannot save the schedule: {error}') from error
         return self.get_schedule(todo_id)
