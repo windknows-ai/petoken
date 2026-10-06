@@ -19,6 +19,10 @@ from token_format import format_tokens
 from usage_overlay import UsageOverlay, UsagePresence, build_sections
 
 
+POKES_TO_POUT=5        # Clicks on her within POKE_WINDOW_S seconds.
+POKE_WINDOW_S=4
+
+
 class DesktopPet(QWidget):
     def __init__(self,panel):
         super().__init__()
@@ -66,7 +70,6 @@ class DesktopPet(QWidget):
         self.dragging=False
         self._drag_last=None
         self._drag_started=0.0
-        self._recent_drags=[]
         self._pokes=[]
         self._pat_last=None
         self._pat_flips=[]
@@ -152,9 +155,11 @@ class DesktopPet(QWidget):
     def focus_subtitle(self):
         """Focus countdown pill, e.g. 'Focus 18:42'; None when not focusing."""
         mode=getattr(self.panel,'focus_mode',None)
-        if mode is None or mode.phase=='idle' or self.token_bubble_visible():
+        if mode is None or mode.phase=='idle':
             return None
         from focus_mode import clock_text
+        if mode.phase=='focus' and mode.todo_title:
+            return self.tr_text('focus_pill_todo',time=clock_text(mode.remaining()),todo=mode.todo_title)
         key='focus_pill' if mode.phase=='focus' else 'focus_pill_break'
         return self.tr_text(key,time=clock_text(mode.remaining()))
 
@@ -335,7 +340,7 @@ class DesktopPet(QWidget):
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         bubble=QColor(theme.CARD)
         bubble.setAlpha(235)
-        if (subtitle:=self.focus_subtitle() or self.music_subtitle()) is not None:
+        if (subtitle:=self.music_subtitle()) is not None:
             # One small secondary pill in the idle card area. No text means no
             # box at all; Token Mode never reaches this branch.
             p.setFont(QFont('Segoe UI',self._px(8)))
@@ -350,6 +355,7 @@ class DesktopPet(QWidget):
             p.drawText(QRectF(pill_x,pill_y,pill_w,pill_h),Qt.AlignCenter,shown)
         if self.motion and self.frame is not None:
             self.paint_animated(p,self.frame)
+            self.paint_focus_tag(p)
             return
         bob_amp, typing_amp = geometry.scaled_amplitudes(self.pet_scale)
         offset=math.sin(self.phase)*bob_amp if self.motion else 0
@@ -382,6 +388,29 @@ class DesktopPet(QWidget):
             x=round((sx+(sw-size.width())/2+tap_shift)*dpr)/dpr
             y=round((sy+sh-size.height())*dpr)/dpr
             p.drawPixmap(QPointF(x,y),rendered)
+        p.restore()
+        self.paint_focus_tag(p)
+
+    def paint_focus_tag(self,p):
+        tag=self.focus_subtitle()
+        if tag is None:
+            return
+        p.save()
+        font=QFont('Segoe UI',self._px(8))
+        font.setWeight(QFont.DemiBold)
+        p.setFont(font)
+        shown=p.fontMetrics().elidedText(tag,Qt.ElideRight,self._px(200))
+        w=min(self._px(224),p.fontMetrics().horizontalAdvance(shown)+self._px(22))
+        h=self._px(22)
+        x=(self.width()-w)/2
+        y=self.height()-h-self._px(2)
+        p.setPen(QPen(QColor(theme.VIOLET),1))
+        fill=QColor(theme.CARD)
+        fill.setAlpha(242)
+        p.setBrush(fill)
+        p.drawRoundedRect(QRectF(x,y,w,h),h/2,h/2)
+        p.setPen(QColor(theme.VIOLET))
+        p.drawText(QRectF(x,y,w,h),Qt.AlignCenter,shown)
         p.restore()
 
     def pose_pixmap(self,state,index=0,blink=False):
@@ -553,18 +582,19 @@ class DesktopPet(QWidget):
             if self.dragging:
                 self.dragging=False
                 self.animator.end_drag()
-                self._recent_drags=[t for t in self._recent_drags if now-t<12]+[now]
-                # Dragged around a lot: a little pout instead of a landing.
-                annoyed=len(self._recent_drags)>=3 or now-self._drag_started>6
-                self.interact('pout' if annoyed else 'landing',2.4 if annoyed else .7)
+                self.interact('landing',.7)
             if self._long_fired:
                 return
             if moved<5:
                 local=getattr(self,'_press_local',None)
                 side=(self.box_fraction(local)[0]-.5)*2 if local is not None else 0
                 self.animator.poke(max(-1.,min(1.,side)))
-                self._pokes=[t for t in self._pokes if now-t<5]+[now]
-                self.interact('pout' if len(self._pokes)>=4 else 'poked',2.4 if len(self._pokes)>=4 else .45)
+                # Only clicking her again and again on purpose makes her pout.
+                self._pokes=[t for t in self._pokes if now-t<POKE_WINDOW_S]+[now]
+                annoyed=len(self._pokes)>=POKES_TO_POUT
+                if annoyed:
+                    self._pokes=[]
+                self.interact('pout' if annoyed else 'poked',2.4 if annoyed else .45)
                 self.toggle_panel()
             else:
                 self.panel.prefs['pet_position']=[self.x(),self.y()]

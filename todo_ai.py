@@ -355,7 +355,8 @@ class GiveToAiDialog(QDialog):
         self.prompt = QPlainTextEdit((schedule or {}).get('prompt') or todo['title'])
         self.prompt.setFixedHeight(80)
         layout.addWidget(self.prompt)
-        layout.addWidget(QLabel(text('launch_folder', language)))
+        self.folder_label = QLabel(text('launch_folder', language))
+        layout.addWidget(self.folder_label)
         self.folder = QComboBox()
         self.folder.setEditable(True)
         for folder in ([schedule['folder']] if schedule else []) + list(folders):

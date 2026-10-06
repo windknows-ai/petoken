@@ -1,11 +1,13 @@
 """Focus companion mode (2.0).
 
-Start a timed focus session from the pet's menu. While it runs she quietly
-reads beside you and only urgent notices get through (approval requests,
-failures, quota and context warnings); everything else is still recorded.
-When the time is up she shows what got done in that time (todos ticked
-off, AI tasks finished, files changed, tokens used) and a short break
-starts: she drinks tea and reminds you to get up for a moment.
+Start a timed focus session from the pet's menu, optionally on one todo
+(its name shows beside the countdown, and the end card can tick it off).
+While it runs she quietly reads beside you and only urgent notices get
+through (approval requests, failures, quota and context warnings);
+everything else is still recorded. When the time is up she shows what got
+done in that time (todos ticked off, AI tasks finished, files changed,
+tokens used) and a break starts: she drinks tea and reminds you to get up.
+Break lengths and how often a long break comes are your choice.
 
 Sessions are kept in the workbench database, so reports can show how long
 you focused this week.
@@ -15,7 +17,7 @@ from __future__ import annotations
 import time
 
 from PySide6.QtCore import QObject, QPoint, Qt, QTimer, Signal
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFormLayout, QFrame, QHBoxLayout, QLabel,
                                QPushButton, QSpinBox, QVBoxLayout, QWidget)
 
 import theme
@@ -23,9 +25,19 @@ from approval_card import GAP, STYLE
 from localization import text
 
 CHOICES = (25, 45, 60)
-BREAK_S = 5 * 60
-LONG_BREAK_S = 15 * 60
+# Defaults for the break settings (minutes; rounds). 0 turns a break off.
+BREAK_MIN = 5
+LONG_BREAK_MIN = 15
 LONG_BREAK_EVERY = 4
+
+
+def break_settings(prefs):
+    """(break, long break, long break every n rounds) from the preferences."""
+    def number(key, default, top):
+        value = prefs.get(key, default)
+        return value if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= top else default
+    return (number('focus_break', BREAK_MIN, 60), number('focus_long_break', LONG_BREAK_MIN, 120),
+            number('focus_long_every', LONG_BREAK_EVERY, 12))
 URGENT = ('needs_approval', 'failed', 'quota_low', 'context_full', 'stuck')
 
 
@@ -65,6 +77,7 @@ class FocusMode(QObject):
         self.session = None
         self.project_id = None
         self.todo_id = None
+        self.todo_title = ''
         self.rounds = 0
         self.break_completed = False      # The last break ran its full time.
         self.timer = QTimer(self)
@@ -92,12 +105,16 @@ class FocusMode(QObject):
         return self.active and kind not in URGENT
 
     # Phases ---------------------------------------------------------------
-    def start(self, minutes, project_id=None, todo_id=None):
+    def start(self, minutes, todo=None):
+        """Focus for ``minutes``, optionally on ``todo`` (a todo record)."""
         now = self.clock()
         self.break_completed = False
         self.phase, self.started, self.planned = 'focus', now, float(minutes) * 60
         self.ends = now + self.planned
-        self.project_id, self.todo_id = project_id, todo_id
+        self.todo_id = (todo or {}).get('id')
+        self.todo_title = (todo or {}).get('title') or ''
+        self.project_id = (todo or {}).get('project_id')
+        project_id, todo_id = self.project_id, self.todo_id
         self.session = None
         if self.store is not None:
             try:
@@ -156,7 +173,13 @@ class FocusMode(QObject):
                 pass
         summary = dict(start=self.started, end=end, planned=self.planned, completed=completed,
                        session=(self.session or {}).get('id'), todos=[], ai_finished=0,
-                       files=None, tokens=None, loading=True)
+                       files=None, tokens=None, loading=True, todo_id=self.todo_id,
+                       todo_title=self.todo_title, todo_done=False)
+        if self.todo_id and self.store is not None:
+            try:
+                summary['todo_done'] = any(t['id'] == self.todo_id and t['done'] for t in self.store.list_todos())
+            except Exception:
+                pass
         try:
             summary['todos'] = [row['title'] for row in self.store.todos_done_between(self.started, end + 1)]
         except Exception:
@@ -167,17 +190,22 @@ class FocusMode(QObject):
             summary['ai_finished'] = sum(1 for e in events if self.started <= (e.get('at') or 0) <= end + 1)
         except Exception:
             pass
+        rest, long_rest, every = break_settings(self.panel.prefs)
         if completed:
             self.rounds += 1
-            long_break = self.rounds % LONG_BREAK_EVERY == 0
+        minutes = (long_rest if completed and every and long_rest and self.rounds % every == 0
+                   else rest if completed else 0)
+        summary['break_min'] = minutes
+        if minutes:
             self.phase = 'break'
-            self.ends = self.clock() + (LONG_BREAK_S if long_break else BREAK_S)
+            self.ends = self.clock() + minutes * 60
             language = self.panel.prefs.get('language')
-            self.panel.tray_notice(text('focus_break', language, minutes=round((self.ends - self.clock()) / 60)),
+            self.panel.tray_notice(text('focus_break', language, minutes=minutes),
                                    text('focus_break_body', language))
             self.timer.start()
         else:
-            self.rounds = 0
+            if not completed:
+                self.rounds = 0
             self.phase = 'idle'
             self.timer.stop()
         self.changed.emit()
@@ -212,12 +240,11 @@ class FocusMode(QObject):
 
 
 class FocusDialog(QDialog):
-    """How long, and (optionally) for which project and todo."""
+    """How long, on which todo (optional), and how breaks go."""
 
     def __init__(self, panel, store=None, parent=None):
         super().__init__(parent)
-        self.language = panel.prefs.get('language')
-        language = self.language
+        self.language = language = panel.prefs.get('language')
         self.setWindowTitle(text('focus_start_title', language))
         self.setStyleSheet(panel.styleSheet())
         layout = QVBoxLayout(self)
@@ -225,36 +252,38 @@ class FocusDialog(QDialog):
         intro.setWordWrap(True)
         intro.setObjectName('muted')
         layout.addWidget(intro)
-        row = QHBoxLayout()
-        row.addWidget(QLabel(text('focus_length', language)))
+        form = QFormLayout()
         self.minutes = QSpinBox()
-        self.minutes.setRange(5, 180)
+        self.minutes.setRange(1, 180)
         self.minutes.setSingleStep(5)
         self.minutes.setSuffix(text('focus_minute_suffix', language))
         self.minutes.setValue(int(panel.prefs.get('focus_minutes', 25)))
-        row.addWidget(self.minutes, 1)
-        layout.addLayout(row)
-        self.project = QComboBox()
+        form.addRow(text('focus_length', language), self.minutes)
         self.todo = QComboBox()
         self._todos = []
-        projects, todos = [], []
-        if store is not None:
-            try:
-                projects, todos = store.list_projects(), store.list_todos(include_completed=False)
-            except Exception:
-                pass
-        self._todos = todos
-        self.project.addItem(text('focus_no_project', language), None)
-        for project in projects:
-            self.project.addItem(project['name'], project['id'])
-        self.project.currentIndexChanged.connect(lambda _: self._fill_todos())
-        for label, widget in ((text('focus_project', language), self.project),
-                              (text('focus_todo', language), self.todo)):
-            line = QHBoxLayout()
-            line.addWidget(QLabel(label))
-            line.addWidget(widget, 1)
-            layout.addLayout(line)
-        self._fill_todos()
+        try:
+            projects = {p['id']: p['name'] for p in store.list_projects()} if store is not None else {}
+            self._todos = store.list_todos(include_completed=False) if store is not None else []
+        except Exception:
+            projects = {}
+        self.todo.addItem(text('focus_no_todo', language), None)
+        for todo in self._todos:
+            name = projects.get(todo.get('project_id'))
+            self.todo.addItem(f"{name} · {todo['title']}" if name else todo['title'], todo['id'])
+        form.addRow(text('focus_todo', language), self.todo)
+        todo_note = QLabel(text('focus_todo_note', language))
+        todo_note.setObjectName('muted')
+        todo_note.setWordWrap(True)
+        form.addRow('', todo_note)
+        rest, long_rest, every = break_settings(panel.prefs)
+        self.rest = self._spin(0, 60, rest, text('focus_minute_suffix', language), text('focus_no_break', language))
+        self.long_rest = self._spin(0, 120, long_rest, text('focus_minute_suffix', language),
+                                    text('focus_no_break', language))
+        self.every = self._spin(0, 12, every, text('focus_rounds_suffix', language), text('focus_never', language))
+        form.addRow(text('focus_break_length', language), self.rest)
+        form.addRow(text('focus_long_break_length', language), self.long_rest)
+        form.addRow(text('focus_long_break_every', language), self.every)
+        layout.addLayout(form)
         buttons = QHBoxLayout()
         buttons.addStretch(1)
         cancel = QPushButton(text('launch_cancel', language))
@@ -265,25 +294,28 @@ class FocusDialog(QDialog):
         buttons.addWidget(cancel)
         buttons.addWidget(start)
         layout.addLayout(buttons)
-        self.setMinimumWidth(360)
+        self.setMinimumWidth(400)
 
-    def _fill_todos(self):
-        project = self.project.currentData()
-        self.todo.clear()
-        self.todo.addItem(text('focus_no_todo', self.language), None)
-        for todo in self._todos:
-            if project is None or todo.get('project_id') == project:
-                self.todo.addItem(todo['title'], todo['id'])
+    @staticmethod
+    def _spin(low, high, value, suffix, zero):
+        spin = QSpinBox()
+        spin.setRange(low, high)
+        spin.setValue(value)
+        spin.setSuffix(suffix)
+        spin.setSpecialValueText(zero)
+        return spin
 
     def values(self):
-        return dict(minutes=self.minutes.value(), project_id=self.project.currentData(),
-                    todo_id=self.todo.currentData())
+        todo = next((t for t in self._todos if t['id'] == self.todo.currentData()), None)
+        return dict(minutes=self.minutes.value(), todo=todo, focus_break=self.rest.value(),
+                    focus_long_break=self.long_rest.value(), focus_long_every=self.every.value())
 
 
 class FocusCard(QWidget):
     """What got done in a focus session, beside the pet."""
 
     again = Signal()
+    todo_done = Signal(str)
 
     def __init__(self, language, summary, token_style=None):
         super().__init__(None)
@@ -314,6 +346,9 @@ class FocusCard(QWidget):
         self.note.setWordWrap(True)
         layout.addWidget(self.note)
         row = QHBoxLayout()
+        self.todo_button = QPushButton(text('focus_todo_done', language))
+        self.todo_button.clicked.connect(self._todo_done)
+        row.addWidget(self.todo_button)
         row.addStretch(1)
         self.close_button = QPushButton(text('focus_card_close', language))
         self.close_button.clicked.connect(self.close)
@@ -325,7 +360,15 @@ class FocusCard(QWidget):
         layout.addLayout(row)
         self.update_summary(summary)
 
+    def _todo_done(self):
+        todo_id = (self.summary or {}).get('todo_id')
+        if todo_id:
+            self.todo_done.emit(todo_id)
+            self.summary['todo_done'] = True
+            self.update_summary(self.summary)
+
     def update_summary(self, summary):
+        self.summary = dict(summary)
         language = self.language
         spent = minutes_text(summary['end'] - summary['start'], language)
         self.title.setText(text('focus_done_title' if summary['completed'] else 'focus_stopped_title',
@@ -347,8 +390,14 @@ class FocusCard(QWidget):
             lines.append(text('focus_line_none', language))
         self.lines.setText('\n'.join('· ' + line for line in lines))
         self.lines.setVisible(bool(lines))
+        if summary.get('todo_title'):
+            lines.insert(0, text('focus_line_focused', language, todo=summary['todo_title']))
+            self.lines.setText('\n'.join('· ' + line for line in lines))
+            self.lines.setVisible(True)
+        self.todo_button.setVisible(bool(summary.get('todo_id')) and not summary.get('todo_done'))
         self.note.setText(text('focus_counting', language) if summary.get('loading') else
-                          (text('focus_break_note', language) if summary['completed'] else ''))
+                          (text('focus_break_note', language, minutes=summary['break_min'])
+                           if summary.get('break_min') else ''))
         self.note.setVisible(bool(self.note.text()))
         self.adjustSize()
 

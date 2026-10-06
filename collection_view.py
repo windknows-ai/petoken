@@ -5,7 +5,7 @@ from datetime import datetime
 
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
-from PySide6.QtWidgets import (QDialog, QDoubleSpinBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
                                QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
 import theme
@@ -160,20 +160,30 @@ class GoalDialog(QDialog):
         intro.setObjectName('muted')
         layout.addWidget(intro)
         form = QFormLayout()
-        self.tokens = QDoubleSpinBox()       # In millions of tokens.
-        self.tokens.setRange(0, 10_000)
-        self.tokens.setDecimals(1)
-        self.tokens.setSingleStep(.5)
+        # A number and a unit (million or billion tokens).
+        self.tokens = QDoubleSpinBox()
+        self.tokens.setRange(0, 999_999)
+        self.tokens.setDecimals(2)
         self.tokens.setSpecialValueText(text('goal_none', language))
-        self.tokens.setSuffix(text('goal_tokens_suffix', language))
-        self.tokens.setValue(((goal or {}).get('weekly_tokens') or 0) / 1_000_000)
+        self.unit = QComboBox()
+        self.unit.addItem(text('goal_unit_million', language), 1_000_000)
+        self.unit.addItem(text('goal_unit_billion', language), 1_000_000_000)
+        amount = (goal or {}).get('weekly_tokens') or 0
+        if amount >= 1_000_000_000 and amount % 10_000_000 == 0:
+            self.unit.setCurrentIndex(1)
+        self.tokens.setValue(amount / self.unit.currentData())
+        token_row = QWidget()
+        line = QHBoxLayout(token_row)
+        line.setContentsMargins(0, 0, 0, 0)
+        line.addWidget(self.tokens, 1)
+        line.addWidget(self.unit)
         self.usd = QDoubleSpinBox()
         self.usd.setRange(0, 100_000)
         self.usd.setDecimals(2)
         self.usd.setSpecialValueText(text('goal_none', language))
         self.usd.setPrefix('$ ')
         self.usd.setValue((goal or {}).get('weekly_usd') or 0)
-        form.addRow(text('goal_tokens', language), self.tokens)
+        form.addRow(text('goal_tokens', language), token_row)
         form.addRow(text('goal_usd', language), self.usd)
         layout.addLayout(form)
         row = QHBoxLayout()
@@ -188,5 +198,5 @@ class GoalDialog(QDialog):
         layout.addLayout(row)
 
     def values(self):
-        return dict(weekly_tokens=round(self.tokens.value() * 1_000_000) or None,
+        return dict(weekly_tokens=round(self.tokens.value() * self.unit.currentData()) or None,
                     weekly_usd=round(self.usd.value(), 2) or None)

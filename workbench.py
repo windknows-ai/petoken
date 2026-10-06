@@ -449,6 +449,8 @@ class WorkbenchWindow(QWidget):
         # A passive refresh must not rebind a draft to a different project.
         if not dirty:
             self._combo(self.note_project, self.note_project.currentData())
+        chosen = self._selected_project()
+        chosen = chosen['id'] if chosen else (self.project_scope or None)
         self.projects_table.clear()
         try:
             goals = {g['project_id']: g for g in self.store.list_goals()}
@@ -460,6 +462,9 @@ class WorkbenchWindow(QWidget):
             item.setToolTip(0, project['name'])
             item.setToolTip(1, project['directory'])
             self.projects_table.addTopLevelItem(item)
+            if project['id'] == chosen:
+                self.projects_table.setCurrentItem(item)
+                item.setSelected(True)
         self.projects_empty.setVisible(not self._projects)
         self.todo_list.clear()
         self.pending_list.clear()
@@ -1171,8 +1176,13 @@ class WorkbenchWindow(QWidget):
         if dialog.exec() != QDialog.Accepted:
             return
         values = dialog.values()
-        self._attempt(self.store.set_preset, record['id'], values['provider_id'], values['folder'],
+        folder = record['directory'] or values['folder']
+        if not record['directory']:
+            # A project without a folder takes the one chosen here.
+            self._attempt(self.store.update_project, record['id'], record['name'], folder)
+        self._attempt(self.store.set_preset, record['id'], values['provider_id'], folder,
                       values['prompt'], values['model'], values['effort'])
+        self.refresh()
 
     def show_continuation(self):
         record = self._selected_project()

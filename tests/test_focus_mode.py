@@ -68,7 +68,7 @@ class FocusModeTests(unittest.TestCase):
         self.assertEqual(self.panel.notices[-1], 'Break is over')
 
     def test_stopping_early_has_no_break(self):
-        self.mode.start(45, todo_id=None)
+        self.mode.start(45)
         self.now[0] += 300
         self.mode.stop()
         self.assertEqual(self.mode.phase, 'idle')
@@ -76,14 +76,50 @@ class FocusModeTests(unittest.TestCase):
         self.assertEqual(self.ended[0]['end'] - self.ended[0]['start'], 300)
         self.assertFalse(self.store.list_focus()[0]['completed'])
 
-    def test_every_fourth_round_has_a_long_break(self):
+    def test_breaks_follow_your_settings(self):
+        lengths = []
         for round_ in range(4):
             self.mode.start(25)
             self.now[0] = self.mode.ends
             self.mode.tick()
-            length = self.mode.ends - self.now[0]
+            lengths.append(self.mode.ends - self.now[0])
             self.mode.skip_break()
-        self.assertEqual(length, focus_mode.LONG_BREAK_S)
+        self.assertEqual(lengths, [300, 300, 300, focus_mode.LONG_BREAK_MIN * 60])   # Defaults.
+        self.panel.prefs.update(focus_break=10, focus_long_break=30, focus_long_every=2)
+        self.mode.rounds = 0
+        lengths = []
+        for round_ in range(2):
+            self.mode.start(25)
+            self.now[0] = self.mode.ends
+            self.mode.tick()
+            lengths.append(self.mode.ends - self.now[0])
+            self.mode.skip_break()
+        self.assertEqual(lengths, [600, 1800])
+        self.panel.prefs.update(focus_break=0, focus_long_every=0)
+        self.mode.start(25)
+        self.now[0] = self.mode.ends
+        self.mode.tick()
+        self.assertEqual(self.mode.phase, 'idle')        # No break at all.
+        self.assertEqual(self.ended[-1]['break_min'], 0)
+
+    def test_focus_on_a_todo_and_tick_it_off_from_the_card(self):
+        todo = self.store.create_todo('write tests')
+        self.mode.start(25, todo)
+        self.assertEqual(self.mode.todo_title, 'write tests')
+        self.assertEqual(self.mode.session['todo_id'], todo['id'])
+        self.now[0] = self.mode.ends
+        self.mode.tick()
+        summary = self.ended[-1]
+        self.assertEqual((summary['todo_id'], summary['todo_done']), (todo['id'], False))
+        card = FocusCard('en', dict(summary, loading=False))
+        self.assertIn('Focused on: write tests', card.lines.text())
+        self.assertFalse(card.todo_button.isHidden())
+        done = []
+        card.todo_done.connect(done.append)
+        card.todo_button.click()
+        self.assertEqual(done, [todo['id']])
+        self.assertTrue(card.todo_button.isHidden())
+        card.deleteLater()
 
     def test_only_urgent_notices_get_through(self):
         self.assertFalse(self.mode.quiet('finished'))
@@ -103,14 +139,14 @@ class FocusModeTests(unittest.TestCase):
 
     def test_card_lists_what_got_done(self):
         card = FocusCard('en', dict(start=0, end=1500, planned=1500, completed=True, todos=['a', 'b'],
-                                    ai_finished=2, files=None, tokens=None, loading=True))
+                                    ai_finished=2, files=None, tokens=None, loading=True, break_min=5))
         self.assertEqual(card.title.text(), 'Focus done · 25 min')
         self.assertIn('2 todos done: a, b', card.lines.text())
         self.assertIn('Counting', card.note.text())
         card.update_summary(dict(start=0, end=1500, planned=1500, completed=True, todos=[], ai_finished=0,
-                                 files=3, tokens=1200, loading=False))
+                                 files=3, tokens=1200, loading=False, break_min=5))
         self.assertIn('3 files changed', card.lines.text())
-        self.assertIn('Take a break', card.note.text())
+        self.assertIn('Take a 5-minute break', card.note.text())
         card.deleteLater()
 
     def test_reports_count_focus_time(self):
@@ -152,6 +188,8 @@ class FocusPetTests(unittest.TestCase):
         self.panel.start_focus(25)
         self.assertEqual(self.pet.current_state, 'focus_read')
         self.assertTrue(self.pet.focus_subtitle().startswith('Focus · 2'))
+        with patch.object(self.pet, 'token_bubble_visible', return_value=True):
+            self.assertIsNotNone(self.pet.focus_subtitle())     # Shown even while AI works.
         with patch.object(self.pet, 'react') as react:
             self.panel.announce(dict(kind='finished', provider='claude'))
             react.assert_not_called()

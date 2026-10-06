@@ -503,6 +503,10 @@ class WorkbenchStore:
                           (_identifier(project_id),))
         return rows[0] if rows else None
 
+    def list_handoffs(self, project_id):
+        return self._read('SELECT * FROM handoff_notes WHERE project_id=? ORDER BY created_at DESC, id',
+                          (_identifier(project_id),))
+
     def delete_handoff(self, id):
         self._delete('handoff_notes', id)
 

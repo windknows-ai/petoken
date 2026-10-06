@@ -18,10 +18,13 @@ import re
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-                               QVBoxLayout, QWidget)
+from datetime import datetime
 
+from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+                               QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
+
+import theme
 from approval_card import GAP, STYLE
 from localization import text
 from providers import PROVIDER_NAMES
@@ -40,9 +43,16 @@ class ProjectPresetDialog(GiveToAiDialog):
         if not preset:
             start = dict(provider_id=panel.prefs.get('launch_app') or 'claude',
                          folder=project.get('directory') or '', prompt='', state='', run_at=None)
+        if project.get('directory'):
+            start['folder'] = project['directory']
         folders = ([project['directory']] if project.get('directory') else []) + list(folders)
         super().__init__(parent, panel, dict(title=''), start, folders)
         language = self.language
+        if project.get('directory'):
+            # One folder per project: the one set under Edit, never a stale copy.
+            self.folder.hide()
+            self.folder_label.setText(text('preset_folder_fixed', language, folder=project['directory']))
+            self.folder_label.setWordWrap(True)
         self.setWindowTitle(text('preset_title', language, project=project['name']))
         self.prompt_label.setText(text('preset_prompt', language))
         self.prompt.setPlainText((preset or {}).get('prompt') or '')
@@ -74,7 +84,7 @@ def start_project(panel, store, project, starter=None, builder=None):
     language = panel.prefs.get('language')
     preset = store.get_preset(project['id']) or {}
     app = preset.get('provider_id') or panel.prefs.get('launch_app') or 'claude'
-    folder = _clean_folder(preset.get('folder') or project.get('directory') or '')
+    folder = _clean_folder(project.get('directory') or preset.get('folder') or '')
     if not folder:
         return 'preset_need_folder'
     prompt = opening_prompt(preset.get('prompt'), store.latest_handoff(project['id']), language)
@@ -133,6 +143,7 @@ def continuation(store, project, history=(), now=None):
         names.add(Path(project['directory']).name.lower())
     last = next((row for row in history if (row.get('project') or '').lower() in names), None)
     info = dict(project=project, note=note['body'] if note else '', note_at=note['created_at'] if note else '',
+                note_id=note['id'] if note else None,
                 todos=[t['title'] for t in todos], unfinished=unfinished,
                 last_task=dict(title=last.get('title') or '', provider=last.get('provider'),
                                at=last.get('finished_at') or last.get('started_at')) if last else None,
@@ -142,7 +153,17 @@ def continuation(store, project, history=(), now=None):
     return info
 
 
+def _epoch(stamp):
+    """An ISO time from the store as epoch seconds (None when unreadable)."""
+    try:
+        return datetime.fromisoformat(stamp).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
 def _ago(at, now, language):
+    if isinstance(at, str):
+        at = _epoch(at)
     if not at:
         return ''
     minutes = max(1, int((now - at) // 60))
@@ -158,6 +179,8 @@ class ContinuationCard(QWidget):
 
     start = Signal(dict)
     note_saved = Signal(dict, str)
+    note_deleted = Signal(dict, str)      # project, note id
+    history = Signal(dict)
 
     def __init__(self, language, info, now=None):
         super().__init__(None)
@@ -182,9 +205,38 @@ class ContinuationCard(QWidget):
         self.title.setObjectName('title')
         self.title.setWordWrap(True)
         layout.addWidget(self.title)
+        # Your own note comes first and stands out: it is what you meant to remember.
+        self.note_box = QFrame()
+        self.note_box.setObjectName('note')
+        self.note_box.setStyleSheet(f'QFrame#note {{ background:{theme.BADGE_BG}; border:1px solid {theme.VIOLET};'
+                                    ' border-radius:8px; }')
+        box = QVBoxLayout(self.note_box)
+        box.setContentsMargins(9, 7, 9, 7)
+        box.setSpacing(3)
+        self.note_heading = QLabel()
+        self.note_heading.setObjectName('muted')
+        box.addWidget(self.note_heading)
+        self.note_text = QLabel()
+        self.note_text.setWordWrap(True)
+        self.note_text.setStyleSheet(f'font-size:13px; font-weight:600; color:{theme.VIOLET};')
+        box.addWidget(self.note_text)
+        links = QHBoxLayout()
+        links.setSpacing(12)
+        self.delete_button = QPushButton(text('handoff_delete', language))
+        self.delete_button.setObjectName('link')
+        self.delete_button.clicked.connect(self._delete)
+        self.history_button = QPushButton(text('handoff_history', language))
+        self.history_button.setObjectName('link')
+        self.history_button.clicked.connect(lambda: self.history.emit(self.info['project']))
+        links.addWidget(self.delete_button)
+        links.addWidget(self.history_button)
+        links.addStretch(1)
+        box.addLayout(links)
+        layout.addWidget(self.note_box)
+        self._now = now
+        self.set_note(dict(id=info.get('note_id'), body=info['note'], created_at=info.get('note_at'))
+                      if info['note'] else None)
         lines = []
-        if info['note']:
-            lines.append(text('handoff_note', language, note=info['note']))
         task = info.get('last_task')
         if task:
             lines.append(text('handoff_last_task', language, app=PROVIDER_NAMES.get(task['provider'], ''),
@@ -222,6 +274,22 @@ class ContinuationCard(QWidget):
         layout.addLayout(row)
         self.adjustSize()
 
+    def set_note(self, note):
+        """Show ``note`` (a handoff record) at the top, or hide the box."""
+        self.note = note
+        self.note_box.setVisible(bool(note))
+        if note:
+            self.note_heading.setText(text('handoff_note_heading', self.language,
+                                           ago=_ago(note.get('created_at'), time.time(), self.language)
+                                           or text('ago_minutes', self.language, n=1)))
+            self.note_text.setText(note['body'])
+            self.delete_button.setVisible(bool(note.get('id')))
+        self.adjustSize()
+
+    def _delete(self):
+        if self.note and self.note.get('id'):
+            self.note_deleted.emit(self.info['project'], self.note['id'])
+
     def _save(self):
         body = self.edit.text().strip()
         if body:
@@ -239,6 +307,58 @@ class ContinuationCard(QWidget):
         x = max(screen.left(), min(x, screen.right() - self.width() + 1))
         y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))
         self.move(QPoint(x, y))
+
+
+class HandoffHistory(QDialog):
+    """Every note left for a project, newest first, with delete."""
+
+    def __init__(self, parent, language, store, project):
+        super().__init__(parent)
+        self.store, self.project, self.language = store, project, language
+        self.setWindowTitle(text('handoff_history_title', language, project=project['name']))
+        self.setMinimumSize(420, 320)
+        layout = QVBoxLayout(self)
+        self.listing = QListWidget()
+        self.listing.setWordWrap(True)
+        layout.addWidget(self.listing, 1)
+        row = QHBoxLayout()
+        self.delete_button = QPushButton(text('handoff_history_delete', language))
+        self.delete_button.clicked.connect(self.delete_selected)
+        row.addWidget(self.delete_button)
+        row.addStretch(1)
+        close = QPushButton(text('focus_card_close', language))
+        close.clicked.connect(self.accept)
+        row.addWidget(close)
+        layout.addLayout(row)
+        self.refresh()
+
+    def refresh(self):
+        self.listing.clear()
+        try:
+            notes = self.store.list_handoffs(self.project['id'])
+        except Exception:
+            notes = []
+        for note in notes:
+            when = _epoch(note['created_at'])
+            stamp = datetime.fromtimestamp(when).strftime('%Y-%m-%d %H:%M') if when else ''
+            item = QListWidgetItem(f"{stamp}\n{note['body']}")
+            item.setData(Qt.UserRole, note['id'])
+            self.listing.addItem(item)
+        if not notes:
+            empty = QListWidgetItem(text('handoff_history_empty', self.language))
+            empty.setFlags(Qt.NoItemFlags)
+            self.listing.addItem(empty)
+        self.delete_button.setEnabled(bool(notes))
+
+    def delete_selected(self):
+        item = self.listing.currentItem()
+        if item is None or not item.data(Qt.UserRole):
+            return
+        try:
+            self.store.delete_handoff(item.data(Qt.UserRole))
+        except Exception:
+            return
+        self.refresh()
 
 
 def match_project(projects, name):

@@ -111,7 +111,50 @@ class ProjectStartTests(unittest.TestCase):
         self.assertIsNone(match_project([self.project], ''))
 
 
+class NoteBoxTests(unittest.TestCase):
+    def test_note_stands_out_and_can_be_deleted_or_browsed(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        store = WorkbenchStore(Path(temp.name) / 'workbench.sqlite3')
+        self.addCleanup(store.close)
+        project = store.create_project('Site')
+        store.add_handoff(project['id'], 'older note')
+        store.add_handoff(project['id'], 'fix the logout button')
+        info = continuation(store, project)
+        card = ContinuationCard('en', info)
+        self.assertFalse(card.note_box.isHidden())
+        self.assertEqual(card.note_text.text(), 'fix the logout button')
+        deleted, history = [], []
+        card.note_deleted.connect(lambda record, note_id: deleted.append(note_id))
+        card.history.connect(history.append)
+        card.delete_button.click()
+        card.history_button.click()
+        self.assertEqual(deleted, [info['note_id']])
+        self.assertEqual(history[0]['id'], project['id'])
+        card.set_note(None)
+        self.assertTrue(card.note_box.isHidden())
+        card.deleteLater()
+        dialog = project_start.HandoffHistory(None, 'en', store, project)
+        self.assertEqual(dialog.listing.count(), 2)
+        self.assertTrue(dialog.listing.item(0).text().endswith('fix the logout button'))
+        dialog.listing.setCurrentRow(0)
+        dialog.delete_selected()
+        self.assertEqual([n['body'] for n in store.list_handoffs(project['id'])], ['older note'])
+        dialog.deleteLater()
+
+
 class PresetDialogTests(unittest.TestCase):
+    def test_project_folder_is_used_not_a_stale_preset_folder(self):
+        panel = FakePanel()
+        project = dict(id='p', name='Site', directory='D:/work/new-folder')
+        with patch('quick_launch.launch_options', return_value=[]):
+            dialog = project_start.ProjectPresetDialog(None, panel, project, dict(
+                provider_id='claude', folder='D:/work/old-folder', prompt='', model='', effort=''))
+        self.assertTrue(dialog.folder.isHidden())
+        self.assertIn('new-folder', dialog.folder_label.text())
+        self.assertEqual(dialog.folder.currentText(), 'D:/work/new-folder')
+        dialog.deleteLater()
+
     def test_dialog_has_no_time_and_keeps_the_preset(self):
         panel = FakePanel()
         project = dict(id='p', name='Site', directory='D:/site')

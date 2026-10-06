@@ -70,7 +70,10 @@ class PetInteractionTests(unittest.TestCase):
             for _ in range(3):
                 self.mouse(QEvent.MouseButtonPress, local)
                 self.mouse(QEvent.MouseButtonRelease, local, Qt.NoButton)
-        self.assertEqual(toggle.call_count, 4)
+            self.assertEqual(self.pet.current_state, 'poked')   # Four clicks: still fine.
+            self.mouse(QEvent.MouseButtonPress, local)
+            self.mouse(QEvent.MouseButtonRelease, local, Qt.NoButton)
+        self.assertEqual(toggle.call_count, 5)
         self.assertEqual(self.pet.current_state, 'pout')
 
     def test_long_press_acts_cute_without_opening_the_panel(self):
@@ -94,6 +97,13 @@ class PetInteractionTests(unittest.TestCase):
             self.assertTrue(self.pet.animator.dragging)
             self.mouse(QEvent.MouseButtonRelease, start + QPoint(30, 0), Qt.NoButton)
         self.assertFalse(self.pet.dragging)
+        self.assertEqual(self.pet.current_state, 'landing')
+        # Dragging her around a lot never makes her pout.
+        with patch.object(self.panel, 'persist'):
+            for _ in range(5):
+                self.mouse(QEvent.MouseButtonPress, start)
+                self.mouse(QEvent.MouseMove, start + QPoint(40, 0))
+                self.mouse(QEvent.MouseButtonRelease, start + QPoint(40, 0), Qt.NoButton)
         self.assertEqual(self.pet.current_state, 'landing')
 
     def test_mood_stays_off_outside_the_live_app(self):

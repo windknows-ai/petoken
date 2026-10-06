@@ -5589,12 +5589,32 @@ class Panel(QWidget):
         dialog = FocusDialog(self, self.workbench_store(), QApplication.activeModalWidget())
         if dialog.exec() == QDialog.Accepted:
             values = dialog.values()
-            self.start_focus(values['minutes'], values['project_id'], values['todo_id'])
+            for key in ('focus_break', 'focus_long_break', 'focus_long_every'):
+                self.prefs[key] = values[key]
+            self.start_focus(values['minutes'], values['todo'])
+            try:
+                self.persist()
+            except Exception:
+                pass
 
-    def start_focus(self, minutes, project_id=None, todo_id=None):
+    def start_focus(self, minutes, todo=None):
         if self._focus_card is not None:
             self._focus_card.close()
-        self.focus_mode.start(minutes, project_id, todo_id)
+        self.focus_mode.start(minutes, todo)
+
+    def _focus_todo_done(self, todo_id):
+        store = self.workbench_store()
+        if store is None:
+            return
+        try:
+            todo = next((t for t in store.list_todos() if t['id'] == todo_id), None)
+            if todo is None or todo['done']:
+                return
+            store.update_todo(todo['id'], todo['title'], todo['project_id'], True)
+        except Exception:
+            return
+        self.companion.todo_done(todo)
+        self._workbench_changed()
 
     def _focus_changed(self):
         phase = self.focus_mode.phase
@@ -5628,8 +5648,10 @@ class Panel(QWidget):
         if self._focus_card is not None:
             self._focus_card.close()
         card = FocusCard(self.language, summary, self.prefs.get('token_number_format'))
-        card.again.connect(lambda: self.start_focus(int(self.prefs.get('focus_minutes', 25)),
-                                                    self.focus_mode.project_id, self.focus_mode.todo_id))
+        again = dict(id=summary.get('todo_id'), title=summary.get('todo_title'),
+                     project_id=self.focus_mode.project_id) if summary.get('todo_id') and not summary.get('todo_done') else None
+        card.again.connect(lambda: self.start_focus(int(self.prefs.get('focus_minutes', 25)), again))
+        card.todo_done.connect(self._focus_todo_done)
         card.destroyed.connect(lambda *_: setattr(self, '_focus_card', None))
         card.session_start = summary['start']
         self._focus_card = card
@@ -5662,7 +5684,9 @@ class Panel(QWidget):
             self._continuation_card.close()
         card = ContinuationCard(self.language, info)
         card.start.connect(lambda record: self.start_project(record, store))
-        card.note_saved.connect(lambda record, body: self._save_handoff(store, record, body))
+        card.note_saved.connect(lambda record, body: self._save_handoff(store, record, body, card))
+        card.note_deleted.connect(lambda record, note_id: self._delete_handoff(store, record, note_id, card))
+        card.history.connect(lambda record: self._handoff_history(store, record, card))
         card.destroyed.connect(lambda *_: setattr(self, '_continuation_card', None))
         self._continuation_card = card
         pet = getattr(self, 'pet', None)
@@ -5677,12 +5701,33 @@ class Panel(QWidget):
             pass
         return True
 
-    def _save_handoff(self, store, project, body):
+    def _save_handoff(self, store, project, body, card=None):
         try:
-            store.add_handoff(project['id'], body)
+            note = store.add_handoff(project['id'], body)
         except Exception:
             return
+        if card is not None:
+            card.set_note(note)
         self._workbench_changed()
+
+    def _delete_handoff(self, store, project, note_id, card=None):
+        try:
+            store.delete_handoff(note_id)
+            latest = store.latest_handoff(project['id'])
+        except Exception:
+            return
+        if card is not None:
+            card.set_note(latest)
+
+    def _handoff_history(self, store, project, card=None):
+        from project_start import HandoffHistory
+        dialog = HandoffHistory(QApplication.activeModalWidget(), self.language, store, project)
+        dialog.exec()
+        if card is not None:
+            try:
+                card.set_note(store.latest_handoff(project['id']))
+            except Exception:
+                pass
 
     def start_project(self, project, store=None):
         """Start work on a project with its preset; None, or an error text key."""
