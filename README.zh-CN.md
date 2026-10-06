@@ -30,9 +30,9 @@ Petoken 是住在 Windows 桌面上的小伙伴。它会跟踪 Codex 和 Claude 
 - **诚实显示未知**：未知的模型就写「未知」，拿不到的数字就写 `N/A`，真正的 0 才写 0，不完整的数据会明确标出。
 - 日常 / Token 两种模式，完整 / 简洁两种数字格式，简体中文 / 英文界面，固定显示、始终置顶、人物大小可调。
 
-## 最新版本：v1.7.0
+## 最新版本：v1.7.1
 
-在 [v1.7.0 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) 下载 **一键安装程序** [Petoken-Setup-v1.7.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.7.0/Petoken-Setup-v1.7.0.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
+在 [v1.7.1 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.7.1) 下载 **一键安装程序** [Petoken-Setup-v1.7.1.exe](https://github.com/windknows-ai/petoken/releases/download/v1.7.1/Petoken-Setup-v1.7.1.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 支持的来源
 
@@ -88,7 +88,7 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 
 ## 安装和使用
 
-1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) 下载 **Petoken-Setup-v1.7.0.exe**，双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。升级时会保留你的设置和工作台。
+1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.7.1) 下载 **Petoken-Setup-v1.7.1.exe**（v1.7.0 及以后的版本会自动更新），双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。升级时会保留你的设置和工作台。
    - Windows 可能提示「Windows 已保护你的电脑」，因为安装程序还没有数字签名。点「更多信息」→「仍要运行」即可。
 2. 像平常一样使用 Codex 或 Claude Code，Petoken 会自动跟随正在运行的任务。在 **设置 → Claude** 里可以打开「同步 Claude 用量」（显示额度）、「Claude 即时通知」和「在桌宠上批准 Claude」。界面默认是英文，可以在 设置 → 常规 → 界面语言 里切换成简体中文。
 
@@ -137,7 +137,7 @@ py -3.13 -m venv .venv
 - 安全策略：[`SECURITY.md`](SECURITY.md)
 - 参与贡献：[`CONTRIBUTING.md`](CONTRIBUTING.md)
 - 第三方组件：[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.7.0 发布说明：[`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
+- v1.7.1 发布说明：[`docs/RELEASE_NOTES_v1.7.1.md`](docs/RELEASE_NOTES_v1.7.1.md)（修复）；v1.7.0：[`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
 - 之前的发布说明：[`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md)、[`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
 
 ## 社区和许可

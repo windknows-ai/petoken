@@ -2,6 +2,11 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V1.7.1 — 2026-10-06
+
+### Fixed
+- Long or many Claude questions no longer overlap on the question card: the questions scroll inside a card at most 60 % of the screen high, and long option labels wrap instead of being cut.
+
 ## V1.7.0 — 2026-10-06
 
 Updates, onboarding, todos handed to AI and Codex on the character; human QA on 2026-10-06.

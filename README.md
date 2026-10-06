@@ -31,9 +31,9 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v1.7.0
+## Latest stable release: v1.7.1
 
-Download the **one-click installer** [Petoken-Setup-v1.7.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.7.0/Petoken-Setup-v1.7.0.exe) from the [v1.7.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v1.7.1.exe](https://github.com/windknows-ai/petoken/releases/download/v1.7.1/Petoken-Setup-v1.7.1.exe) from the [v1.7.1 release](https://github.com/windknows-ai/petoken/releases/tag/v1.7.1) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -168,7 +168,7 @@ If a source is missing or stale, its views show that limitation honestly. No oth
 
 ## Install and use
 
-1. Download **Petoken-Setup-v1.7.0.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps. Upgrading keeps your settings and workbench.
+1. Download **Petoken-Setup-v1.7.1.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.7.1) (v1.7.0 and later update themselves) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps. Upgrading keeps your settings and workbench.
    - Windows may show "Windows protected your PC" because the installer is not code-signed yet: choose **More info → Run anyway**.
 2. Use Codex or Claude Code as usual; Petoken follows their running tasks. In **Settings → Claude** you can turn on Sync Claude usage (quotas), Claude instant notifications and Approve Claude on the pet. The interface starts in English; switch to Simplified Chinese in Settings → General → Language.
 
@@ -217,7 +217,7 @@ Build the one-click installer (`dist\Petoken-Setup-v<version>.exe`, needs [Inno 
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.7.0 release notes: [`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
+- v1.7.1 release notes: [`docs/RELEASE_NOTES_v1.7.1.md`](docs/RELEASE_NOTES_v1.7.1.md) (fix); v1.7.0: [`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
 - Previous release notes: [`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md), [`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md), [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md), [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
 - Historical v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)
 
