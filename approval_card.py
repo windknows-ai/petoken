@@ -16,7 +16,7 @@ import time
 from PySide6.QtCore import QObject, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QDialog, QFrame, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QListWidgetItem, QPushButton,
+                               QLineEdit, QListWidget, QListWidgetItem, QPushButton, QScrollArea,
                                QVBoxLayout, QWidget)
 
 import claude_approval
@@ -28,6 +28,8 @@ POLL_MS = 400
 HEARTBEAT_S = 2.0
 CARD_WIDTH = 300
 QUESTION_WIDTH = 340
+QUESTIONS_MAX_SHARE = 0.6   # Question area: at most this share of the screen height, then it scrolls.
+SCROLL_GUTTER = 10
 PLAN_LINES = 8
 SUMMARY_LINES = 4
 GAP = 8
@@ -52,6 +54,7 @@ QLineEdit {{ background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL
              padding:4px 7px; color:{theme.INK}; }}
 QPushButton#deny {{ color:{theme.DANGER_TEXT}; border-color:{theme.DANGER_BORDER}; }}
 QPushButton#deny:hover {{ background:{theme.DANGER_HOVER_BG}; }}
+QScrollArea#questionsScroll, QWidget#questions {{ background:transparent; border:none; }}
 QLabel#chip {{ background:{theme.BADGE_BG}; border:1px solid {theme.BORDER_SOFT}; border-radius:8px;
                 padding:1px 8px; color:{theme.VIOLET}; font-size:11px; }}
 QPushButton#link {{ background:transparent; border:none; color:{theme.ICE}; padding:0; min-height:0;
@@ -251,38 +254,65 @@ class QuestionCard(QWidget):
             project = QLabel(text('approval_project', language, project=request['project']))
             project.setObjectName('muted')
             layout.addWidget(project)
+        # Questions scroll inside the card: long or many questions never push
+        # the card off screen or squeeze the text over the buttons.
+        body = QWidget()
+        body.setObjectName('questions')
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(0, 0, SCROLL_GUTTER, 0)
+        body_layout.setSpacing(6)
+        text_width = QUESTION_WIDTH - 24 - SCROLL_GUTTER
         self.blocks = []
         for question in request['questions']:
             if question.get('header'):
                 chip = QLabel(question['header'])
                 chip.setObjectName('chip')
-                layout.addWidget(chip, 0, Qt.AlignLeft)
+                body_layout.addWidget(chip, 0, Qt.AlignLeft)
             label = QLabel(question['question'])
             label.setWordWrap(True)
             label.setTextFormat(Qt.PlainText)
-            layout.addWidget(label)
+            body_layout.addWidget(label)
             group = QButtonGroup(self)
             group.setExclusive(not question['multi'])
             buttons = []
             for option in question['options']:
-                button = QPushButton(option['label'])
+                button = QPushButton()
                 button.setObjectName('option')
                 button.setCheckable(True)
                 button.setCursor(Qt.PointingHandCursor)
-                button.setToolTip(option.get('description') or '')
+                button.ensurePolished()
+                # Long option labels wrap (up to three lines) instead of being cut.
+                button.setText(elide_lines(option['label'], QFontMetrics(button.font()), text_width - 24, lines=3))
+                button.setProperty('label', option['label'])
+                button.setToolTip(option.get('description') or option['label'])
                 group.addButton(button)
                 button.toggled.connect(lambda _=False: self._sync())
-                layout.addWidget(button)
+                body_layout.addWidget(button)
                 buttons.append(button)
             other = QLineEdit()
             other.setPlaceholderText(text('question_other', language))
             other.textChanged.connect(lambda _='': self._sync())
-            layout.addWidget(other)
+            body_layout.addWidget(other)
             self.blocks.append((question, buttons, other))
         if any(q['multi'] for q in request['questions']):
             hint = QLabel(text('question_multi', language))
             hint.setObjectName('muted')
-            layout.addWidget(hint)
+            hint.setWordWrap(True)
+            body_layout.addWidget(hint)
+        self.scroll = QScrollArea()
+        self.scroll.setObjectName('questionsScroll')
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidget(body)
+        body.setFixedWidth(QUESTION_WIDTH - 24)
+        natural = body_layout.totalHeightForWidth(QUESTION_WIDTH - 24) if body_layout.hasHeightForWidth()             else body.sizeHint().height()
+        screen = QApplication.primaryScreen()
+        limit = int((screen.availableGeometry().height() if screen else 900) * QUESTIONS_MAX_SHARE)
+        self.scroll.setFixedHeight(max(80, min(natural + 4, limit)))
+        body.setMinimumWidth(0)
+        body.setMaximumWidth(16777215)
+        layout.addWidget(self.scroll)
         row = QHBoxLayout()
         self.ask = QPushButton(text('approval_ask', language))
         self.ask.setObjectName('link')
@@ -307,7 +337,7 @@ class QuestionCard(QWidget):
         result = {}
         for question, buttons, other in self.blocks:
             typed = other.text().strip()
-            chosen = [b.text() for b in buttons if b.isChecked()]
+            chosen = [b.property('label') or b.text() for b in buttons if b.isChecked()]
             if typed:
                 result[question['question']] = typed
             elif chosen:

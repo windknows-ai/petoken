@@ -12,7 +12,7 @@ from provider_selection import (DEFAULT_TRACKING_PROVIDER,
 from token_format import DEFAULT_TOKEN_NUMBER_FORMAT, normalize_token_format
 from pet_geometry import PET_SCALE_DEFAULT, normalize_pet_scale
 
-APP_VERSION = "1.7.0"
+APP_VERSION = "1.7.1"
 # 2: V1.5 Codex + Claude Code. Earlier builds offered no provider choice and
 # saved the forced "codex" value, so that value migrates once to Auto.
 SETTINGS_SCHEMA_VERSION = 2

@@ -95,6 +95,24 @@ class CardTests(unittest.TestCase):
         self.assertIn('smaller steps', answer['hookSpecificOutput']['decision']['message'])
         self.assertIsNone(self.controller.card)
 
+    def test_long_questions_scroll_inside_a_bounded_card(self):
+        long = 'A long question that keeps going ' * 8
+        self.put('f' * 32, tool_name='AskUserQuestion', tool_input=dict(questions=[
+            dict(question=f'{long} {n}', header=f'Q{n}', multiSelect=False,
+                 options=[dict(label='An option label that is much too long for one line of the card ' * 2),
+                          dict(label='Short')]) for n in range(4)]))
+        self.controller.tick()
+        card = self.controller.card
+        from PySide6.QtWidgets import QApplication
+        limit = QApplication.primaryScreen().availableGeometry().height() * 0.6
+        self.assertLessEqual(card.scroll.height(), limit + 1)
+        self.assertGreater(card.scroll.verticalScrollBar().maximum(), 0)        # It scrolls.
+        (_, buttons, _), *_ = card.blocks
+        self.assertIn(chr(10), buttons[0].text())                                 # Wrapped, not cut.
+        buttons[0].click()
+        self.assertTrue(card.answers()[card.blocks[0][0]['question']].startswith('An option label'))
+        self.assertNotIn(chr(10), card.answers()[card.blocks[0][0]['question']])   # The real label goes back.
+
     def test_titles_and_eliding(self):
         self.assertEqual(request_title(dict(tool='Write'), 'zh_CN'), 'Claude Code 想修改文件')
         self.assertEqual(request_title(dict(tool='mcp__x__y'), 'en'), 'Claude Code wants to use mcp__x__y')
