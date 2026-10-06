@@ -240,10 +240,10 @@ class FocusMode(QObject):
 
 
 class FocusTag(QWidget):
-    """The countdown and its End button, a small window at her feet.
+    """The countdown and its End button, a small window under her.
 
-    Its own window, kept above the task stars, so a star passing by goes
-    behind it; the page buttons move down below it while it shows.
+    Placed under the task page buttons (or where they would be), clear of
+    the stars circling her; without tasks, just below her feet.
     """
 
     GAP = 4
@@ -316,8 +316,22 @@ class FocusTag(QWidget):
 
     def follow(self):
         pet = self.pet
-        x = pet.x() + (pet.width() - self.width()) // 2
-        y = pet.y() + pet.height() - self.height() - pet._px(2)     # At her feet.
+        manager = getattr(pet.panel, 'task_manager', None)
+        try:
+            spot = manager.focus_tag_position(self.width(), self.height()) if manager else None
+        except Exception:
+            spot = None
+        if spot is not None:
+            x, y = spot          # Under the page buttons, or where they would be.
+        else:
+            # No task ring: just below her feet, or above her head near the bottom.
+            x = pet.x() + (pet.width() - self.width()) // 2
+            y = pet.y() + pet.height() + self.GAP
+            screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()
+            if y + self.height() > screen.bottom() + 1:
+                overlay = getattr(pet, 'usage_overlay', None)
+                top = overlay.y() if overlay is not None and overlay.isVisible() else pet.y() + pet._px(56)
+                y = top - self.height() - self.GAP
         screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()
         x = max(screen.left(), min(x, screen.right() - self.width() + 1))
         y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))

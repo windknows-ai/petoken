@@ -1149,23 +1149,7 @@ class TaskPanelManager(HaloScene):
         self.page_previous.setAccessibleName('上一页任务' if zh else 'Previous task page')
         self.page_next.setAccessibleName('下一页任务' if zh else 'Next task page')
         self.page_controls.setToolTip('全部任务可在 Usage Panel 的任务菜单中直接选择' if zh else 'Select any task directly from the Usage Panel task menu')
-        x, y, width, height = self._last_pet_rect
-        pose = self._halo_pose or self._fit_halo_pose(self._last_pet_rect, self._last_screen_rect)
-        left, top, right, bottom = halo_geometry.projected_bounds(pose)
-        left, top = min(left, x), min(top, y)
-        right, bottom = max(right, x + width), max(bottom, y + height)
-        # The focus countdown at her feet: the page buttons go below it.
-        tag = getattr(getattr(self.panel, 'pet', None), 'focus_tag', None)
-        if tag is not None and tag.isVisible():
-            bottom = max(bottom, tag.geometry().bottom() + 1)
-        candidates = ((round(pose.cx - 84), math.ceil(bottom) + 8),
-                      (round(pose.cx - 84), math.floor(top) - 40),
-                      (math.ceil(right) + 8, round(pose.cy - 16)),
-                      (math.floor(left) - 176, round(pose.cy - 16)))
-        area = QRect(self._last_screen_rect[0], self._last_screen_rect[1],
-                     self._last_screen_rect[2] - self._last_screen_rect[0] + 1,
-                     self._last_screen_rect[3] - self._last_screen_rect[1] + 1)
-        position = next((p for p in candidates if area.contains(QRect(*p, 168, 32))), None)
+        position = self.strip_position(168, 32)
         # When no adjacent strip fits, the Hub menu still exposes every task.
         # An opaque pager must never cover the ring's interactive numbers.
         if position is not None:
@@ -1175,6 +1159,39 @@ class TaskPanelManager(HaloScene):
             self.page_controls.setWindowFlag(Qt.WindowStaysOnTopHint, on_top)
         self.page_controls.setVisible(position is not None and self._visible
                                       and self.total_task_count() > halo_geometry.MAX_SAFE_STARS)
+
+    def strip_position(self, w, h):
+        """Where a ``w``×``h`` strip goes beside the ring: below it, else above,
+        right or left; None when none fits on the screen. The page buttons and
+        the focus countdown both use it."""
+        x, y, width, height = self._last_pet_rect
+        pose = self._halo_pose or self._fit_halo_pose(self._last_pet_rect, self._last_screen_rect)
+        left, top, right, bottom = halo_geometry.projected_bounds(pose)
+        left, top = min(left, x), min(top, y)
+        right, bottom = max(right, x + width), max(bottom, y + height)
+        candidates = ((round(pose.cx - w / 2), math.ceil(bottom) + 8),
+                      (round(pose.cx - w / 2), math.floor(top) - h - 8),
+                      (math.ceil(right) + 8, round(pose.cy - h / 2)),
+                      (math.floor(left) - w - 8, round(pose.cy - h / 2)))
+        area = QRect(self._last_screen_rect[0], self._last_screen_rect[1],
+                     self._last_screen_rect[2] - self._last_screen_rect[0] + 1,
+                     self._last_screen_rect[3] - self._last_screen_rect[1] + 1)
+        return next((p for p in candidates if area.contains(QRect(*p, w, h))), None)
+
+    def focus_tag_position(self, w, h):
+        """The focus countdown: under the page buttons when they show, else
+        where they would go; None when no task ring is showing."""
+        pager = self.page_controls
+        if pager is not None and pager.isVisible():
+            g = pager.geometry()
+            x = g.center().x() - w // 2
+            screen = self._last_screen_rect
+            for y in (g.bottom() + 7, g.top() - h - 7):
+                if screen[1] <= y and y + h - 1 <= screen[3]:
+                    return x, y
+        if not self._visible or not self.total_task_count() or self._last_pet_rect is None:
+            return None
+        return self.strip_position(w, h)
 
     def _project_name(self, identity):
         display = (self._universe.get(identity) or {}).get('display') or {}

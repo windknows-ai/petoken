@@ -194,14 +194,26 @@ class PresenceTests(unittest.TestCase):
 
 
 class OverlayRowTests(unittest.TestCase):
-    def test_codex_pro_has_no_five_hour_row(self):
+    def test_codex_pro_shows_five_hour_as_na(self):
         pro = dict(secondary=dict(windowDurationMins=10080, usedPercent=40, resetsAt=NOW + 7200))
         section = overlay.provider_section('codex', pro, 30, 'proj', 'en', NOW)
-        self.assertEqual([r['kind'] for r in section['rows']], ['context', 'week'])
+        self.assertEqual([r['kind'] for r in section['rows']], ['context', 'five', 'week'])
         self.assertEqual(section['rows'][0]['remaining'], 70)
-        self.assertEqual(section['rows'][1]['remaining'], 60)
-        self.assertEqual(section['rows'][1]['reset'], 7200)
+        self.assertTrue(section['rows'][1]['na'])           # No 5-hour window: N/A.
+        self.assertEqual(section['rows'][2]['remaining'], 60)
+        self.assertEqual(section['rows'][2]['reset'], 7200)
+        # A Pro plan reported by Codex is N/A for 5 hours even if a window arrives.
+        reported = dict(pro, planType='pro', primary=dict(windowDurationMins=300, usedPercent=5, resetsAt=NOW + 60))
+        five = overlay.provider_section('codex', reported, 30, '', 'en', NOW)['rows'][1]
+        self.assertTrue(five['na'])
+        self.assertIsNone(five['remaining'])
         self.assertIsNone(section['note'])
+
+    def test_ring_colour_follows_what_is_left(self):
+        colour = overlay.UsageOverlay.ring_color
+        self.assertEqual(colour(dict(kind='week', remaining=80)), overlay.RING['week'])
+        self.assertEqual(colour(dict(kind='week', remaining=30)), overlay.RING_LOW)
+        self.assertEqual(colour(dict(kind='five', remaining=10)), overlay.RING_CRITICAL)
 
     def test_plus_shows_both_windows(self):
         plus = dict(primary=dict(windowDurationMins=300, usedPercent=10, resetsAt=NOW + 60),
@@ -288,7 +300,8 @@ class PanelOverlayTests(unittest.TestCase):
         codex, claude = overlay.build_sections(
             self.panel, _Presence(frozenset({'codex', 'claude'})))
         self.assertEqual((codex['project'], codex['rows'][0]['remaining']), ('alpha', 60))
-        self.assertEqual([r['kind'] for r in codex['rows']], ['context', 'week'])
+        self.assertEqual([r['kind'] for r in codex['rows']], ['context', 'five', 'week'])
+        self.assertTrue(codex['rows'][1]['na'])
         self.assertEqual(claude['note'], 'Turn on Sync Claude usage in Settings')
 
     def test_overlay_shows_only_in_token_mode_and_paints(self):

@@ -204,8 +204,9 @@ class FocusPetTests(unittest.TestCase):
         self.pet.update_activity()
         tag = self.pet.focus_tag
         self.assertTrue(tag.isVisible())
-        self.assertLessEqual(tag.geometry().bottom(), self.pet.geometry().bottom())
-        self.assertGreater(tag.geometry().top(), self.pet.y() + self.pet.height() // 2)
+        # No task ring here: below her feet, or above her head at the bottom of the screen.
+        g = tag.geometry()
+        self.assertTrue(g.top() > self.pet.geometry().bottom() or g.bottom() < self.pet.y() + self.pet._px(64), g)
         self.assertGreater(tag.stop_rect.left(), tag.tag_rect.right())
         from PySide6.QtCore import QEvent, QPointF, Qt
         from PySide6.QtGui import QMouseEvent
