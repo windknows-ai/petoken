@@ -64,7 +64,13 @@ def main():
             task['presentation'] = dict(task['presentation'], model=(
                 'claude-opus-5-5' if task['provider_id'] == 'claude' else 'gpt-5-codex'))
         return tasks
-    with patch('widget.PREF_DIR', Path(tempfile.mkdtemp(prefix='petoken-promo-'))),             patch.object(preview_tool, 'fixture_tasks', promo_tasks):
+    snapshot = preview_tool.Preview.hub_snapshot
+
+    def promo_snapshot(self, prefs=None):
+        data = snapshot(self, prefs)
+        data['usd'], data['partial'] = 12.84, False
+        return data
+    with patch('widget.PREF_DIR', Path(tempfile.mkdtemp(prefix='petoken-promo-'))),             patch.object(preview_tool, 'fixture_tasks', promo_tasks),             patch.object(preview_tool.Preview, 'hub_snapshot', promo_snapshot):
         Preview = preview_tool.Preview
         preview = Preview(4, args.language, 'known', 'center', 'mixed')
         preview.panel.preview_toasts = False
