@@ -7,7 +7,10 @@
 - 完成第 1 项：任务小结，25 项合成测试通过。最初测试暴露 fixture SQLite 连接未关闭以及损坏日志被跳过，已分别修复并重新验证。
 - 完成第 2 项：窗口定位，20 项测试通过（含对测试自身进程的原生 helper 检查；没有 Codex 数据依赖或真人窗口前置）。
 - 完成第 3 项：派活命令，9 项测试通过，含实际 PowerShell → 合成 Python recorder 的安全转义检查。初次检测测试的 mock 未真正停止，已修正测试 patch 管理并复验。
-- IN PROGRESS：第 4 项历史列表及最终相关回归，独立提交。
+- 第 4 项历史列表的 22 项合成测试通过。历史 fixture 扩展 schema 后暴露位置式 INSERT 不兼容额外列，已改为显式列名；不影响运行时代码。
+- 四项实现和验证完成，等待 Claude 接入及用户验收；无实际 Codex 派活、配置改动、合并或推送。
+- 前三项提交：recap `a9e979d`，focus `aa6e870`，launch `0e96a4c`；历史接口为本文件最后一次所在的独立提交，可用 `git log --oneline main..HEAD` 获取完整四项 SHA。
+- 最终回归：337 项 PASS（9.039 秒）；新增接口测试 76 项（25 recap / 20 focus / 9 launch / 22 history）。测试覆盖 Codex approval/events/usage/scopes/activity/providers/poller/selection/task projection/analytics/pricing/notifications 及四个新模块；git diff --check PASS。没有重跑共享 UI 全量套件或构建 Windows 包，因此没有声明视觉/打包验收。
 
 ## 1. 任务小结
 
@@ -51,3 +54,28 @@ Claude 接入：使用 `subprocess.Popen(argv, shell=False)`。PowerShell fallba
 原生转义验证用后台 PowerShell 将合成参数传给 Python argv recorder，包含中文、引号、分号、换行、反斜杠和注入文本；只运行 recorder，不启动终端窗口或 Codex 任务。
 
 参考：[Windows Terminal 参数](https://learn.microsoft.com/en-us/windows/terminal/command-line-arguments)、[PowerShell EncodedCommand](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_exe)、[Codex CLI 参数](https://developers.openai.com/codex/cli/reference/)；只学习命令格式，没有复制代码。
+
+## 4. 历史列表
+
+`CodexStore(home).task_history(since_epoch) -> list[dict]`；另提供 `usage.task_history(since_epoch)`，采用现有 CODEX_HOME/default home 发现方式。每项字段：
+
+| 字段 | 含义 |
+|---|---|
+| thread_id | 本地明确线程 ID |
+| title | 现有 conversation_title 规则的名称/标题首行；未知为 None |
+| project | 现有 project_identity 规则的项目名称（metadata、git origin、cwd）；未知为 None |
+| started_at / finished_at | 与 recap 一致的 UTC epoch 秒；未知/最后一轮仍运行时结束为 None |
+| total_tokens | 该线程自己的可核实本地 token 合计，沿用 SessionUsage/unique_records/summarize；未知或不完整为 None |
+| usd | 现有定价表逐段计算的 API 等价 USD 估算；不是 ChatGPT/Codex 订阅账单。任一段未知价格/模型/必要计数（含 cache write）时为 None，不将已知段的部分费用当成总费用；旧实时面板的估算逻辑保持不变 |
+
+按首次开始时间倒序、同时间 thread_id 排序。since_epoch 是包含边界的开始时间过滤；非法日期类型/非有限数/负值抛 ValueError。时间未知的线程不归入日期范围；传 None 可查询全部本地历史，未知开始的排最后。已归档任务及尚未结束任务均包括；只包括 desktop/vscode/cli/exec 根线程，不单列 subagent、不汇总子代理到父线程，不包含 Claude 数据。
+
+复用现有重复事件、累计快照、counter reset、fork 继承去重和多模型估算。相同 DB 行去重，冲突的重复 ID 不猜；缺 session identity、截断/损坏/消失的 rollout、缺 fork 边界均不复用旧数字。即便某项指标为 None，其可读的标题/项目/时间仍可返回。不存在本地数据或 schema 不认识时返回 []，不宣称远端任务不存在。
+
+这是显式报表查询，可能扫描全部本地 rollout（含日期范围之前的父线程，用于正确去重），目前不做跨调用缓存；应在 worker 中按需调用，不放进 UI 每几秒的常规轮询。全生命周期 elapsed 含等待和用户间隔，不可直接用于估算模型执行速度。thread 重新开始后结束时间重新未知；数字是查询时本地累计工作量，不是已经固定的财务账单。
+
+since_epoch 过滤的是 thread 首次开始，而非最近活跃/结束时间；旧 thread 在今天恢复工作也不变成新的历史条目。日报周报若要当日 token/费用，需用现有 analytics 按 usage event 时间分配增量，不能把本接口的整个 thread 累计数当作当日消耗。
+
+### Claude 接入需求
+
+由 Claude 的 provider/通知/报表包装调用以上四个接口；这里只提供数据和明确的降级结果。费用标注 API 等价估算、未知时间不要分配给日报周报、focus='app' 不显示为“已打开具体任务”、派活按 argv + shell=False + 新控制台 flag 执行。无需修改 Codex 配置，本分支没有界面、通知中心、provider wrapper 或构建文件改动。

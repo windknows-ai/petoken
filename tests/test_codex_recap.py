@@ -28,7 +28,7 @@ class RecapFixture:
         records = [dict(type='session_meta', payload=metadata), *events]
         path.write_text(''.join(json.dumps(row) + '\n' for row in records), encoding='utf-8')
         with closing(sqlite3.connect(self.db)) as connection:
-            connection.execute('INSERT INTO threads VALUES (?,?,?,?,?,?,?,?)',
+            connection.execute('INSERT INTO threads (id,source,cwd,rollout_path,title,name,project_id,archived) VALUES (?,?,?,?,?,?,?,?)',
                                (thread, source, cwd, str(path), title, None, None, 0))
             connection.commit()
         return path
