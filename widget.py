@@ -4363,7 +4363,10 @@ class Panel(QWidget):
         from quick_launch import GlobalHotkey
         self.quick_launch_window = None
         self.hotkey = GlobalHotkey()
-        QApplication.instance().installNativeEventFilter(self.hotkey.filter)
+        if live:
+            # Only a running app listens: a filter left installed after its
+            # panel is gone would be a dangling pointer inside Qt.
+            QApplication.instance().installNativeEventFilter(self.hotkey.filter)
         self.hotkey.pressed.connect(self.open_quick_launch)
         self.sync_hotkey()
         from approval_card import ApprovalController
@@ -5441,6 +5444,7 @@ class Panel(QWidget):
         self.notify_clock.stop()
         self.approvals.stop()
         self.hotkey.unregister()
+        QApplication.instance().removeNativeEventFilter(self.hotkey.filter)
         self.stop.set()
         self.active.stop.set()
         self.activity.close()
