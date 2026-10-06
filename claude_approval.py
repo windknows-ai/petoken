@@ -48,7 +48,9 @@ FOLDER_NAME = 'claude-approvals'
 LEDGER_NAME = 'claude-approval-rules.json'
 MARKER = 'petoken-claude-approval'
 WAIT_S = 45                # The pet's turn; then Claude Code asks itself.
-HOOK_TIMEOUT_S = 60        # Claude Code's limit for the hook, above WAIT_S.
+QUESTION_WAIT_S = 300      # Claude's questions (AskUserQuestion) need time to think.
+HOOK_TIMEOUT_S = 330       # Claude Code's limit for the hook, above both waits.
+QUESTION_TOOL = 'AskUserQuestion'
 ALIVE_STALE_S = 10
 SHELL_TOOLS = ('Bash', 'PowerShell')
 EDIT_TOOLS = ('Edit', 'Write', 'MultiEdit', 'NotebookEdit')
@@ -72,7 +74,9 @@ $request = Join-Path $folder "$id.request.json"
 $decision = Join-Path $folder "$id.decision.json"
 [IO.File]::WriteAllText("$request.tmp", $raw, $utf8)
 Move-Item -LiteralPath "$request.tmp" -Destination $request -Force
-$deadline = [DateTime]::UtcNow.AddSeconds(__WAIT__)
+$wait = __WAIT__
+if ($raw -match '"tool_name"\s*:\s*"AskUserQuestion"') { $wait = __QUESTION_WAIT__ }
+$deadline = [DateTime]::UtcNow.AddSeconds($wait)
 while ([DateTime]::UtcNow -lt $deadline) {
     if (Test-Path -LiteralPath $decision) {
         $answer = [IO.File]::ReadAllText($decision, $utf8)
@@ -106,7 +110,8 @@ def ledger_path():
 def script_text(target=None):
     target = str(Path(target) if target is not None else folder())
     return (_SCRIPT.replace('__FOLDER__', target.replace("'", "''"))
-            .replace('__WAIT__', str(WAIT_S)).replace('__STALE__', str(ALIVE_STALE_S)))
+            .replace('__WAIT__', str(WAIT_S)).replace('__QUESTION_WAIT__', str(QUESTION_WAIT_S))
+            .replace('__STALE__', str(ALIVE_STALE_S)))
 
 
 # Installation -------------------------------------------------------------
@@ -224,20 +229,48 @@ def parse_request(request_id, raw, at):
         return None
     tool_input = data.get('tool_input') if isinstance(data.get('tool_input'), dict) else {}
     cwd = _text(data.get('cwd'), 1000)
+    if tool == QUESTION_TOOL:
+        questions = parse_questions(tool_input.get('questions'))
+        if not questions:
+            return None
+        return dict(id=request_id, at=at, session=_text(data.get('session_id'), 128), cwd=cwd,
+                    project=Path(cwd).name if cwd else '', tool=tool, summary=questions[0]['question'],
+                    description='', suggestions=[], rule=None, can_always=False,
+                    questions=questions, original=tool_input.get('questions'), wait=QUESTION_WAIT_S)
     suggestions = [s for s in data.get('permission_suggestions') or []
                    if isinstance(s, dict) and s.get('type') in ('addRules', 'addDirectories')]
     rule = precise_rule(tool, tool_input)
     return dict(id=request_id, at=at, session=_text(data.get('session_id'), 128), cwd=cwd,
-                project=Path(cwd).name if cwd else '', tool=tool,
+                project=Path(cwd).name if cwd else '', tool=tool, wait=WAIT_S,
                 summary=summary(tool, tool_input),
                 description=_text(tool_input.get('description'), 300),
                 suggestions=suggestions, rule=rule, can_always=rule is not None)
 
 
-def decision(request, choice):
-    """The hook output for ``choice``: 'allow' | 'always' | 'deny' | 'ask'."""
+def parse_questions(value):
+    """Claude's AskUserQuestion questions: question, header, options, multiSelect."""
+    out = []
+    for item in value if isinstance(value, list) else []:
+        if not isinstance(item, dict) or not _text(item.get('question')):
+            continue
+        options = [dict(label=_text(o.get('label'), 200), description=_text(o.get('description'), 400))
+                   for o in item.get('options') or [] if isinstance(o, dict) and _text(o.get('label'))]
+        out.append(dict(question=_text(item['question'], 1000), header=_text(item.get('header'), 40),
+                        options=options[:6], multi=bool(item.get('multiSelect'))))
+    return out[:4]
+
+
+def decision(request, choice, answers=None):
+    """The hook output for ``choice``: 'allow' | 'always' | 'deny' | 'ask' |
+    'answer' (``answers``: question text -> label, labels or typed text)."""
     if choice == 'ask':
         return None
+    if choice == 'answer':
+        if not answers or request.get('tool') != QUESTION_TOOL:
+            return None
+        body = dict(behavior='allow', updatedInput=dict(questions=request.get('original') or [],
+                                                        answers=dict(answers)))
+        return dict(hookSpecificOutput=dict(hookEventName='PermissionRequest', decision=body))
     if choice == 'deny':
         body = dict(behavior='deny', message='Denied from Petoken.')
     else:
@@ -311,11 +344,11 @@ class ApprovalBroker:
         self.answered &= set(names)
         return new, gone
 
-    def answer(self, request_id, choice):
+    def answer(self, request_id, choice, answers=None):
         request = self.pending.pop(request_id, None)
         if request is None:
             return False
-        output = decision(request, choice)
+        output = decision(request, choice, answers)
         self.answered.add(request_id)
         if not self._write(request_id, output):
             return False

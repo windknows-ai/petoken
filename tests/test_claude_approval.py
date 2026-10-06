@@ -55,8 +55,9 @@ class InstallTests(unittest.TestCase):
     def test_script_waits_less_than_the_hook_timeout(self):
         text = ca.script_text(r"C:\it's here")
         self.assertIn("'C:\\it''s here'", text)
-        self.assertIn(f'AddSeconds({ca.WAIT_S})', text)
-        self.assertLess(ca.WAIT_S, ca.HOOK_TIMEOUT_S)
+        self.assertIn(f'$wait = {ca.WAIT_S}', text)
+        self.assertIn(f'{{ $wait = {ca.QUESTION_WAIT_S} }}', text)
+        self.assertLess(max(ca.WAIT_S, ca.QUESTION_WAIT_S), ca.HOOK_TIMEOUT_S)
 
 
 class RequestTests(unittest.TestCase):
@@ -91,6 +92,37 @@ class RequestTests(unittest.TestCase):
                  destination='localSettings')])
         self.assertEqual(ca.rule_text(dict(toolName='Bash', ruleContent='npm test')), 'Bash(npm test)')
         self.assertEqual(ca.rule_text(dict(toolName='Edit')), 'Edit')
+
+
+QUESTION_INPUT = dict(
+    session_id='s1', cwd=r'C:\work\site', hook_event_name='PermissionRequest', tool_name='AskUserQuestion',
+    tool_input=dict(questions=[
+        dict(question='Which database?', header='DB', multiSelect=False,
+             options=[dict(label='SQLite', description='Local file'), dict(label='Postgres', description='Server')]),
+        dict(question='Which extras?', header='Extras', multiSelect=True,
+             options=[dict(label='Auth', description=''), dict(label='Search', description='')])]))
+
+
+class QuestionTests(unittest.TestCase):
+    def test_questions_are_parsed_and_answered(self):
+        request = ca.parse_request('f' * 32, json.dumps(QUESTION_INPUT), 5.0)
+        self.assertEqual(request['wait'], ca.QUESTION_WAIT_S)
+        self.assertFalse(request['can_always'])
+        self.assertEqual([(q['question'], q['multi'], [o['label'] for o in q['options']])
+                          for q in request['questions']],
+                         [('Which database?', False, ['SQLite', 'Postgres']),
+                          ('Which extras?', True, ['Auth', 'Search'])])
+        answers = {'Which database?': 'Postgres', 'Which extras?': ['Auth', 'Search']}
+        body = ca.decision(request, 'answer', answers)['hookSpecificOutput']['decision']
+        self.assertEqual(body['behavior'], 'allow')
+        self.assertEqual(body['updatedInput'], dict(questions=QUESTION_INPUT['tool_input']['questions'],
+                                                    answers=answers))
+        self.assertIsNone(ca.decision(request, 'answer', {}))
+        self.assertIsNone(ca.decision(request, 'ask'))
+
+    def test_question_without_questions_goes_back_to_claude(self):
+        data = dict(QUESTION_INPUT, tool_input=dict(questions=[]))
+        self.assertIsNone(ca.parse_request('f' * 32, json.dumps(data), 1))
 
 
 class BrokerTests(unittest.TestCase):

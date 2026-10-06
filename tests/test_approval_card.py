@@ -60,6 +60,30 @@ class CardTests(unittest.TestCase):
         self.controller.tick()
         self.assertIsNone(self.controller.card)
 
+    def test_question_card_collects_answers(self):
+        self.put('d' * 32, tool_name='AskUserQuestion', tool_input=dict(questions=[
+            dict(question='Which database?', header='DB', multiSelect=False,
+                 options=[dict(label='SQLite'), dict(label='Postgres')]),
+            dict(question='Which extras?', header='', multiSelect=True,
+                 options=[dict(label='Auth'), dict(label='Search')])]))
+        self.controller.tick()
+        card = self.controller.card
+        self.assertEqual(type(card).__name__, 'QuestionCard')
+        self.assertFalse(card.submit.isEnabled())
+        (_, db_buttons, _), (_, extra_buttons, extra_other) = card.blocks
+        db_buttons[0].click()
+        db_buttons[1].click()            # Single choice: the second replaces the first.
+        extra_buttons[0].click()
+        extra_buttons[1].click()         # Multiple choice: both stay.
+        self.assertEqual(card.answers(), {'Which database?': 'Postgres', 'Which extras?': ['Auth', 'Search']})
+        extra_other.setText('Payments')  # Typed text wins.
+        self.assertEqual(card.answers()['Which extras?'], 'Payments')
+        card.submit.click()
+        answer = json.loads((self.broker.folder / f"{'d' * 32}.decision.json").read_text(encoding='utf-8'))
+        self.assertEqual(answer['hookSpecificOutput']['decision']['updatedInput']['answers'],
+                         {'Which database?': 'Postgres', 'Which extras?': 'Payments'})
+        self.assertIsNone(self.controller.card)
+
     def test_titles_and_eliding(self):
         self.assertEqual(request_title(dict(tool='Write'), 'zh_CN'), 'Claude Code 想修改文件')
         self.assertEqual(request_title(dict(tool='mcp__x__y'), 'en'), 'Claude Code wants to use mcp__x__y')

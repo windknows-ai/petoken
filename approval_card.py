@@ -15,8 +15,8 @@ import time
 
 from PySide6.QtCore import QObject, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QHBoxLayout, QLabel, QListWidget,
-                               QListWidgetItem, QPushButton,
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QDialog, QFrame, QHBoxLayout, QLabel,
+                               QLineEdit, QListWidget, QListWidgetItem, QPushButton,
                                QVBoxLayout, QWidget)
 
 import claude_approval
@@ -27,6 +27,7 @@ from providers import PROVIDER_NAMES
 POLL_MS = 400
 HEARTBEAT_S = 2.0
 CARD_WIDTH = 300
+QUESTION_WIDTH = 340
 SUMMARY_LINES = 4
 GAP = 8
 
@@ -44,8 +45,14 @@ QPushButton:hover {{ background:{theme.HOVER_BG}; border-color:{theme.HOVER_BORD
 QPushButton:disabled {{ color:{theme.BORDER}; }}
 QPushButton#allow {{ background:{theme.PRIMARY_FILL}; color:{theme.PRIMARY_TEXT}; border-color:{theme.PRIMARY_FILL_PRESSED}; }}
 QPushButton#allow:hover {{ background:{theme.PRIMARY_FILL_HOVER}; }}
+QPushButton#option {{ text-align:left; padding:5px 10px; }}
+QPushButton#option:checked {{ background:{theme.TAB_SELECTED_BG}; border-color:{theme.SELECT_BAR}; font-weight:600; }}
+QLineEdit {{ background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:7px;
+             padding:4px 7px; color:{theme.INK}; }}
 QPushButton#deny {{ color:{theme.DANGER_TEXT}; border-color:{theme.DANGER_BORDER}; }}
 QPushButton#deny:hover {{ background:{theme.DANGER_HOVER_BG}; }}
+QLabel#chip {{ background:{theme.BADGE_BG}; border:1px solid {theme.BORDER_SOFT}; border-radius:8px;
+                padding:1px 8px; color:{theme.VIOLET}; font-size:11px; }}
 QPushButton#link {{ background:transparent; border:none; color:{theme.ICE}; padding:0; min-height:0;
                     text-decoration:underline; font-size:11px; }}
 '''
@@ -180,7 +187,7 @@ class ApprovalCard(QWidget):
                 self.always.setToolTip(text('approval_always_unavailable', language))
             self.adjustSize()
         now = time.time() if now is None else now
-        seconds = max(0, round(request['at'] + claude_approval.WAIT_S - now))
+        seconds = max(0, round(request['at'] + request.get('wait', claude_approval.WAIT_S) - now))
         line = text('approval_countdown', language, seconds=seconds)
         if waiting:
             line = text('approval_more', language, count=waiting) + ' · ' + line
@@ -198,6 +205,126 @@ class ApprovalCard(QWidget):
         y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))
         if self.pos() != QPoint(x, y):
             self.move(x, y)
+
+
+class QuestionCard(QWidget):
+    """Claude's clarifying questions (AskUserQuestion) beside the pet.
+
+    One block per question: Claude's options as buttons (several may be
+    chosen when the question allows it) and a field for your own answer,
+    which wins over the buttons. Unlike the approval card it can take
+    keyboard focus once you click into it, so you can type; it still
+    appears without stealing focus.
+    """
+
+    answered = Signal(str, str, object)   # request id, 'answer' | 'ask', answers
+
+    def __init__(self, language, request):
+        super().__init__(None)
+        self.language = language
+        self.request = request
+        self.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setStyleSheet(STYLE)
+        self.setFixedWidth(QUESTION_WIDTH)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        frame = QFrame()
+        frame.setObjectName('approval')
+        outer.addWidget(frame)
+        layout = QVBoxLayout(frame)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6)
+        title = QLabel(text('question_title', language, provider=PROVIDER_NAMES.get('claude', 'Claude Code')))
+        title.setObjectName('title')
+        title.setWordWrap(True)
+        layout.addWidget(title)
+        if request.get('project'):
+            project = QLabel(text('approval_project', language, project=request['project']))
+            project.setObjectName('muted')
+            layout.addWidget(project)
+        self.blocks = []
+        for question in request['questions']:
+            if question.get('header'):
+                chip = QLabel(question['header'])
+                chip.setObjectName('chip')
+                layout.addWidget(chip, 0, Qt.AlignLeft)
+            label = QLabel(question['question'])
+            label.setWordWrap(True)
+            label.setTextFormat(Qt.PlainText)
+            layout.addWidget(label)
+            group = QButtonGroup(self)
+            group.setExclusive(not question['multi'])
+            buttons = []
+            for option in question['options']:
+                button = QPushButton(option['label'])
+                button.setObjectName('option')
+                button.setCheckable(True)
+                button.setCursor(Qt.PointingHandCursor)
+                button.setToolTip(option.get('description') or '')
+                group.addButton(button)
+                button.toggled.connect(lambda _=False: self._sync())
+                layout.addWidget(button)
+                buttons.append(button)
+            other = QLineEdit()
+            other.setPlaceholderText(text('question_other', language))
+            other.textChanged.connect(lambda _='': self._sync())
+            layout.addWidget(other)
+            self.blocks.append((question, buttons, other))
+        if any(q['multi'] for q in request['questions']):
+            hint = QLabel(text('question_multi', language))
+            hint.setObjectName('muted')
+            layout.addWidget(hint)
+        row = QHBoxLayout()
+        self.ask = QPushButton(text('approval_ask', language))
+        self.ask.setObjectName('link')
+        self.ask.setCursor(Qt.PointingHandCursor)
+        self.ask.clicked.connect(lambda: self.answered.emit(request['id'], 'ask', None))
+        self.submit = QPushButton(text('question_submit', language))
+        self.submit.setObjectName('allow')
+        self.submit.setCursor(Qt.PointingHandCursor)
+        self.submit.clicked.connect(self._submit)
+        row.addWidget(self.ask)
+        row.addStretch(1)
+        row.addWidget(self.submit)
+        layout.addLayout(row)
+        self.countdown = QLabel()
+        self.countdown.setObjectName('muted')
+        layout.addWidget(self.countdown, 0, Qt.AlignRight)
+        self._sync()
+        self.adjustSize()
+
+    def answers(self):
+        """question text -> typed text, the chosen label, or chosen labels."""
+        result = {}
+        for question, buttons, other in self.blocks:
+            typed = other.text().strip()
+            chosen = [b.text() for b in buttons if b.isChecked()]
+            if typed:
+                result[question['question']] = typed
+            elif chosen:
+                result[question['question']] = chosen if question['multi'] else chosen[0]
+        return result
+
+    def _sync(self):
+        self.submit.setEnabled(len(self.answers()) == len(self.blocks))
+
+    def _submit(self):
+        answers = self.answers()
+        if len(answers) == len(self.blocks):
+            self.answered.emit(self.request['id'], 'answer', answers)
+
+    def show_request(self, request, waiting=0, now=None):
+        now = time.time() if now is None else now
+        seconds = max(0, round(request['at'] + request.get('wait', claude_approval.QUESTION_WAIT_S) - now))
+        minutes, rest = divmod(seconds, 60)
+        line = text('question_countdown', self.language, time=f'{minutes}:{rest:02d}')
+        if waiting:
+            line = text('approval_more', self.language, count=waiting) + ' · ' + line
+        self.countdown.setText(line)
+
+    place_beside = ApprovalCard.place_beside
 
 
 class ApprovalController(QObject):
@@ -245,8 +372,8 @@ class ApprovalController(QObject):
             self.requested.emit(request)
         self._show(now)
 
-    def answer(self, request_id, choice):
-        self.broker.answer(request_id, choice)
+    def answer(self, request_id, choice, answers=None):
+        self.broker.answer(request_id, choice, answers)
         self.queue = [r for r in self.queue if r['id'] != request_id]
         self._show()
 
@@ -257,7 +384,15 @@ class ApprovalController(QObject):
         if not self.queue:
             self._hide()
             return
-        if self.card is None or self.card.language != self._language():
+        request = self.queue[0]
+        if request.get('questions'):
+            if self.card is None or getattr(self.card, 'request', None) is not request \
+                    or not isinstance(self.card, QuestionCard) or self.card.language != self._language():
+                self._hide()
+                self.card = QuestionCard(self._language(), request)
+                self.card.answered.connect(self.answer)
+        elif (self.card is None or isinstance(self.card, QuestionCard)
+              or self.card.language != self._language()):
             self._hide()
             self.card = ApprovalCard(self._language())
             self.card.answered.connect(self.answer)

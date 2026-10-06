@@ -104,6 +104,14 @@ PREVIEW_REQUESTS = {
                  '  Remove-Item -WhatIf'),
         description='Find large log files')),
     'web': dict(tool_name='WebFetch', tool_input=dict(url='https://docs.python.org/3/library/json.html')),
+    'question': dict(tool_name='AskUserQuestion', tool_input=dict(questions=[
+        dict(question='Which database should the new API use?', header='Database', multiSelect=False,
+             options=[dict(label='SQLite', description='One local file, no server'),
+                      dict(label='PostgreSQL', description='A server; best for many users')]),
+        dict(question='Which extras should I add?', header='Extras', multiSelect=True,
+             options=[dict(label='Login', description='Accounts and sessions'),
+                      dict(label='Search', description='Full-text search'),
+                      dict(label='Export', description='CSV download')])])),
 }
 # Synthetic forecast.py advice for the usage card (applies to every section).
 PREVIEW_HINTS = {
@@ -424,7 +432,9 @@ class Preview(QWidget):
         def expire():   # What the hook script does when nobody answers.
             if not (path.with_name(f'{request_id}.decision.json')).exists():
                 path.unlink(missing_ok=True)
-        QTimer.singleShot(claude_approval.WAIT_S * 1000, expire)
+        wait = (claude_approval.QUESTION_WAIT_S if data['tool_name'] == claude_approval.QUESTION_TOOL
+                else claude_approval.WAIT_S)
+        QTimer.singleShot(wait * 1000, expire)
 
     def set_hint(self, name):
         advice = PREVIEW_HINTS.get(name)
