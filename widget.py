@@ -5237,6 +5237,13 @@ class Panel(QWidget):
         self.workbench_window.raise_()
         self.workbench_window.activateWindow()
 
+    def open_reports(self):
+        if self.closing:
+            return
+        self.open_workbench()
+        if self.workbench_window:
+            self.workbench_window.show_reports()
+
     def open_workbench_tutorial(self):
         if self.closing:
             return

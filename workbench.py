@@ -217,7 +217,8 @@ class WorkbenchWindow(QWidget):
         self._build_notes()
         self._build_projects()
         self._build_notifications()
-        for index, name in enumerate(('home', 'todos', 'notes', 'projects', 'notifications')):
+        self._build_reports()
+        for index, name in enumerate(('home', 'todos', 'notes', 'projects', 'notifications', 'reports')):
             self.tabs.setTabIcon(index, QIcon(str(ASSETS_DIR / f'workbench-{name}.svg')))
         self.status = QLabel('')
         self.status.setWordWrap(True)
@@ -517,6 +518,20 @@ class WorkbenchWindow(QWidget):
         self.reminder_delete_button = self.button(actions, 'wb_delete', self.delete_reminder, danger=True)
         layout.addLayout(actions)
         self._reminder_selected()
+
+    def _build_reports(self):
+        from report_view import ReportPage
+        self.report_page = ReportPage(self.panel)
+        self.tabs.addTab(self.report_page, '')
+        self.reports_tab = self.tabs.count() - 1
+        # Counted only when the page is first opened (Codex history takes seconds).
+        self.tabs.currentChanged.connect(
+            lambda index: self.report_page.refresh() if index == self.reports_tab else None)
+
+    def show_reports(self):
+        self.tabs.setCurrentIndex(self.reports_tab)
+        self.show()
+        self.raise_()
 
     def show_notifications(self):
         self.tabs.setCurrentIndex(self.notifications_tab)
@@ -1050,8 +1065,10 @@ class WorkbenchWindow(QWidget):
         self.setWindowTitle(self.tr('workbench_open') + ' · Petoken')
         for widget, key in self._captions:
             widget.setText(self.tr(key))
-        for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects', 'wb_notifications']):
+        for index, key in enumerate(['wb_home', 'wb_todos', 'wb_notes', 'wb_projects', 'wb_notifications',
+                                     'wb_reports']):
             self.tabs.setTabText(index, self.tr(key))
+        self.report_page.apply_language()
         self.projects_table.setHeaderLabels([self.tr('wb_name'), self.tr('wb_folder')])
         for index, key in enumerate(('wb_notify_all',) + tuple(f'notify_kind_{k}' for k in NOTIFY_KINDS)):
             self.notify_filter.setItemText(index, self.tr(key))

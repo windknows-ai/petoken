@@ -370,6 +370,7 @@ class DesktopPet(QWidget):
         menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch)
         menu.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
         menu.addAction(self.tr_text('workbench_open'),self.panel.open_workbench)
+        menu.addAction(self.tr_text('wb_reports'),self.panel.open_reports)
         menu.addAction(self.tr_text('wb_tutorial'),self.panel.open_workbench_tutorial)
         menu.addAction(self.tr_text('pet_settings'),self.panel.open_settings)
         topmost=menu.addAction(self.tr_text('always_on_top'));topmost.setCheckable(True)
