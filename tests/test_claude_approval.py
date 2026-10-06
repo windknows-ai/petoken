@@ -75,6 +75,7 @@ class InstallTests(unittest.TestCase):
         text = ca.script_text(r"C:\it's here")
         self.assertIn("'C:\\it''s here'", text)
         self.assertIn(f'$wait = {ca.WAIT_S}', text)
+        self.assertIn('[string]$PID', text)
         self.assertIn(f'{{ $wait = {ca.QUESTION_WAIT_S} }}', text)
         self.assertLess(max(ca.WAIT_S, ca.QUESTION_WAIT_S), ca.HOOK_TIMEOUT_S)
 
@@ -200,6 +201,26 @@ class BrokerTests(unittest.TestCase):
         (self.broker.folder / f'{first}.request.json').unlink()
         self.assertEqual(self.broker.poll(), ([], [second]))
         self.assertFalse(self.broker.answer(second, 'allow'))
+
+    def test_stale_requests_are_dropped(self):
+        old, dead, live = 'c' * 32, 'd' * 32, 'e' * 32
+        for request_id in (old, dead, live):
+            self.put(request_id, COMMAND_INPUT)
+        (self.broker.folder / f'{dead}.pid').write_text('111', encoding='utf-8')
+        (self.broker.folder / f'{live}.pid').write_text('222', encoding='utf-8')
+        import os
+        now = time.time()
+        stamp = now - ca.QUESTION_WAIT_S - 60
+        os.utime(self.broker.folder / f'{old}.request.json', (stamp, stamp))
+        for request_id in (dead, live):
+            os.utime(self.broker.folder / f'{request_id}.request.json', (now - 5, now - 5))
+        new, gone = self.broker.poll(now, alive=lambda pid: pid == 222)
+        self.assertEqual([r['id'] for r in new], [live])
+        self.assertFalse((self.broker.folder / f'{old}.request.json').exists())
+        self.assertFalse((self.broker.folder / f'{dead}.pid').exists())
+        # The hook ends while the card is up (answered in Claude): the card goes.
+        new, gone = self.broker.poll(now + 1, alive=lambda pid: False)
+        self.assertEqual((new, gone), ([], [live]))
 
     def test_unreadable_request_goes_back_to_claude(self):
         self.put('c' * 32, '{oops')

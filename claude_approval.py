@@ -74,6 +74,8 @@ $id = [guid]::NewGuid().ToString('N')
 $request = Join-Path $folder "$id.request.json"
 $decision = Join-Path $folder "$id.decision.json"
 [IO.File]::WriteAllText("$request.tmp", $raw, $utf8)
+$owner = Join-Path $folder "$id.pid"
+[IO.File]::WriteAllText($owner, [string]$PID, $utf8)
 Move-Item -LiteralPath "$request.tmp" -Destination $request -Force
 $wait = __WAIT__
 if ($raw -match '"tool_name"\s*:\s*"(AskUserQuestion|ExitPlanMode)"') { $wait = __QUESTION_WAIT__ }
@@ -81,7 +83,7 @@ $deadline = [DateTime]::UtcNow.AddSeconds($wait)
 while ([DateTime]::UtcNow -lt $deadline) {
     if (Test-Path -LiteralPath $decision) {
         $answer = [IO.File]::ReadAllText($decision, $utf8)
-        Remove-Item -LiteralPath $decision, $request -Force
+        Remove-Item -LiteralPath $decision, $request, $owner -Force
         if ($answer.Trim()) { [Console]::Out.Write($answer) }
         Add-Content -LiteralPath (Join-Path $folder 'events.log') -Value ("{0} {1} script returned answer ({2} chars)" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $id.Substring(0, 8), $answer.Length)
         exit 0
@@ -89,7 +91,7 @@ while ([DateTime]::UtcNow -lt $deadline) {
     if (-not (Alive)) { break }
     Start-Sleep -Milliseconds 150
 }
-Remove-Item -LiteralPath $request -Force
+Remove-Item -LiteralPath $request, $owner -Force
 Add-Content -LiteralPath (Join-Path $folder 'events.log') -Value ("{0} {1} script gave up waiting" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $id.Substring(0, 8))
 exit 0
 '''
@@ -361,12 +363,30 @@ class ApprovalBroker:
         except OSError:
             pass
 
-    def poll(self):
-        """(new requests, ids that went away: answered elsewhere or timed out)."""
+    def poll(self, now=None, alive=None):
+        """(new requests, ids that went away: answered elsewhere or timed out).
+
+        A request whose hook script is gone (Claude Code answered it another
+        way and ended the hook, or the session closed) or that is older
+        than its wait is stale: its files are removed and it is never shown.
+        """
+        now = time.time() if now is None else now
+        alive = alive or _process_alive
         try:
             names = {p.name[:-len('.request.json')]: p for p in self.folder.glob('*.request.json')}
         except OSError:
             names = {}
+        for request_id, path in list(names.items()):
+            if self._stale(request_id, path, now, alive):
+                for leftover in (path, self.folder / f'{request_id}.pid',
+                                 self.folder / f'{request_id}.decision.json'):
+                    try:
+                        leftover.unlink()
+                    except OSError:
+                        pass
+                self.log(request_id, (self.pending.get(request_id) or {}).get('tool', '-'),
+                         'stale: hook ended or wait over')
+                names.pop(request_id)
         new = []
         for request_id, path in sorted(names.items(), key=lambda item: item[1].stat().st_mtime
                                        if item[1].exists() else 0):
@@ -389,6 +409,19 @@ class ApprovalBroker:
             self.log(request_id, self.pending.pop(request_id).get('tool'), 'gone (timed out or handled)')
         self.answered &= set(names)
         return new, gone
+
+    def _stale(self, request_id, path, now, alive):
+        try:
+            age = now - path.stat().st_mtime
+        except OSError:
+            return False
+        if age > max(WAIT_S, QUESTION_WAIT_S) + 30:
+            return True
+        try:
+            pid = int((self.folder / f'{request_id}.pid').read_text(encoding='utf-8').strip())
+        except (OSError, ValueError):
+            return False   # Older script without a pid file: the age limit decides.
+        return age > 2 and not alive(pid)
 
     def log(self, request_id, tool, what):
         """One line per step (time, short id, tool, step) for troubleshooting."""
@@ -436,6 +469,14 @@ class ApprovalBroker:
 
 
 # "Always allow" ledger ----------------------------------------------------
+def _process_alive(pid):
+    try:
+        import psutil
+        return psutil.pid_exists(pid)
+    except Exception:
+        return True   # Unknown: keep the request until its wait is over.
+
+
 def list_rules(path=None):
     path = Path(path) if path is not None else ledger_path()
     try:
