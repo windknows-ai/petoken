@@ -118,3 +118,37 @@ class ReportPageTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ReportCacheTests(unittest.TestCase):
+    def test_one_load_at_a_time_and_staleness(self):
+        import threading as th
+        gate, calls, seen = th.Event(), [], []
+
+        def loader():
+            calls.append(1)
+            gate.wait(5)
+            return dict(events=[], history=[], missing=[])
+        cache = reports.ReportCache(loader, max_age=60)
+        self.assertTrue(cache.stale())
+        self.assertTrue(cache.refresh(seen.append))
+        self.assertFalse(cache.refresh(seen.append))       # Joins the running load.
+        gate.set()
+        deadline = time.time() + 5
+        while len(seen) < 2 and time.time() < deadline:
+            time.sleep(0.01)
+        self.assertEqual((len(calls), len(seen)), (1, 2))
+        self.assertFalse(cache.stale())
+        self.assertTrue(cache.stale(time.time() + 61))
+
+    def test_page_shows_cached_numbers_at_once(self):
+        from report_view import ReportPage
+        panel = FakePanel()
+        panel.report_cache = reports.ReportCache(lambda: DATA)
+        panel.report_cache.data, panel.report_cache.at = DATA, time.time()
+        page = ReportPage(panel)
+        page.refresh()
+        self.assertIs(page.data, DATA)                       # No waiting for a load.
+        self.assertFalse(page.loading)                       # Fresh: no background reload.
+        page.close()
+

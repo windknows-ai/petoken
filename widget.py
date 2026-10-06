@@ -3883,6 +3883,12 @@ class Settings(QDialog):
             self.about_titles.append(title)
             self.about_bodies.append(body)
             about.addSpacing(6)
+        self.diagnostics_button = QPushButton()
+        self.diagnostics_button.clicked.connect(self.export_diagnostics)
+        diagnostics_row = QHBoxLayout()
+        diagnostics_row.addWidget(self.diagnostics_button)
+        diagnostics_row.addStretch(1)
+        about.addLayout(diagnostics_row)
         about.addStretch(1)
         self.pages['about'].setLayout(about)
         layout.addWidget(self.tabs)
@@ -3904,6 +3910,60 @@ class Settings(QDialog):
 
     def tr_text(self, key, **values):
         return text(key, self.language.currentData(), **values)
+
+    def diagnostics_sections(self):
+        import diagnostics
+        panel = self.parentWidget()
+        hotkey = getattr(panel, 'hotkey', None)
+        features = {
+            'Sync Claude usage': claude_statusline.state(),
+            'Claude instant notifications': claude_events.state(),
+            'Approve Claude on the pet': claude_approval.state(),
+            'Mute Claude app pop-ups': f"{panel.prefs.get('mute_claude_toasts', True)}"
+                                       f" (muted now: {getattr(panel, '_claude_toasts_muted', False)})",
+            'Quick launch shortcut': f"{panel.prefs.get('quick_launch_hotkey')}"
+                                     f" (active: {getattr(hotkey, 'registered', None)})",
+            'Predictions and tips': panel.prefs.get('assistant_hints', True),
+        }
+        return diagnostics.collect(PREF_DIR, panel.prefs, APP_VERSION, features)
+
+    def export_diagnostics(self):
+        """Show everything first, then save it as a zip where the user chooses."""
+        import diagnostics
+        from PySide6.QtWidgets import QFileDialog, QPlainTextEdit
+        t = self.tr_text
+        sections = self.diagnostics_sections()
+        dialog = QDialog(self)
+        dialog.setWindowTitle(t('diagnostics_export'))
+        dialog.resize(640, 520)
+        layout = QVBoxLayout(dialog)
+        intro = label(t('diagnostics_intro'), 'muted')
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+        preview = QPlainTextEdit()
+        preview.setReadOnly(True)
+        preview.setPlainText('\n\n'.join(f'===== {name} =====\n{body}' for name, body in sections.items()))
+        layout.addWidget(preview, 1)
+        result = label('', 'muted')
+        layout.addWidget(result)
+        buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Close)
+        buttons.button(QDialogButtonBox.Save).setText(t('save'))
+        buttons.button(QDialogButtonBox.Close).setText(t('approval_rules_close'))
+        layout.addWidget(buttons)
+        buttons.rejected.connect(dialog.reject)
+
+        def save():
+            default = str(Path.home() / 'Desktop' / f'petoken-diagnostics-{datetime.now():%Y%m%d-%H%M}.zip')
+            path, _ = QFileDialog.getSaveFileName(dialog, t('diagnostics_export'), default, 'Zip (*.zip)')
+            if not path:
+                return
+            try:
+                diagnostics.write_zip(path, sections)
+                result.setText(t('diagnostics_saved', path=path))
+            except OSError:
+                result.setText(t('diagnostics_failed'))
+        buttons.accepted.connect(save)
+        dialog.exec()
 
     def open_approval_rules(self):
         from approval_card import ApprovalRulesDialog
@@ -4003,6 +4063,8 @@ class Settings(QDialog):
         for index, key in enumerate(SETTINGS_PAGES):
             self.tabs.setTabText(index, t(f'settings_page_{key}'))
         self.about_heading.setText(t('about_data'))
+        self.diagnostics_button.setText(t('diagnostics_export'))
+        self.diagnostics_button.setToolTip(t('diagnostics_tip'))
         for index in range(4):
             self.about_titles[index].setText(f"{index + 1}. {t(f'about_{index + 1}_title')}")
             self.about_bodies[index].setText(t(f'about_{index + 1}_body'))
@@ -4426,6 +4488,11 @@ class Panel(QWidget):
         self.sync_approvals()
         self._claude_toasts_muted = False
         self.sync_claude_toasts()
+        # Reports open instantly: count once in the background after start-up.
+        import reports
+        self.report_cache = reports.ReportCache()
+        if live:
+            QTimer.singleShot(90_000, lambda: None if self.closing else self.report_cache.refresh())
 
     def anchor_to_pet(self):
         pet = getattr(self, 'pet', None)
@@ -5570,6 +5637,8 @@ def main():
     app.setApplicationVersion(APP_VERSION)
     app.setQuitOnLastWindowClosed(False)
     PREF_DIR.mkdir(parents=True, exist_ok=True)
+    import diagnostics
+    diagnostics.install_error_log(PREF_DIR)   # Windowed app: keep errors for bug reports.
     lock = QLockFile(str(PREF_DIR/'widget.lock'))
     if not lock.tryLock(100):
         return 0

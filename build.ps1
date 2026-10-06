@@ -28,6 +28,8 @@ $originalPath = $env:PATH
 # unrelated versioned ICU build that PyInstaller can mistake for Qt's Windows
 # system ICU dependency, producing a QtCore entry-point failure at startup.
 $env:PATH = (($originalPath -split ';') | Where-Object { $_ -notmatch '[\\/]\.cache[\\/]codex-runtimes[\\/]' }) -join ';'
+# Pillow is a development tool (promo images) only; the app never imports it,
+# so it is kept out of the package rather than shipped unused.
 try {
     & $python -m PyInstaller --noconfirm --clean --windowed `
         --name petoken `
@@ -37,6 +39,7 @@ try {
         --icon (Join-Path $repo 'assets\petoken.ico') `
         --add-data "$(Join-Path $repo 'assets');assets" `
         --collect-submodules winrt `
+        --exclude-module PIL `
         (Join-Path $repo 'widget.py')
     $pyInstallerExit = $LASTEXITCODE
 } finally {

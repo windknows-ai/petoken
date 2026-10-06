@@ -21,6 +21,7 @@ known price, flagged ``partial`` when some responses have none.
 """
 from __future__ import annotations
 
+import threading
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -191,3 +192,52 @@ def search(history, query='', provider=None, since=None):
         if all(word in haystack for word in words):
             out.append(row)
     return out
+
+
+class ReportCache:
+    """The last ``load()`` result, shared by every report page.
+
+    Petoken warms it in the background after start-up, so opening Reports
+    shows numbers at once; a page then refreshes it in the background when
+    it is older than ``max_age``. Callbacks run on the worker thread.
+    """
+
+    def __init__(self, loader=None, max_age=300):
+        self.loader = loader or load
+        self.max_age = max_age
+        self.data = None
+        self.at = 0.0
+        self._lock = threading.Lock()
+        self._loading = False
+        self._callbacks = []
+
+    def stale(self, now=None):
+        now = time.time() if now is None else now
+        return self.data is None or now - self.at >= self.max_age
+
+    def refresh(self, callback=None):
+        """Reload in a worker; ``callback(data)`` when done. One load at a time."""
+        with self._lock:
+            if callback is not None:
+                self._callbacks.append(callback)
+            if self._loading:
+                return False
+            self._loading = True
+        threading.Thread(target=self._work, daemon=True).start()
+        return True
+
+    def _work(self):
+        try:
+            data = self.loader()
+        except Exception:
+            data = dict(events=[], history=[], missing=['claude', 'codex'],
+                        activity=dict(turns=[], edits=[]))
+        with self._lock:
+            self.data, self.at = data, time.time()
+            self._loading = False
+            callbacks, self._callbacks = self._callbacks, []
+        for callback in callbacks:
+            try:
+                callback(data)
+            except Exception:
+                pass

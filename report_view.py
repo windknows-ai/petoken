@@ -1,13 +1,13 @@
 """Workbench "Reports" page (V1.6 D): today / this week, and task history.
 
-The numbers come from ``reports`` in a worker thread (Codex history can
-take seconds); the page shows "Counting…" meanwhile and keeps the result
-for RELOAD_S before reading again. Double-clicking a history row jumps to
-that task's window when it is still open.
+The numbers come from the panel's shared ``reports.ReportCache``: warmed in
+the background after Petoken starts, so the page shows the last result at
+once and refreshes it in a worker when it is older than RELOAD_S (Codex
+history can take seconds). Double-clicking a history row jumps to that
+task's window when it is still open.
 """
 from __future__ import annotations
 
-import threading
 import time
 
 from PySide6.QtCore import QObject, Qt, Signal
@@ -39,7 +39,9 @@ class ReportPage(QWidget):
     def __init__(self, panel, loader=None):
         super().__init__()
         self.panel = panel
-        self.load_data = loader or reports.load
+        shared = getattr(panel, 'report_cache', None)
+        self.cache = (reports.ReportCache(loader, RELOAD_S) if loader is not None or shared is None
+                      else shared)
         self.data = None
         self.loaded_at = 0.0
         self.loading = False
@@ -157,23 +159,20 @@ class ReportPage(QWidget):
 
     # Loading -------------------------------------------------------------
     def refresh(self, force=False):
-        if self.loading or (not force and self.data is not None and time.time() - self.loaded_at < RELOAD_S):
+        """Show what the cache has now; reload in the background when stale."""
+        if self.cache.data is not None and self.data is not self.cache.data:
+            self.data, self.loaded_at = self.cache.data, self.cache.at
+            self.render()
+        if self.loading or not (force or self.cache.stale()):
             return
         self.loading = True
-        self.status.setText(self.tr('report_loading'))
+        self.status.setText(self.tr('report_updating' if self.data is not None else 'report_loading'))
         self.reload_button.setEnabled(False)
-
-        def work():
-            try:
-                data = self.load_data()
-            except Exception:
-                data = dict(events=[], history=[], missing=['claude', 'codex'])
-            self._signals.loaded.emit(data)
-        threading.Thread(target=work, daemon=True).start()
+        self.cache.refresh(self._signals.loaded.emit)
 
     def _loaded(self, data):
         self.loading = False
-        self.data, self.loaded_at = data, time.time()
+        self.data, self.loaded_at = data, self.cache.at
         self.reload_button.setEnabled(True)
         self.render()
 
