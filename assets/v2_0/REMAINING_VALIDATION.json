@@ -1,0 +1,3374 @@
+{
+  "assets": [
+    {
+      "file": "wake_stretch_1.png",
+      "alpha_bbox": [
+        147,
+        40,
+        1106,
+        1219
+      ],
+      "sha256": "411bb4ed21f407d1e360046a7cdf90ddce883e3d09aca005b5e2e196eca4d3d4",
+      "generation": {
+        "name": "wake_stretch_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-09b09a88-28c0-424a-94b3-3d0ef3bdcdd3.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. kneeling up straight with both arms stretched high above her head, fingers interlaced, back arched, eyes squinting sleepily, two small sparkles around. Arms at highest stretch. Knees/body make a clearly upright kneeling silhouette. Input image is ONLY the character-design reference. Redraw a NEW WHOLE BODY in the specified pose; do not preserve seated idle body. Same exact hair/clothes/ornament design and lineart style, no new costume. One single sprite only, 1254x1254 RGBA transparent canvas, centered with at least 40px side clearance; lowest body contact near y1218, all hair/hands inside canvas. No text, no ground or shadow."
+      },
+      "method": {
+        "name": "wake_stretch_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-09b09a88-28c0-424a-94b3-3d0ef3bdcdd3.png",
+        "source_bbox": [
+          160,
+          51,
+          1119,
+          1230
+        ],
+        "scale": 1,
+        "offset": [
+          147,
+          40
+        ],
+        "alpha_bbox": [
+          147,
+          40,
+          1106,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "wake_stretch_2.png",
+      "alpha_bbox": [
+        147,
+        40,
+        1106,
+        1219
+      ],
+      "sha256": "6f4c2f2a9c8a5c5a2d71fe58d784e96cfcaf14245fc82054be07bf50bf20ad2a",
+      "generation": {
+        "name": "wake_stretch_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-885683af-9be9-4ee5-9c1e-20b9cc381c39.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Only tilt the two interlaced hands and raised forearms gently 30 pixels to viewer-left. Keep upper-arm roots fixed, reconstruct hair where arms moved. Head, face, ornament, lower body, sparkles and knee contact stay exactly fixed. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "wake_stretch_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-885683af-9be9-4ee5-9c1e-20b9cc381c39.png",
+        "parent": "wake_stretch_1",
+        "parts": [
+          [
+            320,
+            35,
+            740,
+            550
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          315,
+          30,
+          746,
+          556
+        ],
+        "alpha_bbox": [
+          147,
+          40,
+          1106,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        315,
+        64,
+        746,
+        556
+      ],
+      "changed_pixels": 175216,
+      "transparent_corners": true
+    },
+    {
+      "file": "curious_1.png",
+      "alpha_bbox": [
+        66,
+        24,
+        1188,
+        1219
+      ],
+      "sha256": "34aca1ba88fe0af47dc55e43a18c24536713467af070a7ebcfa7af6c39b81cc1",
+      "generation": {
+        "name": "curious_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-8b99d900-95ac-4dff-a606-f69bc1ccbf24.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. on her hands and knees leaning forward toward the viewer, head tilted noticeably to her left, big sparkling curious violet eyes, mouth slightly open. Hands planted apart, knees bent under hips, clear crawling posture. Input image is ONLY the character-design reference. Redraw a NEW WHOLE BODY in the specified pose; do not preserve seated idle body. Same exact hair/clothes/ornament design and lineart style, no new costume. One single sprite only, 1254x1254 RGBA transparent canvas, centered with at least 40px side clearance; lowest body contact near y1218, all hair/hands inside canvas. No text, no ground or shadow."
+      },
+      "method": {
+        "name": "curious_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-8b99d900-95ac-4dff-a606-f69bc1ccbf24.png",
+        "source_bbox": [
+          59,
+          9,
+          1215,
+          1240
+        ],
+        "scale": 0.9707554833468724,
+        "offset": [
+          66,
+          24
+        ],
+        "alpha_bbox": [
+          66,
+          24,
+          1188,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "curious_2.png",
+      "alpha_bbox": [
+        67,
+        19,
+        1214,
+        1219
+      ],
+      "sha256": "74f754477cc0474792a8d5bc923a0247938ba09e9a6821ebd25bc0ec0f4f4b0a",
+      "generation": {
+        "name": "curious_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-eac68277-a15c-4280-8618-2cc3e021bd67.png",
+        "prompt": "Local edit of supplied curious crawling sprite, fixed 1254 transparent canvas. Tilt ONLY her head toward the OPPOSITE side from original. Original eye line slopes DOWN toward the viewer-right; NEW eye line must slope UP toward viewer-right: the viewer-RIGHT eye is visibly HIGHER than viewer-LEFT eye by about 60 pixels. Her head tilts counterclockwise, not clockwise. Pivot head at neck and keep neck root, shoulders, planted hands, knees and all pixels below y900 fixed. Redraw face/head/hair naturally in new tilt, same face and curious open eyes. Preserve entire lower body unchanged. No resize/recenter, no text, no shadow, no new clothes or character."
+      },
+      "method": {
+        "name": "curious_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-eac68277-a15c-4280-8618-2cc3e021bd67.png",
+        "parent": "curious_1",
+        "parts": [
+          [
+            40,
+            10,
+            1213,
+            1218
+          ]
+        ],
+        "symbol": null,
+        "protect": [
+          [
+            [
+              478,
+              752
+            ],
+            [
+              601,
+              797
+            ],
+            [
+              638,
+              805
+            ],
+            [
+              748,
+              811
+            ],
+            [
+              790,
+              903
+            ],
+            [
+              797,
+              956
+            ],
+            [
+              833,
+              1022
+            ],
+            [
+              856,
+              1110
+            ],
+            [
+              959,
+              1154
+            ],
+            [
+              974,
+              1176
+            ],
+            [
+              953,
+              1200
+            ],
+            [
+              811,
+              1203
+            ],
+            [
+              782,
+              1138
+            ],
+            [
+              756,
+              1138
+            ],
+            [
+              724,
+              1154
+            ],
+            [
+              660,
+              1148
+            ],
+            [
+              622,
+              1120
+            ],
+            [
+              600,
+              1139
+            ],
+            [
+              558,
+              1146
+            ],
+            [
+              565,
+              1186
+            ],
+            [
+              532,
+              1207
+            ],
+            [
+              443,
+              1217
+            ],
+            [
+              385,
+              1207
+            ],
+            [
+              375,
+              1169
+            ],
+            [
+              419,
+              1117
+            ],
+            [
+              443,
+              1026
+            ],
+            [
+              455,
+              1000
+            ],
+            [
+              413,
+              929
+            ],
+            [
+              417,
+              855
+            ]
+          ]
+        ],
+        "align_bottom": null,
+        "raw_offset": [
+          -3,
+          0
+        ],
+        "feather_px": 2,
+        "mask_bbox": [
+          35,
+          5,
+          1219,
+          1219
+        ],
+        "alpha_bbox": [
+          67,
+          19,
+          1214,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        66,
+        19,
+        1214,
+        1219
+      ],
+      "changed_pixels": 791890,
+      "transparent_corners": true
+    },
+    {
+      "file": "curious_blink.png",
+      "alpha_bbox": [
+        66,
+        24,
+        1188,
+        1219
+      ],
+      "sha256": "daaccb4e0f165ebc3eaf63a223a2d2e9f7d6d984afa706f9fa073133f4b4433e",
+      "generation": {
+        "name": "curious_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-2008eae1-f9b4-4200-9a20-ed0731971645.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Only close BOTH eyes into gentle curved dark eyelash lines. Remove open iris/sclera and all old open lash contour. Preserve eyebrows at exact original location, hair, face outline, blush, mouth, body and all other pixels. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "curious_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-2008eae1-f9b4-4200-9a20-ed0731971645.png",
+        "parent": "curious_1",
+        "parts": [
+          [
+            458,
+            500,
+            650,
+            651
+          ],
+          [
+            725,
+            640,
+            907,
+            761
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          453,
+          495,
+          913,
+          767
+        ],
+        "alpha_bbox": [
+          66,
+          24,
+          1188,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        454,
+        495,
+        913,
+        767
+      ],
+      "changed_pixels": 54402,
+      "transparent_corners": true
+    },
+    {
+      "file": "thinking_1.png",
+      "alpha_bbox": [
+        93,
+        24,
+        1161,
+        1219
+      ],
+      "sha256": "8302e6a67373a99ef51ea5a124e947d19a481f7b99e29df2f34e495298181628",
+      "generation": {
+        "name": "thinking_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7f08ce66-b75c-4f72-a0da-be43838e662a.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. sitting cross-legged, one index finger tapping her chin, eyes looking up and to the side, a small question-mark bubble above her head. Crossed stocking legs clearly visible, other hand resting on knee. Input image is ONLY the character-design reference. Redraw a NEW WHOLE BODY in the specified pose; do not preserve seated idle body. Same exact hair/clothes/ornament design and lineart style, no new costume. One single sprite only, 1254x1254 RGBA transparent canvas, centered with at least 40px side clearance; lowest body contact near y1218, all hair/hands inside canvas. No text, no ground or shadow."
+      },
+      "method": {
+        "name": "thinking_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7f08ce66-b75c-4f72-a0da-be43838e662a.png",
+        "source_bbox": [
+          84,
+          10,
+          1192,
+          1250
+        ],
+        "scale": 0.9637096774193549,
+        "offset": [
+          93,
+          24
+        ],
+        "alpha_bbox": [
+          93,
+          24,
+          1161,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "thinking_2.png",
+      "alpha_bbox": [
+        93,
+        24,
+        1161,
+        1219
+      ],
+      "sha256": "6066ca784e6c32213b21542b6427d19bd86caaac6143231cb21db79e8429f404",
+      "generation": {
+        "name": "thinking_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-ba782d69-a614-4b67-baef-fb6519171148.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Only move the raised index finger 9 pixels toward the chin for a thoughtful tap, leave the elbow fixed and redraw any skin revealed. The question bubble gently hops upward 10px, its shape unchanged. Head, eyes, lips, crossed legs and other hand stay fixed. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "thinking_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-ba782d69-a614-4b67-baef-fb6519171148.png",
+        "parent": "thinking_1",
+        "parts": [
+          [
+            725,
+            690,
+            906,
+            952
+          ],
+          [
+            1004,
+            290,
+            1178,
+            487
+          ]
+        ],
+        "symbol": {
+          "rect": [
+            1010,
+            310,
+            1170,
+            476
+          ],
+          "offset": [
+            0,
+            -10
+          ]
+        },
+        "feather_px": 2,
+        "mask_bbox": [
+          720,
+          285,
+          1184,
+          958
+        ],
+        "alpha_bbox": [
+          93,
+          24,
+          1161,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        720,
+        308,
+        1161,
+        958
+      ],
+      "changed_pixels": 68005,
+      "transparent_corners": true
+    },
+    {
+      "file": "thinking_blink.png",
+      "alpha_bbox": [
+        93,
+        24,
+        1161,
+        1219
+      ],
+      "sha256": "cb9af80fae62e81c7507c650ea720b50bdbb180bf02edc8a50cfc3aa70a1511e",
+      "generation": {
+        "name": "thinking_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-3ff0c4e3-944b-4853-bfc8-cfe10eaa0448.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Only close BOTH eyes into relaxed curved dark lash lines. Fully remove each open iris/sclera and old open-eye lashes; keep eyebrows fixed, finger, mouth, head, hair, body, question bubble unchanged. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "thinking_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-3ff0c4e3-944b-4853-bfc8-cfe10eaa0448.png",
+        "parent": "thinking_1",
+        "parts": [
+          [
+            505,
+            554,
+            718,
+            706
+          ],
+          [
+            785,
+            505,
+            951,
+            654
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          500,
+          500,
+          957,
+          712
+        ],
+        "alpha_bbox": [
+          93,
+          24,
+          1161,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        501,
+        500,
+        955,
+        712
+      ],
+      "changed_pixels": 60671,
+      "transparent_corners": true
+    },
+    {
+      "file": "shy_1.png",
+      "alpha_bbox": [
+        170,
+        24,
+        1084,
+        1219
+      ],
+      "sha256": "3393fd3c86f49681ecc117a3705388f6854d2e9827ffa57f6da44f192a2dafd9",
+      "generation": {
+        "name": "shy_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d33a9598-b775-43df-9f6b-9388da688e43.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing with knees together and toes pointed inward, both hands covering her blushing face, peeking through a narrow gap between her fingers with one eye, deep blush on cheeks. Clearly different inward timid silhouette. Input image is ONLY the character-design reference. Redraw a NEW WHOLE BODY in the specified pose; do not preserve seated idle body. Same exact hair/clothes/ornament design and lineart style, no new costume. One single sprite only, 1254x1254 RGBA transparent canvas, centered with at least 40px side clearance; lowest body contact near y1218, all hair/hands inside canvas. No text, no ground or shadow."
+      },
+      "method": {
+        "name": "shy_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d33a9598-b775-43df-9f6b-9388da688e43.png",
+        "source_bbox": [
+          176,
+          8,
+          1119,
+          1241
+        ],
+        "scale": 0.9691808596918086,
+        "offset": [
+          170,
+          24
+        ],
+        "alpha_bbox": [
+          170,
+          24,
+          1084,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "shy_2.png",
+      "alpha_bbox": [
+        170,
+        24,
+        1084,
+        1219
+      ],
+      "sha256": "b1e9f74b3fbcdeadad1755382be7ac62f358a101089573237d7bf28a7434066c",
+      "generation": {
+        "name": "shy_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-66d75cff-bc3c-449c-aadc-1c0cd0896b1c.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Only spread the face-covering glove fingers slightly further apart to peek shyly through them, reveal a little more of the already open eye. Hands remain by cheeks, wrists and elbows fixed. Keep blush, eye gaze, hair, clothes and legs unchanged. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "shy_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-66d75cff-bc3c-449c-aadc-1c0cd0896b1c.png",
+        "parent": "shy_1",
+        "parts": [
+          [
+            570,
+            460,
+            864,
+            694
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          565,
+          455,
+          870,
+          700
+        ],
+        "alpha_bbox": [
+          170,
+          24,
+          1084,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        565,
+        455,
+        870,
+        700
+      ],
+      "changed_pixels": 71571,
+      "transparent_corners": true
+    },
+    {
+      "file": "poked_1.png",
+      "alpha_bbox": [
+        84,
+        24,
+        1170,
+        1219
+      ],
+      "sha256": "a2605cfbbe9c2b66cbe986a0e299ef7aec8832804eb6e6945e1226141af9cd98",
+      "generation": {
+        "name": "poked_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-db959de4-b459-44ca-9329-11372d940da9.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing but tipping sideways steeply off balance as if just poked, one eye squeezed shut, arms flung out for balance, a small exclamation mark. One leg lifted sideways. Cute comic unbalanced diagonal silhouette. Input image is ONLY the character-design reference. Redraw a NEW WHOLE BODY in the specified pose; do not preserve seated idle body. Same exact hair/clothes/ornament design and lineart style, no new costume. One single sprite only, 1254x1254 RGBA transparent canvas, centered with at least 40px side clearance; lowest body contact near y1218, all hair/hands inside canvas. No text, no ground or shadow."
+      },
+      "method": {
+        "name": "poked_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-db959de4-b459-44ca-9329-11372d940da9.png",
+        "source_bbox": [
+          68,
+          2,
+          1189,
+          1236
+        ],
+        "scale": 0.9683954619124797,
+        "offset": [
+          84,
+          24
+        ],
+        "alpha_bbox": [
+          84,
+          24,
+          1170,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "dragged_1.png",
+      "alpha_bbox": [
+        153,
+        24,
+        1100,
+        1219
+      ],
+      "sha256": "eb29644e65d09cdaa331c4391589f9a85e3e1a09192b672616688dca1fde28d6",
+      "generation": {
+        "name": "dragged_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-184868ff-b7eb-46dc-88eb-eb80042ee671.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. NEW WHOLE BODY POSE: dangling UPRIGHT in mid-air as though gently lifted by her back collar. Her shoulders are pulled upward, torso hangs vertically and droops, both little legs dangle mostly DOWN below her body with one knee bending a little. Left arm weakly flails to the SIDE BELOW her cheek, right arm droops downward. Flustered surprised open-eyed face, one sweat drop. This must NOT resemble a diagonal jumping/falling pose: keep head upright, BOTH feet BELOW her hips, both hands BELOW shoulder level, visibly limp suspended posture. NO visible hand, hook, string or support. Input is character reference only, use same costume and hair. Single sprite centered on transparent 1254 canvas, full hair and feet within 40px safety sides, no text/shadow/ground."
+      },
+      "method": {
+        "name": "dragged_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-184868ff-b7eb-46dc-88eb-eb80042ee671.png",
+        "source_bbox": [
+          152,
+          7,
+          1105,
+          1209
+        ],
+        "scale": 0.9941763727121464,
+        "offset": [
+          153,
+          24
+        ],
+        "alpha_bbox": [
+          153,
+          24,
+          1100,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "dragged_2.png",
+      "alpha_bbox": [
+        153,
+        24,
+        1100,
+        1219
+      ],
+      "sha256": "4608c87f5457ac6ae44dbb597dae88ca26544ff2863c2c7df544790b42e0c3e2",
+      "generation": {
+        "name": "dragged_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-20f35591-b85f-4a03-8242-8715179f1d27.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Animate dangling limbs only: lower viewer-left arm to her side, lift viewer-right forearm outward a little; kick the viewer-left stocking leg gently outward while viewer-right leg and its lowest toe stay exactly fixed at original pixel position. Keep face, head, torso and upper hair fixed; repaint only limb areas and newly revealed hair. No hook or hand. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "dragged_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-20f35591-b85f-4a03-8242-8715179f1d27.png",
+        "parent": "dragged_1",
+        "parts": [
+          [
+            [
+              325,
+              670
+            ],
+            [
+              542,
+              665
+            ],
+            [
+              563,
+              734
+            ],
+            [
+              528,
+              933
+            ],
+            [
+              365,
+              933
+            ],
+            [
+              325,
+              795
+            ]
+          ],
+          [
+            [
+              630,
+              706
+            ],
+            [
+              765,
+              707
+            ],
+            [
+              955,
+              752
+            ],
+            [
+              964,
+              911
+            ],
+            [
+              762,
+              1036
+            ],
+            [
+              625,
+              1026
+            ]
+          ],
+          [
+            [
+              539,
+              881
+            ],
+            [
+              649,
+              893
+            ],
+            [
+              649,
+              1207
+            ],
+            [
+              502,
+              1207
+            ],
+            [
+              361,
+              1126
+            ],
+            [
+              361,
+              995
+            ]
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          320,
+          660,
+          970,
+          1213
+        ],
+        "alpha_bbox": [
+          153,
+          24,
+          1100,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        320,
+        660,
+        968,
+        1188
+      ],
+      "changed_pixels": 191271,
+      "transparent_corners": true
+    },
+    {
+      "file": "dragged_3.png",
+      "alpha_bbox": [
+        153,
+        24,
+        1100,
+        1219
+      ],
+      "sha256": "ee4d7e4210f4c92b95a47dc8cb0254fddd5e176310b60956b7ec90f7ff551e7f",
+      "generation": {
+        "name": "dragged_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7228467f-ca54-4fa2-a73a-fc57ff21b638.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Animate suspended flailing only: lift viewer-left hand slightly and kick viewer-right lower leg modestly outward to the right, while viewer-left leg extends downward reaching the exact previous lowest-foot baseline y1218. Keep head, shoulders, torso, face, all upper hair and ornament fixed. Keep every toe inside x40..1213. No support or shadow. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "dragged_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7228467f-ca54-4fa2-a73a-fc57ff21b638.png",
+        "parent": "dragged_1",
+        "parts": [
+          [
+            300,
+            619,
+            549,
+            838
+          ],
+          [
+            527,
+            855,
+            958,
+            1218
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": {
+          "rect": [
+            527,
+            883,
+            958,
+            1254
+          ]
+        },
+        "feather_px": 2,
+        "mask_bbox": [
+          295,
+          614,
+          964,
+          1219
+        ],
+        "alpha_bbox": [
+          153,
+          24,
+          1100,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        295,
+        614,
+        964,
+        1219
+      ],
+      "changed_pixels": 164061,
+      "transparent_corners": true
+    },
+    {
+      "file": "dragged_4.png",
+      "alpha_bbox": [
+        153,
+        24,
+        1100,
+        1219
+      ],
+      "sha256": "ecc507b6184ec8baa0698e7070463d35cc5d7004fb73ecf1f3afcd12f479a9dd",
+      "generation": {
+        "name": "dragged_4",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d9b7f398-c548-4ee1-ba81-4bb7452fb98c.png",
+        "prompt": "Edit target is the supplied finalized sprite on a fixed 1254x1254 transparent canvas. Same identity, exact existing lineart, palette, costume, scale and placement. Fourth suspended flail: viewer-left forearm bends inward toward waist and viewer-right hand reaches to the side below shoulder; viewer-left stocking leg bends inward at knee (different from second frame), viewer-right leg and lowest toe remain pixel fixed. Head, torso, face and upper hair unchanged. Keep ALL nonmoving regions pixel-identical; no translation, resizing, recentering, costume redesign, extra markings, text or background. Deliver full-canvas transparent PNG, not a crop. Motion is subtle but clearly different."
+      },
+      "method": {
+        "name": "dragged_4",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d9b7f398-c548-4ee1-ba81-4bb7452fb98c.png",
+        "parent": "dragged_1",
+        "parts": [
+          [
+            323,
+            653,
+            639,
+            842
+          ],
+          [
+            630,
+            695,
+            1025,
+            1033
+          ],
+          [
+            491,
+            883,
+            682,
+            1190
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          318,
+          648,
+          1031,
+          1196
+        ],
+        "alpha_bbox": [
+          153,
+          24,
+          1100,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        318,
+        648,
+        1031,
+        1196
+      ],
+      "changed_pixels": 221990,
+      "transparent_corners": true
+    },
+    {
+      "file": "landing_1.png",
+      "alpha_bbox": [
+        40,
+        33,
+        1214,
+        1219
+      ],
+      "sha256": "cd3dc398ad555eb4a8e8cc0b17ae0c58a1f18e6c09ce59acf0ffbea981e6d972",
+      "generation": {
+        "name": "landing_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-591b1c69-b62c-406d-b21a-b1dfe6044a58.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. landing in a low crouch on both feet, knees deeply bent outward, arms spread wide for balance, a tiny separate cartoon dust puff at feet (not a shadow or ground), relieved open-eyed expression. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours.",
+        "stocking_correction": {
+          "name": "landing_1_stockings",
+          "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-48ae1836-ffb2-47a4-b5b4-83bfb9b3bf24.png",
+          "prompt": "Local outfit consistency correction of first supplied sprite. Second image is the authoritative character design reference. Modify ONLY the two FOOT/ANKLE regions: remove the invented shoes, laces, shoe soles, heels and metallic shoe cuffs, replacing them with the original character's simple deep-indigo thigh-high stocking-covered rounded feet with WHITE FOUR-POINT STAR motifs, exactly as second reference. No separate footwear at all, no bare feet. Keep feet at the original positions and baseline y1218, same foot sizes, keep ankle-to-leg anatomy clean. Absolutely preserve every other pixel: head, hair, face, arms, posture, upper costume, props, symbols. Transparent background, exact1254canvas, no text, no shadow, no extra elements.",
+          "parent": "landing_1",
+          "parts": [
+            [
+              477,
+              1080,
+              623,
+              1218
+            ],
+            [
+              682,
+              1050,
+              827,
+              1218
+            ]
+          ]
+        }
+      },
+      "method": {
+        "name": "landing_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-591b1c69-b62c-406d-b21a-b1dfe6044a58.png",
+        "source_bbox": [
+          43,
+          27,
+          1228,
+          1224
+        ],
+        "scale": 0.9907172995780591,
+        "offset": [
+          40,
+          33
+        ],
+        "alpha_bbox": [
+          40,
+          33,
+          1214,
+          1219
+        ]
+      },
+      "transparent_corners": true,
+      "stocking_correction_fixed_region_changed_pixels": 0
+    },
+    {
+      "file": "landing_blink.png",
+      "alpha_bbox": [
+        40,
+        33,
+        1214,
+        1219
+      ],
+      "sha256": "27560ca042789572dc21b5d3152136d7a1522abee1925af9a8326b3608dda3f1",
+      "generation": {
+        "name": "landing_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d56d0a7d-7ce4-4bf4-8cc1-95157d34a864.png",
+        "prompt": "Edit target is supplied finalized 1254x1254 transparent sprite. Close both open eyes into gentle relieved curved eyelash lines only; remove entire old iris/sclera and old open lashes, preserve eyebrow positions exactly. Face outline, mouth, hair, hands, crouching feet and dust puffs unchanged. All other regions exactly unchanged, same costume and palette, no resize/recenter, no text, no background. Full canvas output."
+      },
+      "method": {
+        "name": "landing_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d56d0a7d-7ce4-4bf4-8cc1-95157d34a864.png",
+        "parent": "landing_1",
+        "parts": [
+          [
+            552,
+            619,
+            771,
+            768
+          ],
+          [
+            790,
+            633,
+            977,
+            783
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          547,
+          614,
+          983,
+          789
+        ],
+        "alpha_bbox": [
+          40,
+          33,
+          1214,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        547,
+        614,
+        983,
+        789
+      ],
+      "changed_pixels": 64753,
+      "transparent_corners": true
+    },
+    {
+      "file": "hug_1.png",
+      "alpha_bbox": [
+        106,
+        24,
+        1148,
+        1219
+      ],
+      "sha256": "64466d9ccce3551eb47ef8b4a364eb24cd869ff1a5a54e9481f1d559fddd1438",
+      "generation": {
+        "name": "hug_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-28efde92-286d-4006-8d7e-a30146c96aea.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing and leaning toward the viewer with both arms open wide for a hug, big happy open-eyed smile, two small hearts. Feet together, welcoming front lean. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "hug_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-28efde92-286d-4006-8d7e-a30146c96aea.png",
+        "source_bbox": [
+          85,
+          2,
+          1172,
+          1249
+        ],
+        "scale": 0.958299919807538,
+        "offset": [
+          106,
+          24
+        ],
+        "alpha_bbox": [
+          106,
+          24,
+          1148,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "hug_2.png",
+      "alpha_bbox": [
+        105,
+        24,
+        1179,
+        1219
+      ],
+      "sha256": "04f989598bac225eb7a6f2910cec6d4cd1591f003072696d0667e500ee26d3c7",
+      "generation": {
+        "name": "hug_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7585c019-2d1d-40d0-8821-b8710475947a.png",
+        "prompt": "Edit target is supplied finalized 1254x1254 transparent sprite. Only open both arms a little farther outward, palms still facing viewer, and lean the upper torso forward slightly at waist. Hands stay within x40..1213. Keep head, face, entire upper hair, hearts and legs/feet fixed. Reconstruct hair behind previous hands. All other regions exactly unchanged, same costume and palette, no resize/recenter, no text, no background. Full canvas output."
+      },
+      "method": {
+        "name": "hug_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7585c019-2d1d-40d0-8821-b8710475947a.png",
+        "parent": "hug_1",
+        "parts": [
+          [
+            76,
+            563,
+            571,
+            880
+          ],
+          [
+            739,
+            570,
+            1204,
+            890
+          ],
+          [
+            471,
+            651,
+            793,
+            933
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          71,
+          558,
+          1210,
+          939
+        ],
+        "alpha_bbox": [
+          105,
+          24,
+          1179,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        103,
+        558,
+        1182,
+        939
+      ],
+      "changed_pixels": 329630,
+      "transparent_corners": true
+    },
+    {
+      "file": "hug_blink.png",
+      "alpha_bbox": [
+        106,
+        24,
+        1148,
+        1219
+      ],
+      "sha256": "c479bb533d47315d5988056af5e7790279ab01cafffbf997ec7ee63adf63e5b2",
+      "generation": {
+        "name": "hug_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-545b8773-9337-4d7e-b021-4d942168e45d.png",
+        "prompt": "Edit target is supplied finalized 1254x1254 transparent sprite. Close both eyes into happy curved dark eyelash lines only. Remove complete open iris/sclera and old open-eye lashes; keep eyebrows, mouth and all hair, fingers, arms and costume exactly fixed. All other regions exactly unchanged, same costume and palette, no resize/recenter, no text, no background. Full canvas output."
+      },
+      "method": {
+        "name": "hug_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-545b8773-9337-4d7e-b021-4d942168e45d.png",
+        "parent": "hug_1",
+        "parts": [
+          [
+            431,
+            414,
+            654,
+            580
+          ],
+          [
+            702,
+            474,
+            902,
+            625
+          ]
+        ],
+        "symbol": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          426,
+          409,
+          908,
+          631
+        ],
+        "alpha_bbox": [
+          106,
+          24,
+          1148,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        426,
+        409,
+        908,
+        631
+      ],
+      "changed_pixels": 70876,
+      "transparent_corners": true
+    },
+    {
+      "file": "heart_1.png",
+      "alpha_bbox": [
+        130,
+        24,
+        1123,
+        1219
+      ],
+      "sha256": "eb55ae66a921dfb4c99296d3a43006c191a4d5d682b20e678523607fcde0891c",
+      "generation": {
+        "name": "heart_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d757511a-0568-44b2-9fe1-5c97aaef3789.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing, both hands forming a heart shape in front of her chest, winking with one eye, cheerful smile, a small heart floating. Feet in a turned three-quarter stance, tilted torso. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours.",
+        "stocking_correction": {
+          "name": "heart_1_stockings",
+          "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-fd160736-0e98-4a49-b193-01004da7f524.png",
+          "prompt": "Local outfit consistency correction of first supplied sprite. Second image is the authoritative character design reference. Modify ONLY the two FOOT/ANKLE regions: remove the invented shoes, laces, shoe soles, heels and metallic shoe cuffs, replacing them with the original character's simple deep-indigo thigh-high stocking-covered rounded feet with WHITE FOUR-POINT STAR motifs, exactly as second reference. No separate footwear at all, no bare feet. Keep feet at the original positions and baseline y1218, same foot sizes, keep ankle-to-leg anatomy clean. Absolutely preserve every other pixel: head, hair, face, arms, posture, upper costume, props, symbols. Transparent background, exact1254canvas, no text, no shadow, no extra elements.",
+          "parent": "heart_1",
+          "parts": [
+            [
+              581,
+              1030,
+              804,
+              1218
+            ]
+          ]
+        }
+      },
+      "method": {
+        "name": "heart_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d757511a-0568-44b2-9fe1-5c97aaef3789.png",
+        "source_bbox": [
+          138,
+          12,
+          1163,
+          1246
+        ],
+        "scale": 0.9683954619124797,
+        "offset": [
+          130,
+          24
+        ],
+        "alpha_bbox": [
+          130,
+          24,
+          1123,
+          1219
+        ]
+      },
+      "transparent_corners": true,
+      "stocking_correction_fixed_region_changed_pixels": 0
+    },
+    {
+      "file": "greet_morning_1.png",
+      "alpha_bbox": [
+        113,
+        24,
+        1140,
+        1219
+      ],
+      "sha256": "b396f9a2791fbefcb8cbfbd6f35a642df01688f9cc286f5745828a7e86e7cb28",
+      "generation": {
+        "name": "greet_morning_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d0f4a94f-20b6-4e3b-bb0c-c92ac88d9681.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing, rubbing one sleepy eye with one hand and waving with the other, a small cartoon sun beside her. One eye open looking at viewer; wave hand tilted inward. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "greet_morning_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d0f4a94f-20b6-4e3b-bb0c-c92ac88d9681.png",
+        "source_bbox": [
+          99,
+          6,
+          1164,
+          1245
+        ],
+        "scale": 0.9644874899112187,
+        "offset": [
+          113,
+          24
+        ],
+        "alpha_bbox": [
+          113,
+          24,
+          1140,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "greet_morning_2.png",
+      "alpha_bbox": [
+        113,
+        24,
+        1140,
+        1219
+      ],
+      "sha256": "51425bad4dc6b4a6f5956bd380c26fb98e6777ab82371a7ffa98d6f699b9418e",
+      "generation": {
+        "name": "greet_morning_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d8053043-7f16-477e-863f-2c24eeb72e4c.png",
+        "prompt": "Local edit of supplied FINAL sprite, 1254 transparent canvas. Only swing the greeting/waving glove wrist outward to viewer-right by about 30 pixels, rotating the fingers to opposite wave angle. Keep its elbow attachment unchanged and reconstruct hair revealed by old hand. Rubbing hand, closed rubbed eye, open other eye, sun, body and feet remain fixed. Same exact lineart, costume, palette and original placement. No changes to nonmoving regions, no resizing or recentering, no text or background."
+      },
+      "method": {
+        "name": "greet_morning_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-d8053043-7f16-477e-863f-2c24eeb72e4c.png",
+        "parent": "greet_morning_1",
+        "parts": [
+          [
+            786,
+            623,
+            1138,
+            862
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          781,
+          618,
+          1144,
+          868
+        ],
+        "alpha_bbox": [
+          113,
+          24,
+          1140,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        781,
+        618,
+        1143,
+        868
+      ],
+      "changed_pixels": 67360,
+      "transparent_corners": true
+    },
+    {
+      "file": "greet_morning_blink.png",
+      "alpha_bbox": [
+        113,
+        24,
+        1140,
+        1219
+      ],
+      "sha256": "f97efd254ebb2ec75ca385b8e551eaf259f44d792b18373f3fc4a19d8cf577f7",
+      "generation": {
+        "name": "greet_morning_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-70e47cf3-a5d4-43fa-a664-68853bb9b321.png",
+        "prompt": "Local edit of supplied FINAL sprite, 1254 transparent canvas. Close ONLY the currently open viewer-right eye into a gentle curved lash line; remove all open-eye iris, sclera and old lashes. The rubbed viewer-left eye is already closed and must be completely unchanged, as must rubbing glove, mouth, eyebrows, other hand, sun and body. Same exact lineart, costume, palette and original placement. No changes to nonmoving regions, no resizing or recentering, no text or background."
+      },
+      "method": {
+        "name": "greet_morning_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-70e47cf3-a5d4-43fa-a664-68853bb9b321.png",
+        "parent": "greet_morning_1",
+        "parts": [
+          [
+            722,
+            529,
+            893,
+            657
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          717,
+          524,
+          899,
+          663
+        ],
+        "alpha_bbox": [
+          113,
+          24,
+          1140,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        718,
+        524,
+        898,
+        663
+      ],
+      "changed_pixels": 23023,
+      "transparent_corners": true
+    },
+    {
+      "file": "greet_night_1.png",
+      "alpha_bbox": [
+        103,
+        24,
+        1150,
+        1219
+      ],
+      "sha256": "69a33b9d8322756363eeb08b5fc2a4b55cc0b821fa2d7b4e27ee1dc93c02a543",
+      "generation": {
+        "name": "greet_night_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-b937a14d-5124-4cc0-ae4c-ce09df39716b.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing, hugging a fluffy lavender pillow with one arm, waving goodnight drowsily with the other hand, eyes half closed, a small crescent moon beside her. Barely awake, bent relaxed knee, fingers waved inward. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "greet_night_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-b937a14d-5124-4cc0-ae4c-ce09df39716b.png",
+        "source_bbox": [
+          93,
+          9,
+          1178,
+          1247
+        ],
+        "scale": 0.9652665589660743,
+        "offset": [
+          103,
+          24
+        ],
+        "alpha_bbox": [
+          103,
+          24,
+          1150,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "greet_night_2.png",
+      "alpha_bbox": [
+        103,
+        24,
+        1150,
+        1219
+      ],
+      "sha256": "bc793160612bdbdd94c818f156a8509e95afe52e6ccd795d49141183a9617991",
+      "generation": {
+        "name": "greet_night_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-c42491d5-355d-4203-8f8b-316c789f7a0c.png",
+        "prompt": "Local edit of supplied FINAL sprite, 1254 transparent canvas. Only tilt the waving glove outward to viewer-right by about 25 pixels for a gentle sleepy goodnight wave; keep elbow fixed. Restore hair behind old glove, preserve hugged pillow, eyes, moon, body and feet exactly. Same exact lineart, costume, palette and original placement. No changes to nonmoving regions, no resizing or recentering, no text or background."
+      },
+      "method": {
+        "name": "greet_night_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-c42491d5-355d-4203-8f8b-316c789f7a0c.png",
+        "parent": "greet_night_1",
+        "parts": [
+          [
+            833,
+            542,
+            1069,
+            798
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          828,
+          537,
+          1075,
+          804
+        ],
+        "alpha_bbox": [
+          103,
+          24,
+          1150,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        828,
+        537,
+        1075,
+        804
+      ],
+      "changed_pixels": 56179,
+      "transparent_corners": true
+    },
+    {
+      "file": "surprised_1.png",
+      "alpha_bbox": [
+        70,
+        24,
+        1183,
+        1219
+      ],
+      "sha256": "662b9bd4cc917a41a6431d718d77b28eda6623844495c87380c8ef431b63044f",
+      "generation": {
+        "name": "surprised_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-023f5fe6-9dcd-448a-a802-a74c966e76cf.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. jumping slightly in surprise, both hands raised apart, eyes wide open, hair bouncing up, a small exclamation mark above her head. Legs bent up asymmetrically, clearly jumping silhouette. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "surprised_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-023f5fe6-9dcd-448a-a802-a74c966e76cf.png",
+        "source_bbox": [
+          55,
+          12,
+          1201,
+          1242
+        ],
+        "scale": 0.9715447154471545,
+        "offset": [
+          70,
+          24
+        ],
+        "alpha_bbox": [
+          70,
+          24,
+          1183,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "thumbs_up_1.png",
+      "alpha_bbox": [
+        101,
+        24,
+        1152,
+        1219
+      ],
+      "sha256": "c85c0fca4892227bce3b714b69a2ba57eb6baf1c866e35daffdb60e468c1a0c4",
+      "generation": {
+        "name": "thumbs_up_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-623d662b-7aab-4e49-a55e-e1a5d2fe09c3.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing confidently in three-quarter stance, one hand giving a big thumbs up toward viewer, other hand on hip, bright grin, eyes open. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours.",
+        "stocking_correction": {
+          "name": "thumbs_up_1_stockings",
+          "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7ffadee7-b285-4f22-a5ab-422fbb19297d.png",
+          "prompt": "Local outfit consistency correction of first supplied sprite. Second image is the authoritative character design reference. Modify ONLY the two FOOT/ANKLE regions: remove the invented shoes, laces, shoe soles, heels and metallic shoe cuffs, replacing them with the original character's simple deep-indigo thigh-high stocking-covered rounded feet with WHITE FOUR-POINT STAR motifs, exactly as second reference. No separate footwear at all, no bare feet. Keep feet at the original positions and baseline y1218, same foot sizes, keep ankle-to-leg anatomy clean. Absolutely preserve every other pixel: head, hair, face, arms, posture, upper costume, props, symbols. Transparent background, exact1254canvas, no text, no shadow, no extra elements.",
+          "parent": "thumbs_up_1",
+          "parts": [
+            [
+              493,
+              1080,
+              641,
+              1218
+            ],
+            [
+              780,
+              1080,
+              925,
+              1218
+            ]
+          ]
+        }
+      },
+      "method": {
+        "name": "thumbs_up_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-623d662b-7aab-4e49-a55e-e1a5d2fe09c3.png",
+        "source_bbox": [
+          87,
+          3,
+          1185,
+          1252
+        ],
+        "scale": 0.9567654123298639,
+        "offset": [
+          101,
+          24
+        ],
+        "alpha_bbox": [
+          101,
+          24,
+          1152,
+          1219
+        ]
+      },
+      "transparent_corners": true,
+      "stocking_correction_fixed_region_changed_pixels": 0
+    },
+    {
+      "file": "thumbs_up_blink.png",
+      "alpha_bbox": [
+        101,
+        24,
+        1152,
+        1219
+      ],
+      "sha256": "6cbae0e9ff3a1b3ed755b3e0e2181879b9467edfc02fecad0751865f1a5569e2",
+      "generation": {
+        "name": "thumbs_up_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-10376522-b0f2-46e7-8104-20adc9717b70.png",
+        "prompt": "Local edit of supplied FINAL sprite, 1254 transparent canvas. Only close both eyes into bright happy curved lash lines. Remove all iris/sclera and entire old open lash contours; keep eyebrow coordinates, grin, thumbs-up glove, other arm, torso, feet and hair exactly unchanged. Same exact lineart, costume, palette and original placement. No changes to nonmoving regions, no resizing or recentering, no text or background."
+      },
+      "method": {
+        "name": "thumbs_up_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-10376522-b0f2-46e7-8104-20adc9717b70.png",
+        "parent": "thumbs_up_1",
+        "parts": [
+          [
+            534,
+            442,
+            727,
+            585
+          ],
+          [
+            763,
+            535,
+            929,
+            674
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          529,
+          437,
+          935,
+          680
+        ],
+        "alpha_bbox": [
+          101,
+          24,
+          1152,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        529,
+        437,
+        935,
+        680
+      ],
+      "changed_pixels": 53864,
+      "transparent_corners": true
+    },
+    {
+      "file": "cheer_1.png",
+      "alpha_bbox": [
+        72,
+        24,
+        1182,
+        1219
+      ],
+      "sha256": "307f6513dba15c42d54d39ff1ad74e0516d6538323ff00253b1b23b8bb26fe33",
+      "generation": {
+        "name": "cheer_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-954aeb1a-2ec9-431b-a44f-6cb885cfa2ca.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing in a wide energetic stance, one fist pumped high in air, other fist at her side, determined energetic open-eyed expression. Strong asymmetrical cheering silhouette. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "cheer_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-954aeb1a-2ec9-431b-a44f-6cb885cfa2ca.png",
+        "source_bbox": [
+          79,
+          19,
+          1208,
+          1235
+        ],
+        "scale": 0.9827302631578947,
+        "offset": [
+          72,
+          24
+        ],
+        "alpha_bbox": [
+          72,
+          24,
+          1182,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "cheer_2.png",
+      "alpha_bbox": [
+        72,
+        24,
+        1182,
+        1219
+      ],
+      "sha256": "22de93b5bbec44893c911d670bab412d93de58042965b9241c6a078bdde54f7c",
+      "generation": {
+        "name": "cheer_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-47b9316e-89af-4da5-bf42-3c45d2f1395d.png",
+        "prompt": "Local edit of supplied FINAL sprite, 1254 transparent canvas. Only lower the viewer-left cheering fist from its high position down to shoulder height, hand stays clenched; elbow bends beside body. Repaint hair revealed behind old raised arm. Keep face, head outline, hair ornament, other fist, torso and feet exactly fixed. Same exact lineart, costume, palette and original placement. No changes to nonmoving regions, no resizing or recentering, no text or background."
+      },
+      "method": {
+        "name": "cheer_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-47b9316e-89af-4da5-bf42-3c45d2f1395d.png",
+        "parent": "cheer_1",
+        "parts": [
+          [
+            [
+              270,
+              290
+            ],
+            [
+              460,
+              290
+            ],
+            [
+              508,
+              560
+            ],
+            [
+              528,
+              685
+            ],
+            [
+              572,
+              763
+            ],
+            [
+              553,
+              951
+            ],
+            [
+              329,
+              950
+            ],
+            [
+              271,
+              778
+            ]
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          265,
+          285,
+          578,
+          957
+        ],
+        "alpha_bbox": [
+          72,
+          24,
+          1182,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        265,
+        285,
+        578,
+        956
+      ],
+      "changed_pixels": 159677,
+      "transparent_corners": true
+    },
+    {
+      "file": "cheer_blink.png",
+      "alpha_bbox": [
+        72,
+        24,
+        1182,
+        1219
+      ],
+      "sha256": "8fbb51f445dfca809c105ce8436210c18025666df2fd17fd8edfaca3c738255c",
+      "generation": {
+        "name": "cheer_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-8630d00e-7324-4fbb-bf8e-5317a4665479.png",
+        "prompt": "Local edit of supplied FINAL sprite, 1254 transparent canvas. Only close both open eyes into determined cheerful curved eyelash lines. Erase open eyes and old open lash contours fully, keep eyebrows in identical original positions, mouth and all fist gestures, hair and body unchanged. Same exact lineart, costume, palette and original placement. No changes to nonmoving regions, no resizing or recentering, no text or background."
+      },
+      "method": {
+        "name": "cheer_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-8630d00e-7324-4fbb-bf8e-5317a4665479.png",
+        "parent": "cheer_1",
+        "parts": [
+          [
+            495,
+            460,
+            699,
+            604
+          ],
+          [
+            752,
+            529,
+            933,
+            669
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          490,
+          455,
+          939,
+          675
+        ],
+        "alpha_bbox": [
+          72,
+          24,
+          1182,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        491,
+        455,
+        939,
+        675
+      ],
+      "changed_pixels": 58565,
+      "transparent_corners": true
+    },
+    {
+      "file": "clap_1.png",
+      "alpha_bbox": [
+        147,
+        24,
+        1107,
+        1219
+      ],
+      "sha256": "5116adb9f4454487ac5de969df8b98a68466f355cdbec31b6dd161c36c8007c8",
+      "generation": {
+        "name": "clap_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-00d32192-78cb-44f5-ae57-b3e902c6c25c.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing straight with feet softly apart, hands held apart ready to clap in front of chest, joyful open eyes and closed-mouth smile, two small sparkles. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "clap_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-00d32192-78cb-44f5-ae57-b3e902c6c25c.png",
+        "source_bbox": [
+          144,
+          14,
+          1126,
+          1236
+        ],
+        "scale": 0.9779050736497545,
+        "offset": [
+          147,
+          24
+        ],
+        "alpha_bbox": [
+          147,
+          24,
+          1107,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "clap_2.png",
+      "alpha_bbox": [
+        147,
+        24,
+        1107,
+        1219
+      ],
+      "sha256": "494686c6c36087faeb4b97b9d30e65de6c6fa20ed50c006da77a906b3a9974f6",
+      "generation": {
+        "name": "clap_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-88e6e70f-1850-4f69-98e3-9f1c4c80ab9b.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Only bring both hands together in front of chest for the contact beat of a clap; palms touch each other, elbows remain anchored. Recreate whatever original costume is uncovered by moved hands. Keep face, hair, smile, sparkles and legs fixed. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "clap_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-88e6e70f-1850-4f69-98e3-9f1c4c80ab9b.png",
+        "parent": "clap_1",
+        "parts": [
+          [
+            533,
+            665,
+            814,
+            843
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          528,
+          660,
+          820,
+          849
+        ],
+        "alpha_bbox": [
+          147,
+          24,
+          1107,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        528,
+        661,
+        820,
+        849
+      ],
+      "changed_pixels": 52886,
+      "transparent_corners": true
+    },
+    {
+      "file": "clap_3.png",
+      "alpha_bbox": [
+        147,
+        24,
+        1107,
+        1219
+      ],
+      "sha256": "4fe85237489804b5d83bbbceae40a4b902554578cf84490089129412ba6897e4",
+      "generation": {
+        "name": "clap_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-3c605f67-76e2-484e-bd65-df83c886dcda.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Third clapping beat: release both palms slightly farther apart than original first frame (about 18px each) and rotate wrists outward a little, palms facing inward ready to clap again. Different from first frame, elbows anchored. Keep head, eyes, smile, hair, sparkles and lower body exactly fixed. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "clap_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-3c605f67-76e2-484e-bd65-df83c886dcda.png",
+        "parent": "clap_1",
+        "parts": [
+          [
+            504,
+            659,
+            847,
+            854
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          499,
+          654,
+          853,
+          860
+        ],
+        "alpha_bbox": [
+          147,
+          24,
+          1107,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        499,
+        654,
+        853,
+        860
+      ],
+      "changed_pixels": 70793,
+      "transparent_corners": true
+    },
+    {
+      "file": "clap_blink.png",
+      "alpha_bbox": [
+        147,
+        24,
+        1107,
+        1219
+      ],
+      "sha256": "839cfb5218d58f05ad0e1b773fc9387429a652cbec57a6da5ef1a9aee85d7d90",
+      "generation": {
+        "name": "clap_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-52d77dfc-f291-4437-ae19-a5bb783a513a.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Only close both open eyes into joyful curved dark eyelash lines. Fully erase old open iris/sclera and old lash contours. Eyebrows, closed-mouth smile, palms, sparkles, hair and lower body stay exactly fixed. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "clap_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-52d77dfc-f291-4437-ae19-a5bb783a513a.png",
+        "parent": "clap_1",
+        "parts": [
+          [
+            471,
+            502,
+            657,
+            624
+          ],
+          [
+            716,
+            513,
+            884,
+            649
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          466,
+          497,
+          890,
+          655
+        ],
+        "alpha_bbox": [
+          147,
+          24,
+          1107,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        466,
+        497,
+        890,
+        655
+      ],
+      "changed_pixels": 49123,
+      "transparent_corners": true
+    },
+    {
+      "file": "grievance_1.png",
+      "alpha_bbox": [
+        75,
+        24,
+        1179,
+        1219
+      ],
+      "sha256": "5452747e62e6916e6eca65564e6325386885d3abe756a6ccabe59b8c05c14bc9",
+      "generation": {
+        "name": "grievance_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-33028540-8f07-4e57-8608-0e2781929b0e.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. kneeling in seiza with ankles tucked beneath, teary glistening eyes, trembling wavy mouth, fiddling fingers together in front, shoulders drawn inward. One visible small tear on cheek. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "grievance_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-33028540-8f07-4e57-8608-0e2781929b0e.png",
+        "source_bbox": [
+          64,
+          8,
+          1201,
+          1239
+        ],
+        "scale": 0.9707554833468724,
+        "offset": [
+          75,
+          24
+        ],
+        "alpha_bbox": [
+          75,
+          24,
+          1179,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "grievance_2.png",
+      "alpha_bbox": [
+        75,
+        24,
+        1179,
+        1219
+      ],
+      "sha256": "9ef69a5715f5b4eaa2a93422e82f0da20018b72a4b6369ff3073ec72b31c8c5d",
+      "generation": {
+        "name": "grievance_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-b8efa7b1-19a0-475a-95e7-f433c620466e.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Only let the single visible tear on viewer-right cheek slide 12 pixels downward. Redraw the blush/skin at previous tear location cleanly. Do NOT change the wet eye or eyelashes, mouth, head, hands, torso, knees or other tear glints. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "grievance_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-b8efa7b1-19a0-475a-95e7-f433c620466e.png",
+        "parent": "grievance_1",
+        "parts": [
+          [
+            773,
+            731,
+            831,
+            821
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          768,
+          726,
+          837,
+          827
+        ],
+        "alpha_bbox": [
+          75,
+          24,
+          1179,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        768,
+        727,
+        837,
+        827
+      ],
+      "changed_pixels": 6077,
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_read_1.png",
+      "alpha_bbox": [
+        79,
+        24,
+        1174,
+        1219
+      ],
+      "sha256": "6ba7f952d65563fff3f693b166a999fc0f17c3e00ceb8c3073ca811a92491a48",
+      "generation": {
+        "name": "focus_read_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-90d4ee56-32eb-4ece-886b-b2aba7bf39aa.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. sitting on a round lavender floor cushion at a tiny low wooden desk, reading an open book on desk, calm gentle focused open-eyed expression, a small steaming cup on desk. Feet tucked beneath, tabletop clearly visible, no ground. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "focus_read_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-90d4ee56-32eb-4ece-886b-b2aba7bf39aa.png",
+        "source_bbox": [
+          75,
+          11,
+          1198,
+          1237
+        ],
+        "scale": 0.9747145187601958,
+        "offset": [
+          79,
+          24
+        ],
+        "alpha_bbox": [
+          79,
+          24,
+          1174,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_read_2.png",
+      "alpha_bbox": [
+        79,
+        24,
+        1174,
+        1219
+      ],
+      "sha256": "d5a44bde1348fde2fa7f5d19abcf5b633d05a7d97794ae175da1c19de6d4c2da",
+      "generation": {
+        "name": "focus_read_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-85e4275d-aca0-4cb6-aaa3-f73d0a3b0935.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed 1254 transparent canvas. Only animate one page turning in the open book and the reading hand lifting that page. Raise a single blank page gently in an arc, no letters anywhere. Keep book cover edges and desk outline at same positions; preserve cup, other hand under chin, head, eyes, cushion and knees exactly. Preserve original character identity, outfit and palette. No translation or recentering of canvas. No words, no ground/background or shadow. Output full original canvas."
+      },
+      "method": {
+        "name": "focus_read_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-85e4275d-aca0-4cb6-aaa3-f73d0a3b0935.png",
+        "parent": "focus_read_1",
+        "parts": [
+          [
+            528,
+            791,
+            1014,
+            949
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          523,
+          786,
+          1020,
+          955
+        ],
+        "alpha_bbox": [
+          79,
+          24,
+          1174,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        523,
+        786,
+        1020,
+        954
+      ],
+      "changed_pixels": 81274,
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_read_3.png",
+      "alpha_bbox": [
+        79,
+        24,
+        1174,
+        1219
+      ],
+      "sha256": "fb0da61576f4e2883663dad442cdd2712010899637f16782e178a6942ce433cc",
+      "generation": {
+        "name": "focus_read_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-499754b7-0f6b-4256-8bfd-18ea7575563d.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed 1254 transparent canvas. Quiet reading third keyframe: shift pupils slightly downward toward book and gently settle the reading fingers to a different point on the page. Eyes remain open, no blink. Keep lashes, eyebrows, head, face, book cover, desk, chin-resting hand, cup and cushion fixed. Preserve original character identity, outfit and palette. No translation or recentering of canvas. No words, no ground/background or shadow. Output full original canvas."
+      },
+      "method": {
+        "name": "focus_read_3",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-499754b7-0f6b-4256-8bfd-18ea7575563d.png",
+        "parent": "focus_read_1",
+        "parts": [
+          [
+            532,
+            615,
+            706,
+            720
+          ],
+          [
+            787,
+            634,
+            932,
+            743
+          ],
+          [
+            532,
+            827,
+            683,
+            945
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          527,
+          610,
+          938,
+          951
+        ],
+        "alpha_bbox": [
+          79,
+          24,
+          1174,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        527,
+        610,
+        938,
+        950
+      ],
+      "changed_pixels": 57267,
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_read_4.png",
+      "alpha_bbox": [
+        79,
+        24,
+        1174,
+        1219
+      ],
+      "sha256": "fb0abe98886fe37498c79d0da87ce1df096ccfae3c388761ab2ed3405a076226",
+      "generation": {
+        "name": "focus_read_4",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e9e614f8-f679-4a33-90ac-d762efa0f0c6.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed 1254 transparent canvas. Only lift the gaze to look directly at viewer for a shy gentle glance, slightly more open eyes and pupils centered toward viewer. Keep eyebrows and mouth fixed, hand under chin, reading hand, book, desk, hair, cushion and body entirely unchanged. Preserve original character identity, outfit and palette. No translation or recentering of canvas. No words, no ground/background or shadow. Output full original canvas."
+      },
+      "method": {
+        "name": "focus_read_4",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e9e614f8-f679-4a33-90ac-d762efa0f0c6.png",
+        "parent": "focus_read_1",
+        "parts": [
+          [
+            526,
+            604,
+            715,
+            723
+          ],
+          [
+            780,
+            625,
+            938,
+            747
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          521,
+          599,
+          944,
+          753
+        ],
+        "alpha_bbox": [
+          79,
+          24,
+          1174,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        521,
+        599,
+        944,
+        753
+      ],
+      "changed_pixels": 44578,
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_read_blink.png",
+      "alpha_bbox": [
+        79,
+        24,
+        1174,
+        1219
+      ],
+      "sha256": "6962177cb94c8a33af65a337564560b353011fa4018d6fc84c07d7599359383e",
+      "generation": {
+        "name": "focus_read_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-77a8a4d9-5e31-427b-9856-ec4b753dd557.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed 1254 transparent canvas. Only close both eyes into calm curved dark eyelash lines. Fully erase iris/sclera and old open-eye lash contours. Keep eyebrows, mouth, hands, book, desk, steam and all hair fixed. Preserve original character identity, outfit and palette. No translation or recentering of canvas. No words, no ground/background or shadow. Output full original canvas."
+      },
+      "method": {
+        "name": "focus_read_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-77a8a4d9-5e31-427b-9856-ec4b753dd557.png",
+        "parent": "focus_read_1",
+        "parts": [
+          [
+            526,
+            604,
+            715,
+            723
+          ],
+          [
+            780,
+            625,
+            938,
+            747
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          521,
+          599,
+          944,
+          753
+        ],
+        "alpha_bbox": [
+          79,
+          24,
+          1174,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        522,
+        599,
+        944,
+        753
+      ],
+      "changed_pixels": 45306,
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_tea_1.png",
+      "alpha_bbox": [
+        92,
+        24,
+        1162,
+        1219
+      ],
+      "sha256": "b113f4548468241d60f70519b14f90451f9bcd44bb980fe02507a2bfc42876ba",
+      "generation": {
+        "name": "focus_tea_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-1555cd4d-8233-4a02-bb7e-521f322c1b74.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. sitting with legs tucked to one side opposite the idle pose, holding a warm teacup in both hands near face, eyes closed contentedly, steam rising. No furniture, delicate lavender steam curls. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "focus_tea_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-1555cd4d-8233-4a02-bb7e-521f322c1b74.png",
+        "source_bbox": [
+          82,
+          6,
+          1176,
+          1228
+        ],
+        "scale": 0.9779050736497545,
+        "offset": [
+          92,
+          24
+        ],
+        "alpha_bbox": [
+          92,
+          24,
+          1162,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_tea_2.png",
+      "alpha_bbox": [
+        92,
+        24,
+        1162,
+        1219
+      ],
+      "sha256": "852a9fb6f28c213389e70e8de75a9f8cb45c29ed75bde4fc553525b0b4bc0f6d",
+      "generation": {
+        "name": "focus_tea_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e66bcce6-c74b-4c58-89fe-c23691ca08ac.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed 1254 transparent canvas. Only change the shape of the gentle lavender tea steam curls beside the cup: let two steam curls waft upward with a different smooth shape. Do not add steam over eyes, keep the already closed eyes, cup, fingers, face, hair, legs and entire character pixel fixed. No shadow or text. Preserve original character identity, outfit and palette. No translation or recentering of canvas. No words, no ground/background or shadow. Output full original canvas."
+      },
+      "method": {
+        "name": "focus_tea_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e66bcce6-c74b-4c58-89fe-c23691ca08ac.png",
+        "parent": "focus_tea_1",
+        "parts": [
+          [
+            872,
+            630,
+            1014,
+            854
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          867,
+          625,
+          1020,
+          860
+        ],
+        "alpha_bbox": [
+          92,
+          24,
+          1162,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        867,
+        625,
+        1020,
+        860
+      ],
+      "changed_pixels": 33447,
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_done_1.png",
+      "alpha_bbox": [
+        138,
+        24,
+        1115,
+        1219
+      ],
+      "sha256": "af17a0e63683f3eedc6cd221cb4bce530e2e17fab7be14ff81b2d187c3b740f8",
+      "generation": {
+        "name": "focus_done_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-6428d9bc-eb38-489b-b74b-f8e9a85d4ce4.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing proudly with weight on one leg, holding up a small notebook with a big check mark pictogram on its otherwise blank cover, happy open-eyed smile, small sparkles. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "focus_done_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-6428d9bc-eb38-489b-b74b-f8e9a85d4ce4.png",
+        "source_bbox": [
+          137,
+          12,
+          1143,
+          1242
+        ],
+        "scale": 0.9715447154471545,
+        "offset": [
+          138,
+          24
+        ],
+        "alpha_bbox": [
+          138,
+          24,
+          1115,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "focus_done_blink.png",
+      "alpha_bbox": [
+        138,
+        24,
+        1115,
+        1219
+      ],
+      "sha256": "d1aec889f6cb44e6e4a1d98855e165e63a7ebd20689e5cbbd649e1c56734a4ed",
+      "generation": {
+        "name": "focus_done_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-f5216655-0646-4ddc-829a-6f076cf5d245.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed 1254 transparent canvas. Only close both open eyes into happy curved lash lines; remove all open iris/sclera and old open-eye lashes. Keep eyebrows, grin, notebook/check symbol, hands, hair, body and sparkles exactly fixed. Preserve original character identity, outfit and palette. No translation or recentering of canvas. No words, no ground/background or shadow. Output full original canvas."
+      },
+      "method": {
+        "name": "focus_done_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-f5216655-0646-4ddc-829a-6f076cf5d245.png",
+        "parent": "focus_done_1",
+        "parts": [
+          [
+            496,
+            442,
+            674,
+            576
+          ],
+          [
+            709,
+            501,
+            873,
+            626
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          491,
+          437,
+          879,
+          632
+        ],
+        "alpha_bbox": [
+          138,
+          24,
+          1115,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        492,
+        437,
+        879,
+        632
+      ],
+      "changed_pixels": 47681,
+      "transparent_corners": true
+    },
+    {
+      "file": "stretch_break_1.png",
+      "alpha_bbox": [
+        123,
+        30,
+        1131,
+        1219
+      ],
+      "sha256": "bbd86d7e724b65af0696fc72be4e07795c0ea7e36a8982a2b35756761bc6b47f",
+      "generation": {
+        "name": "stretch_break_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-64767f02-e0da-457e-bf77-bc57ed70665a.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing, doing a side stretch with one arm over head and other on hip, leaning distinctly left, refreshed open-eyed expression, feet spread for balance. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours.",
+        "stocking_correction": {
+          "name": "stretch_break_1_stockings",
+          "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-f02503fe-ff55-458d-8f81-463959527d10.png",
+          "prompt": "Local outfit consistency correction of first supplied sprite. Second image is the authoritative character design reference. Modify ONLY the two FOOT/ANKLE regions: remove the invented shoes, laces, shoe soles, heels and metallic shoe cuffs, replacing them with the original character's simple deep-indigo thigh-high stocking-covered rounded feet with WHITE FOUR-POINT STAR motifs, exactly as second reference. No separate footwear at all, no bare feet. Keep feet at the original positions and baseline y1218, same foot sizes, keep ankle-to-leg anatomy clean. Absolutely preserve every other pixel: head, hair, face, arms, posture, upper costume, props, symbols. Transparent background, exact1254canvas, no text, no shadow, no extra elements.",
+          "parent": "stretch_break_1",
+          "parts": [
+            [
+              381,
+              1090,
+              522,
+              1218
+            ],
+            [
+              787,
+              1090,
+              943,
+              1218
+            ]
+          ]
+        }
+      },
+      "method": {
+        "name": "stretch_break_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-64767f02-e0da-457e-bf77-bc57ed70665a.png",
+        "source_bbox": [
+          132,
+          41,
+          1140,
+          1230
+        ],
+        "scale": 1,
+        "offset": [
+          123,
+          30
+        ],
+        "alpha_bbox": [
+          123,
+          30,
+          1131,
+          1219
+        ]
+      },
+      "transparent_corners": true,
+      "stocking_correction_fixed_region_changed_pixels": 0
+    },
+    {
+      "file": "stretch_break_2.png",
+      "alpha_bbox": [
+        128,
+        51,
+        1144,
+        1219
+      ],
+      "sha256": "b464b0402905bb638b8bff6f8165695e6c9cb0fc213f7e21e79b36617370d7c3",
+      "generation": {
+        "name": "stretch_break_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e64fad4b-1ed9-471d-81ad-8d479d1d6802.png",
+        "prompt": "Edit the supplied first frame of a side-stretch sprite. Create the SECOND keyframe leaning the torso and head gently to viewer-LEFT instead of viewer-RIGHT. Keep both stocking feet EXACTLY in their current positions and shapes at y1218: left foot around x430 y1180, right foot around x850 y1180. Pivot the legs at the ankles and redraw shins smoothly connected to these fixed feet. Keep anatomical legs continuous with no straight horizontal seams or displaced ankles. Slightly change the overhead arm to lean left as torso follows. DO NOT mirror this character: her crystal ornament stays on the viewer-RIGHT of her head, her outfit crescent stays on viewer-LEFT side, same clothes and stocking feet with white stars, NO SHOES. Full 1254x1254 transparent canvas, original size, no cropping, centered, x40..1213 and lowest foot y1218. Both eyes open same calm smile. Preserve the original colors and proportions. No ground, shadow, text, new objects. Frame 2 should be a coherent opposite side stretch, not a mirror flip. Every stationary foot pixel should remain unchanged."
+      },
+      "method": {
+        "name": "stretch_break_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e64fad4b-1ed9-471d-81ad-8d479d1d6802.png",
+        "parent": "stretch_break_1",
+        "parts": [
+          [
+            40,
+            8,
+            1213,
+            1218
+          ]
+        ],
+        "symbol": null,
+        "protect": [
+          [
+            [
+              437,
+              1216
+            ],
+            [
+              473,
+              1216
+            ],
+            [
+              473,
+              1253
+            ],
+            [
+              437,
+              1253
+            ]
+          ],
+          [
+            [
+              833,
+              1216
+            ],
+            [
+              867,
+              1216
+            ],
+            [
+              867,
+              1253
+            ],
+            [
+              833,
+              1253
+            ]
+          ]
+        ],
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          35,
+          3,
+          1219,
+          1219
+        ],
+        "alpha_bbox": [
+          128,
+          51,
+          1144,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        123,
+        30,
+        1146,
+        1219
+      ],
+      "changed_pixels": 891798,
+      "transparent_corners": true
+    },
+    {
+      "file": "stretch_break_blink.png",
+      "alpha_bbox": [
+        123,
+        30,
+        1131,
+        1219
+      ],
+      "sha256": "a8da6b97505e4cdd4d77f3f1bdcb55e4a68ff1e78a0b0cc624e0247c3deda3b2",
+      "generation": {
+        "name": "stretch_break_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-c603d419-5304-4005-b65e-9b5ae7ba5865.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed 1254 transparent canvas. Only close both eyes into relaxed refreshed curved eyelash lines; remove all open iris/sclera and original open lash contour. Preserve eyebrows, smile, raised arm, hand on hip, head tilt, hair and feet exactly. Preserve original character identity, outfit and palette. No translation or recentering of canvas. No words, no ground/background or shadow. Output full original canvas."
+      },
+      "method": {
+        "name": "stretch_break_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-c603d419-5304-4005-b65e-9b5ae7ba5865.png",
+        "parent": "stretch_break_1",
+        "parts": [
+          [
+            596,
+            383,
+            750,
+            510
+          ],
+          [
+            765,
+            487,
+            911,
+            624
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          591,
+          378,
+          917,
+          630
+        ],
+        "alpha_bbox": [
+          123,
+          30,
+          1131,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        592,
+        378,
+        917,
+        630
+      ],
+      "changed_pixels": 41475,
+      "transparent_corners": true
+    },
+    {
+      "file": "hold_card_1.png",
+      "alpha_bbox": [
+        120,
+        24,
+        1134,
+        1219
+      ],
+      "sha256": "9861009eae798062a1508d86f5127ec6748bc57195ecf678ba745fbf5784b9a0",
+      "generation": {
+        "name": "hold_card_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-9112b31a-9856-48d4-b171-34f7409c7187.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing, holding a large blank cream-white paper card with both hands in front of chest, card facing viewer clearly completely empty, warm open-eyed smile. Two feet together, card occupies middle silhouette. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "hold_card_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-9112b31a-9856-48d4-b171-34f7409c7187.png",
+        "source_bbox": [
+          106,
+          9,
+          1153,
+          1243
+        ],
+        "scale": 0.9683954619124797,
+        "offset": [
+          120,
+          24
+        ],
+        "alpha_bbox": [
+          120,
+          24,
+          1134,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "hold_card_blink.png",
+      "alpha_bbox": [
+        120,
+        24,
+        1134,
+        1219
+      ],
+      "sha256": "7631eeed37a8b88aff9cc939d4736d1919e57c0d2da61c4e5be03c6c68491a87",
+      "generation": {
+        "name": "hold_card_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7acfd3ec-a46e-47cc-9837-6a016c9310ce.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Only close both eyes into warm curved lash lines; remove entire open eyes and old lash outlines. Keep eyebrows, smile, the large completely blank card, fingers, hair and feet exactly unchanged. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "hold_card_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7acfd3ec-a46e-47cc-9837-6a016c9310ce.png",
+        "parent": "hold_card_1",
+        "parts": [
+          [
+            452,
+            480,
+            661,
+            623
+          ],
+          [
+            718,
+            517,
+            889,
+            650
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          447,
+          475,
+          895,
+          656
+        ],
+        "alpha_bbox": [
+          120,
+          24,
+          1134,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        448,
+        475,
+        895,
+        656
+      ],
+      "changed_pixels": 55265,
+      "transparent_corners": true
+    },
+    {
+      "file": "packing_1.png",
+      "alpha_bbox": [
+        78,
+        24,
+        1176,
+        1219
+      ],
+      "sha256": "50233bcd2737659ed9d1c1684aa59e08db99e01636bd4409019b5ab440e08879",
+      "generation": {
+        "name": "packing_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-4dd22720-abc6-4843-a689-b4bc85e427db.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing turned three-quarter toward left, hugging a lavender folder and a couple of blank papers against chest, glancing to side as if about to leave. No writing on papers, feet angled toward departure. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "packing_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-4dd22720-abc6-4843-a689-b4bc85e427db.png",
+        "source_bbox": [
+          65,
+          7,
+          1200,
+          1242
+        ],
+        "scale": 0.9676113360323887,
+        "offset": [
+          78,
+          24
+        ],
+        "alpha_bbox": [
+          78,
+          24,
+          1176,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "packing_blink.png",
+      "alpha_bbox": [
+        78,
+        24,
+        1176,
+        1219
+      ],
+      "sha256": "d8f7773292a1c9595d838b4ed1560e4631d86d0c6f0ae5cb98c3d50698d910a8",
+      "generation": {
+        "name": "packing_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e320cd05-cbe4-482c-8e9a-659a5a0f4f57.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Only close both eyes into relaxed curved eyelash lines. Fully remove open iris/sclera and old lash outlines; keep eyebrows, mouth, folder, papers, hands, hair and turned body exactly unchanged. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "packing_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e320cd05-cbe4-482c-8e9a-659a5a0f4f57.png",
+        "parent": "packing_1",
+        "parts": [
+          [
+            449,
+            471,
+            605,
+            583
+          ],
+          [
+            700,
+            533,
+            860,
+            643
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          444,
+          466,
+          866,
+          649
+        ],
+        "alpha_bbox": [
+          78,
+          24,
+          1176,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        445,
+        466,
+        866,
+        649
+      ],
+      "changed_pixels": 37457,
+      "transparent_corners": true
+    },
+    {
+      "file": "ready_go_1.png",
+      "alpha_bbox": [
+        106,
+        24,
+        1147,
+        1219
+      ],
+      "sha256": "611687d45825bc94c935907b17ac43d32a992b21822aff4f0415bd29d657918b",
+      "generation": {
+        "name": "ready_go_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-397dbaa7-32cf-4235-997e-1573cbf80571.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing in a lively forward-stepping stance, one foot well forward, pointing forward with one hand, other hand in a fist, energetic eager open-eyed face. Clear strong forward diagonal gesture. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours.",
+        "stocking_correction": {
+          "name": "ready_go_1_stockings",
+          "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-eaada96d-db4e-4ff7-9dc6-011313cfb493.png",
+          "prompt": "Edit ONLY the front foot and lower ankle of this exact sprite. Remove the small protruding shoe heel on the viewer-left side of the front foot (near x650 y1150). This character wears plain dark thigh-high stockings ending in smooth rounded stocking feet with white four-point stars, NOT shoes. Preserve exact front foot size, leg position and stars. Front lowest point y1218, no change to any other clothing, face, hair, hand or body pixel. Same 1254x1254 transparent canvas. No ground, no text. Output original full sprite with only the small heel removed and a smooth ankle contour.",
+          "parent": "ready_go_1",
+          "parts": [
+            [
+              623,
+              1100,
+              727,
+              1218
+            ]
+          ]
+        }
+      },
+      "method": {
+        "name": "ready_go_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-397dbaa7-32cf-4235-997e-1573cbf80571.png",
+        "source_bbox": [
+          92,
+          6,
+          1176,
+          1250
+        ],
+        "scale": 0.9606109324758842,
+        "offset": [
+          106,
+          24
+        ],
+        "alpha_bbox": [
+          106,
+          24,
+          1147,
+          1219
+        ]
+      },
+      "transparent_corners": true,
+      "stocking_correction_fixed_region_changed_pixels": 0
+    },
+    {
+      "file": "ready_go_blink.png",
+      "alpha_bbox": [
+        106,
+        24,
+        1147,
+        1219
+      ],
+      "sha256": "34c3637145f83fc5bd4b4c5f6d0505cf46084502cc8e510399c15465503134ad",
+      "generation": {
+        "name": "ready_go_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-de14ce16-c524-4d28-9bdf-2b5822dda6c4.png",
+        "prompt": "Exact animation blink edit of supplied sprite. Close only BOTH eyes with curved relaxed dark eyelashes at the existing eye positions. Keep all hair outlines and strands, eyebrows, face contour, nose, cheeks, mouth, skin shading, hair ornament and entire body pixel-identical, do not redraw, shift or scale ANY part of face. In particular keep original fringe boundaries and original eyebrow positions. Only erase existing irises/eye whites and replace them with curved closed eyelid lines. Preserve the original mouth. 1254x1254 transparent canvas, all feet and body unchanged. No text or new objects."
+      },
+      "method": {
+        "name": "ready_go_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-de14ce16-c524-4d28-9bdf-2b5822dda6c4.png",
+        "parent": "ready_go_1",
+        "parts": [
+          [
+            480,
+            460,
+            709,
+            625
+          ],
+          [
+            747,
+            540,
+            911,
+            676
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          475,
+          455,
+          917,
+          682
+        ],
+        "alpha_bbox": [
+          106,
+          24,
+          1147,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        475,
+        455,
+        917,
+        682
+      ],
+      "changed_pixels": 64073,
+      "transparent_corners": true
+    },
+    {
+      "file": "worried_1.png",
+      "alpha_bbox": [
+        156,
+        24,
+        1098,
+        1219
+      ],
+      "sha256": "030d48e1a8c24ea243a0fc7ad287a9863ac9a3335f8ca657352d0707134b8d23",
+      "generation": {
+        "name": "worried_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-559e39ad-3cac-4a7a-9793-bf7edec0e120.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing nervously biting tip of her thumb, eyebrows furrowed, a big separate sweat drop beside face, knees slightly bent inward, anxious open eyes. Other arm crossed low under elbow. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours."
+      },
+      "method": {
+        "name": "worried_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-559e39ad-3cac-4a7a-9793-bf7edec0e120.png",
+        "source_bbox": [
+          147,
+          10,
+          1119,
+          1243
+        ],
+        "scale": 0.9691808596918086,
+        "offset": [
+          156,
+          24
+        ],
+        "alpha_bbox": [
+          156,
+          24,
+          1098,
+          1219
+        ]
+      },
+      "transparent_corners": true
+    },
+    {
+      "file": "worried_2.png",
+      "alpha_bbox": [
+        156,
+        24,
+        1098,
+        1219
+      ],
+      "sha256": "d88ddf19a43f1864547f41b9883e515652021ef4198a9ee96846f8f43276a590",
+      "generation": {
+        "name": "worried_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-5db0abf2-e37b-4e03-aea5-622185878610.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Only move the isolated cartoon sweat drop beside her head downward by 12px, keeping its shape unchanged; no change whatsoever to character, hair, face, gloves, knees or body. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "worried_2",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-5db0abf2-e37b-4e03-aea5-622185878610.png",
+        "parent": "worried_1",
+        "parts": [
+          [
+            998,
+            448,
+            1080,
+            590
+          ]
+        ],
+        "symbol": {
+          "rect": [
+            1006,
+            457,
+            1067,
+            568
+          ],
+          "offset": [
+            0,
+            12
+          ]
+        },
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          993,
+          443,
+          1086,
+          596
+        ],
+        "alpha_bbox": [
+          156,
+          24,
+          1098,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        1006,
+        458,
+        1063,
+        580
+      ],
+      "changed_pixels": 5133,
+      "transparent_corners": true
+    },
+    {
+      "file": "worried_blink.png",
+      "alpha_bbox": [
+        156,
+        24,
+        1098,
+        1219
+      ],
+      "sha256": "1d34e4113d78dc3f7944f2cd29bddecf2a2f8661744e99f0b06cf11193ac658a",
+      "generation": {
+        "name": "worried_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-6836121e-a2db-4231-9551-a48f2832c804.png",
+        "prompt": "Local edit of supplied FINAL sprite on fixed transparent 1254x1254 canvas. Only close both eyes into gently anxious curved lash lines. Fully remove original open iris/sclera and old open lash contours. Furrowed eyebrows stay exactly original, mouth, thumb-biting hand, arms, hair, sweat drop and body unchanged. Keep original identity, hair, proportions, outfit and every nonmoving region unchanged. No recenter/resize, no text, no background, no shadow."
+      },
+      "method": {
+        "name": "worried_blink",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-6836121e-a2db-4231-9551-a48f2832c804.png",
+        "parent": "worried_1",
+        "parts": [
+          [
+            524,
+            490,
+            711,
+            600
+          ],
+          [
+            758,
+            529,
+            908,
+            642
+          ]
+        ],
+        "symbol": null,
+        "protect": null,
+        "align_bottom": null,
+        "raw_offset": null,
+        "feather_px": 2,
+        "mask_bbox": [
+          519,
+          485,
+          914,
+          648
+        ],
+        "alpha_bbox": [
+          156,
+          24,
+          1098,
+          1219
+        ]
+      },
+      "fixed_region_changed_pixels": 0,
+      "changed_bbox": [
+        520,
+        485,
+        914,
+        648
+      ],
+      "changed_pixels": 41314,
+      "transparent_corners": true
+    },
+    {
+      "file": "proud_1.png",
+      "alpha_bbox": [
+        132,
+        24,
+        1121,
+        1219
+      ],
+      "sha256": "1010ca04c3c797c1521d46772caedd6f2686e3da55ecd1fe9eeb6b5b34569126",
+      "generation": {
+        "name": "proud_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-530c49a8-8eae-498b-a52a-99e1147526cd.png",
+        "prompt": "Chibi anime girl, same character as the reference image (silver-lavender long wavy hair, ice-blue crystal hair ornament, dark navy-violet outfit with crescent-moon motif, dark thigh-high stockings), big head small body, clean thick lineart, soft cel shading, pastel lavender palette, full body, centered, transparent background, no text, no ground, no shadow, sticker-like clarity readable at 128px. standing with both hands on hips, chin raised, eyes closed in a smug proud smile, two sparkles around. Feet firmly planted, chest lifted, distinct cocky leaning-back posture. Input is ONLY character design reference. Redraw entire body into specified new pose, never copy seated idle body; same exact outfit, hair and ornament. Single sprite, 1254x1254 transparent RGBA, horizontal center with 40px side safety margins, body lowest point near y1218; no cropping, no text, no ground or shadow. Big head, very small body, same soft cel shading and strong dark contours.",
+        "stocking_correction": {
+          "name": "proud_1_stockings",
+          "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-944288da-5c46-4df8-9871-3e7aaa7d02d5.png",
+          "prompt": "Local outfit consistency correction of first supplied sprite. Second image is the authoritative character design reference. Modify ONLY the two FOOT/ANKLE regions: remove the invented shoes, laces, shoe soles, heels and metallic shoe cuffs, replacing them with the original character's simple deep-indigo thigh-high stocking-covered rounded feet with WHITE FOUR-POINT STAR motifs, exactly as second reference. No separate footwear at all, no bare feet. Keep feet at the original positions and baseline y1218, same foot sizes, keep ankle-to-leg anatomy clean. Absolutely preserve every other pixel: head, hair, face, arms, posture, upper costume, props, symbols. Transparent background, exact1254canvas, no text, no shadow, no extra elements.",
+          "parent": "proud_1",
+          "parts": [
+            [
+              484,
+              1100,
+              650,
+              1218
+            ],
+            [
+              779,
+              1100,
+              948,
+              1218
+            ]
+          ]
+        }
+      },
+      "method": {
+        "name": "proud_1",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-530c49a8-8eae-498b-a52a-99e1147526cd.png",
+        "source_bbox": [
+          124,
+          6,
+          1152,
+          1248
+        ],
+        "scale": 0.962157809983897,
+        "offset": [
+          132,
+          24
+        ],
+        "alpha_bbox": [
+          132,
+          24,
+          1121,
+          1219
+        ]
+      },
+      "transparent_corners": true,
+      "stocking_correction_fixed_region_changed_pixels": 0
+    }
+  ],
+  "preserved_approved": [
+    "bored_1.png",
+    "bored_2.png",
+    "bored_3.png",
+    "bored_blink.png",
+    "coquettish_1.png",
+    "coquettish_2.png",
+    "coquettish_3.png",
+    "coquettish_4.png",
+    "coquettish_blink.png",
+    "headpat_happy_1.png",
+    "headpat_happy_2.png",
+    "headpat_happy_3.png",
+    "headpat_happy_4.png",
+    "headpat_happy_blink.png",
+    "idle_blink.png",
+    "peek_1.png",
+    "peek_2.png",
+    "pout_1.png",
+    "pout_2.png",
+    "pout_blink.png",
+    "sleep_1.png",
+    "sleep_2.png",
+    "sleep_3.png",
+    "yawn_1.png",
+    "yawn_2.png",
+    "yawn_3.png"
+  ],
+  "expected_new": 60,
+  "validated": 60,
+  "errors": [],
+  "canonical_idle_sha256": "b52b011cb3328dc1d8733bf4a33c1d81d26c200a84e56a358ee05f1025b757d1",
+  "first_pose_alpha_pairs_checked": 300,
+  "stocking_corrections": [
+    "landing_1",
+    "heart_1",
+    "thumbs_up_1",
+    "stretch_break_1",
+    "ready_go_1",
+    "proud_1"
+  ],
+  "status": "WAITING_FOR_HUMAN_ART_QA",
+  "total_v2_png": 86
+}
