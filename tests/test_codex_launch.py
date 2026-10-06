@@ -1,4 +1,5 @@
 import base64
+import io
 import json
 from pathlib import Path
 import re
@@ -7,7 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import codex_launch
 from codex_focus import _argv
@@ -64,6 +65,45 @@ class LaunchTests(unittest.TestCase):
         run.assert_not_called()
 
     @unittest.skipUnless(sys.platform == 'win32', 'Windows native argv parser')
+    def test_model_and_effort_are_native_options_before_literal_prompt(self):
+        catalog = {'model-a': ['low', 'high'], 'model-b': ['low']}
+        with patch('codex_launch._model_catalog', return_value=catalog):
+            for model, effort, flags in (
+                    ('model-a', 'high', ['-m', 'model-a', '-c', 'model_reasoning_effort="high"']),
+                    ('model-b', None, ['-m', 'model-b']),
+                    (None, 'low', ['-c', 'model_reasoning_effort="low"'])):
+                prompt = '--model other ; $(whoami) "日本語"'
+                data = payload(codex_launch.launch_command(self.folder, prompt,
+                    external_id='todo-1', model=model, effort=effort))
+                self.assertEqual(_argv('codex.exe ' + data['arguments']),
+                    ['codex.exe', '--cd', str(self.folder.resolve()), *flags, '--', prompt])
+                self.assertEqual(data['external_id'], 'todo-1')
+
+    def test_unknown_choices_and_command_injection_are_rejected(self):
+        with patch('codex_launch._model_catalog', return_value={'model-a': ['high']}):
+            for value in ('unknown', '', '--dangerously-bypass-approvals-and-sandbox',
+                          'model-a --flag', 'high";whoami', '$(whoami)', 'a\nflag', 'a\0b',
+                          True, 3, ['model-a']):
+                for field in ('model', 'effort'):
+                    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                        codex_launch.launch_command(self.folder, 'Fix', **{field: value})
+
+    def test_effort_must_be_supported_by_explicit_model(self):
+        with patch('codex_launch._model_catalog', return_value={'model-a': ['high'], 'model-b': ['low']}):
+            with self.assertRaisesRegex(ValueError, 'selected Codex model'):
+                codex_launch.launch_command(self.folder, 'Fix', model='model-b', effort='high')
+
+    def test_missing_catalog_keeps_default_launch_and_rejects_explicit_choices(self):
+        with patch('codex_launch._model_catalog', return_value={}) as catalog:
+            self.assertTrue(codex_launch.launch_command(self.folder, 'Fix'))
+            catalog.assert_not_called()
+            self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+            for choices in ({'model': 'model-a'}, {'effort': 'high'},
+                            {'model': 'model-a', 'effort': 'high'}):
+                with self.assertRaises(ValueError):
+                    codex_launch.launch_command(self.folder, 'Fix', **choices)
+
+    @unittest.skipUnless(sys.platform == 'win32', 'Windows native argv parser')
     def test_prompts_are_literal_single_arguments_and_not_cli_flags(self):
         for prompt in ('--dangerously-bypass-approvals-and-sandbox',
                        '"quotes" ; & whoami | x $(touch x) `backticks` %PATH%',
@@ -110,6 +150,132 @@ class LaunchTests(unittest.TestCase):
             self.assertFalse(codex_launch.available())
 
 
+class RecordedInput(io.BytesIO):
+    def close(self):
+        self.recorded = self.getvalue()
+        super().close()
+
+
+class ModelOptionsTests(unittest.TestCase):
+    def setUp(self):
+        self.executables = patch('codex_launch._executables',
+            return_value=('C:/tools/codex.exe', 'powershell.exe')).start()
+        self.start = patch('codex_launch.subprocess.Popen').start()
+        self.addCleanup(patch.stopall)
+
+    @staticmethod
+    def row(model='model-a', efforts=('low', 'high'), hidden=False):
+        return dict(id='display-id', model=model, hidden=hidden,
+            supportedReasoningEfforts=[dict(reasoningEffort=e, description='synthetic') for e in efforts])
+
+    def server(self, messages):
+        process = Mock()
+        process.stdin = RecordedInput()
+        process.stdout = io.BytesIO(b''.join((json.dumps(m)+'\n').encode('utf-8') for m in messages))
+        self.start.return_value = process
+        return process
+
+    def discover(self, result):
+        process = self.server([dict(id=1, result={}), dict(id=2, result=result)])
+        found = codex_launch.options()
+        process.terminate.assert_called_once()
+        self.assertTrue(process.stdout.closed)
+        self.assertTrue(process.stdin.closed)
+        return found
+
+    def test_official_model_list_filters_hidden_and_preserves_order_and_union(self):
+        rows = [self.row('model-b', ('minimal', 'high')), self.row('model-hidden', hidden=True),
+                self.row('model-a', ('low', 'high', 'low')), self.row('model-b', ('minimal', 'high'))]
+        self.assertEqual(self.discover(dict(data=rows, nextCursor=None)),
+            dict(models=['model-b', 'model-a'], efforts=['minimal', 'high', 'low']))
+        process = self.start.return_value
+        self.assertEqual(self.start.call_args.args[0],
+            ['C:/tools/codex.exe', 'app-server', '--listen', 'stdio://'])
+        self.assertEqual(self.start.call_args.kwargs['cwd'], Path.home())
+        messages = [json.loads(line) for line in process.stdin.recorded.splitlines()]
+        self.assertEqual([m['method'] for m in messages], ['initialize', 'initialized', 'model/list'])
+        self.assertEqual(messages[-1]['params'], dict(limit=100, includeHidden=False, cursor=None))
+
+    def test_pagination_and_unrelated_notifications(self):
+        process = self.server([dict(method='notice', params={}), dict(id=1, result={}),
+            dict(id=2, result=dict(data=[self.row()], nextCursor='page2')),
+            dict(id=3, result=dict(data=[self.row('model-b', ('max',))], nextCursor=None))])
+        self.assertEqual(codex_launch.options(),
+            dict(models=['model-a', 'model-b'], efforts=['low', 'high', 'max']))
+        requests = [json.loads(line) for line in process.stdin.recorded.splitlines()]
+        self.assertEqual(requests[-1]['params']['cursor'], 'page2')
+
+    def test_unknown_schema_and_unsafe_catalog_values_fail_closed(self):
+        bad_rows = [None, {}, self.row(model='--flag'), self.row(model='m;whoami'),
+                    self.row(efforts=('high";whoami',)), self.row(efforts=('$(whoami)',)),
+                    dict(self.row(), hidden='false'), dict(self.row(), supportedReasoningEfforts=None),
+                    dict(self.row(), supportedReasoningEfforts=[{}])]
+        for row in bad_rows:
+            with self.subTest(row=row):
+                self.assertEqual(self.discover(dict(data=[row], nextCursor=None)),
+                    dict(models=[], efforts=[]))
+        for result in ({}, {'data': None}, {'data': [self.row()], 'nextCursor': 4}):
+            with self.subTest(result=result):
+                self.assertEqual(self.discover(result), dict(models=[], efforts=[]))
+
+    def test_empty_catalog_and_nonreasoning_models_do_not_invent_efforts(self):
+        self.assertEqual(self.discover(dict(data=[], nextCursor=None)), dict(models=[], efforts=[]))
+        self.assertEqual(self.discover(dict(data=[self.row(efforts=())], nextCursor=None)),
+            dict(models=['model-a'], efforts=[]))
+
+    def test_conflicting_models_and_repeated_cursor_discard_partial_results(self):
+        self.assertEqual(self.discover(dict(data=[self.row(), self.row(efforts=('low',))], nextCursor=None)),
+            dict(models=[], efforts=[]))
+        self.server([dict(id=1, result={}), dict(id=2, result=dict(data=[self.row()], nextCursor='same')),
+                     dict(id=3, result=dict(data=[], nextCursor='same'))])
+        self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+
+    def test_rpc_error_eof_invalid_json_and_oversized_response(self):
+        for messages in ([], [dict(id=1, error={'code': -1})],
+                         [dict(id=1, result={}), dict(id=2, error={'code': -1})]):
+            self.server(messages)
+            self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+        for raw in (b'{invalid}\n', b'\xff\n', b'x'*(1024*1024+1)):
+            process = self.server([])
+            process.stdout = io.BytesIO(raw)
+            self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+
+    def test_missing_binary_or_start_failure_returns_empty(self):
+        self.executables.return_value = (None, 'powershell.exe')
+        self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+        self.start.assert_not_called()
+        self.executables.return_value = ('codex.exe', 'powershell.exe')
+        self.start.side_effect = OSError('synthetic unavailable executable')
+        self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+
+    def test_deadline_terminates_owned_process(self):
+        process = self.server([dict(id=1, result={})])
+        with patch('codex_launch.time.monotonic', side_effect=[0., 4.]):
+            self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+        process.terminate.assert_called_once()
+
+    def test_no_previous_success_is_reused_after_failure(self):
+        self.assertEqual(self.discover(dict(data=[self.row()], nextCursor=None))['models'], ['model-a'])
+        self.server([])
+        self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+
+    def test_cleanup_kills_unresponsive_metadata_server(self):
+        process = self.server([dict(id=1, error={'code': -1})])
+        process.wait.side_effect = [subprocess.TimeoutExpired('synthetic', .2), 0]
+        self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+        process.kill.assert_called_once()
+
+    def test_broken_stdin_still_returns_empty_and_cleans_up(self):
+        process = self.server([])
+        process.stdin = Mock()
+        process.stdin.write.side_effect = BrokenPipeError('synthetic disconnected pipe')
+        process.stdin.close.side_effect = BrokenPipeError('synthetic close failure')
+        self.assertEqual(codex_launch.options(), dict(models=[], efforts=[]))
+        process.terminate.assert_called_once()
+        process.stdin.close.assert_called_once()
+        self.assertTrue(process.stdout.closed)
+
+
 class NativeArgumentTests(unittest.TestCase):
     @unittest.skipUnless(sys.platform == 'win32' and shutil.which('powershell.exe'), 'Windows PowerShell')
     def test_real_powershell_passes_literal_unicode_quotes_and_injection_text_to_python(self):
@@ -118,7 +284,8 @@ class NativeArgumentTests(unittest.TestCase):
             directory = Path(root)
             output, sentinel = directory/'argv.json', directory/'must-not-exist.txt'
             prompt = '"quoted" 日本語 ; $(New-Item ' + str(sentinel) + ') & %PATH%\nline\\'
-            arguments = ['--cd', str(directory), '--', prompt]
+            arguments = ['--cd', str(directory), '-m', 'model-a',
+                         '-c', 'model_reasoning_effort="high"', '--', prompt]
             code = 'import json,sys;from pathlib import Path;Path(' + repr(str(output)) + ').write_text(json.dumps(sys.argv[1:],ensure_ascii=False),encoding="utf-8")'
             script = codex_launch._encoded_script(dict(executable=sys.executable, folder=str(directory),
                 arguments=subprocess.list2cmdline(['-c', code, *arguments])))
