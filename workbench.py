@@ -381,6 +381,9 @@ class WorkbenchWindow(QWidget):
         layout.addWidget(self.projects_empty)
         actions = QHBoxLayout()
         self.button(actions, 'wb_new_project', lambda: self.edit_project(), True)
+        self.project_start_button = self.button(actions, 'preset_start', self.start_selected_project, True)
+        self.project_preset_button = self.button(actions, 'wb_preset', self.edit_preset)
+        self.project_card_button = self.button(actions, 'wb_continuation', self.show_continuation)
         self.project_edit_button = self.button(actions, 'wb_edit', self.edit_selected_project)
         self.project_folder_button = self.button(actions, 'wb_folder_open', self.open_folder)
         actions.addStretch()
@@ -881,6 +884,8 @@ class WorkbenchWindow(QWidget):
                 (self.todo_edit_button, bool(todo)), (self.todo_delete_button, bool(todo)),
                 (self.todo_ai_button, bool(todo)),
                 (self.project_edit_button, bool(project)), (self.project_delete_button, bool(project)),
+                (self.project_start_button, bool(project)), (self.project_preset_button, bool(project)),
+                (self.project_card_button, bool(project)),
                 (self.project_folder_button, bool(project and project['directory'])),
                 (self.note_delete_button, selected_note)]:
             button.setVisible(available)
@@ -1089,6 +1094,40 @@ class WorkbenchWindow(QWidget):
             self.refresh()
 
         return saved
+
+    def start_selected_project(self):
+        record = self._selected_project()
+        if not record:
+            return
+        error = self.panel.start_project(record, self.store)
+        if error:
+            self.status.setText(self.tr(error))
+            self.status.show()
+        else:
+            self.status.clear()
+            self.status.hide()
+
+    def edit_preset(self):
+        from project_start import ProjectPresetDialog
+        from quick_launch import known_folders
+        record = self._selected_project()
+        if not record:
+            return
+        ok, preset = self._attempt(self.store.get_preset, record['id'])
+        if not ok:
+            return
+        dialog = ProjectPresetDialog(self, self.panel, record, preset, known_folders(self.panel.prefs))
+        if dialog.exec() != QDialog.Accepted:
+            return
+        values = dialog.values()
+        self._attempt(self.store.set_preset, record['id'], values['provider_id'], values['folder'],
+                      values['prompt'], values['model'], values['effort'])
+
+    def show_continuation(self):
+        record = self._selected_project()
+        if record and not self.panel.show_continuation(record, self.store):
+            self.status.setText(self.tr('handoff_empty'))
+            self.status.show()
 
     def edit_selected_project(self):
         record = self._selected_project()

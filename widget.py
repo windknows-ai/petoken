@@ -3840,6 +3840,10 @@ class Settings(QDialog):
         self.assistant_hints.setChecked(bool(panel.prefs.get('assistant_hints', True)))
         self.assistant_hints_label = label()
         self.forms['assistant'].addRow(self.assistant_hints_label, self.assistant_hints)
+        self.continuation_card = QCheckBox()
+        self.continuation_card.setChecked(bool(panel.prefs.get('continuation_card', True)))
+        self.continuation_card_label = label()
+        self.forms['assistant'].addRow(self.continuation_card_label, self.continuation_card)
         self.dnd = QCheckBox()
         self.dnd.setChecked(bool(panel.prefs.get('dnd_enabled')))
         self.dnd_label = label()
@@ -4107,6 +4111,10 @@ class Settings(QDialog):
         self.assistant_hints.setToolTip(t('assistant_hints_tip'))
         self.assistant_hints_label.setToolTip(t('assistant_hints_tip'))
         self.dnd_label.setText(t('dnd'))
+        self.continuation_card_label.setText(t('continuation_setting'))
+        self.continuation_card.setAccessibleName(t('continuation_setting'))
+        self.continuation_card.setToolTip(t('continuation_setting_tip'))
+        self.continuation_card_label.setToolTip(t('continuation_setting_tip'))
         self.dnd.setAccessibleName(t('dnd'))
         self.dnd.setToolTip(t('dnd_tip'))
         self.dnd_scheduled_label.setText(t('dnd_scheduled'))
@@ -4187,6 +4195,7 @@ class Settings(QDialog):
                      update_auto=self.update_auto.isChecked(),
                      quick_launch_hotkey=self.quick_launch_hotkey.currentData(),
                      dnd_enabled=self.dnd.isChecked(),
+                     continuation_card=self.continuation_card.isChecked(),
                      dnd_scheduled=self.dnd_scheduled.isChecked(),
                      dnd_start=self.dnd_start.time().toString('HH:mm'),
                      dnd_end=self.dnd_end.time().toString('HH:mm'),
@@ -4591,6 +4600,10 @@ class Panel(QWidget):
         self.focus_mode.summary_ready.connect(self._focus_summary)
         self._focus_card = None
         self._focus_phase = 'idle'
+        # 2.0 continuation card: "where was I?" when you come back to a project.
+        from project_start import ContinuationWatcher
+        self.continuation = ContinuationWatcher(self)
+        self._continuation_card = None
         # Reports open instantly: count once in the background after start-up.
         import reports
         self.report_cache = (reports.ReportCache(lambda: reports.load(store_path=PREF_DIR / 'workbench.sqlite3'))
@@ -5038,6 +5051,9 @@ class Panel(QWidget):
             self.notifications.observe_tasks(
                 tasks or [], preference,
                 hooks_providers=('claude',) if self._claude_hooks_on else ())
+            project = self.continuation.observe(tasks or [])
+            if project is not None:
+                self.show_continuation(project)
             events = self.assistant.observe_tasks(tasks or [])
             if self.prefs.get('assistant_hints', True):
                 for event in events:
@@ -5608,6 +5624,59 @@ class Panel(QWidget):
             if pet is not None:
                 card.place_beside(pet)
 
+    def show_continuation(self, project, store=None):
+        """The continuation card for ``project`` beside the pet; False when empty."""
+        from project_start import ContinuationCard, continuation
+        store = store or self.workbench_store()
+        if store is None or self.closing:
+            return False
+        history = (self.report_cache.data or {}).get('history') or []
+        try:
+            info = continuation(store, project, history)
+        except Exception:
+            info = None
+        if info is None:
+            return False
+        if self._continuation_card is not None:
+            self._continuation_card.close()
+        card = ContinuationCard(self.language, info)
+        card.start.connect(lambda record: self.start_project(record, store))
+        card.note_saved.connect(lambda record, body: self._save_handoff(store, record, body))
+        card.destroyed.connect(lambda *_: setattr(self, '_continuation_card', None))
+        self._continuation_card = card
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            pet.interact('hold_card', 6)
+            if pet.isVisible():
+                card.show()
+                card.place_beside(pet)
+        try:
+            self.persist()
+        except Exception:
+            pass
+        return True
+
+    def _save_handoff(self, store, project, body):
+        try:
+            store.add_handoff(project['id'], body)
+        except Exception:
+            return
+        self._workbench_changed()
+
+    def start_project(self, project, store=None):
+        """Start work on a project with its preset; None, or an error text key."""
+        from project_start import start_project
+        store = store or self.workbench_store()
+        if store is None:
+            return 'preset_need_folder'
+        error = start_project(self, store, project)
+        if error is None:
+            try:
+                self.persist()
+            except Exception:
+                pass
+        return error
+
     def open_reports(self):
         if self.closing:
             return
@@ -5813,8 +5882,9 @@ class Panel(QWidget):
         self.approvals.stop()
         self.updates.stop()
         self.focus_mode.abandon()
-        if self._focus_card is not None:
-            self._focus_card.close()
+        for card in (self._focus_card, self._continuation_card):
+            if card is not None:
+                card.close()
         self.todo_ai.stop()
         self.hotkey.unregister()
         QApplication.instance().removeNativeEventFilter(self.hotkey.filter)
