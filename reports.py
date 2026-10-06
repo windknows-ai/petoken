@@ -8,8 +8,9 @@ Sources, all local:
 - Claude Code activity (claude_recap.activity): each turn from your prompt
   to Claude's last reply (AI working time) and every successful file edit,
   straight from the transcripts, so it covers time Petoken was not running.
-- Notifications (notifications.py): finished / failed tasks and approvals,
-  plus the files listed in Codex recaps (Codex has no per-turn timing yet).
+- Codex activity (codex_recap.activity, from Codex): the same turns and
+  successful file changes, from its rollouts.
+- Notifications (notifications.py): finished / failed tasks and approvals.
 - History: Claude sessions from the transcripts, Codex threads from
   Codex's ``task_history``.
 
@@ -24,7 +25,6 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from notifications import parse_recap
 
 
 def _number(value):
@@ -104,13 +104,21 @@ def load(now=None):
     now = time.time() if now is None else now
     events, history, missing = [], [], []
     activity = dict(turns=[], edits=[])
-    try:
-        import claude_recap
-        from claude_usage import default_home
-        since = min(period('week', now)[0], period('today', now)[2])
-        activity = claude_recap.activity(default_home(), since)
-    except Exception:
-        pass
+    since = min(period('week', now)[0], period('today', now)[2])
+    for name in ('claude', 'codex'):
+        try:
+            if name == 'claude':
+                import claude_recap
+                from claude_usage import default_home
+                found = claude_recap.activity(default_home(), since)
+            else:
+                import codex_recap
+                from usage import CodexStore
+                found = codex_recap.activity(CodexStore().home, since)
+        except Exception:
+            continue
+        activity['turns'] += list(found.get('turns') or [])
+        activity['edits'] += list(found.get('edits') or [])
     for name, source in (('claude', claude_sources), ('codex', codex_sources)):
         try:
             more_events, more_history = source()
@@ -159,9 +167,6 @@ def summarize(data, notices, kind, now):
         if not start <= (notice.get('at') or 0) < end:
             continue
         counts[notice.get('kind')] += 1
-        recap = parse_recap(notice.get('detail')) if notice.get('kind') == 'finished' else None
-        if recap and notice.get('provider') == 'codex':
-            files.update(f"{notice.get('project')}/{name}" for name in recap.get('names') or [])
     tokens = sum(p['tokens'] for p in providers.values())
     previous_tokens = sum(p['tokens'] for p in before.values())
     return dict(kind=kind, start=start, end=end, providers=providers, projects=projects,

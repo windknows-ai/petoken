@@ -60,9 +60,9 @@ class ReportTests(unittest.TestCase):
         self.assertAlmostEqual(summary['usd'], 0.85)
         self.assertTrue(summary['partial'])
         self.assertEqual(summary['providers']['claude'], dict(tokens=1500, usd=0.75, partial=False, tasks=1))
-        # 10 min today + the 20 min after midnight; a.css, b.css and Codex's login.py.
+        # 10 min today + the 20 min after midnight; a.css and b.css (recaps are not counted twice).
         self.assertEqual((summary['finished'], summary['failed'], summary['files'], summary['seconds']),
-                         (2, 1, 3, 1800))
+                         (2, 1, 2, 1800))
         self.assertEqual([p['name'] for p in summary['projects']], ['api', 'site'])
         # By 15:00 yesterday 700 tokens were used.
         self.assertAlmostEqual(summary['change'], (3600 - 700) / 700)
