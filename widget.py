@@ -15,7 +15,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QPointF, QRect, QRectF, QSize, QLockFile, QTime
 from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QRadialGradient, QPixmap, QPolygonF, QKeySequence, QRegion, QShortcut
-from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
+from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QTabWidget,
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
     QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy, QTimeEdit)
 
@@ -3693,12 +3693,38 @@ class TaskPanelManager(HaloScene):
         self.last_activated = None
 
 
+SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'about')
+
+
 class Settings(QDialog):
     def __init__(self, panel):
         super().__init__(panel)
         self.setMinimumWidth(540)
         layout = QVBoxLayout(self)
-        self.form = QFormLayout()
+        # One tab per topic keeps the window short: general look and feel,
+        # which tasks to follow, Claude Code integrations, the assistant
+        # and notifications, and what the numbers mean.
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet(
+            f'QTabWidget::pane {{ background:{theme.CARD}; border:1px solid {theme.BORDER}; border-radius:10px; }}'
+            f'QTabBar::tab {{ background:{theme.TABLE_HEADER}; border:1px solid {theme.BORDER_CONTROL};'
+            f' padding:6px 12px; margin:4px 4px 0 0; border-top-left-radius:8px; border-top-right-radius:8px; }}'
+            f'QTabBar::tab:selected {{ background:{theme.CARD}; margin-top:0; padding-top:9px;'
+            f' border-bottom-color:{theme.CARD}; font-weight:600; }}'
+            f'QTabBar::tab:hover {{ background:{theme.HOVER_BG}; }}')
+        self.forms = {}
+        self.pages = {}
+        for key in SETTINGS_PAGES:
+            page = QWidget()
+            self.pages[key] = page
+            self.tabs.addTab(page, '')
+            if key == 'about':
+                continue   # Text, not a form: laid out below.
+            form = QFormLayout(page)
+            form.setContentsMargins(14, 14, 14, 10)
+            form.setVerticalSpacing(9)
+            self.forms[key] = form
+        self.form = self.forms['general']
         self.task = QComboBox()
         self.task.addItem('', '')
         for row in panel.snapshot.get('rows', []):
@@ -3707,7 +3733,7 @@ class Settings(QDialog):
         self.task.setCurrentIndex(max(0, self.task.findData(panel.prefs.get('pinned', ''))))
         self.task.setMaximumWidth(390)
         self.task_label = label()
-        self.form.addRow(self.task_label, self.task)
+        self.forms['tracking'].addRow(self.task_label, self.task)
         self.scope = QComboBox()
         for key in ('global','project','conversation'):
             self.scope.addItem('', key)
@@ -3715,7 +3741,7 @@ class Settings(QDialog):
         selected_index = self.scope.findData(selected_scope)
         self.scope.setCurrentIndex(selected_index if selected_index >= 0 else self.scope.findData('conversation'))
         self.scope_label = label()
-        self.form.addRow(self.scope_label, self.scope)
+        self.forms['tracking'].addRow(self.scope_label, self.scope)
         self.tracking = QComboBox()
         for key in TRACKING_CHOICES:
             self.tracking.addItem('', key)
@@ -3724,36 +3750,36 @@ class Settings(QDialog):
         self.tracking_label = label()
         # Auto (default) follows whichever source is working; a manual
         # choice shows only that provider in the Hub and the Stars.
-        self.form.addRow(self.tracking_label, self.tracking)
+        self.forms['tracking'].addRow(self.tracking_label, self.tracking)
         self.language = QComboBox()
         initial_language = normalize_language(panel.prefs.get('language'))
         self.language.addItem(text('language_zh_CN', initial_language), 'zh_CN')
         self.language.addItem(text('language_en', initial_language), 'en')
         self.language.setCurrentIndex(self.language.findData(normalize_language(panel.prefs.get('language'))))
         self.language_label = label()
-        self.form.addRow(self.language_label, self.language)
+        self.forms['general'].addRow(self.language_label, self.language)
         self.token_format = QComboBox()
         self.token_format.addItem('', 'full')
         self.token_format.addItem('', 'compact')
         self.token_format.setCurrentIndex(self.token_format.findData(
             normalize_token_format(panel.prefs.get('token_number_format'))))
         self.token_format_label = label()
-        self.form.addRow(self.token_format_label, self.token_format)
+        self.forms['general'].addRow(self.token_format_label, self.token_format)
         self.currency = QComboBox()
         for code in SUPPORTED_CURRENCIES:
             self.currency.addItem(code, code)
         self.currency.setCurrentIndex(self.currency.findData(
             normalize_currency(panel.prefs.get('currency'))))
         self.currency_label = label()
-        self.form.addRow(self.currency_label, self.currency)
+        self.forms['general'].addRow(self.currency_label, self.currency)
         self.topmost = QCheckBox()
         self.topmost.setChecked(bool(panel.prefs.get('always_on_top', True)))
         self.topmost_label = label()
-        self.form.addRow(self.topmost_label, self.topmost)
+        self.forms['general'].addRow(self.topmost_label, self.topmost)
         self.star_ring = QCheckBox()
         self.star_ring.setChecked(bool(panel.prefs.get('star_ring_enabled', True)))
         self.star_ring_label = label()
-        self.form.addRow(self.star_ring_label, self.star_ring)
+        self.forms['general'].addRow(self.star_ring_label, self.star_ring)
         # Opt-in: lets Claude Code hand its 5h / 7d usage to Petoken through
         # a status-line command. Changing it edits only the `statusLine` key
         # of Claude Code's settings (backed up first) and only on Save.
@@ -3762,7 +3788,7 @@ class Settings(QDialog):
         self.claude_sync.setChecked(self._claude_sync_state == 'on')
         self.claude_sync.setEnabled(self._claude_sync_state in ('on', 'off'))
         self.claude_sync_label = label()
-        self.form.addRow(self.claude_sync_label, self.claude_sync)
+        self.forms['claude'].addRow(self.claude_sync_label, self.claude_sync)
         # V1.6: Claude Code hooks for instant notifications (opt-in, same
         # backup/restore rules as usage sync) and Do Not Disturb.
         self._claude_notify_state = claude_events.state()
@@ -3770,7 +3796,7 @@ class Settings(QDialog):
         self.claude_notify.setChecked(self._claude_notify_state in ('on', 'partial'))
         self.claude_notify.setEnabled(self._claude_notify_state != 'unreadable')
         self.claude_notify_label = label()
-        self.form.addRow(self.claude_notify_label, self.claude_notify)
+        self.forms['claude'].addRow(self.claude_notify_label, self.claude_notify)
         self._claude_approval_state = claude_approval.state()
         self.claude_approval = QCheckBox()
         self.claude_approval.setChecked(self._claude_approval_state == 'on')
@@ -3782,7 +3808,7 @@ class Settings(QDialog):
         approval_row.addWidget(self.claude_approval_rules)
         approval_row.addStretch(1)
         self.claude_approval_label = label()
-        self.form.addRow(self.claude_approval_label, approval_row)
+        self.forms['claude'].addRow(self.claude_approval_label, approval_row)
         from quick_launch import HOTKEYS
         self.quick_launch_hotkey = QComboBox()
         for name in (*HOTKEYS, 'off'):
@@ -3790,15 +3816,15 @@ class Settings(QDialog):
         self.quick_launch_hotkey.setCurrentIndex(max(0, self.quick_launch_hotkey.findData(
             panel.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space'))))
         self.quick_launch_hotkey_label = label()
-        self.form.addRow(self.quick_launch_hotkey_label, self.quick_launch_hotkey)
+        self.forms['assistant'].addRow(self.quick_launch_hotkey_label, self.quick_launch_hotkey)
         self.assistant_hints = QCheckBox()
         self.assistant_hints.setChecked(bool(panel.prefs.get('assistant_hints', True)))
         self.assistant_hints_label = label()
-        self.form.addRow(self.assistant_hints_label, self.assistant_hints)
+        self.forms['assistant'].addRow(self.assistant_hints_label, self.assistant_hints)
         self.dnd = QCheckBox()
         self.dnd.setChecked(bool(panel.prefs.get('dnd_enabled')))
         self.dnd_label = label()
-        self.form.addRow(self.dnd_label, self.dnd)
+        self.forms['assistant'].addRow(self.dnd_label, self.dnd)
         self.dnd_scheduled = QCheckBox()
         self.dnd_scheduled.setChecked(bool(panel.prefs.get('dnd_scheduled')))
         self.dnd_start = QTimeEdit(QTime.fromString(panel.prefs.get('dnd_start', '22:00'), 'HH:mm'))
@@ -3814,7 +3840,7 @@ class Settings(QDialog):
         schedule.addWidget(self.dnd_end)
         schedule.addStretch()
         self.dnd_scheduled_label = label()
-        self.form.addRow(self.dnd_scheduled_label, schedule)
+        self.forms['assistant'].addRow(self.dnd_scheduled_label, schedule)
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -3833,13 +3859,13 @@ class Settings(QDialog):
         scale_box = QWidget()
         scale_box.setLayout(scale_row)
         self.pet_scale_label = label()
-        self.form.addRow(self.pet_scale_label, scale_box)
+        self.forms['general'].addRow(self.pet_scale_label, scale_box)
         self.pet_scale.valueChanged.connect(self._preview_pet_scale)
-        layout.addLayout(self.form)
-        layout.addWidget(divider())
+        about = QVBoxLayout()
+        about.setContentsMargins(14, 14, 14, 10)
         self.about_heading = label('')
         self.about_heading.setStyleSheet(f'color:{ICE}; font-size:13px; font-weight:600;')
-        layout.addWidget(self.about_heading)
+        about.addWidget(self.about_heading)
         self.about_titles = []
         self.about_bodies = []
         for _ in range(4):
@@ -3847,11 +3873,14 @@ class Settings(QDialog):
             title.setStyleSheet(f'color:{ICE}; font-weight:600;')
             body = label('', 'muted')
             body.setWordWrap(True)
-            layout.addWidget(title)
-            layout.addWidget(body)
+            about.addWidget(title)
+            about.addWidget(body)
             self.about_titles.append(title)
             self.about_bodies.append(body)
-            layout.addSpacing(6)
+            about.addSpacing(6)
+        about.addStretch(1)
+        self.pages['about'].setLayout(about)
+        layout.addWidget(self.tabs)
         self.error = label('', 'muted')
         layout.addWidget(self.error)
         self.buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
@@ -3859,11 +3888,12 @@ class Settings(QDialog):
         self.buttons.rejected.connect(self.reject)
         self.reset_armed = False
         self.reset_button = button('', '', self.reset_to_defaults)
+        # One row: reset on the left, Save / Cancel on the right.
         reset_row = QHBoxLayout()
-        reset_row.addStretch()
         reset_row.addWidget(self.reset_button)
+        reset_row.addStretch()
+        reset_row.addWidget(self.buttons)
         layout.addLayout(reset_row)
-        layout.addWidget(self.buttons)
         self.language.currentIndexChanged.connect(self.apply_language)
         self.apply_language()
 
@@ -3961,6 +3991,8 @@ class Settings(QDialog):
         self.pet_scale.setToolTip(t('character_size'))
         self.pet_scale.setAccessibleName(t('character_size'))
         self.pet_scale_value.setText(f'{int(self.pet_scale.value())}%')
+        for index, key in enumerate(SETTINGS_PAGES):
+            self.tabs.setTabText(index, t(f'settings_page_{key}'))
         self.about_heading.setText(t('about_data'))
         for index in range(4):
             self.about_titles[index].setText(f"{index + 1}. {t(f'about_{index + 1}_title')}")
@@ -4309,12 +4341,17 @@ class Panel(QWidget):
             'show_hide_pet': menu.addAction('', self.toggle_pet),
             'launch_menu': menu.addAction('', self.open_quick_launch),
             'workbench_open': menu.addAction('', self.open_workbench),
-            'wb_tutorial': menu.addAction('', self.open_workbench_tutorial),
-            'analytics_button': menu.addAction('', self.open_analytics),
-            'collapse_expand': menu.addAction('', self.toggle_compact),
+            'wb_reports': menu.addAction('', self.open_reports),
             'settings_help': menu.addAction('', self.open_settings),
-            'move_right': menu.addAction('', self.reset_position),
         }
+        # Occasional actions stay one level down.
+        self.tray_more = menu.addMenu('')
+        self.tray_actions.update({
+            'analytics_button': self.tray_more.addAction('', self.open_analytics),
+            'wb_tutorial': self.tray_more.addAction('', self.open_workbench_tutorial),
+            'collapse_expand': self.tray_more.addAction('', self.toggle_compact),
+            'move_right': self.tray_more.addAction('', self.reset_position),
+        })
         menu.addSeparator()
         self.tray_actions['exit_petoken'] = menu.addAction('', self.shutdown)
         self.tray.setContextMenu(menu)
@@ -4512,6 +4549,7 @@ class Panel(QWidget):
         self.tray.setToolTip(t('tray_tip'))
         for key, action in self.tray_actions.items():
             action.setText(t(key))
+        self.tray_more.setTitle(t('menu_more'))
         if self.analytics_window:
             self.analytics_window.apply_language()
         if self.workbench_window:

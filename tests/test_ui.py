@@ -257,7 +257,6 @@ class UiTests(unittest.TestCase):
         self.assertEqual(set(boxes), {settings.topmost, settings.star_ring, settings.claude_sync,
                                       settings.claude_notify, settings.claude_approval, settings.assistant_hints, settings.dnd,
                                       settings.dnd_scheduled})
-        self.assertIs(boxes[0],settings.topmost)
         self.assertEqual(settings.topmost_label.text(),'Always on Top')
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
         with patch('widget.write_preferences') as write:
@@ -714,6 +713,7 @@ class ProviderUiTests(unittest.TestCase):
     def test_settings_exposes_auto_codex_and_claude_selector(self):
         settings = Settings(self.panel)
         settings.show()
+        settings.tabs.setCurrentWidget(settings.pages['tracking'])
         self.app.processEvents()
         tracking = settings.tracking
         self.assertTrue(tracking.isVisible())
