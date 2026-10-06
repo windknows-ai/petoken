@@ -5,7 +5,8 @@
 ## 进度
 
 - 完成第 1 项：任务小结，25 项合成测试通过。最初测试暴露 fixture SQLite 连接未关闭以及损坏日志被跳过，已分别修复并重新验证。
-- IN PROGRESS：第 2 项窗口定位；其后派活命令、历史列表，每项独立提交。
+- 完成第 2 项：窗口定位，20 项测试通过（含对测试自身进程的原生 helper 检查；没有 Codex 数据依赖或真人窗口前置）。
+- IN PROGRESS：第 3 项派活命令；其后历史列表，独立提交。
 
 ## 1. 任务小结
 
@@ -23,3 +24,15 @@
 - [Codex protocol](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/protocol.rs)：任务时间、patch 成功状态和路径结构。
 - [Codex items](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/items.rs)：分页 FileChange。
 - [Rollout persistence policy](https://github.com/openai/codex/blob/main/codex-rs/rollout/src/policy.rs)：legacy/paginated 保存方式不同，不能假定所有来源都有 patch_apply_end。
+
+## 2. 窗口定位
+
+`codex_focus.focus(home, thread_id) -> 'exact' | 'app' | None`。只在 Windows 实现；其他系统返回 None。仅在用户点击直达时调用，CIM/辅助进程可能用数秒，应由整合方在工作线程调用。
+
+- desktop：按已验证的 Codex 安装路径定位当前可见 App 窗口，成功前置返回 app；不切换具体 thread。
+- cli/exec：只有运行中 codex.exe 的明确 `resume <thread_id>` / `exec resume <thread_id>` 参数才能与 thread 关联。用隔离辅助进程 AttachConsole/GetConsoleWindow 查询；存在可见控制台窗口时返回 exact。
+- Windows Terminal 的 pseudoconsole HWND 隐藏，不冒充标签页定位；若祖先进程明确属于一个有唯一窗口的 WindowsTerminal.exe，可前置该窗口并返回 app。新任务、不带 ID 的 resume picker、复杂全局参数排列、共享 daemon、已退出任务和 VS Code 暂无可靠映射，返回 None。
+- 不用标题、项目名、cwd 或 prompt 中出现的 UUID 猜窗口。多个关联进程/终端窗口时返回 None；前置前重新核实 HWND 所属 PID，并核对实际前台 HWND。权限/Windows 前台策略拒绝也返回 None。
+- 不启动 Codex、不自动恢复 thread、不改配置或向终端输入任何文字。App 未运行时返回 None，不冷启动。进程可能在快照后退出；这属于 best effort，不宣称跨用户/远程会话精确定位。
+
+参考：[Microsoft GetConsoleWindow](https://learn.microsoft.com/en-us/windows/console/getconsolewindow)，官方明确说明 pseudoconsole HWND 不是本地可见终端窗口。接口决策测试全部使用合成进程/窗口；原生检查仅测试合成命令行的 Windows 参数解析及辅助脚本对测试进程自身的查询，没有切换真人窗口。
