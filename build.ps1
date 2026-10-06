@@ -56,6 +56,10 @@ $internal = Join-Path $app '_internal'
 foreach ($runtime in 'vcruntime140.dll','vcruntime140_1.dll') {
     Copy-Item -LiteralPath (Join-Path $site "PySide6\$runtime") -Destination $internal -Force
 }
+# 2.0 poses are drawn at most 768 px wide (pet_assets.SOURCE_MAX_SIDE), so the
+# package carries them at that size; the repository keeps the originals.
+& $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" (Join-Path $internal 'assets\v2_0')
+if ($LASTEXITCODE -ne 0) { throw 'Shrinking the 2.0 artwork failed.' }
 Copy-Item -LiteralPath (Join-Path $repo 'README.md') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'LICENSE') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'THIRD_PARTY_NOTICES.md') -Destination $app -Force
