@@ -6,7 +6,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community（社区版）** 是 Petoken 免费、开源的版本。v1.6.0 让它成为帮你省时间的 AI 助手：提前预测额度什么时候用完；在人物旁边直接批准 Claude Code 的权限请求、回答它的提问、审批它的计划；一键跳到任务所在的窗口；在任何地方快速派活；每天、每周告诉你 AI 帮你做了多少。之前版本的 Codex 和 Claude Code 用量跟踪、通知和本机工作台都还在。
+**Petoken Community（社区版）** 是 Petoken 免费、开源的版本。v1.7.0 能自动更新、带新用户上手、把待办定时或马上交给 Claude Code 或 Codex，Codex 的通知和审批也上了桌宠。从 v1.6 起它就是帮你省时间的 AI 助手：提前预测额度什么时候用完；在人物旁边直接批准 Claude Code 的权限请求、回答它的提问、审批它的计划；一键跳到任务所在的窗口；在任何地方快速派活；每天、每周告诉你 AI 帮你做了多少。之前版本的 Codex 和 Claude Code 用量跟踪、通知和本机工作台都还在。
 
 ## 能做什么
 
@@ -30,9 +30,9 @@ Petoken 是住在 Windows 桌面上的小伙伴。它会跟踪 Codex 和 Claude 
 - **诚实显示未知**：未知的模型就写「未知」，拿不到的数字就写 `N/A`，真正的 0 才写 0，不完整的数据会明确标出。
 - 日常 / Token 两种模式，完整 / 简洁两种数字格式，简体中文 / 英文界面，固定显示、始终置顶、人物大小可调。
 
-## 最新版本：v1.6.0
+## 最新版本：v1.7.0
 
-在 [v1.6.0 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) 下载 **一键安装程序** [Petoken-Setup-v1.6.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.6.0/Petoken-Setup-v1.6.0.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
+在 [v1.7.0 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) 下载 **一键安装程序** [Petoken-Setup-v1.7.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.7.0/Petoken-Setup-v1.7.0.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 支持的来源
 
@@ -64,6 +64,15 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 - **快速派活。** 按 Ctrl+Alt+Space（可以在 设置 → 助手与通知 里换成别的快捷键或者关掉），或者从人物右键菜单、托盘打开一个小窗口：写下要做什么、选项目文件夹（会列出最近用过的）、选 Claude Code 或 Codex。点「开始」就会打开新终端运行对应的命令行工具，任务随后会变成一颗星星。你写的内容作为数据传递，不经过任何 shell，也不会加任何跳过权限的参数。
 - **日报 / 周报。** 工作台 → 报告（人物右键菜单里也有）：今天或本周处理的任务、AI 工作时长（每一轮从你提问到回复完成）、改过的文件、用量、等价 API 费用和比上期的变化，下面是可以搜索的 Claude 和 Codex 历史任务。双击一行就能切到那个任务的窗口。
 
+### v1.7 新增
+
+- **自动更新。** Petoken 每天向 GitHub 读取一次最新版本（只读请求，不发送这台电脑的任何信息）。有新版本时会显示更新内容，可以选择现在更新、以后再说或跳过这个版本；下载的安装程序必须和发布页的 SHA-256 校验值一致才会使用，然后静默安装并自动重新打开。勾选「自动安装」后，会在没有任务运行时自己更新。在 设置 → 常规 里设置。
+- **新手引导。** 第一次打开时，向导会带新用户设置语言、Claude Code 和 Codex 的集成（每项都写明会改什么）以及助手选项。升级的用户不会看到，可以在设置里重新打开。
+- **把待办交给 AI。** 工作台 → 待办 →「交给 AI…」：选 Claude Code 或 Codex、文件夹、模型和推理强度，现在开始或者定时。任务会和待办对应起来，第一次真正完成时自动勾掉待办并写一条小结便签（被你中断的不算）。「收回」可以取消。错过时间的待办按 设置 → 助手与通知 里的选择处理：下次提醒我，或者自动补跑。
+- **Codex 也上了桌宠**（需要打开：设置 →「Claude 和 Codex」）：Codex 的 hook 会即时送来完成和等待确认的通知，Codex 的权限请求也会变成卡片（单次允许 / 拒绝）。需要在 Codex 里用 `/hooks` 信任一次，而且 Codex 的审批模式要会询问（不能是 `never`）。Codex 的提问和计划目前还不能由其他程序回答。
+- **快速派活升级。** 模型和推理强度从各个 App 自己的实时列表里选（Claude Code 的模型目录、Codex 的模型列表：有新模型会自动出现，下线的会自动消失）；勾选「只是聊聊」就不需要项目文件夹。
+- **报告更快、诊断导出、安装包更小。** 报告从后台缓存直接显示；设置 → 关于数据 →「导出诊断信息」会先显示全部内容再保存成 zip，方便反馈 bug；安装包不再带 Pillow。
+
 ### 工作台
 
 工作台有首页、项目、待办、便签和通知几个页面，可以从用量面板、人物右键菜单或托盘打开。个人记录只保存在本机的 `%LOCALAPPDATA%\CodexWisp\workbench.sqlite3`；便签用「保存」或 Ctrl+S 保存，切换或退出时会保护未保存的内容。Codex 和 Claude Code 的任务可以关联到项目。首次使用有可跳过的中英文新手教程。
@@ -79,7 +88,7 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 
 ## 安装和使用
 
-1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) 下载 **Petoken-Setup-v1.6.0.exe**，双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。升级时会保留你的设置和工作台。
+1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) 下载 **Petoken-Setup-v1.7.0.exe**，双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。升级时会保留你的设置和工作台。
    - Windows 可能提示「Windows 已保护你的电脑」，因为安装程序还没有数字签名。点「更多信息」→「仍要运行」即可。
 2. 像平常一样使用 Codex 或 Claude Code，Petoken 会自动跟随正在运行的任务。在 **设置 → Claude** 里可以打开「同步 Claude 用量」（显示额度）、「Claude 即时通知」和「在桌宠上批准 Claude」。界面默认是英文，可以在 设置 → 常规 → 界面语言 里切换成简体中文。
 
@@ -93,7 +102,7 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 - **同步 Claude 用量** 需要你手动打开：它会在 Claude Code 的设置里加一条状态栏命令（修改前先备份），只记录用量数字。在设置里关掉就会移除。
 - **在桌宠上批准 Claude** 需要你手动打开：hook 通过 `%LOCALAPPDATA%\CodexWisp\claude-approvals` 里的文件把请求交给 Petoken，回答后马上删除；一个小日志只记录时间和工具名。任务小结、报告和预测只从本机记录里读取工具名、文件路径、时间和用量数字，不读取对话内容和文件内容。
 - 关掉 Claude 桌面版的弹窗，只改你自己 Windows 通知设置里 Claude 这一项，退出 Petoken 时恢复。
-- 从不导出对话记录或凭据，从不发送模型请求，从不录音或记录按键，从不上传本机用量。
+- 从不导出对话记录或凭据，从不发送模型请求，从不录音或记录按键，从不上传本机用量。唯一的联网请求是每天一次的更新检查（只读取 GitHub 上最新版本的信息），以及你选择更新时下载安装程序和校验文件；可以在 设置 → 常规 里关掉检查。
 - 详情见 [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) 和 [`SECURITY.md`](SECURITY.md)。
 
 ## 从源码构建和测试
@@ -128,8 +137,8 @@ py -3.13 -m venv .venv
 - 安全策略：[`SECURITY.md`](SECURITY.md)
 - 参与贡献：[`CONTRIBUTING.md`](CONTRIBUTING.md)
 - 第三方组件：[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.6.0 发布说明：[`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md)
-- 上一版发布说明：[`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
+- v1.7.0 发布说明：[`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
+- 之前的发布说明：[`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md)、[`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
 
 ## 社区和许可
 

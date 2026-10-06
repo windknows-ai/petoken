@@ -8,7 +8,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community** — the free, open-source edition of Petoken. v1.6.0 turns the companion into a time-saving assistant: it predicts when your limits run out, lets you approve Claude Code's requests, answer its questions and accept its plans right on the character, jumps to a task's window in one click, starts new tasks from anywhere and reports what AI did for you today and this week — beside the Codex and Claude Code usage tracking, notifications and local workbench of earlier versions.
+**Petoken Community** — the free, open-source edition of Petoken. v1.7.0 keeps itself up to date, welcomes new users, takes todos to Claude Code or Codex now or at a set time, and brings Codex notices and approvals onto the character. Since v1.6 it is a time-saving assistant: it predicts when your limits run out, lets you approve Claude Code's requests, answer its questions and accept its plans right on the character, jumps to a task's window in one click, starts new tasks from anywhere and reports what AI did for you today and this week — beside the Codex and Claude Code usage tracking, notifications and local workbench of earlier versions.
 
 ## What it does
 
@@ -31,9 +31,9 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v1.6.0
+## Latest stable release: v1.7.0
 
-Download the **one-click installer** [Petoken-Setup-v1.6.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.6.0/Petoken-Setup-v1.6.0.exe) from the [v1.6.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v1.7.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.7.0/Petoken-Setup-v1.7.0.exe) from the [v1.7.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -118,6 +118,36 @@ back when Petoken exits).
   previous period, followed by a searchable history of Claude sessions and Codex
   threads. Double-click a row to jump to its window.
 
+### New in v1.7
+
+- **Updates.** Once a day Petoken reads the latest release from GitHub (a
+  read-only request; nothing about your computer is sent). A new version shows
+  what changed with Update now / Later / Skip this version; the download is
+  used only if its SHA-256 matches the release checksum file, then Petoken
+  installs it silently and reopens. Tick "Update automatically" and it updates
+  by itself while no task is running. Settings > General.
+- **Welcome guide.** A first start walks new users through language, the
+  Claude Code and Codex integrations (each with what it changes) and the
+  assistant options. People upgrading never see it; reopen it from Settings.
+- **Give a todo to AI.** Workbench > Todos > Give to AI…: Claude Code or
+  Codex, a folder, a model and effort, now or at a set time. The task is tied
+  to the todo; its first real finish ticks it and writes a recap note (an
+  interrupted turn does not count). Take back cancels it. Missed times follow
+  Settings > Assistant: remind me, or run right away.
+- **Codex on the character** (opt-in, Settings > Claude and Codex): Codex
+  hooks bring finished and waiting notices at once and Codex permission
+  requests as cards (allow once / deny). Codex asks you to trust the hooks
+  once with `/hooks`; its approval policy must ask (not `never`). Codex
+  questions and plans cannot be answered by other programs yet.
+- **Quick launch, upgraded.** Pick the model and effort from each app's own
+  live list (Claude Code's model catalog, Codex's model list: new models
+  appear and retired ones go by themselves), or tick "Just chat" to talk
+  without a project folder.
+- **Faster reports, diagnostics, smaller package.** Reports open at once from
+  a background cache; Settings > About the data > Export diagnostics saves a
+  zip for bug reports after showing everything in it; Pillow is no longer
+  shipped.
+
 ### Workbench
 
 A native Home / Projects / Todos / Notes workbench opens from the Hub,
@@ -138,7 +168,7 @@ If a source is missing or stale, its views show that limitation honestly. No oth
 
 ## Install and use
 
-1. Download **Petoken-Setup-v1.6.0.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps. Upgrading keeps your settings and workbench.
+1. Download **Petoken-Setup-v1.7.0.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.7.0) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps. Upgrading keeps your settings and workbench.
    - Windows may show "Windows protected your PC" because the installer is not code-signed yet: choose **More info → Run anyway**.
 2. Use Codex or Claude Code as usual; Petoken follows their running tasks. In **Settings → Claude** you can turn on Sync Claude usage (quotas), Claude instant notifications and Approve Claude on the pet. The interface starts in English; switch to Simplified Chinese in Settings → General → Language.
 
@@ -152,7 +182,7 @@ No administrator rights or system changes are needed. Petoken's Claude Code hook
 - **Sync Claude usage** is opt-in: it adds a status-line command to Claude Code's settings (backed up first) that keeps only usage numbers. Turn it off in Settings to remove it.
 - **Approve Claude on the pet** is opt-in: a hook hands each request to Petoken through files under `%LOCALAPPDATA%\CodexWisp\claude-approvals` that are deleted once answered; a small step log keeps times and tool names only. Recaps, reports and predictions read tool names, file paths, timestamps and usage numbers from local transcripts, never message text or file contents.
 - Muting the Claude desktop app's pop-ups changes only that app's entry in your own Windows notification settings and restores it when Petoken exits.
-- Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere.
+- Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere. The only network requests are the daily update check (GitHub's latest-release record, read only) and, when you choose to update, the installer and checksum download; turn the check off in Settings > General.
 - Details: [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) and [`SECURITY.md`](SECURITY.md).
 
 ## Build and test from source
@@ -187,8 +217,8 @@ Build the one-click installer (`dist\Petoken-Setup-v<version>.exe`, needs [Inno 
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.6.0 release notes: [`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md)
-- Previous release notes: [`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md), [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md), [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
+- v1.7.0 release notes: [`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
+- Previous release notes: [`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md), [`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md), [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md), [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
 - Historical v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)
 
 ## Community and licensing

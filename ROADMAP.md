@@ -21,6 +21,13 @@ Directions only — no schedule promises. `Available now` always matches [Releas
 
 The compact Codex-only implementation and rebuilt package passed technical and independent review; human visual QA was accepted on 2026-10-04. The refinements developed under the V1.4 working name are included in v1.3.0 by user request.
 
+## Released — v1.7.0 (2026-10-06)
+
+- Update check with one-click and automatic updates; welcome guide for new users
+- Todos handed to Claude Code or Codex, now or at a set time, ticked with a recap note
+- Codex instant notices and approvals on the character; quick launch with live model lists
+- Report cache, diagnostics export, smaller package
+
 ## Released — v1.6.0 (2026-10-06)
 
 - Predictions and tips: limit run-out forecasts, switch suggestions, context, stuck tasks

@@ -2,6 +2,28 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V1.7.0 — 2026-10-06
+
+Updates, onboarding, todos handed to AI and Codex on the character; human QA on 2026-10-06.
+
+### Added
+- **Update check** once a day (read-only, GitHub latest release) with Update now / Later / Skip, optional automatic updates while idle; downloads must match the release SHA-256; silent install and reopen.
+- **Welcome guide** for first starts (language, Claude Code and Codex integrations, assistant options); reopen from Settings.
+- **Give a todo to AI** now or at a set time (Claude Code or Codex, folder, model, effort); its first real finish ticks the todo and writes a recap note; Take back; missed times: remind or run.
+- **Codex hooks** (opt-in, Codex's codex_hooks): instant finished / waiting notices and Codex approval cards (allow once / deny).
+- Quick launch: **model and effort** from each app's live list (Claude Code's model catalog, Codex model/list), **Just chat** without a project folder.
+- **Export diagnostics** (shown before saving) and an error log for bug reports.
+
+### Changed
+- Reports open from a background cache; Pillow is no longer bundled (Dependabot alerts fixed); workbench schema 3 (migrated with a backup).
+- Interrupted Claude turns neither tick a todo nor raise a finished pop-up; new terminals come to the front.
+
+### Fixed
+- Codex launches on PCs without the Codex app-server daemon (`--no-daemon` when it is missing).
+- Settings layout of the update options; the update dialog is clickable above Settings.
+
+See [release notes](docs/RELEASE_NOTES_v1.7.0.md).
+
 ## V1.6.0 — 2026-10-06
 
 Time-saving assistant; human QA of the new cards and reports on 2026-10-06.
