@@ -1,5 +1,22 @@
 # Claude progress
 
+## Released — v1.6.0 (2026-10-06)
+
+Time-saving assistant, published from `a3be462` (tag `v1.6.0`, Latest). Installer only (no ZIP from now on):
+`Petoken-Setup-v1.6.0.exe` SHA256 `b2820d526acc7bcb6a2c4e940c84f6be121ca5524c240a53cc7f44771b8c0acb`;
+downloaded asset re-verified. Full suite 1154 tests pass (180 s).
+- A `forecast.py` (pace, switch hints, context, stuck, quota back). B `claude_approval.py` + `approval_card.py`
+  (blocking PermissionRequest hook; permission / AskUserQuestion / ExitPlanMode cards; every allow returns
+  `updatedInput` — Claude ignored plan approvals without it; plan accept also sets the session mode; script pid
+  file lets stale requests close; installed hooks refreshed on start), `claude_recap.py`, `claude_focus.py`,
+  `claude_toasts.py` (mutes Claude desktop toasts while running). C `quick_launch.py` + `claude_launch.py`
+  (Ctrl+Alt+Space is taken on the maintainer's PC: falls back to Alt+Shift+Space). D `reports.py` + `report_view.py`
+  (time/files from Claude transcripts and Codex `codex_recap.activity`).
+- Codex delivered `codex_recap/focus/launch`, `usage.task_history`, `activity`, pricing research; all merged.
+- Approval cards for plans/questions were verified only in the user's interactive QA (headless `-p` has no
+  AskUserQuestion/ExitPlanMode); `claude_approval` keeps a step log in `claude-approvals/events.log`.
+- Local: QA package recycled; `petoken-takeover-backups\Petoken-v1.5.0\` still kept.
+
 ## Released — v1.5.0 (2026-10-05)
 
 Notifications and reminders (roadmap phase "1.6"), published from `5ed41d7`
