@@ -120,7 +120,9 @@ class ReportPage(QWidget):
         for column in range(6):
             header.setSectionResizeMode(column, QHeaderView.Stretch if column in (2, 3)
                                         else QHeaderView.ResizeToContents)
+        # No dark focus frame around the clicked cell (as in the other lists).
         self.setStyleSheet('QPushButton:checked { background:%s; border-color:%s; font-weight:600; }'
+                           ' QTreeWidget { outline: 0px; }'
                            % (theme.TAB_SELECTED_BG, theme.SELECT_BAR))
         layout.addWidget(self.history, 1)
         self.apply_language()

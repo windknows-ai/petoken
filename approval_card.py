@@ -511,6 +511,7 @@ class ApprovalRulesDialog(QDialog):
         intro.setWordWrap(True)
         layout.addWidget(intro)
         self.list = QListWidget()
+        self.list.setStyleSheet('QListWidget { outline: 0px; }')   # No focus frame.
         self.list.currentRowChanged.connect(lambda _: self._sync())
         layout.addWidget(self.list)
         row = QHBoxLayout()
