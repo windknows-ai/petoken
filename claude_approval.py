@@ -273,10 +273,12 @@ def decision(request, choice, answers=None):
     if choice == 'ask':
         return None
     if choice in ('accept', 'accept_edits') and request.get('tool') == PLAN_TOOL:
-        body = dict(behavior='allow')
-        if choice == 'accept_edits':
-            # Same as Claude's "accept and allow edits": edits stop asking for this session.
-            body['updatedPermissions'] = [dict(type='setMode', mode='acceptEdits', destination='session')]
+        # Approving a plan also leaves plan mode, exactly like Claude's own
+        # buttons: back to asking as usual, or "accept and allow edits".
+        # Without the mode change Claude stays in plan mode and cannot act.
+        mode = 'acceptEdits' if choice == 'accept_edits' else 'default'
+        body = dict(behavior='allow',
+                    updatedPermissions=[dict(type='setMode', mode=mode, destination='session')])
         return dict(hookSpecificOutput=dict(hookEventName='PermissionRequest', decision=body))
     if choice == 'revise' and request.get('tool') == PLAN_TOOL:
         feedback = (answers or '').strip() if isinstance(answers, str) else ''

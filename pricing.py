@@ -13,11 +13,19 @@ from __future__ import annotations
 
 import math
 
-# USD / million tokens, verified 2026-09-16:
-# https://developers.openai.com/api/docs/pricing
-# Order: uncached input, cached input, cache writes, output.
+# USD / million tokens, verified 2026-09-16 (GPT-6 Sol/Luna and GPT-5.5
+# added 2026-10-06): https://developers.openai.com/api/docs/pricing
+# Order: uncached input, cached input, cache writes, output. ``None`` cache
+# writes: the model has no separate write price (GPT-5.5's older caching),
+# so a record that reports cache writes for it stays unknown.
+# Sol, Luna and Astra are separate models: never strip suffixes.
+# codex-auto-review has no published price and stays unknown.
 MODEL_PRICES = {
+    'gpt-6.1-sol': (2, .1, 2.5, 10),
+    'gpt-6-sol': (2, .2, 2.5, 10),
+    'gpt-6-luna': (.1, .01, .125, .5),
     'gpt-6-astra': (10, 1, 12.5, 50),
+    'gpt-5.5': (5, .5, None, 30),
     'gpt-5.6-sol': (4, .4, 5, 20),
     'gpt-5.6-terra': (2, .2, 2.5, 12),
     'gpt-5.6-luna': (.2, .02, .25, 1.2),
@@ -110,6 +118,12 @@ DEFAULT_CURRENCY = "CAD"
 _CURRENCY_SYMBOLS = {"USD": "$", "CAD": "CA$", "EUR": "\u20ac", "CNY": "\u00a5"}
 
 
+# Priority/fast multiplier where it differs from the usual 2x.
+FAST_MULTIPLIERS = {'gpt-5.5': 2.5}
+# Models with no published fast price for long-context requests.
+NO_LONG_FAST = frozenset({'gpt-5.5'})
+
+
 def estimate_usd(tokens, model, tier=None, request_input=None):
     """Estimate API-equivalent USD for one Token delta; ``None`` if unknown."""
     rates = MODEL_PRICES.get(model)
@@ -118,15 +132,22 @@ def estimate_usd(tokens, model, tier=None, request_input=None):
     if any(tokens.get(k) is None for k in ('input_tokens', 'cached_input_tokens', 'output_tokens')):
         return None
     inp, cached, writes, out = rates
+    write = max(0, tokens.get('cache_write_input_tokens') or 0)
+    if writes is None:
+        if write:
+            return None   # Cache writes on a model without a write price: unknown.
+        writes = 0
+    fast = tier in ('priority', 'fast')
     if (request_input if request_input is not None else tokens.get('input_tokens', 0)) > 272000:
+        if fast and model in NO_LONG_FAST:
+            return None
         inp, cached, writes, out = inp * 2, cached * 2, writes * 2, out * 1.5
     cache = max(0, tokens.get('cached_input_tokens') or 0)
-    write = max(0, tokens.get('cache_write_input_tokens') or 0)
     plain = max(0, tokens.get('input_tokens', 0) - cache - write)
     # Reasoning is already included in output_tokens.
     try:
         cost = (plain * inp + cache * cached + write * writes + tokens.get('output_tokens', 0) * out) / 1_000_000
-        cost *= 2 if tier in ('priority', 'fast') else .5 if tier in ('flex', 'batch') else 1
+        cost *= FAST_MULTIPLIERS.get(model, 2) if fast else .5 if tier in ('flex', 'batch') else 1
         return cost if math.isfinite(cost) else None
     except OverflowError:
         return None

@@ -133,7 +133,8 @@ class PlanTests(unittest.TestCase):
         self.assertEqual((request['plan'], request['plan_file'], request['wait']),
                          ('# Plan\n1. Add a file', r'C:\plans\p.md', ca.QUESTION_WAIT_S))
         decision = lambda *a: ca.decision(request, *a)['hookSpecificOutput']['decision']
-        self.assertEqual(decision('accept'), dict(behavior='allow'))
+        self.assertEqual(decision('accept'), dict(behavior='allow', updatedPermissions=[
+            dict(type='setMode', mode='default', destination='session')]))
         self.assertEqual(decision('accept_edits')['updatedPermissions'],
                          [dict(type='setMode', mode='acceptEdits', destination='session')])
         revise = decision('revise', 'use SQLite instead')

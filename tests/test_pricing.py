@@ -60,7 +60,8 @@ class CostFixture:
 
 class PricingTests(unittest.TestCase):
     def test_internal_table_has_verified_models_only(self):
-        self.assertEqual(set(MODEL_PRICES), {'gpt-6-astra', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'})
+        self.assertEqual(set(MODEL_PRICES), {'gpt-6.1-sol', 'gpt-6-sol', 'gpt-6-luna', 'gpt-6-astra', 'gpt-5.5',
+                                             'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'})
 
     def test_estimate_usd_known_model_tier_and_unknown(self):
         tokens = dict(input_tokens=1000, cached_input_tokens=800,
@@ -163,3 +164,28 @@ class PricingTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class NewCodexModelPriceTests(unittest.TestCase):
+    """Official prices checked 2026-10-06 (Codex research, docs/V1_6_CODEX_PRICING.md).
+    100K-token requests stay below the 272K long-context threshold."""
+
+    def test_gpt6_models(self):
+        tokens = dict(input_tokens=100_000, cached_input_tokens=0, output_tokens=100_000)
+        self.assertAlmostEqual(estimate_usd(tokens, 'gpt-6.1-sol'), 1.2)
+        self.assertAlmostEqual(estimate_usd(tokens, 'gpt-6-luna'), .06)
+        cached = dict(input_tokens=100_000, cached_input_tokens=100_000, output_tokens=0)
+        self.assertAlmostEqual(estimate_usd(cached, 'gpt-6.1-sol'), .01)
+        self.assertAlmostEqual(estimate_usd(cached, 'gpt-6-sol'), .02)
+        self.assertIsNone(estimate_usd(tokens, 'gpt-6'))
+        self.assertIsNone(estimate_usd(tokens, 'codex-auto-review'))
+
+    def test_gpt55_has_no_cache_write_price(self):
+        tokens = dict(input_tokens=100_000, cached_input_tokens=20_000, output_tokens=10_000)
+        base = (.08 * 5 + .02 * .5 + .01 * 30)
+        self.assertAlmostEqual(estimate_usd(tokens, 'gpt-5.5'), base)
+        self.assertAlmostEqual(estimate_usd(tokens, 'gpt-5.5', tier='fast'), base * 2.5)
+        self.assertIsNone(estimate_usd(dict(tokens, cache_write_input_tokens=10), 'gpt-5.5'))
+        self.assertIsNone(estimate_usd(tokens, 'gpt-5.5', tier='fast', request_input=300_000))
+        self.assertAlmostEqual(estimate_usd(tokens, 'gpt-5.5', request_input=300_000),
+                               .08 * 10 + .02 * 1 + .01 * 45)
