@@ -77,23 +77,33 @@ def claude_sources(store=None):
     return events, history
 
 
-def codex_sources(store=None):
-    """(usage events, history rows) from Codex's local data."""
-    from usage import CodexStore, unique_records
-    store = store or CodexStore()
+_CODEX_STORE = None
+
+
+def codex_sources(store=None, since=None):
+    """(usage events, history rows) from Codex's local data.
+
+    Usage comes from Codex's public ``usage_events`` (epoch ``at``, deltas,
+    unknown amounts stay None); ``task_history`` only supplies titles. The
+    default store is kept between loads so later reads are incremental.
+    """
+    global _CODEX_STORE
+    from usage import CodexStore
+    if store is None:
+        _CODEX_STORE = _CODEX_STORE or CodexStore()
+        store = _CODEX_STORE
     store.read(scope='global')
     projects = {}
     rows = store.task_history(None)
     for row in rows:
         projects[row['thread_id']] = row.get('project')
     events = []
-    for record in unique_records(getattr(store, '_scope_sessions', []) or []):
-        at = _iso(record.get('timestamp'))
-        if at is None:
+    for event in store.usage_events(since):
+        if event.get('at') is None:
             continue
-        events.append(dict(provider='codex', session=record.get('session'), at=at,
-                           tokens=_number((record.get('tokens') or {}).get('total_tokens')),
-                           usd=_number(record.get('usd')), project=projects.get(record.get('session'))))
+        events.append(dict(provider='codex', session=event.get('thread_id'), at=float(event['at']),
+                           tokens=_number(event.get('total_tokens')), usd=_number(event.get('usd')),
+                           project=event.get('project') or projects.get(event.get('thread_id'))))
     history = [dict(provider='codex', id=row['thread_id'], title=row.get('title'), project=row.get('project'),
                     started_at=row.get('started_at'), finished_at=row.get('finished_at'),
                     tokens=row.get('total_tokens'), usd=row.get('usd')) for row in rows]
@@ -106,6 +116,8 @@ def load(now=None):
     events, history, missing = [], [], []
     activity = dict(turns=[], edits=[])
     since = min(period('week', now)[0], period('today', now)[2])
+    # Usage also covers the previous week, for the change against it.
+    usage_since = min(period('week', now)[2], period('today', now)[2])
     for name in ('claude', 'codex'):
         try:
             if name == 'claude':
@@ -120,7 +132,8 @@ def load(now=None):
             continue
         activity['turns'] += list(found.get('turns') or [])
         activity['edits'] += list(found.get('edits') or [])
-    for name, source in (('claude', claude_sources), ('codex', codex_sources)):
+    for name, source in (('claude', claude_sources),
+                         ('codex', lambda: codex_sources(since=usage_since))):
         try:
             more_events, more_history = source()
         except Exception:
@@ -161,8 +174,10 @@ def summarize(data, notices, kind, now):
     before, _ = _usage(data.get('events') or [], previous_start, previous_start + (end - start))
     counts = defaultdict(int)
     activity = data.get('activity') or {}
-    seconds = sum(max(0.0, min(stop, end) - max(begin, start))
-                  for begin, stop, _project in activity.get('turns') or [])
+    # Turns are (start, end, project) from Claude and (start, end, project,
+    # outcome) from Codex; only the times matter here.
+    seconds = sum(max(0.0, min(turn[1], end) - max(turn[0], start))
+                  for turn in activity.get('turns') or [])
     files = {f'{project}/{path}' for at, project, path in activity.get('edits') or [] if start <= at < end}
     for notice in notices or []:
         if not start <= (notice.get('at') or 0) < end:

@@ -34,7 +34,9 @@ DATA = dict(events=[
          finished_at=NOW - 40 * 86400, tokens=1, usd=0),
 ], missing=[], activity=dict(
     # A turn from 14:00-14:10 today, one from 23:50 yesterday to 00:20 today.
-    turns=[(NOW - HOUR, NOW - HOUR + 600, 'site'), (NOW - 15 * HOUR - 600, NOW - 15 * HOUR + 1200, 'site')],
+    # Codex turns carry a fourth field, the outcome.
+    turns=[(NOW - HOUR, NOW - HOUR + 600, 'site'),
+           (NOW - 15 * HOUR - 600, NOW - 15 * HOUR + 1200, 'site', 'completed')],
     edits=[(NOW - HOUR, 'site', 'a.css'), (NOW - HOUR + 60, 'site', 'a.css'), (NOW - HOUR, 'site', 'b.css'),
            (NOW - 30 * HOUR, 'site', 'old.css')]))
 
@@ -78,6 +80,34 @@ class ReportTests(unittest.TestCase):
         self.assertEqual([r['id'] for r in reports.search(history, 'api')], ['t1'])
         self.assertEqual([r['id'] for r in reports.search(history, provider='claude', since=NOW - 7 * 86400)], ['a'])
         self.assertEqual(len(reports.search(history)), 3)
+
+
+class FakeCodexStore:
+    def __init__(self):
+        self.since = 'unset'
+
+    def read(self, scope):
+        self.scope = scope
+
+    def task_history(self, scope):
+        return [dict(thread_id='t1', title='Fix login', project='api', started_at=1.0,
+                     finished_at=None, total_tokens=30, usd=None)]
+
+    def usage_events(self, since):
+        self.since = since
+        return [dict(at=NOW - HOUR, thread_id='t1', project=None, model='gpt-5.5', total_tokens=20, usd=.1),
+                dict(at=None, thread_id='t1', project='api', model=None, total_tokens=10, usd=None)]
+
+
+class CodexSourceTests(unittest.TestCase):
+    def test_codex_usage_comes_from_the_public_events(self):
+        store = FakeCodexStore()
+        events, history = reports.codex_sources(store, since=NOW - 7 * 86400)
+        self.assertEqual(store.since, NOW - 7 * 86400)
+        # The undated carry is left out; the project falls back to the task's.
+        self.assertEqual(events, [dict(provider='codex', session='t1', at=NOW - HOUR, tokens=20,
+                                       usd=.1, project='api')])
+        self.assertEqual(history[0]['title'], 'Fix login')
 
 
 class FakeStore:
