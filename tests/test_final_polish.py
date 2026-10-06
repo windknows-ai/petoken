@@ -184,6 +184,7 @@ class FinalPolishTests(unittest.TestCase):
         settings = Settings(panel)
         try:
             settings.show()
+            settings.tabs.setCurrentWidget(settings.pages["about"])
             self.app.processEvents()
             self.assertEqual(settings.about_heading.text(), expected[0][0])
             self.assertEqual(len(settings.about_titles), 4)
