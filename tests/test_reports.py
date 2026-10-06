@@ -146,6 +146,36 @@ class ReportPageTests(unittest.TestCase):
         page.close()
 
 
+
+class HistoryTests(unittest.TestCase):
+    def test_past_periods(self):
+        start, end, previous = reports.period('yesterday', NOW)
+        self.assertEqual((datetime.fromtimestamp(start), datetime.fromtimestamp(end)),
+                         (datetime(2026, 10, 6), datetime(2026, 10, 7)))
+        start, end, previous = reports.period('week-1', NOW)
+        self.assertEqual((datetime.fromtimestamp(start), datetime.fromtimestamp(end), datetime.fromtimestamp(previous)),
+                         (datetime(2026, 9, 28), datetime(2026, 10, 5), datetime(2026, 9, 21)))
+        self.assertEqual(datetime.fromtimestamp(reports.history_start(NOW)), datetime(2026, 7, 13))
+        week_ago = reports.summarize(DATA, [], 'week-1', NOW)
+        self.assertEqual(week_ago['tokens'], 900)               # Only last week's event.
+
+    def test_series_by_day_and_week(self):
+        from report_charts import buckets, nice_max, series
+        days = buckets('7d', NOW)
+        self.assertEqual(len(days), 7)
+        self.assertEqual(days[-1][2], '10/7')
+        data = series(DATA, '7d', NOW)
+        self.assertEqual(data['tokens']['claude'][-1], 1500)    # Today: two Claude events.
+        self.assertEqual(data['tokens']['codex'][-1], 2100)
+        self.assertEqual(data['tasks']['claude'][-1], 1)
+        self.assertEqual(data['tokens']['claude'][-2], 700)     # Yesterday.
+        self.assertAlmostEqual(sum(data['hours']), 1800 / 3600 + 600 / 3600, places=5)
+        weekly = series(DATA, '12w', NOW)
+        self.assertEqual(len(weekly['labels']), 12)
+        self.assertEqual(weekly['tokens']['claude'][-2], 900)   # Last week.
+        self.assertEqual([nice_max(v) for v in (0, 3, 7, 12, 260)], [1, 5, 10, 20, 500])
+
+
 if __name__ == '__main__':
     unittest.main()
 

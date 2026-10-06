@@ -10,9 +10,12 @@ from __future__ import annotations
 
 import time
 
+from datetime import datetime
+
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-                               QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
+                               QPushButton, QScrollArea, QStackedWidget, QTreeWidget, QTreeWidgetItem,
+                               QVBoxLayout, QWidget)
 
 import reports
 import theme
@@ -23,6 +26,8 @@ from token_format import format_tokens
 
 RELOAD_S = 300
 RANGES = (('week', 7), ('month', 30), ('all', None))
+# Data board periods: today, yesterday, this week, then whole past weeks.
+PERIODS = ('today', 'yesterday', 'week') + tuple(f'week-{n}' for n in range(1, 8))
 
 
 class _Loader(QObject):
@@ -55,14 +60,30 @@ class ReportPage(QWidget):
         self.intro.setObjectName('muted')
         self.intro.setWordWrap(True)
         layout.addWidget(self.intro)
-        top = QHBoxLayout()
-        self.today_button = QPushButton()
-        self.week_button = QPushButton()
-        for button, kind in ((self.today_button, 'today'), (self.week_button, 'week')):
+        # Two sub-pages: the data board (numbers for one period) and the
+        # analysis (how it changed over days or weeks).
+        switch = QHBoxLayout()
+        self.board_button, self.analysis_button = QPushButton(), QPushButton()
+        for index, button in enumerate((self.board_button, self.analysis_button)):
             button.setCheckable(True)
             button.setCursor(Qt.PointingHandCursor)
-            button.clicked.connect(lambda _=False, k=kind: self.set_kind(k))
-            top.addWidget(button)
+            button.clicked.connect(lambda _=False, i=index: self.show_sub(i))
+            switch.addWidget(button)
+        switch.addStretch()
+        layout.addLayout(switch)
+        self.stack = QStackedWidget()
+        layout.addWidget(self.stack, 1)
+        board = QWidget()
+        self.stack.addWidget(board)
+        layout = QVBoxLayout(board)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+        top = QHBoxLayout()
+        self.period_box = QComboBox()
+        for kind in PERIODS:
+            self.period_box.addItem('', kind)
+        self.period_box.currentIndexChanged.connect(lambda _: self.set_kind(self.period_box.currentData()))
+        top.addWidget(self.period_box)
         top.addStretch()
         self.status = QLabel()
         self.status.setObjectName('muted')
@@ -127,6 +148,9 @@ class ReportPage(QWidget):
                            ' QTreeWidget { outline: 0px; }'
                            % (theme.TAB_SELECTED_BG, theme.SELECT_BAR))
         layout.addWidget(self.history, 1)
+        self.analysis = AnalysisView(self)
+        self.stack.addWidget(self.analysis)
+        self.show_sub(0)
         self.apply_language()
 
     @property
@@ -138,8 +162,11 @@ class ReportPage(QWidget):
 
     def apply_language(self):
         self.intro.setText(self.tr('report_intro'))
-        self.today_button.setText(self.tr('report_today'))
-        self.week_button.setText(self.tr('report_week'))
+        self.board_button.setText(self.tr('report_board'))
+        self.analysis_button.setText(self.tr('report_analysis'))
+        for index, kind in enumerate(PERIODS):
+            self.period_box.setItemText(index, self.period_text(kind))
+        self.analysis.apply_language()
         self.reload_button.setText(self.tr('report_reload'))
         self.history_title.setText(self.tr('report_history'))
         self.query.setPlaceholderText(self.tr('report_search'))
@@ -176,8 +203,28 @@ class ReportPage(QWidget):
         self.reload_button.setEnabled(True)
         self.render()
 
+    def period_text(self, kind):
+        if kind in ('today', 'yesterday', 'week'):
+            return self.tr({'today': 'report_today', 'yesterday': 'report_yesterday', 'week': 'report_week'}[kind])
+        start, end, _ = reports.period(kind, time.time())
+        first, last = datetime.fromtimestamp(start), datetime.fromtimestamp(end - 1)
+        span = f'{first.month}/{first.day}–{last.month}/{last.day}'
+        return self.tr('report_last_week' if kind == 'week-1' else 'report_weeks_ago',
+                       n=int(kind.split('-')[1]), span=span)
+
+    def show_sub(self, index):
+        self.stack.setCurrentIndex(index)
+        self.board_button.setChecked(index == 0)
+        self.analysis_button.setChecked(index == 1)
+        if index == 1:
+            self.analysis.render()
+
     def set_kind(self, kind):
-        if kind == 'week':
+        if kind is None:
+            return
+        if self.period_box.currentData() != kind:
+            self.period_box.setCurrentIndex(max(0, self.period_box.findData(kind)))
+        if kind.startswith('week'):
             companion = getattr(self.panel, 'companion', None)
             if companion is not None:
                 companion.earn('first_weekly')
@@ -202,10 +249,10 @@ class ReportPage(QWidget):
         return format_tokens(value, self.panel.prefs.get('token_number_format')) if value is not None else '—'
 
     def render(self):
-        self.today_button.setChecked(self.kind == 'today')
-        self.week_button.setChecked(self.kind == 'week')
         if self.data is None:
             return
+        if self.stack.currentIndex() == 1:
+            self.analysis.render()
         center = getattr(self.panel, 'notifications', None)
         notices = center.store.list_events(limit=5000) if center is not None else []
         summary = reports.summarize(self.data, notices, self.kind, time.time())
@@ -215,7 +262,8 @@ class ReportPage(QWidget):
             files=str(summary['files']),
             tokens=self._tokens(summary['tokens']),
             cost=self._cost_text(summary['usd'], summary['partial']),
-            change='—' if summary['change'] is None else f"{summary['change']:+.0%}")
+            change='—' if summary['change'] is None else
+            ('0%' if abs(summary['change']) < .005 else f"{summary['change']:+.0%}"))
         for key, value in values.items():
             self.tiles[key][0].setText(value)
         self.tiles['cost'][0].setToolTip(self.tr('report_cost_partial') if summary['partial'] else
@@ -267,3 +315,103 @@ class ReportPage(QWidget):
         key = f"claude:{row['id']}" if row.get('provider') == 'claude' else row.get('id')
         if key and getattr(self.panel, 'live', False):
             self.panel.focus_task((row['provider'], key))
+
+
+class AnalysisView(QWidget):
+    """Reports > Analysis: tokens, cost, AI time and tasks as line charts."""
+
+    def __init__(self, page):
+        super().__init__()
+        from report_charts import RANGES as CHART_RANGES, LineChart
+        self.page = page
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+        top = QHBoxLayout()
+        self.range = QComboBox()
+        for key in CHART_RANGES:
+            self.range.addItem('', key)
+        self.range.currentIndexChanged.connect(lambda _: self.render())
+        top.addWidget(self.range)
+        top.addStretch()
+        self.note = QLabel()
+        self.note.setObjectName('muted')
+        top.addWidget(self.note)
+        layout.addLayout(top)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        body = QWidget()
+        body.setObjectName('charts')
+        body.setStyleSheet('QWidget#charts { background:transparent; }')
+        column = QVBoxLayout(body)
+        column.setContentsMargins(0, 0, 6, 0)
+        column.setSpacing(12)
+        self.charts = {}
+        for key in ('tokens', 'usd', 'hours', 'tasks'):
+            chart = LineChart()
+            self.charts[key] = chart
+            column.addWidget(chart)
+        column.addStretch()
+        scroll.setWidget(body)
+        scroll.setStyleSheet('QScrollArea { background:transparent; border:0; }')
+        scroll.viewport().setAutoFillBackground(False)
+        layout.addWidget(scroll, 1)
+
+    def tr(self, key, **values):
+        return self.page.tr(key, **values)
+
+    def apply_language(self):
+        from report_charts import RANGES as CHART_RANGES
+        for index, key in enumerate(CHART_RANGES):
+            self.range.setItemText(index, self.tr(f'report_chart_range_{key}'))
+        self.render()
+
+    def render(self):
+        from report_charts import COLORS, series
+        page = self.page
+        if page.data is None:
+            self.note.setText(self.tr('report_loading'))
+            return
+        self.note.setText(self.tr('report_chart_note'))
+        kind = self.range.currentData()
+        data = series(page.data, kind, time.time())
+        names = {p: PROVIDER_NAMES[p] for p in ('claude', 'codex')}
+
+        def per_app(values):
+            return [(names[p], COLORS[p], values[p]) for p in ('claude', 'codex')]
+
+        def tokens(value, axis=False):
+            return format_tokens(round(value), 'compact').replace(' Tokens', '') if axis else page._tokens(round(value))
+
+        # Costs are drawn in your currency, so the axis gets round numbers.
+        currency = getattr(page.panel, 'currency', 'USD')
+        rates = (getattr(page.panel, 'fx', None) or {}).get('rates') or {}
+        rate = (convert_usd(1.0, currency, rates) if currency != 'USD' else 1.0) or 1.0
+        shown = currency if rate != 1.0 or currency == 'USD' else 'USD'
+
+        def cost(value, axis=False):
+            text_ = format_cost(value, shown)
+            return text_ if axis else '≈ ' + text_
+
+        def hours(value, axis=False):
+            return f'{value:.0f}h' if axis else duration_text(value * 3600)
+
+        def count(value, axis=False):
+            return f'{value:.0f}'
+
+        total_tokens = sum(sum(v) for v in data['tokens'].values())
+        total_usd = sum(sum(v) for v in data['usd'].values())
+        total_hours = sum(data['hours'])
+        total_tasks = sum(sum(v) for v in data['tasks'].values())
+        self.charts['tokens'].set_data(self.tr('report_chart_tokens'), page._tokens(total_tokens),
+                                       data['labels'], per_app(data['tokens']), tokens)
+        local = {p: [v * rate for v in data['usd'][p]] for p in data['usd']}
+        self.charts['usd'].set_data(self.tr('report_chart_cost'), page._cost(total_usd),
+                                    data['labels'], per_app(local), cost)
+        self.charts['hours'].set_data(self.tr('report_chart_hours'), duration_text(total_hours * 3600),
+                                      data['labels'], [(self.tr('report_chart_all_apps'), COLORS['total'],
+                                                        data['hours'])], hours)
+        self.charts['tasks'].set_data(self.tr('report_chart_tasks'), str(total_tasks),
+                                      data['labels'], per_app(data['tasks']), count)

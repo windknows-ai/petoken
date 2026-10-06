@@ -3719,6 +3719,17 @@ class TaskPanelManager(HaloScene):
 SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'about')
 
 
+# Which options each page shows, in order (row label attributes).
+SETTINGS_LAYOUT = (
+    ('general', ('language_label', 'pet_scale_label', 'clinginess_label', 'topmost_label', 'star_ring_label',
+                 'update_label', 'onboarding_label')),
+    ('tracking', ('tracking_label', 'task_label', 'scope_label', 'token_format_label', 'currency_label')),
+    ('claude', ('claude_sync_label', 'claude_notify_label', 'claude_approval_label', 'codex_hooks_label',
+                'mute_claude_toasts_label')),
+    ('assistant', ('assistant_hints_label', 'continuation_card_label', 'dnd_label', 'dnd_scheduled_label',
+                   'schedule_missed_label', 'quick_launch_hotkey_label')),
+)
+
 # (page, row label attribute, description key): the line shown under each option.
 SETTING_DESCRIPTIONS = (
     ('general', 'token_format_label', 'token_format'), ('general', 'currency_label', 'currency'),
@@ -4003,20 +4014,70 @@ class Settings(QDialog):
         reset_row.addStretch()
         reset_row.addWidget(self.buttons)
         layout.addLayout(reset_row)
-        # Under each option, one short line on what it does (details stay in tooltips).
+        # Each option is one card: its name and one line on what it does on the
+        # left, the control on the right (details stay in tooltips).
         self.descriptions = []
-        for form_key, attr, key in SETTING_DESCRIPTIONS:
-            row_label = getattr(self, attr)
-            form = self.forms[form_key]
-            row, _ = form.getWidgetPosition(row_label)
-            note = label('', 'muted')
-            note.setWordWrap(True)
-            note.setStyleSheet(f'color:{theme.MUTED}; font-size:11px; padding:0 0 4px 0;')
-            form.insertRow(row + 1, note)
-            self.descriptions.append((note, key))
+        self._build_cards()
         self.clinginess.currentIndexChanged.connect(lambda _: self._describe_clinginess())
         self.language.currentIndexChanged.connect(self.apply_language)
         self.apply_language()
+
+    def _build_cards(self):
+        descriptions = {attr: key for _page, attr, key in SETTING_DESCRIPTIONS}
+        taken = {}
+        for _page, attrs in SETTINGS_LAYOUT:
+            for attr in attrs:
+                row_label = getattr(self, attr)
+                for form in self.forms.values():
+                    row, _ = form.getWidgetPosition(row_label)
+                    if row >= 0:
+                        result = form.takeRow(row)
+                        field = result.fieldItem
+                        taken[attr] = field.widget() or field.layout()
+                        break
+        for page, attrs in SETTINGS_LAYOUT:
+            cards = QWidget()
+            column = QVBoxLayout(cards)
+            column.setContentsMargins(0, 0, 0, 0)
+            column.setSpacing(8)
+            for attr in attrs:
+                if attr not in taken:
+                    continue
+                card = QFrame()
+                card.setObjectName('settingCard')
+                card.setStyleSheet(f'QFrame#settingCard {{ background:{theme.CONTROL_BG}; border:1px solid {theme.BORDER_SOFT};'
+                                   ' border-radius:10px; }')
+                row = QHBoxLayout(card)
+                row.setContentsMargins(14, 10, 14, 10)
+                row.setSpacing(16)
+                words = QVBoxLayout()
+                words.setSpacing(2)
+                title = getattr(self, attr)
+                title.setStyleSheet('font-weight:600;')
+                title.setWordWrap(True)
+                words.addWidget(title)
+                if attr in descriptions:
+                    note = label('', 'muted')
+                    note.setWordWrap(True)
+                    note.setStyleSheet(f'color:{theme.MUTED}; font-size:11px;')
+                    words.addWidget(note)
+                    self.descriptions.append((note, descriptions[attr]))
+                words.insertStretch(0)
+                words.addStretch()
+                row.addLayout(words, 1)
+                field = taken[attr]
+                if isinstance(field, QWidget):
+                    if isinstance(field, QComboBox):
+                        field.setMinimumWidth(190)
+                        field.setMaximumWidth(260)
+                    row.addWidget(field, 0, Qt.AlignRight | Qt.AlignVCenter)
+                else:
+                    holder = QWidget()
+                    holder.setLayout(field)
+                    holder.setMinimumWidth(190)
+                    row.addWidget(holder, 0, Qt.AlignRight | Qt.AlignVCenter)
+                column.addWidget(card)
+            self.forms[page].insertRow(0, cards)
 
     def _describe_clinginess(self):
         for note, key in self.descriptions:
@@ -4333,6 +4394,36 @@ class Settings(QDialog):
         self.accept()
 
 
+class WheelGuard(QObject):
+    """The mouse wheel over a closed drop-down, number box or slider scrolls
+    the page it sits in instead of changing the value: you were most likely
+    scrolling, not choosing. Clicking still opens and changes them."""
+
+    def eventFilter(self, obj, event):
+        from PySide6.QtCore import QEvent
+        from PySide6.QtGui import QWheelEvent
+        from PySide6.QtWidgets import QAbstractScrollArea, QAbstractSpinBox
+        if event.type() != QEvent.Wheel or not isinstance(obj, (QComboBox, QAbstractSpinBox, QSlider)):
+            return False
+        parent = obj.parentWidget()
+        while parent is not None and not isinstance(parent, QAbstractScrollArea):
+            parent = parent.parentWidget()
+        if parent is not None:
+            bar = parent.verticalScrollBar()
+            if bar.isVisible():
+                QApplication.sendEvent(bar, QWheelEvent(
+                    event.position(), event.globalPosition(), event.pixelDelta(), event.angleDelta(),
+                    event.buttons(), event.modifiers(), event.phase(), event.inverted()))
+        return True
+
+
+def install_wheel_guard():
+    app = QApplication.instance()
+    if app is not None and getattr(app, '_petoken_wheel_guard', None) is None:
+        app._petoken_wheel_guard = WheelGuard(app)
+        app.installEventFilter(app._petoken_wheel_guard)
+
+
 class Panel(QWidget):
     focus_failed = Signal(object)   # Fallback to run on the UI thread.
 
@@ -4342,6 +4433,7 @@ class Panel(QWidget):
         # clock; unit tests construct live=False and must never arm
         # real timers (deterministic assertions).
         self.live = bool(live)
+        install_wheel_guard()
         self.prefs = read_preferences()
         self.app_mode = AppModeState()
         self.codex_activity = dict(active=False, valid=False, reason='starting')

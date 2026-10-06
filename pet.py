@@ -20,6 +20,10 @@ from usage_overlay import UsageOverlay, UsagePresence, build_sections
 
 
 POKES_TO_POUT=5        # Clicks on her within POKE_WINDOW_S seconds.
+PAT_FLIPS=5            # Direction changes of a head rub...
+PAT_WINDOW_S=2.5       # ...within this long...
+PAT_HOLD_S=.9          # ...kept up at least this long...
+PAT_STROKE=12          # ...each stroke this many px (at 100% size).
 POKE_WINDOW_S=4
 POUT_S=2.4            # Each further click while pouting restarts this.
 
@@ -614,29 +618,37 @@ class DesktopPet(QWidget):
         self.interact('coquettish',3.5)
 
     def track_pat(self,point):
-        """Rubbing back and forth over the head is a head pat."""
+        """Rubbing back and forth over the head is a head pat.
+
+        Deliberate only: PAT_FLIPS turns within PAT_WINDOW_S seconds, each
+        stroke at least PAT_STROKE px long, kept up for PAT_HOLD_S seconds.
+        Passing over her head on the way somewhere never counts.
+        """
         fx,fy=self.box_fraction(point)
         now=time.monotonic()
         if not (.18<=fx<=.82 and 0<=fy<=.38):
             self._pat_last=None
             return
+        x=point.x()
         if self._pat_last is not None:
-            last_x,last_t,direction=self._pat_last
-            dx=point.x()-last_x
+            last_x,last_t,direction,stroke_from=self._pat_last
+            dx=x-last_x
             if now-last_t>.4:
-                direction=0
-            elif abs(dx)>=3:
+                direction,stroke_from=0,x
+            elif abs(dx)>=2:
                 turn=1 if dx>0 else -1
                 if direction and turn!=direction:
-                    self._pat_flips.append(now)
+                    if abs(last_x-stroke_from)>=self._px(PAT_STROKE):
+                        self._pat_flips.append(now)
+                    stroke_from=last_x
                 direction=turn
             else:
                 return
-            self._pat_last=(point.x(),now,direction)
+            self._pat_last=(x,now,direction,stroke_from)
         else:
-            self._pat_last=(point.x(),now,0)
-        self._pat_flips=[t for t in self._pat_flips if now-t<1.5]
-        if len(self._pat_flips)>=3:
+            self._pat_last=(x,now,0,x)
+        self._pat_flips=[t for t in self._pat_flips if now-t<PAT_WINDOW_S]
+        if len(self._pat_flips)>=PAT_FLIPS and now-self._pat_flips[0]>=PAT_HOLD_S:
             if self._pat_started is None or now-self._pat_seen>2:
                 self._pat_started=now
             self._pat_seen=now

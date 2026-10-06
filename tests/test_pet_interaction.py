@@ -56,9 +56,20 @@ class PetInteractionTests(unittest.TestCase):
     def test_rubbing_the_head_is_a_pat(self):
         clock = [100.0]
         with patch('pet.time.monotonic', side_effect=lambda: clock[0]):
-            for n in range(8):
+            # A quick pass over her head is not a pat.
+            for n in range(4):
                 clock[0] += .1
                 self.mouse(QEvent.MouseMove, self.head(.35 if n % 2 else .6), Qt.NoButton, Qt.NoButton)
+            self.assertEqual(self.pet.current_state, 'idle')
+            # Tiny wiggles are not either.
+            for n in range(12):
+                clock[0] += .1
+                self.mouse(QEvent.MouseMove, self.head(.48 if n % 2 else .5), Qt.NoButton, Qt.NoButton)
+            self.assertEqual(self.pet.current_state, 'idle')
+            # A real rub, kept up for a second, is.
+            for n in range(12):
+                clock[0] += .15
+                self.mouse(QEvent.MouseMove, self.head(.3 if n % 2 else .65), Qt.NoButton, Qt.NoButton)
         self.assertEqual(self.pet.current_state, 'headpat_happy')
 
     def test_clicks_poke_without_opening_the_panel_and_many_clicks_pout(self):

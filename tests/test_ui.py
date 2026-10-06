@@ -4320,7 +4320,16 @@ class MultiTaskIntegrationTests(unittest.TestCase):
         if self.panel.analytics_window: self.panel.analytics_window.close()
         self.panel.closing = True; self.panel.close()
         self.panel.deleteLater(); self.app.processEvents()
-        self.pref_patch.stop(); self.temp.cleanup()
+        self.pref_patch.stop()
+        # A closed poller may still hold the synthetic Codex store for a moment.
+        import gc, time as _time
+        for _attempt in range(20):
+            gc.collect()
+            try:
+                self.temp.cleanup()
+                break
+            except PermissionError:
+                _time.sleep(.1)
 
 
     def _publish_render(self, prefs=None, now=None, **kw):

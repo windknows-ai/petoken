@@ -33,17 +33,37 @@ def _number(value):
     return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
 
+HISTORY_WEEKS = 12     # How far back reports read (data board weeks, analysis charts).
+
+
 def period(kind, now):
-    """(start, end, previous_start) epoch seconds for 'today' or 'week'."""
+    """(start, end, previous_start) epoch seconds.
+
+    ``kind``: 'today', 'yesterday', 'week' (this week so far) or 'week-N'
+    (the whole week N weeks ago). A current period ends now; a past one at
+    its end, and is compared with the period before it.
+    """
     local = datetime.fromtimestamp(now)
     midnight = local.replace(hour=0, minute=0, second=0, microsecond=0)
-    if kind == 'week':
-        start = midnight - timedelta(days=local.weekday())
+    if kind == 'week' or kind.startswith('week-'):
+        back = int(kind.split('-', 1)[1]) if '-' in kind else 0
+        start = midnight - timedelta(days=local.weekday()) - timedelta(weeks=back)
         previous = start - timedelta(days=7)
+        end = now if back == 0 else (start + timedelta(days=7)).timestamp()
+    elif kind == 'yesterday':
+        start = midnight - timedelta(days=1)
+        previous = start - timedelta(days=1)
+        end = midnight.timestamp()
     else:
         start = midnight
         previous = start - timedelta(days=1)
-    return start.timestamp(), now, previous.timestamp()
+        end = now
+    return start.timestamp(), end, previous.timestamp()
+
+
+def history_start(now):
+    """Monday 00:00 HISTORY_WEEKS weeks back: the oldest data reports read."""
+    return period(f'week-{HISTORY_WEEKS}', now)[0]
 
 
 def _iso(value):
@@ -127,9 +147,8 @@ def load(now=None, store_path=None):
     events, history, missing = [], [], []
     focus = []
     activity = dict(turns=[], edits=[])
-    since = min(period('week', now)[0], period('today', now)[2])
-    # Usage also covers the previous week, for the change against it.
-    usage_since = min(period('week', now)[2], period('today', now)[2])
+    # Twelve weeks back: past weeks on the data board and the analysis charts.
+    since = usage_since = history_start(now)
     for name in ('claude', 'codex'):
         try:
             if name == 'claude':
