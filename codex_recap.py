@@ -51,7 +51,10 @@ def thread_info(home, thread_id):
 def epoch(value):
     """Explicit epoch seconds or a timezone-bearing ISO timestamp; no unit guesses."""
     if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return float(value) if math.isfinite(value) and value >= 0 else None
+        try:
+            return float(value) if math.isfinite(value) and value >= 0 else None
+        except OverflowError:
+            return None
     if isinstance(value, str):
         try:
             stamp = datetime.fromisoformat(value.replace('Z', '+00:00'))
@@ -114,108 +117,123 @@ def _ledger_times(home, thread_id):
         return None, None
 
 
+def _rollout_events(row):
+    """Validated, thread-local events with the same cwd/fork rules for all readers."""
+    root = cwd = row.get('cwd')
+    metadata = False
+    fork_at = None
+    with Path(row['rollout_path']).open('rb') as stream:
+        for line in stream:
+            if not line.endswith(b'\n'):
+                raise ValueError('incomplete rollout record')
+            event = json.loads(line)
+            if not isinstance(event, dict) or not isinstance(event.get('payload'), dict):
+                raise ValueError('invalid rollout record')
+            payload = event['payload']
+            kind = event.get('type')
+            stamp = epoch(event.get('timestamp'))
+            if kind == 'session_meta' and not metadata:
+                if payload.get('id') != row['id']:
+                    raise ValueError('mismatched rollout identity')
+                metadata = True
+                root = root or payload.get('cwd')
+                cwd = payload.get('cwd') or root
+                if payload.get('forked_from_id'):
+                    fork_at = epoch(payload.get('timestamp'))
+                    if fork_at is None:
+                        raise ValueError('unknown fork boundary')
+                continue
+            if not metadata:
+                raise ValueError('missing rollout identity')
+            if fork_at is not None and (stamp is None or stamp < fork_at):
+                continue
+            if payload.get('thread_id', row['id']) != row['id']:
+                continue
+            if kind == 'turn_context':
+                cwd = payload.get('cwd') or cwd
+            yield event, payload, root, cwd, stamp
+
+
+def _changed_paths(payload, root, cwd):
+    tag = payload.get('type')
+    changes = None
+    if tag == 'patch_apply_end' and payload.get('success') is True and payload.get('status') in (None, 'completed'):
+        changes = payload.get('changes')
+    elif tag == 'item_completed':
+        item = payload.get('item')
+        if isinstance(item, dict) and item.get('type') == 'FileChange' and item.get('status') == 'completed':
+            changes = item.get('changes')
+    if not isinstance(changes, dict):
+        return None
+    paths = set()
+    for name, change in changes.items():
+        if not isinstance(change, dict) or change.get('type') not in ('add', 'delete', 'update'):
+            raise ValueError('invalid file change')
+        for changed in (name, change.get('move_path')):
+            relative = _relative(changed, root, cwd)
+            if relative:
+                paths.add(relative)
+    return paths
+
+
 def _rollout_summary(row):
     """Scan one log without retaining messages, patch bodies or command contents."""
     unknown = dict(files=None, started_at=None, finished_at=None, duration_s=None)
-    path = row.get('rollout_path')
-    if not path:
+    if not row.get('rollout_path'):
         return unknown, False
-    root = cwd = row.get('cwd')
+    root = row.get('cwd')
     files, calls = set(), set()
     observed_edits = False
     start = finish = None
     active_turn = None
     lifecycle = False
     start_seen = False
-    metadata = False
-    fork_at = None
     try:
-        with Path(path).open('rb') as stream:
-            for line in stream:
-                if not line.endswith(b'\n'):
-                    return unknown, True  # The terminal record may still be being written.
-                event = json.loads(line)
-                if not isinstance(event, dict) or not isinstance(event.get('payload'), dict):
-                    return unknown, True
-                payload = event['payload']
-                kind = event.get('type')
-                stamp = epoch(event.get('timestamp'))
-                if kind == 'session_meta' and not metadata:
-                    if payload.get('id') != row['id']:
-                        return unknown, True
-                    metadata = True
-                    root = root or payload.get('cwd')
-                    cwd = payload.get('cwd') or root
-                    if payload.get('forked_from_id'):
-                        fork_at = epoch(payload.get('timestamp'))
-                        if fork_at is None:
-                            return unknown, True
-                    continue
-                if not metadata:
-                    return unknown, True
-                if fork_at is not None and (stamp is None or stamp < fork_at):
-                    continue
-                if payload.get('thread_id', row['id']) != row['id']:
-                    continue
-                if kind == 'turn_context':
-                    cwd = payload.get('cwd') or cwd
-                if kind == 'response_item':
-                    call_id = payload.get('call_id')
-                    if (payload.get('type') in ('function_call', 'custom_tool_call')
-                            and payload.get('name') in ('apply_patch', 'functions.apply_patch')
-                            and isinstance(call_id, str)):
-                        calls.add(call_id)
-                    elif (payload.get('type') in ('function_call_output', 'custom_tool_call_output')
-                          and isinstance(call_id, str) and call_id in calls):
-                        calls.discard(call_id)
-                        output = payload.get('output')
-                        if isinstance(output, str) and output.startswith('Success. Updated the following files:\n'):
-                            for entry in output.splitlines()[1:]:
-                                if len(entry) < 3 or entry[:2] not in ('A ', 'M ', 'D '):
-                                    return unknown, True
-                                relative = _relative(entry[2:], root, cwd)
-                                if relative:
-                                    files.add(relative)
-                            observed_edits = True
-                if kind != 'event_msg':
-                    continue
-                tag = payload.get('type')
-                if tag in ('task_started', 'turn_started'):
-                    lifecycle = True
-                    value = epoch(payload.get('started_at'))
-                    value = stamp if value is None else value
-                    if not start_seen:
-                        start = value
-                        start_seen = True
-                    active_turn = payload.get('turn_id')
-                    finish = None
-                elif tag in ('task_complete', 'turn_complete', 'turn_aborted'):
-                    if active_turn is not None and payload.get('turn_id') != active_turn:
-                        continue
-                    lifecycle = True
-                    if not start_seen:
-                        start = epoch(payload.get('started_at'))
-                        start_seen = True
-                    value = epoch(payload.get('completed_at'))
-                    finish = stamp if value is None else value
-                changes = None
-                if tag == 'patch_apply_end' and payload.get('success') is True and payload.get('status') in (None, 'completed'):
-                    changes = payload.get('changes')
-                elif tag == 'item_completed':
-                    item = payload.get('item')
-                    if isinstance(item, dict) and item.get('type') == 'FileChange' and item.get('status') == 'completed':
-                        changes = item.get('changes')
-                if isinstance(changes, dict):
-                    observed_edits = True
-                    for name, change in changes.items():
-                        if not isinstance(change, dict) or change.get('type') not in ('add', 'delete', 'update'):
-                            return unknown, True
-                        for changed in (name, change.get('move_path')):
-                            relative = _relative(changed, root, cwd)
+        for event, payload, root, cwd, stamp in _rollout_events(row):
+            kind = event.get('type')
+            if kind == 'response_item':
+                call_id = payload.get('call_id')
+                if (payload.get('type') in ('function_call', 'custom_tool_call')
+                        and payload.get('name') in ('apply_patch', 'functions.apply_patch')
+                        and isinstance(call_id, str)):
+                    calls.add(call_id)
+                elif (payload.get('type') in ('function_call_output', 'custom_tool_call_output')
+                      and isinstance(call_id, str) and call_id in calls):
+                    calls.discard(call_id)
+                    output = payload.get('output')
+                    if isinstance(output, str) and output.startswith('Success. Updated the following files:\n'):
+                        for entry in output.splitlines()[1:]:
+                            if len(entry) < 3 or entry[:2] not in ('A ', 'M ', 'D '):
+                                return unknown, True
+                            relative = _relative(entry[2:], root, cwd)
                             if relative:
                                 files.add(relative)
-        if not metadata:
-            return unknown, False
+                        observed_edits = True
+            if kind != 'event_msg':
+                continue
+            tag = payload.get('type')
+            if tag in ('task_started', 'turn_started'):
+                lifecycle = True
+                value = epoch(payload.get('started_at'))
+                value = stamp if value is None else value
+                if not start_seen:
+                    start = value
+                    start_seen = True
+                active_turn = payload.get('turn_id')
+                finish = None
+            elif tag in ('task_complete', 'turn_complete', 'turn_aborted'):
+                if active_turn is not None and payload.get('turn_id') != active_turn:
+                    continue
+                lifecycle = True
+                if not start_seen:
+                    start = epoch(payload.get('started_at'))
+                    start_seen = True
+                value = epoch(payload.get('completed_at'))
+                finish = stamp if value is None else value
+            changed = _changed_paths(payload, root, cwd)
+            if changed is not None:
+                observed_edits = True
+                files.update(changed)
     except OSError:
         return unknown, False
     except (ValueError, TypeError):
@@ -225,6 +243,76 @@ def _rollout_summary(row):
     duration = finish - start if start is not None and finish is not None else None
     return dict(files=sorted(files) if observed_edits and root else None,
                 started_at=start, finished_at=finish, duration_s=duration), lifecycle
+
+
+def _rollout_activity(row, since, project):
+    turns, edits = [], []
+    started = active_turn = None
+    in_turn = False
+    for event, payload, root, cwd, stamp in _rollout_events(row):
+        if event.get('type') != 'event_msg':
+            continue
+        tag = payload.get('type')
+        if tag in ('task_started', 'turn_started'):
+            value = epoch(payload.get('started_at'))
+            started = stamp if value is None else value
+            active_turn = payload.get('turn_id')
+            in_turn = True
+        elif tag in ('task_complete', 'turn_complete', 'turn_aborted'):
+            if in_turn and payload.get('turn_id') == active_turn:
+                value = epoch(payload.get('completed_at'))
+                ended = stamp if value is None else value
+                if started is not None and ended is not None and ended >= max(since, started):
+                    turns.append((started, ended, project))
+                in_turn = False
+        if stamp is not None and stamp >= since:
+            changed = _changed_paths(payload, root, cwd)
+            if changed:
+                edits.extend((stamp, project, relative) for relative in sorted(changed))
+    return turns, edits
+
+
+def activity(home, since):
+    """Explicit per-turn and edit activity, sorted by UTC epoch seconds.
+
+    Only rollouts with filesystem mtime >= since are read. task_started is
+    accepted as the local Codex alias of turn_started. Running/unknown turns
+    are omitted; projects use the existing project-name resolution (or None).
+    Archived and independent subagent turns remain history, while inherited
+    fork events and duplicate/conflicting index entries are not counted again.
+    Unknown cutoffs and unreadable/corrupt logs return no inferred activity.
+    """
+    result = dict(turns=[], edits=[])
+    since = epoch(since)
+    if since is None:
+        return result
+    # usage imports recap helpers, so resolve its pure project helper lazily.
+    from usage import project_identity
+    try:
+        state = json.loads((Path(home)/'.codex-global-state.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        state = {}
+    rows = {}
+    for row in thread_rows(home):
+        key = row['id']
+        if key not in rows:
+            rows[key] = row
+        elif rows[key] != row:
+            rows[key] = None
+    for row in rows.values():
+        if not row or not row.get('rollout_path'):
+            continue
+        try:
+            if Path(row['rollout_path']).stat().st_mtime < since:
+                continue
+            turns, edits = _rollout_activity(row, since, project_identity(row, state)[0])
+        except (OSError, ValueError, TypeError):
+            continue
+        result['turns'].extend(turns)
+        result['edits'].extend(edits)
+    result['turns'].sort(key=lambda item: (item[0], item[1], item[2] or ''))
+    result['edits'].sort(key=lambda item: (item[0], item[1] or '', item[2]))
+    return result
 
 
 def recap_row(home, row):
