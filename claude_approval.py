@@ -83,12 +83,14 @@ while ([DateTime]::UtcNow -lt $deadline) {
         $answer = [IO.File]::ReadAllText($decision, $utf8)
         Remove-Item -LiteralPath $decision, $request -Force
         if ($answer.Trim()) { [Console]::Out.Write($answer) }
+        Add-Content -LiteralPath (Join-Path $folder 'events.log') -Value ("{0} {1} script returned answer ({2} chars)" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $id.Substring(0, 8), $answer.Length)
         exit 0
     }
     if (-not (Alive)) { break }
     Start-Sleep -Milliseconds 150
 }
 Remove-Item -LiteralPath $request -Force
+Add-Content -LiteralPath (Join-Path $folder 'events.log') -Value ("{0} {1} script gave up waiting" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $id.Substring(0, 8))
 exit 0
 '''
 
@@ -252,7 +254,7 @@ def parse_request(request_id, raw, at):
         plan = _text(tool_input.get('plan'), 20000)
         return dict(id=request_id, at=at, session=_text(data.get('session_id'), 128), cwd=cwd,
                     project=Path(cwd).name if cwd else '', tool=tool, summary=plan, description='',
-                    suggestions=[], rule=None, can_always=False, plan=plan,
+                    suggestions=[], rule=None, can_always=False, plan=plan, input=tool_input,
                     plan_file=_text(tool_input.get('planFilePath'), 1000), wait=QUESTION_WAIT_S)
     if tool == QUESTION_TOOL:
         questions = parse_questions(tool_input.get('questions'))
@@ -266,7 +268,7 @@ def parse_request(request_id, raw, at):
                    if isinstance(s, dict) and s.get('type') in ('addRules', 'addDirectories')]
     rule = precise_rule(tool, tool_input)
     return dict(id=request_id, at=at, session=_text(data.get('session_id'), 128), cwd=cwd,
-                project=Path(cwd).name if cwd else '', tool=tool, wait=WAIT_S,
+                project=Path(cwd).name if cwd else '', tool=tool, wait=WAIT_S, input=tool_input,
                 summary=summary(tool, tool_input),
                 description=_text(tool_input.get('description'), 300),
                 suggestions=suggestions, rule=rule, can_always=rule is not None)
@@ -294,8 +296,11 @@ def decision(request, choice, answers=None):
         # Approving a plan also leaves plan mode, exactly like Claude's own
         # buttons: back to asking as usual, or "accept and allow edits".
         # Without the mode change Claude stays in plan mode and cannot act.
+        # The tool input goes back with the approval: for tools that need the
+        # user (plans, questions) Claude Code only takes an allow that
+        # carries it, as in the SDK's own examples.
         mode = 'acceptEdits' if choice == 'accept_edits' else 'default'
-        body = dict(behavior='allow',
+        body = dict(behavior='allow', updatedInput=dict(request.get('input') or {}),
                     updatedPermissions=[dict(type='setMode', mode=mode, destination='session')])
         return dict(hookSpecificOutput=dict(hookEventName='PermissionRequest', decision=body))
     if choice == 'revise' and request.get('tool') == PLAN_TOOL:
@@ -313,6 +318,8 @@ def decision(request, choice, answers=None):
         body = dict(behavior='deny', message='Denied from Petoken.')
     else:
         body = dict(behavior='allow')
+        if request.get('input'):
+            body['updatedInput'] = dict(request['input'])   # Unchanged: run exactly what Claude asked.
         if choice == 'always' and request.get('can_always'):
             body['updatedPermissions'] = always_permissions(request)
     return dict(hookSpecificOutput=dict(hookEventName='PermissionRequest', decision=body))
@@ -375,17 +382,31 @@ class ApprovalBroker:
                 self.answered.add(request_id)
                 continue
             self.pending[request_id] = request
+            self.log(request_id, request.get('tool'), 'received')
             new.append(request)
         gone = [request_id for request_id in self.pending if request_id not in names]
         for request_id in gone:
-            self.pending.pop(request_id)
+            self.log(request_id, self.pending.pop(request_id).get('tool'), 'gone (timed out or handled)')
         self.answered &= set(names)
         return new, gone
+
+    def log(self, request_id, tool, what):
+        """One line per step (time, short id, tool, step) for troubleshooting."""
+        path = self.folder / 'events.log'
+        try:
+            if path.exists() and path.stat().st_size > 256 * 1024:
+                path.write_text('', encoding='utf-8')
+            with path.open('a', encoding='utf-8') as handle:
+                handle.write(f'{time.strftime("%Y-%m-%d %H:%M:%S")} {request_id[:8]} {tool} {what}\n')
+        except OSError:
+            pass
 
     def answer(self, request_id, choice, answers=None):
         request = self.pending.pop(request_id, None)
         if request is None:
+            self.log(request_id, '-', f'answer {choice} ignored: not pending')
             return False
+        self.log(request_id, request.get('tool'), f'answer {choice}')
         output = decision(request, choice, answers)
         self.answered.add(request_id)
         if not self._write(request_id, output):

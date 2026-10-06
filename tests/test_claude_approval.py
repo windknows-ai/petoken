@@ -101,7 +101,8 @@ class RequestTests(unittest.TestCase):
     def test_decisions(self):
         request = ca.parse_request('a' * 32, json.dumps(COMMAND_INPUT), 5.0)
         allow = ca.decision(request, 'allow')['hookSpecificOutput']
-        self.assertEqual(allow, dict(hookEventName='PermissionRequest', decision=dict(behavior='allow')))
+        self.assertEqual(allow, dict(hookEventName='PermissionRequest', decision=dict(
+            behavior='allow', updatedInput=COMMAND_INPUT['tool_input'])))
         self.assertEqual(ca.decision(request, 'deny')['hookSpecificOutput']['decision']['behavior'], 'deny')
         self.assertIsNone(ca.decision(request, 'ask'))
         updates = ca.decision(request, 'always')['hookSpecificOutput']['decision']['updatedPermissions']
@@ -152,8 +153,9 @@ class PlanTests(unittest.TestCase):
         self.assertEqual((request['plan'], request['plan_file'], request['wait']),
                          ('# Plan\n1. Add a file', r'C:\plans\p.md', ca.QUESTION_WAIT_S))
         decision = lambda *a: ca.decision(request, *a)['hookSpecificOutput']['decision']
-        self.assertEqual(decision('accept'), dict(behavior='allow', updatedPermissions=[
-            dict(type='setMode', mode='default', destination='session')]))
+        self.assertEqual(decision('accept'), dict(
+            behavior='allow', updatedInput=data['tool_input'],
+            updatedPermissions=[dict(type='setMode', mode='default', destination='session')]))
         self.assertEqual(decision('accept_edits')['updatedPermissions'],
                          [dict(type='setMode', mode='acceptEdits', destination='session')])
         revise = decision('revise', 'use SQLite instead')
