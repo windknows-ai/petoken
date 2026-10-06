@@ -314,5 +314,98 @@ class SchemaMigrationTests(unittest.TestCase):
         self.assertEqual(store.task_links(), {('codex', 'thread-1'): project})
 
 
+
+class SchemaFourTests(unittest.TestCase):
+    """2.0: review state, presets, handoffs, focus, goals, stickers, points."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.folder = Path(self.directory.name)
+        self.path = self.folder / 'workbench.sqlite3'
+
+    def make_v3(self):
+        import workbench_store
+        project, todo = str(uuid4()), str(uuid4())
+        with closing(sqlite3.connect(self.path)) as connection, connection:
+            for sql in workbench_store._SCHEMA_V3.values():
+                connection.execute(sql)
+            connection.execute(f'PRAGMA application_id={workbench_store._APPLICATION_ID}')
+            connection.execute('PRAGMA user_version=3')
+            connection.execute("INSERT INTO projects VALUES (?, 'site', 'D:/p', 'now', 'now')", (project,))
+            connection.execute("INSERT INTO todos VALUES (?, 'todo', ?, 0, 'now', 'now')", (todo, project))
+            connection.execute("INSERT INTO todo_schedules VALUES (?, 1.0, 'claude', 'D:/p', 'go', 'opus', 'high', "
+                               "'started', 2.0, 'claude:s1', NULL)", (todo,))
+        return project, todo
+
+    def test_exact_v3_migrates_with_backup_and_keeps_schedules(self):
+        project, todo = self.make_v3()
+        store = WorkbenchStore(self.path)
+        self.addCleanup(store.close)
+        schedule = store.get_schedule(todo)
+        self.assertEqual((schedule['state'], schedule['model'], schedule['task_key']), ('started', 'opus', 'claude:s1'))
+        self.assertEqual(store.update_schedule(todo, state='review')['state'], 'review')
+        [backup] = sorted(self.folder.glob('workbench.v3-backup-*.sqlite3'))
+        with closing(sqlite3.connect(backup)) as connection:
+            self.assertEqual(connection.execute('PRAGMA user_version').fetchone()[0], 3)
+        self.assertIsNone(store.get_preset(project))
+
+    def test_presets_handoffs_goals(self):
+        store = WorkbenchStore(self.path)
+        self.addCleanup(store.close)
+        project = store.create_project('site', 'D:/site')['id']
+        store.set_preset(project, 'codex', 'D:/site', 'continue the login work', 'gpt-5.5', 'high')
+        self.assertEqual(store.get_preset(project)['model'], 'gpt-5.5')
+        store.set_preset(project, 'claude', 'D:/site', '')
+        self.assertEqual((store.get_preset(project)['provider_id'], store.get_preset(project)['model']), ('claude', ''))
+        with self.assertRaises(WorkbenchError):
+            store.set_preset(project, 'opencode', 'D:/site', '')
+        store.add_handoff(project, 'first')
+        store.add_handoff(project, 'fix the logout button next')
+        self.assertEqual(store.latest_handoff(project)['body'], 'fix the logout button next')
+        self.assertEqual(store.set_goal(project, weekly_tokens=2_000_000)['weekly_tokens'], 2_000_000)
+        self.assertEqual(store.set_goal(project, weekly_usd=5.0)['weekly_tokens'], None)
+        for bad in (0, -1, True, float('nan')):
+            with self.assertRaises(WorkbenchError):
+                store.set_goal(project, weekly_tokens=bad)
+        self.assertIsNone(store.set_goal(project))
+        self.assertEqual(store.list_goals(), [])
+        store.delete_project(project)        # Presets and handoffs go with it.
+        with self.assertRaises(WorkbenchError):
+            store.get_preset(project) or store.latest_handoff(project) or store._record('projects', project)
+
+    def test_focus_sessions_and_done_todos(self):
+        import time
+        store = WorkbenchStore(self.path)
+        self.addCleanup(store.close)
+        todo = store.create_todo('write tests')
+        now = time.time()
+        session = store.start_focus(now, 25 * 60, todo_id=todo['id'])
+        with self.assertRaises(WorkbenchError):
+            store.start_focus(now, 0)
+        store.update_todo(todo['id'], 'write tests', done=True)
+        self.assertEqual(store.list_focus(), [])           # Still running.
+        ended = store.end_focus(session['id'], now + 1500, True)
+        self.assertEqual(ended['completed'], 1)
+        with self.assertRaises(WorkbenchError):
+            store.end_focus(session['id'], now + 1600, False)
+        self.assertEqual([s['id'] for s in store.list_focus(now - 10)], [session['id']])
+        self.assertEqual([t['id'] for t in store.todos_done_between(now - 5, time.time() + 5)], [todo['id']])
+        self.assertEqual(store.todos_done_between(now - 100, now - 50), [])
+
+    def test_stickers_and_points_count_once(self):
+        store = WorkbenchStore(self.path)
+        self.addCleanup(store.close)
+        self.assertTrue(store.earn('first_project', 10))
+        self.assertFalse(store.earn('first_project', 20))
+        self.assertEqual(store.achievements(), {'first_project': 10})
+        self.assertTrue(store.add_points('todo_done', 'todo-1', 5, 1))
+        self.assertFalse(store.add_points('todo_done', 'todo-1', 5, 2))
+        self.assertTrue(store.add_points('focus_done', 'f-1', 10, 3))
+        self.assertEqual((store.points(), store.count_points('todo_done')), (15, 1))
+        with self.assertRaises(WorkbenchError):
+            store.add_points('x', 'y', 0, 1)
+
+
 if __name__ == '__main__':
     unittest.main()

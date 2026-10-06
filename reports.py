@@ -24,6 +24,7 @@ from __future__ import annotations
 import threading
 import time
 from collections import defaultdict
+from pathlib import Path
 from datetime import datetime, timedelta
 
 
@@ -110,10 +111,21 @@ def codex_sources(store=None, since=None):
     return events, history
 
 
-def load(now=None):
+def focus_sessions(store_path, since):
+    """(start, end, completed) of focus sessions that ended since ``since``."""
+    from workbench_store import WorkbenchStore
+    store = WorkbenchStore(store_path)
+    try:
+        return [(row['started_at'], row['ended_at'], row['completed']) for row in store.list_focus(since)]
+    finally:
+        store.close()
+
+
+def load(now=None, store_path=None):
     """Everything the report needs; a provider that fails is just missing."""
     now = time.time() if now is None else now
     events, history, missing = [], [], []
+    focus = []
     activity = dict(turns=[], edits=[])
     since = min(period('week', now)[0], period('today', now)[2])
     # Usage also covers the previous week, for the change against it.
@@ -142,7 +154,12 @@ def load(now=None):
         events += more_events
         history += more_history
     history.sort(key=lambda row: -(row.get('finished_at') or row.get('started_at') or 0))
-    return dict(events=events, history=history, missing=missing, activity=activity)
+    if store_path is not None and Path(store_path).exists():
+        try:
+            focus = focus_sessions(store_path, usage_since)
+        except Exception:
+            focus = []
+    return dict(events=events, history=history, missing=missing, activity=activity, focus=focus)
 
 
 def _usage(events, start, end):
@@ -179,6 +196,8 @@ def summarize(data, notices, kind, now):
     seconds = sum(max(0.0, min(turn[1], end) - max(turn[0], start))
                   for turn in activity.get('turns') or [])
     files = {f'{project}/{path}' for at, project, path in activity.get('edits') or [] if start <= at < end}
+    focus = [max(0.0, min(stop, end) - max(begin, start)) for begin, stop, _done in data.get('focus') or []]
+    focus = [seconds for seconds in focus if seconds > 0]
     for notice in notices or []:
         if not start <= (notice.get('at') or 0) < end:
             continue
@@ -190,7 +209,8 @@ def summarize(data, notices, kind, now):
                 partial=any(p['partial'] for p in providers.values()),
                 change=None if not previous_tokens else (tokens - previous_tokens) / previous_tokens,
                 finished=counts['finished'], failed=counts['failed'], approvals=counts['needs_approval'],
-                files=len(files), seconds=seconds, missing=list(data.get('missing') or []))
+                files=len(files), seconds=seconds, missing=list(data.get('missing') or []),
+                focus_count=len(focus), focus_seconds=sum(focus))
 
 
 def search(history, query='', provider=None, since=None):

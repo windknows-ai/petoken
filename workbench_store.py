@@ -2,7 +2,10 @@
 
 Schema 2 (V1.5) lets Codex and Claude Code tasks be linked to projects;
 schema 3 (V1.7) adds ``todo_schedules``: a todo handed to Claude Code or
-Codex, now or at a set time, and what became of it. Exact older databases
+Codex, now or at a set time, and what became of it. Schema 4 (2.0) adds a
+``review`` schedule state (the AI is done, waiting for you to accept it),
+project start presets, "where to continue" notes, focus sessions, weekly
+project usage goals, stickers and companionship points. Exact older databases
 are migrated once on open, one step at a time: a complete SQLite backup is
 written beside the file first, each step runs in one transaction, and any
 failure rolls back and leaves the original untouched. Anything
@@ -20,8 +23,8 @@ class WorkbenchError(Exception):
 
 
 _APPLICATION_ID = 0x50545742
-_SCHEMA_VERSION = 3
-SCHEDULE_STATES = ('waiting', 'started', 'finished', 'failed', 'missed')
+_SCHEMA_VERSION = 4
+SCHEDULE_STATES = ('waiting', 'started', 'review', 'finished', 'failed', 'missed')
 # Providers whose tasks may be linked to projects.
 LINK_PROVIDERS = ('codex', 'claude')
 _SCHEMA = {
@@ -47,10 +50,41 @@ _SCHEMA = {
         provider_id TEXT NOT NULL CHECK (provider_id IN ('codex', 'claude')),
         folder TEXT NOT NULL, prompt TEXT NOT NULL,
         model TEXT NOT NULL DEFAULT '', effort TEXT NOT NULL DEFAULT '',
-        state TEXT NOT NULL CHECK (state IN ('waiting', 'started', 'finished', 'failed', 'missed')),
+        state TEXT NOT NULL CHECK (state IN ('waiting', 'started', 'review', 'finished', 'failed', 'missed')),
         started_at REAL, task_key TEXT,
         note_id TEXT REFERENCES notes(id) ON DELETE SET NULL)''',
+    'project_presets': '''CREATE TABLE project_presets (
+        project_id TEXT PRIMARY KEY NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        provider_id TEXT NOT NULL CHECK (provider_id IN ('codex', 'claude')),
+        folder TEXT NOT NULL, prompt TEXT NOT NULL,
+        model TEXT NOT NULL DEFAULT '', effort TEXT NOT NULL DEFAULT '',
+        updated_at TEXT NOT NULL)''',
+    'handoff_notes': '''CREATE TABLE handoff_notes (
+        id TEXT PRIMARY KEY NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        body TEXT NOT NULL, created_at TEXT NOT NULL)''',
+    'focus_sessions': '''CREATE TABLE focus_sessions (
+        id TEXT PRIMARY KEY NOT NULL, started_at REAL NOT NULL, planned_s REAL NOT NULL,
+        ended_at REAL, completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1)),
+        project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+        todo_id TEXT REFERENCES todos(id) ON DELETE SET NULL)''',
+    'usage_goals': '''CREATE TABLE usage_goals (
+        project_id TEXT PRIMARY KEY NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        weekly_tokens INTEGER CHECK (weekly_tokens IS NULL OR weekly_tokens > 0),
+        weekly_usd REAL CHECK (weekly_usd IS NULL OR weekly_usd > 0),
+        updated_at TEXT NOT NULL)''',
+    'achievements': '''CREATE TABLE achievements (
+        id TEXT PRIMARY KEY NOT NULL, earned_at REAL NOT NULL)''',
+    'points_ledger': '''CREATE TABLE points_ledger (
+        reason TEXT NOT NULL, ref TEXT NOT NULL, at REAL NOT NULL,
+        points INTEGER NOT NULL CHECK (points > 0),
+        PRIMARY KEY (reason, ref))''',
 }
+_V4_TABLES = ('project_presets', 'handoff_notes', 'focus_sessions', 'usage_goals',
+              'achievements', 'points_ledger')
+# Schema 3 (V1.7): no review state and none of the 2.0 tables.
+_SCHEMA_V3 = {name: sql for name, sql in _SCHEMA.items() if name not in _V4_TABLES}
+_SCHEMA_V3['todo_schedules'] = _SCHEMA['todo_schedules'].replace("'started', 'review', ", "'started', ")
 # The first schema-3 table in V1.7 test builds, before model and effort.
 _SCHEDULES_PREVIEW = '''CREATE TABLE todo_schedules (
         todo_id TEXT PRIMARY KEY NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
@@ -61,7 +95,7 @@ _SCHEDULES_PREVIEW = '''CREATE TABLE todo_schedules (
         started_at REAL, task_key TEXT,
         note_id TEXT REFERENCES notes(id) ON DELETE SET NULL)'''
 # Schema 2 (V1.5/V1.6): no schedules. Kept to recognize and migrate it.
-_SCHEMA_V2 = {name: sql for name, sql in _SCHEMA.items() if name != 'todo_schedules'}
+_SCHEMA_V2 = {name: sql for name, sql in _SCHEMA_V3.items() if name != 'todo_schedules'}
 # Schema 1 (V1.4): Codex-only task links. Kept to recognize and migrate it.
 _SCHEMA_V1 = dict(_SCHEMA_V2, task_links='''CREATE TABLE task_links (
         provider_id TEXT NOT NULL CHECK (provider_id = 'codex'), task_key TEXT NOT NULL,
@@ -129,6 +163,7 @@ class WorkbenchStore:
             self._migrate_v1()
             self._migrate_v2()
             self._migrate_v3_preview()
+            self._migrate_v3()
             self._validate_schema()
         except (OSError, ValueError, TypeError, sqlite3.Error, WorkbenchError) as error:
             self.close()
@@ -162,7 +197,7 @@ class WorkbenchStore:
                 connection.execute('BEGIN IMMEDIATE')
                 if connection.execute('PRAGMA user_version').fetchone()[0] != 2:
                     return  # Another opener migrated it meanwhile.
-                connection.execute(_SCHEMA['todo_schedules'])
+                connection.execute(_SCHEMA_V3['todo_schedules'])
                 connection.execute('PRAGMA user_version=3')
         except sqlite3.Error as error:
             raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
@@ -176,7 +211,7 @@ class WorkbenchStore:
         row = connection.execute("SELECT sql FROM sqlite_master WHERE name='todo_schedules'").fetchone()
         if row is None or ' '.join(row[0].split()) != ' '.join(_SCHEDULES_PREVIEW.split()):
             return
-        self._validate_schema(dict(_SCHEMA, todo_schedules=_SCHEDULES_PREVIEW), 3)
+        self._validate_schema(dict(_SCHEMA_V3, todo_schedules=_SCHEDULES_PREVIEW), 3)
         self._backup('v3-preview')
         columns = 'todo_id, run_at, provider_id, folder, prompt, state, started_at, task_key, note_id'
         try:
@@ -184,11 +219,39 @@ class WorkbenchStore:
                 connection.execute('BEGIN IMMEDIATE')
                 count = connection.execute('SELECT COUNT(*) FROM todo_schedules').fetchone()[0]
                 connection.execute('ALTER TABLE todo_schedules RENAME TO todo_schedules_preview')
-                connection.execute(_SCHEMA['todo_schedules'])
+                connection.execute(_SCHEMA_V3['todo_schedules'])
                 connection.execute(f'INSERT INTO todo_schedules ({columns}) SELECT {columns} FROM todo_schedules_preview')
                 connection.execute('DROP TABLE todo_schedules_preview')
                 if connection.execute('SELECT COUNT(*) FROM todo_schedules').fetchone()[0] != count:
                     raise WorkbenchError('Workbench migration changed the schedule count')
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
+
+    def _migrate_v3(self):
+        """Schema 3 to 4: the review state and the 2.0 tables, backup first."""
+        connection = self._connection
+        if (connection.execute('PRAGMA application_id').fetchone()[0] != _APPLICATION_ID
+                or connection.execute('PRAGMA user_version').fetchone()[0] != 3):
+            return
+        self._validate_schema(_SCHEMA_V3, 3)
+        self._backup('v3')
+        columns = ('todo_id, run_at, provider_id, folder, prompt, model, effort, state, '
+                   'started_at, task_key, note_id')
+        try:
+            with connection:
+                connection.execute('BEGIN IMMEDIATE')
+                if connection.execute('PRAGMA user_version').fetchone()[0] != 3:
+                    return  # Another opener migrated it meanwhile.
+                count = connection.execute('SELECT COUNT(*) FROM todo_schedules').fetchone()[0]
+                connection.execute('ALTER TABLE todo_schedules RENAME TO todo_schedules_v3')
+                connection.execute(_SCHEMA['todo_schedules'])
+                connection.execute(f'INSERT INTO todo_schedules ({columns}) SELECT {columns} FROM todo_schedules_v3')
+                connection.execute('DROP TABLE todo_schedules_v3')
+                if connection.execute('SELECT COUNT(*) FROM todo_schedules').fetchone()[0] != count:
+                    raise WorkbenchError('Workbench migration changed the schedule count')
+                for name in _V4_TABLES:
+                    connection.execute(_SCHEMA[name])
+                connection.execute('PRAGMA user_version=4')
         except sqlite3.Error as error:
             raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
 
@@ -398,6 +461,134 @@ class WorkbenchStore:
                 connection.execute('DELETE FROM todo_schedules WHERE todo_id=?', (_identifier(todo_id),))
         except sqlite3.Error as error:
             raise WorkbenchError(f'Cannot remove the schedule: {error}') from error
+
+    def _write(self, sql, parameters=()):
+        try:
+            with self._open() as connection:
+                return connection.execute(sql, parameters).rowcount
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot save workbench record: {error}') from error
+
+    # 2.0: project start presets ----------------------------------------------
+    def get_preset(self, project_id):
+        rows = self._read('SELECT * FROM project_presets WHERE project_id=?', (_identifier(project_id),))
+        return rows[0] if rows else None
+
+    def set_preset(self, project_id, provider_id, folder, prompt, model='', effort=''):
+        """How this project starts work: which app, folder, model and opening prompt."""
+        self._record('projects', project_id)
+        if provider_id not in LINK_PROVIDERS:
+            raise WorkbenchError('Only Codex and Claude Code can start a project')
+        self._write(
+            'INSERT INTO project_presets VALUES (?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET '
+            'provider_id=excluded.provider_id, folder=excluded.folder, prompt=excluded.prompt, '
+            'model=excluded.model, effort=excluded.effort, updated_at=excluded.updated_at',
+            (project_id, provider_id, _text(folder, 'folder', 2000, True), _text(prompt, 'prompt', 8000),
+             _text(model or '', 'model', 120), _text(effort or '', 'effort', 40), _now()))
+        return self.get_preset(project_id)
+
+    def delete_preset(self, project_id):
+        self._write('DELETE FROM project_presets WHERE project_id=?', (_identifier(project_id),))
+
+    # 2.0: "where to continue next time" ---------------------------------------
+    def add_handoff(self, project_id, body):
+        self._record('projects', project_id)
+        record = dict(id=str(uuid4()), project_id=project_id, body=_text(body, 'note', 2000, True),
+                      created_at=_now())
+        self._write('INSERT INTO handoff_notes VALUES (?,?,?,?)', tuple(record.values()))
+        return record
+
+    def latest_handoff(self, project_id):
+        rows = self._read('SELECT * FROM handoff_notes WHERE project_id=? ORDER BY created_at DESC, id LIMIT 1',
+                          (_identifier(project_id),))
+        return rows[0] if rows else None
+
+    def delete_handoff(self, id):
+        self._delete('handoff_notes', id)
+
+    # 2.0: focus sessions ------------------------------------------------------
+    def start_focus(self, started_at, planned_s, project_id=None, todo_id=None):
+        if isinstance(planned_s, bool) or not isinstance(planned_s, (int, float)) or not 0 < planned_s <= 6 * 3600:
+            raise WorkbenchError('Invalid focus length')
+        self._project(project_id)
+        if todo_id is not None:
+            self._record('todos', todo_id)
+        record = dict(id=str(uuid4()), started_at=float(started_at), planned_s=float(planned_s),
+                      ended_at=None, completed=0, project_id=project_id, todo_id=todo_id)
+        self._write('INSERT INTO focus_sessions VALUES (?,?,?,?,?,?,?)', tuple(record.values()))
+        return self._record('focus_sessions', record['id'])
+
+    def end_focus(self, id, ended_at, completed):
+        if self._write('UPDATE focus_sessions SET ended_at=?, completed=? WHERE id=? AND ended_at IS NULL',
+                       (float(ended_at), int(_boolean(completed, 'completed')), _identifier(id))) != 1:
+            raise WorkbenchError('Focus session does not exist or already ended')
+        return self._record('focus_sessions', id)
+
+    def list_focus(self, since=None):
+        rows = self._read('SELECT * FROM focus_sessions WHERE ended_at IS NOT NULL AND ended_at >= ? '
+                          'ORDER BY started_at, id', (float(since or 0),))
+        for row in rows:
+            row['completed'] = bool(row['completed'])
+        return rows
+
+    def todos_done_between(self, start, end):
+        """Todos ticked off in a time window (by their last change)."""
+        def iso(epoch):
+            return datetime.fromtimestamp(epoch, timezone.utc).isoformat(timespec='microseconds')
+        return self._read('SELECT * FROM todos WHERE done=1 AND updated_at >= ? AND updated_at < ? '
+                          'ORDER BY updated_at, id', (iso(start), iso(end)))
+
+    # 2.0: weekly project usage goals -----------------------------------------
+    def get_goal(self, project_id):
+        rows = self._read('SELECT * FROM usage_goals WHERE project_id=?', (_identifier(project_id),))
+        return rows[0] if rows else None
+
+    def list_goals(self):
+        return self._read('SELECT * FROM usage_goals ORDER BY project_id')
+
+    def set_goal(self, project_id, weekly_tokens=None, weekly_usd=None):
+        """A weekly limit in tokens and/or money; both None removes it."""
+        self._record('projects', project_id)
+        for value in (weekly_tokens, weekly_usd):
+            if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                                      or not value > 0 or value != value):
+                raise WorkbenchError('Invalid goal')
+        if weekly_tokens is None and weekly_usd is None:
+            self._write('DELETE FROM usage_goals WHERE project_id=?', (project_id,))
+            return None
+        self._write('INSERT INTO usage_goals VALUES (?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET '
+                    'weekly_tokens=excluded.weekly_tokens, weekly_usd=excluded.weekly_usd, '
+                    'updated_at=excluded.updated_at',
+                    (project_id, None if weekly_tokens is None else int(weekly_tokens),
+                     None if weekly_usd is None else float(weekly_usd), _now()))
+        return self.get_goal(project_id)
+
+    # 2.0: stickers and companionship points -----------------------------------
+    def earn(self, achievement_id, at):
+        """Record a sticker once; True only the first time."""
+        _text(achievement_id, 'sticker', 64, True)
+        return self._write('INSERT OR IGNORE INTO achievements VALUES (?,?)', (achievement_id, float(at))) == 1
+
+    def achievements(self):
+        return {row['id']: row['earned_at'] for row in self._read('SELECT * FROM achievements')}
+
+    def add_points(self, reason, ref, points, at):
+        """Award points once per (reason, ref); True when newly added."""
+        if isinstance(points, bool) or not isinstance(points, int) or points <= 0:
+            raise WorkbenchError('Invalid points')
+        return self._write('INSERT OR IGNORE INTO points_ledger VALUES (?,?,?,?)',
+                           (_text(reason, 'reason', 40, True), _text(ref, 'ref', 200, True),
+                            float(at), points)) == 1
+
+    def points(self):
+        rows = self._read('SELECT COALESCE(SUM(points), 0) AS total FROM points_ledger')
+        return rows[0]['total']
+
+    def points_log(self, limit=50):
+        return self._read('SELECT * FROM points_ledger ORDER BY at DESC LIMIT ?', (int(limit),))
+
+    def count_points(self, reason):
+        return self._read('SELECT COUNT(*) AS n FROM points_ledger WHERE reason=?', (reason,))[0]['n']
 
     def list_notes(self, project_id=None):
         return self._list('notes', project_id)

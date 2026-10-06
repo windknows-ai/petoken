@@ -225,6 +225,9 @@ class ReportPage(QWidget):
                                      cost=self._cost_text(info['usd'], info['partial'])))
         if summary['finished'] or summary['failed']:
             lines.append(self.tr('report_outcomes', finished=summary['finished'], failed=summary['failed']))
+        if summary.get('focus_count'):
+            lines.append(self.tr('report_focus', count=summary['focus_count'],
+                                 time=duration_text(summary['focus_seconds'])))
         if summary['projects']:
             lines.append(self.tr('report_projects', projects=', '.join(p['name'] for p in summary['projects'])))
         if summary['missing']:

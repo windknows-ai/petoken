@@ -4583,9 +4583,18 @@ class Panel(QWidget):
         self.updates = UpdateController(self)
         if live:
             self.updates.start_schedule()
+        # 2.0 focus companion mode.
+        from focus_mode import FocusMode
+        self.focus_mode = FocusMode(self)
+        self.focus_mode.changed.connect(self._focus_changed)
+        self.focus_mode.ended.connect(self._focus_ended)
+        self.focus_mode.summary_ready.connect(self._focus_summary)
+        self._focus_card = None
+        self._focus_phase = 'idle'
         # Reports open instantly: count once in the background after start-up.
         import reports
-        self.report_cache = reports.ReportCache()
+        self.report_cache = (reports.ReportCache(lambda: reports.load(store_path=PREF_DIR / 'workbench.sqlite3'))
+                             if live else reports.ReportCache())
         if live:
             QTimer.singleShot(90_000, lambda: None if self.closing else self.report_cache.refresh())
 
@@ -5458,6 +5467,9 @@ class Panel(QWidget):
 
     def announce(self, event):
         self._last_notice = dict(event)
+        focus = getattr(self, 'focus_mode', None)
+        if focus is not None and focus.quiet(event.get('kind')):
+            return  # Focusing: recorded in Notifications, but no pop-up or reaction.
         pet = getattr(self, 'pet', None)
         if pet is not None:
             pet.react(event.get('kind'))
@@ -5544,6 +5556,57 @@ class Panel(QWidget):
         self.workbench_window.show()
         self.workbench_window.raise_()
         self.workbench_window.activateWindow()
+
+    def workbench_store(self):
+        """The running app's workbench database (None in tests and previews)."""
+        return self.todo_ai.store if self.live else None
+
+    def open_focus_dialog(self):
+        from focus_mode import FocusDialog
+        dialog = FocusDialog(self, self.workbench_store(), QApplication.activeModalWidget())
+        if dialog.exec() == QDialog.Accepted:
+            values = dialog.values()
+            self.start_focus(values['minutes'], values['project_id'], values['todo_id'])
+
+    def start_focus(self, minutes, project_id=None, todo_id=None):
+        if self._focus_card is not None:
+            self._focus_card.close()
+        self.focus_mode.start(minutes, project_id, todo_id)
+
+    def _focus_changed(self):
+        phase = self.focus_mode.phase
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            if phase == 'break' and self._focus_phase == 'focus':
+                pet.interact('stretch_break', 3)
+            pet.update_activity()
+            pet.update()
+        self._focus_phase = phase
+
+    def _focus_ended(self, summary):
+        from focus_mode import FocusCard
+        pet = getattr(self, 'pet', None)
+        if pet is not None and summary['completed']:
+            pet.interact('focus_done', 4)
+        if self._focus_card is not None:
+            self._focus_card.close()
+        card = FocusCard(self.language, summary, self.prefs.get('token_number_format'))
+        card.again.connect(lambda: self.start_focus(int(self.prefs.get('focus_minutes', 25)),
+                                                    self.focus_mode.project_id, self.focus_mode.todo_id))
+        card.destroyed.connect(lambda *_: setattr(self, '_focus_card', None))
+        card.session_start = summary['start']
+        self._focus_card = card
+        if pet is not None and pet.isVisible():
+            card.show()
+            card.place_beside(pet)
+
+    def _focus_summary(self, summary):
+        card = self._focus_card
+        if card is not None and getattr(card, 'session_start', None) == summary['start']:
+            card.update_summary(summary)
+            pet = getattr(self, 'pet', None)
+            if pet is not None:
+                card.place_beside(pet)
 
     def open_reports(self):
         if self.closing:
@@ -5749,6 +5812,9 @@ class Panel(QWidget):
         self.notify_clock.stop()
         self.approvals.stop()
         self.updates.stop()
+        self.focus_mode.abandon()
+        if self._focus_card is not None:
+            self._focus_card.close()
         self.todo_ai.stop()
         self.hotkey.unregister()
         QApplication.instance().removeNativeEventFilter(self.hotkey.filter)

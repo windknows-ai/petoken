@@ -149,6 +149,15 @@ class DesktopPet(QWidget):
         line=info.get('text')
         return line.strip() if isinstance(line,str) and line.strip() else None
 
+    def focus_subtitle(self):
+        """Focus countdown pill, e.g. 'Focus 18:42'; None when not focusing."""
+        mode=getattr(self.panel,'focus_mode',None)
+        if mode is None or mode.phase=='idle' or self.token_bubble_visible():
+            return None
+        from focus_mode import clock_text
+        key='focus_pill' if mode.phase=='focus' else 'focus_pill_break'
+        return self.tr_text(key,time=clock_text(mode.remaining()))
+
     def apply_language(self):
         self.setWindowTitle(self.tr_text('pet_title'))
         self.setAccessibleName(self.tr_text('pet_accessible'))
@@ -237,9 +246,12 @@ class DesktopPet(QWidget):
         if self.mood_enabled and now>=self._mood_next:
             self._mood_next=now+1
             self.update_mood(now,task)
-        # Being dragged > notification > preview > interaction > task > mood.
+        focus=getattr(getattr(self.panel,'focus_mode',None),'phase','idle')
+        focus_pose={'focus':'focus_read','break':'focus_tea'}.get(focus)
+        # Being dragged > notification > preview > interaction > focus > task > mood.
         state=(('dragged' if self.dragging and 'dragged' in self.sprites else None)
                or self.reaction_state or self.preview_state or self.interaction_state
+               or (focus_pose if focus_pose in self.sprites else None)
                or (task if task!='idle' else None)
                or (self.mood.pose if self.mood_enabled and self.mood.pose in self.sprites else None)
                or 'idle')
@@ -281,7 +293,8 @@ class DesktopPet(QWidget):
 
     def update_mood(self,now,task):
         from notifications import quiet_now
-        self.mood.update(now,datetime.now(),input_idle_seconds(),busy=task!='idle',
+        focusing=getattr(getattr(self.panel,'focus_mode',None),'phase','idle')!='idle'
+        self.mood.update(now,datetime.now(),input_idle_seconds(),busy=task!='idle' or focusing,
                          quiet=quiet_now(self.panel.prefs),fullscreen=fullscreen_now())
         if self.mood.greeted_day and self.mood.greeted_day!=self.panel.prefs.get('mood_greeted_day'):
             self.panel.prefs['mood_greeted_day']=self.mood.greeted_day
@@ -322,7 +335,7 @@ class DesktopPet(QWidget):
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         bubble=QColor(theme.CARD)
         bubble.setAlpha(235)
-        if (subtitle:=self.music_subtitle()) is not None:
+        if (subtitle:=self.focus_subtitle() or self.music_subtitle()) is not None:
             # One small secondary pill in the idle card area. No text means no
             # box at all; Token Mode never reaches this branch.
             p.setFont(QFont('Segoe UI',self._px(8)))
@@ -626,6 +639,21 @@ class DesktopPet(QWidget):
         usage.toggled.connect(self.panel.set_panel_pinned)
         # Everyday actions on top; occasional ones and toggles under More.
         menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch)
+        mode=getattr(self.panel,'focus_mode',None)
+        if mode is not None:
+            from focus_mode import CHOICES, clock_text
+            if mode.phase=='focus':
+                menu.addAction(self.tr_text('focus_stop',time=clock_text(mode.remaining())),mode.stop)
+            elif mode.phase=='break':
+                menu.addAction(self.tr_text('focus_skip_break'),mode.skip_break)
+            else:
+                focus=menu.addMenu(self.tr_text('focus_menu'))
+                focus.setStyleSheet(self.panel.styleSheet())
+                for minutes in CHOICES:
+                    focus.addAction(self.tr_text('focus_minutes',minutes=minutes),
+                                    lambda m=minutes:self.panel.start_focus(m))
+                focus.addSeparator()
+                focus.addAction(self.tr_text('focus_custom'),self.panel.open_focus_dialog)
         menu.addAction(self.tr_text('workbench_open'),self.panel.open_workbench)
         menu.addAction(self.tr_text('wb_reports'),self.panel.open_reports)
         menu.addSeparator()
