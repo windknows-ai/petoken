@@ -94,6 +94,17 @@ def fixture_tasks(count=3, case='known', source='mixed'):
 
 
 PLANS = ('plus', 'pro')
+# Synthetic Claude Code permission requests (hook input fields).
+PREVIEW_REQUESTS = {
+    'command': dict(tool_name='Bash', tool_input=dict(
+        command='npm run build && npm test', description='Build the site and run the test suite')),
+    'edit': dict(tool_name='Edit', tool_input=dict(file_path=r'C:\work\website\src\styles.css')),
+    'multi_line': dict(tool_name='PowerShell', tool_input=dict(
+        command=('Get-ChildItem -Recurse -Filter *.log |\n  Where-Object Length -gt 10MB |\n'
+                 '  Remove-Item -WhatIf'),
+        description='Find large log files')),
+    'web': dict(tool_name='WebFetch', tool_input=dict(url='https://docs.python.org/3/library/json.html')),
+}
 # Synthetic forecast.py advice for the usage card (applies to every section).
 PREVIEW_HINTS = {
     'none': None,
@@ -221,9 +232,10 @@ class Preview(QWidget):
         self.detail_status = QLabel('')
         self.detail_status.setWordWrap(True)
         layout.addRow(self.detail_status)
-        # V1.6: synthetic notifications show the pop-up, the pet reaction
-        # and the workbench Notifications list without running a task.
-        self.panel.preview_toasts = True
+        # V1.6: synthetic notifications show the pet reaction and the
+        # workbench Notifications list without running a task. Real Windows
+        # pop-ups only when a person opens the preview (see main), never
+        # from automated tests that build many previews.
         from notifications import KINDS
         self.notify_kind = self.combo(KINDS, 'finished')
         notify_button = QPushButton('Send test notification / 发送测试通知')
@@ -233,6 +245,19 @@ class Preview(QWidget):
         self.hint = self.combo(tuple(PREVIEW_HINTS), 'none')
         self.hint.currentTextChanged.connect(self.set_hint)
         layout.addRow('Card hint / 卡片提示', self.hint)
+        # V1.6 B: a synthetic Claude Code permission request beside the pet,
+        # answered into a disposable folder (no Claude Code involved).
+        import claude_approval
+        from approval_card import ApprovalController
+        self._approval_dir = tempfile.TemporaryDirectory(prefix='petoken-approval-qa-')
+        self.panel.approvals = ApprovalController(
+            self.panel, claude_approval.ApprovalBroker(self._approval_dir.name))
+        self.panel.approvals.requested.connect(self.panel._approval_requested)
+        self.panel.approvals.start()
+        self.approval_kind = self.combo(tuple(PREVIEW_REQUESTS), 'command')
+        approval_button = QPushButton('Send approval request / 发送权限请求')
+        approval_button.clicked.connect(self.send_approval)
+        layout.addRow(self.approval_kind, approval_button)
         quit_button = QPushButton('Exit preview / 退出预览')
         quit_button.clicked.connect(self.close)
         layout.addRow(quit_button)
@@ -388,6 +413,19 @@ class Preview(QWidget):
                                             'stuck': '20'}.get(kind, ''),
             dedupe=f'preview:{self._notice_count}'), now=time.time() + self._notice_count * 1000)
 
+    def send_approval(self):
+        import claude_approval
+        request_id = claude_approval.new_request_id()
+        path = Path(self._approval_dir.name) / f'{request_id}.request.json'
+        data = dict(session_id='synthetic', cwd=r'C:\work\SYNTHETIC QA website',
+                    hook_event_name='PermissionRequest', **PREVIEW_REQUESTS[self.approval_kind.currentText()])
+        path.write_text(json.dumps(data), encoding='utf-8')
+
+        def expire():   # What the hook script does when nobody answers.
+            if not (path.with_name(f'{request_id}.decision.json')).exists():
+                path.unlink(missing_ok=True)
+        QTimer.singleShot(claude_approval.WAIT_S * 1000, expire)
+
     def set_hint(self, name):
         advice = PREVIEW_HINTS.get(name)
         self.panel.assistant.hint = lambda *args, **kwargs: advice
@@ -517,6 +555,7 @@ def main(argv=None):
         stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
         preview = Preview(args.count, args.language, args.case, args.anchor,
                           args.provider, args.codex_plan)
+        preview.panel.preview_toasts = True
         preview.motion.setChecked(args.motion == 'on')
         preview.pose.setCurrentText(args.pose)
         if args.inspect is not None:

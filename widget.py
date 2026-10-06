@@ -19,10 +19,11 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
     QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy, QTimeEdit)
 
+import claude_approval
 import claude_events
 import claude_statusline
 from forecast import Assistant
-from notifications import NotificationCenter, NotificationStore
+from notifications import NotificationCenter, NotificationStore, quiet_now
 from desktop import ActiveTask, RateLimits, fetch_fx
 from usage import quota_window, sample_age
 from analytics_view import AnalyticsWindow, help_text
@@ -3758,6 +3759,18 @@ class Settings(QDialog):
         self.claude_notify.setEnabled(self._claude_notify_state != 'unreadable')
         self.claude_notify_label = label()
         self.form.addRow(self.claude_notify_label, self.claude_notify)
+        self._claude_approval_state = claude_approval.state()
+        self.claude_approval = QCheckBox()
+        self.claude_approval.setChecked(self._claude_approval_state == 'on')
+        self.claude_approval.setEnabled(self._claude_approval_state != 'unreadable')
+        self.claude_approval_rules = QPushButton()
+        self.claude_approval_rules.clicked.connect(self.open_approval_rules)
+        approval_row = QHBoxLayout()
+        approval_row.addWidget(self.claude_approval)
+        approval_row.addWidget(self.claude_approval_rules)
+        approval_row.addStretch(1)
+        self.claude_approval_label = label()
+        self.form.addRow(self.claude_approval_label, approval_row)
         self.assistant_hints = QCheckBox()
         self.assistant_hints.setChecked(bool(panel.prefs.get('assistant_hints', True)))
         self.assistant_hints_label = label()
@@ -3837,6 +3850,10 @@ class Settings(QDialog):
     def tr_text(self, key, **values):
         return text(key, self.language.currentData(), **values)
 
+    def open_approval_rules(self):
+        from approval_card import ApprovalRulesDialog
+        ApprovalRulesDialog(self, self.language.currentData()).exec()
+
     def _preview_pet_scale(self, value):
         # Live preview only: the pet resizes immediately, but nothing is
         # written to disk until Save. Cancel restores the saved value.
@@ -3891,6 +3908,13 @@ class Settings(QDialog):
             '\n' + t('claude_usage_sync_unreadable') if self._claude_notify_state == 'unreadable' else '')
         self.claude_notify.setToolTip(notify_tip)
         self.claude_notify_label.setToolTip(notify_tip)
+        self.claude_approval_label.setText(t('approval_setting'))
+        self.claude_approval.setAccessibleName(t('approval_setting'))
+        approval_tip = t('approval_setting_tip', wait=claude_approval.WAIT_S) + (
+            '\n' + t('claude_usage_sync_unreadable') if self._claude_approval_state == 'unreadable' else '')
+        self.claude_approval.setToolTip(approval_tip)
+        self.claude_approval_label.setToolTip(approval_tip)
+        self.claude_approval_rules.setText(t('approval_rules'))
         self.assistant_hints_label.setText(t('assistant_hints'))
         self.assistant_hints.setAccessibleName(t('assistant_hints'))
         self.assistant_hints.setToolTip(t('assistant_hints_tip'))
@@ -3978,6 +4002,13 @@ class Settings(QDialog):
             except (OSError, ValueError):
                 pass
         panel._claude_hooks_on = claude_events.state() == 'on'
+        wanted = self.claude_approval.isChecked()
+        if self.claude_approval.isEnabled() and wanted != (self._claude_approval_state == 'on'):
+            try:
+                (claude_approval.enable if wanted else claude_approval.disable)()
+            except (OSError, ValueError):
+                pass
+        panel.sync_approvals()
         panel.task_manager.set_visible(prefs['star_ring_enabled'])
         # Every save retires outstanding requests for the previous
         # settings, even when only scope/pinned changed: the new epoch
@@ -4291,6 +4322,10 @@ class Panel(QWidget):
         self.notify_clock.timeout.connect(self.poll_notifications)
         if live:
             self.notify_clock.start(2000)
+        from approval_card import ApprovalController
+        self.approvals = ApprovalController(self)
+        self.approvals.requested.connect(self._approval_requested)
+        self.sync_approvals()
 
     def anchor_to_pet(self):
         pet = getattr(self, 'pet', None)
@@ -4969,6 +5004,19 @@ class Panel(QWidget):
                 center.ingest(event)
         center.fire_reminders(now)
 
+    def sync_approvals(self):
+        """Answer Claude Code's permission requests while the hook is installed."""
+        wanted = self.live and not self.closing and claude_approval.state() == 'on'
+        if wanted and not self.approvals.active:
+            self.approvals.start()
+        elif not wanted and self.approvals.active:
+            self.approvals.stop()
+
+    def _approval_requested(self, request):
+        pet = getattr(self, 'pet', None)
+        if pet is not None and not quiet_now(self.prefs):
+            pet.react('needs_approval')
+
     def notification_text(self, event):
         """Title and body of a notification, in the UI language."""
         provider = PROVIDER_NAMES.get(event.get('provider'), '')
@@ -5005,6 +5053,10 @@ class Panel(QWidget):
         pet = getattr(self, 'pet', None)
         if pet is not None:
             pet.react(event.get('kind'))
+        carded = (event.get('kind') == 'needs_approval' and event.get('provider') == 'claude'
+                  and event.get('detail') != 'permission_prompt' and self.approvals.active)
+        if carded:
+            return  # The approval card beside the pet is the notice.
         if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
             title, body = self.notification_text(event)
             self.tray.showMessage(title, body or ' ', self.windowIcon(), 6000)
@@ -5248,6 +5300,7 @@ class Panel(QWidget):
             return False
         self.closing = True
         self.notify_clock.stop()
+        self.approvals.stop()
         self.stop.set()
         self.active.stop.set()
         self.activity.close()
