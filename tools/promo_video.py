@@ -633,14 +633,19 @@ def render(a, t):
     elif name == 'hello':
         act(frame, a.pose['wave'], 560, 960, t, s0 + 0.05, 'drop' if k < 1.6 else 'wave')
         burst(d, 560, 920, t, s0 + 0.5, LAVENDER, 12, 160, 320, 60, 8)
-        a.hi.draw(frame, t, s0 + 0.7, 930, 150)
-        a.b_hello.draw(frame, t, s0 + 1.3, 980, 540)
-        a.buddy.draw(frame, t, s0 + 2.4, 960, 620)
+        # Stack by real text heights so taller CJK glyphs never overlap.
+        hi_y = 70
+        tip_y = hi_y + a.hi.height + a.b_hello.h + 50
+        buddy_y = tip_y + 36
+        pill_y = buddy_y + a.buddy.height + 50
+        a.hi.draw(frame, t, s0 + 0.7, 930, hi_y)
+        a.b_hello.draw(frame, t, s0 + 1.3, 980, tip_y)
+        a.buddy.draw(frame, t, s0 + 2.4, 960, buddy_y)
         xs = [975, 975 + a.pill_codex.width + 4, 975 + a.pill_codex.width + a.amp.width + 14]
         for i, img in enumerate((a.pill_codex, a.amp, a.pill_claude)):
-            draw(frame, img, xs[i] + img.width / 2, 790, scale=pop(t, s0 + 3.2 + i * BEAT / 2, 2.8, .32))
-        burst(d, xs[0] + a.pill_codex.width / 2, 790, t, s0 + 3.3, BLUE, 10, 60, 150, 26, 5)
-        burst(d, xs[2] + a.pill_claude.width / 2, 790, t, s0 + 3.8, GOLD, 10, 60, 170, 26, 5)
+            draw(frame, img, xs[i] + img.width / 2, pill_y, scale=pop(t, s0 + 3.2 + i * BEAT / 2, 2.8, .32))
+        burst(d, xs[0] + a.pill_codex.width / 2, pill_y, t, s0 + 3.3, BLUE, 10, 60, 150, 26, 5)
+        burst(d, xs[2] + a.pill_claude.width / 2, pill_y, t, s0 + 3.8, GOLD, 10, 60, 170, 26, 5)
 
     elif name == 'react':
         a.react_title.draw(frame, t, s0 + 0.1, 110, 80)
@@ -797,7 +802,7 @@ def render(a, t):
 
     elif name == 'stats':
         act(frame, a.pose['working'], 400, 1010, t, s0, 'talk' if k < 2 else 'idle', 0.92)
-        a.b_stats.draw(frame, t, s0 + 0.3, 520, 330, s0 + 4.3)
+        a.b_stats.draw(frame, t, s0 + 0.3, 470, 470, s0 + 4.3)
         if k < 4.6:
             value = 1382450 * ease_out((k - 0.8) / 2.2) if k > 0.8 else 0
             text = f'{int(value):,}'
@@ -838,11 +843,11 @@ def render(a, t):
                 hx, hy = pts[n - 1]
                 cd.ellipse((hx - 12, hy - 12, hx + 12, hy + 12), fill=GOLD, outline=WHITE, width=3)
             cs = pop(t, s0 + 0.7, 2.0, .4)
-            draw(frame, shadowed(chart, 18, 10, 70), 1320, 610 + 80 * (1 - cs), scale=0.85 + 0.15 * cs,
+            draw(frame, shadowed(chart, 18, 10, 70), 1320, 660 + 80 * (1 - cs), scale=0.85 + 0.15 * cs,
                  alpha=clamp((k - .7) / .15))
             for i, (plain, lit) in enumerate(a.scope_chips):
                 on = k > 2.6 and int((k - 2.6) / 0.5) % 3 == i
-                draw(frame, lit if on else plain, 1030 + i * 260, 900, scale=pop(t, s0 + 2.2 + i * 0.15, 2.6, .34))
+                draw(frame, lit if on else plain, 1030 + i * 260, 950, scale=pop(t, s0 + 2.2 + i * 0.15, 2.6, .34))
         else:
             ks = pop(t, s0 + 4.6, 1.9, .38)
             draw(frame, a.analytics, 1250, 540 + 160 * (1 - ks), scale=0.7 + 0.3 * ks, rot=4 * (1 - ks),
