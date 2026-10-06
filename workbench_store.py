@@ -1,10 +1,12 @@
 """Transactional local projects, todos, notes and explicit task links.
 
-Schema 2 (V1.5) lets Codex and Claude Code tasks be linked to projects. An
-exact schema-1 database is migrated once on open: a complete SQLite backup
-is written beside it first, the task-link table is rebuilt inside one
-transaction with its row count verified, and any failure rolls back and
-leaves the original untouched. Anything unrecognized is never migrated.
+Schema 2 (V1.5) lets Codex and Claude Code tasks be linked to projects;
+schema 3 (V1.7) adds ``todo_schedules``: a todo handed to Claude Code or
+Codex, now or at a set time, and what became of it. Exact older databases
+are migrated once on open, one step at a time: a complete SQLite backup is
+written beside the file first, each step runs in one transaction, and any
+failure rolls back and leaves the original untouched. Anything
+unrecognized is never migrated.
 """
 from contextlib import closing
 from datetime import datetime, timezone
@@ -18,7 +20,8 @@ class WorkbenchError(Exception):
 
 
 _APPLICATION_ID = 0x50545742
-_SCHEMA_VERSION = 2
+_SCHEMA_VERSION = 3
+SCHEDULE_STATES = ('waiting', 'started', 'finished', 'failed', 'missed')
 # Providers whose tasks may be linked to projects.
 LINK_PROVIDERS = ('codex', 'claude')
 _SCHEMA = {
@@ -38,9 +41,19 @@ _SCHEMA = {
         provider_id TEXT NOT NULL CHECK (provider_id IN ('codex', 'claude')), task_key TEXT NOT NULL,
         project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
         PRIMARY KEY (provider_id, task_key))''',
+    'todo_schedules': '''CREATE TABLE todo_schedules (
+        todo_id TEXT PRIMARY KEY NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+        run_at REAL NOT NULL,
+        provider_id TEXT NOT NULL CHECK (provider_id IN ('codex', 'claude')),
+        folder TEXT NOT NULL, prompt TEXT NOT NULL,
+        state TEXT NOT NULL CHECK (state IN ('waiting', 'started', 'finished', 'failed', 'missed')),
+        started_at REAL, task_key TEXT,
+        note_id TEXT REFERENCES notes(id) ON DELETE SET NULL)''',
 }
+# Schema 2 (V1.5/V1.6): no schedules. Kept to recognize and migrate it.
+_SCHEMA_V2 = {name: sql for name, sql in _SCHEMA.items() if name != 'todo_schedules'}
 # Schema 1 (V1.4): Codex-only task links. Kept to recognize and migrate it.
-_SCHEMA_V1 = dict(_SCHEMA, task_links='''CREATE TABLE task_links (
+_SCHEMA_V1 = dict(_SCHEMA_V2, task_links='''CREATE TABLE task_links (
         provider_id TEXT NOT NULL CHECK (provider_id = 'codex'), task_key TEXT NOT NULL,
         project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
         PRIMARY KEY (provider_id, task_key))''')
@@ -104,12 +117,44 @@ class WorkbenchStore:
                         connection.execute(f'PRAGMA user_version={_SCHEMA_VERSION}')
             self.migration_backup = None
             self._migrate_v1()
+            self._migrate_v2()
             self._validate_schema()
         except (OSError, ValueError, TypeError, sqlite3.Error, WorkbenchError) as error:
             self.close()
             if isinstance(error, WorkbenchError):
                 raise
             raise WorkbenchError(f'Cannot open workbench database: {error}') from error
+
+    def _backup(self, label):
+        stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        backup = self.path.with_name(f'{self.path.stem}.{label}-backup-{stamp}{self.path.suffix}')
+        index = 1
+        while backup.exists():
+            index += 1
+            backup = self.path.with_name(f'{self.path.stem}.{label}-backup-{stamp}-{index}{self.path.suffix}')
+        with closing(sqlite3.connect(backup)) as target:
+            self._connection.backup(target)
+        if self.migration_backup is None:
+            self.migration_backup = backup   # The oldest copy: the user's original file.
+        return backup
+
+    def _migrate_v2(self):
+        """Add todo schedules to an exact schema-2 store, backup first."""
+        connection = self._connection
+        if (connection.execute('PRAGMA application_id').fetchone()[0] != _APPLICATION_ID
+                or connection.execute('PRAGMA user_version').fetchone()[0] != 2):
+            return
+        self._validate_schema(_SCHEMA_V2, 2)
+        self._backup('v2')
+        try:
+            with connection:
+                connection.execute('BEGIN IMMEDIATE')
+                if connection.execute('PRAGMA user_version').fetchone()[0] != 2:
+                    return  # Another opener migrated it meanwhile.
+                connection.execute(_SCHEMA['todo_schedules'])
+                connection.execute('PRAGMA user_version=3')
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
 
     def _migrate_v1(self):
         """Upgrade an exact schema-1 store to schema 2, backup first."""
@@ -119,15 +164,7 @@ class WorkbenchStore:
             return
         # Read-only proof that this is exactly our schema 1 before any write.
         self._validate_schema(_SCHEMA_V1, 1)
-        stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-        backup = self.path.with_name(f'{self.path.stem}.v1-backup-{stamp}{self.path.suffix}')
-        index = 1
-        while backup.exists():
-            index += 1
-            backup = self.path.with_name(f'{self.path.stem}.v1-backup-{stamp}-{index}{self.path.suffix}')
-        with closing(sqlite3.connect(backup)) as target:
-            connection.backup(target)
-        self.migration_backup = backup
+        self._backup('v1')
         try:
             with connection:
                 connection.execute('BEGIN IMMEDIATE')
@@ -141,7 +178,7 @@ class WorkbenchStore:
                 connection.execute('DROP TABLE task_links_v1')
                 if connection.execute('SELECT COUNT(*) FROM task_links').fetchone()[0] != count:
                     raise WorkbenchError('Workbench migration changed the task-link count')
-                connection.execute(f'PRAGMA user_version={_SCHEMA_VERSION}')
+                connection.execute('PRAGMA user_version=2')
         except sqlite3.Error as error:
             raise WorkbenchError(f'Cannot migrate workbench database: {error}') from error
 
@@ -265,6 +302,63 @@ class WorkbenchStore:
 
     def delete_todo(self, id):
         self._delete('todos', id)
+
+    # Todos handed to AI -----------------------------------------------------
+    def schedule_todo(self, todo_id, run_at, provider_id, folder, prompt):
+        """Hand a todo to Claude Code or Codex at ``run_at`` (epoch seconds)."""
+        self._record('todos', todo_id)
+        if provider_id not in LINK_PROVIDERS:
+            raise WorkbenchError('Only Codex and Claude Code can take a todo')
+        if isinstance(run_at, bool) or not isinstance(run_at, (int, float)) or run_at != run_at:
+            raise WorkbenchError('Invalid time')
+        values = (todo_id, float(run_at), provider_id, _text(folder, 'folder', 2000, True),
+                  _text(prompt, 'prompt', 8000, True))
+        try:
+            with self._open() as connection:
+                connection.execute(
+                    'INSERT INTO todo_schedules (todo_id, run_at, provider_id, folder, prompt, state) '
+                    "VALUES (?,?,?,?,?,'waiting') ON CONFLICT(todo_id) DO UPDATE SET run_at=excluded.run_at, "
+                    'provider_id=excluded.provider_id, folder=excluded.folder, prompt=excluded.prompt, '
+                    "state='waiting', started_at=NULL, task_key=NULL", values)
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot save the schedule: {error}') from error
+        return self.get_schedule(todo_id)
+
+    def get_schedule(self, todo_id):
+        rows = self._read('SELECT * FROM todo_schedules WHERE todo_id=?', (_identifier(todo_id),))
+        return rows[0] if rows else None
+
+    def list_schedules(self, states=None):
+        if states is None:
+            return self._read('SELECT * FROM todo_schedules ORDER BY run_at, todo_id')
+        states = [state for state in states if state in SCHEDULE_STATES]
+        marks = ','.join('?' for _ in states) or "''"
+        return self._read(f'SELECT * FROM todo_schedules WHERE state IN ({marks}) ORDER BY run_at, todo_id',
+                          states)
+
+    def update_schedule(self, todo_id, **fields):
+        allowed = {'state', 'started_at', 'task_key', 'note_id', 'run_at'}
+        if not fields or set(fields) - allowed:
+            raise WorkbenchError('Invalid schedule update')
+        if 'state' in fields and fields['state'] not in SCHEDULE_STATES:
+            raise WorkbenchError('Invalid schedule state')
+        try:
+            with self._open() as connection:
+                cursor = connection.execute(
+                    f'UPDATE todo_schedules SET {",".join(f"{key}=?" for key in fields)} WHERE todo_id=?',
+                    (*fields.values(), _identifier(todo_id)))
+                if cursor.rowcount != 1:
+                    raise WorkbenchError('Schedule does not exist')
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot save the schedule: {error}') from error
+        return self.get_schedule(todo_id)
+
+    def unschedule(self, todo_id):
+        try:
+            with self._open() as connection:
+                connection.execute('DELETE FROM todo_schedules WHERE todo_id=?', (_identifier(todo_id),))
+        except sqlite3.Error as error:
+            raise WorkbenchError(f'Cannot remove the schedule: {error}') from error
 
     def list_notes(self, project_id=None):
         return self._list('notes', project_id)

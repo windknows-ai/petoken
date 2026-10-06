@@ -325,6 +325,7 @@ class WorkbenchWindow(QWidget):
         self.show_completed.toggled.connect(lambda _: self.refresh())
         actions.addWidget(self.show_completed)
         actions.addStretch()
+        self.todo_ai_button = self.button(actions, 'todo_ai_button', self.give_to_ai)
         self.todo_edit_button = self.button(actions, 'wb_edit', self.edit_todo)
         self.todo_delete_button = self.button(actions, 'wb_delete', self.delete_todo, danger=True)
         layout.addLayout(actions)
@@ -445,10 +446,16 @@ class WorkbenchWindow(QWidget):
         self.pending_list.clear()
         scoped = [r for r in todos if self._in_scope(r['project_id'])]
         pending = [r for r in scoped if not r['done']]
+        from todo_ai import schedule_badge
+        try:
+            schedules = {s['todo_id']: s for s in self.store.list_schedules()}
+        except WorkbenchError:
+            schedules = {}
         for record in scoped:
             if record['done'] and not self.show_completed.isChecked():
                 continue
-            item = QListWidgetItem(record['title'])
+            badge = schedule_badge(schedules.get(record['id']), self.language)
+            item = QListWidgetItem(record['title'] + (f'   {badge}' if badge else ''))
             item.setData(Qt.UserRole, record['id'])
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked if record['done'] else Qt.Unchecked)
@@ -872,6 +879,7 @@ class WorkbenchWindow(QWidget):
         for button, available in [
                 (self.task_detail_button, bool(task)), (self.task_link_button, linkable),
                 (self.todo_edit_button, bool(todo)), (self.todo_delete_button, bool(todo)),
+                (self.todo_ai_button, bool(todo and not todo['done'])),
                 (self.project_edit_button, bool(project)), (self.project_delete_button, bool(project)),
                 (self.project_folder_button, bool(project and project['directory'])),
                 (self.note_delete_button, selected_note)]:
@@ -887,6 +895,37 @@ class WorkbenchWindow(QWidget):
             save=lambda title, project: self.store.update_todo(record['id'], title, project, record['done']))
         if saved:
             self.refresh()
+
+    def give_to_ai(self):
+        """Hand the selected todo to Claude Code or Codex, now or later."""
+        from quick_launch import known_folders
+        from todo_ai import GiveToAiDialog
+        record = self._selected_todo()
+        if not record:
+            return
+        try:
+            schedule = self.store.get_schedule(record['id'])
+        except WorkbenchError:
+            schedule = None
+        project = next((p for p in self._projects if p['id'] == record['project_id']), None)
+        folders = ([project['directory']] if project and project['directory'] else []) + known_folders(self.panel.prefs)
+        dialog = GiveToAiDialog(self, self.panel, record, schedule, folders)
+        result = dialog.exec()
+        if result == 2:
+            self._attempt(self.store.unschedule, record['id'])
+            self.refresh()
+            return
+        if result != QDialog.Accepted:
+            return
+        values = dialog.values()
+        import time as _time
+        saved, _ = self._attempt(self.store.schedule_todo, record['id'], values['run_at'] or _time.time(),
+                                 values['provider_id'], values['folder'], values['prompt'])
+        if saved and values['run_at'] is None:
+            scheduler = getattr(self.panel, 'todo_ai', None)
+            if scheduler is not None:
+                scheduler.run(record['id'])
+        self.refresh()
 
     def delete_todo(self):
         record = self._selected_todo()

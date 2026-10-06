@@ -3822,6 +3822,13 @@ class Settings(QDialog):
             panel.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space'))))
         self.quick_launch_hotkey_label = label()
         self.forms['assistant'].addRow(self.quick_launch_hotkey_label, self.quick_launch_hotkey)
+        self.schedule_missed = QComboBox()
+        for key in ('ask', 'run'):
+            self.schedule_missed.addItem('', key)
+        self.schedule_missed.setCurrentIndex(max(0, self.schedule_missed.findData(
+            panel.prefs.get('schedule_missed', 'ask'))))
+        self.schedule_missed_label = label()
+        self.forms['assistant'].addRow(self.schedule_missed_label, self.schedule_missed)
         self.assistant_hints = QCheckBox()
         self.assistant_hints.setChecked(bool(panel.prefs.get('assistant_hints', True)))
         self.assistant_hints_label = label()
@@ -4064,6 +4071,10 @@ class Settings(QDialog):
                                   else t('launch_hotkey_taken', combo=chosen))
         self.quick_launch_hotkey.setToolTip(hotkey_tip)
         self.quick_launch_hotkey_label.setToolTip(hotkey_tip)
+        self.schedule_missed_label.setText(t('schedule_missed'))
+        self.schedule_missed.setItemText(0, t('schedule_missed_ask'))
+        self.schedule_missed.setItemText(1, t('schedule_missed_run'))
+        self.schedule_missed.setToolTip(t('schedule_missed_tip'))
         self.assistant_hints_label.setText(t('assistant_hints'))
         self.assistant_hints.setAccessibleName(t('assistant_hints'))
         self.assistant_hints.setToolTip(t('assistant_hints_tip'))
@@ -4139,6 +4150,7 @@ class Settings(QDialog):
                      assistant_hints=self.assistant_hints.isChecked(),
                      mute_claude_toasts=self.mute_claude_toasts.isChecked(),
                      update_check=self.update_check.isChecked(),
+                     schedule_missed=self.schedule_missed.currentData(),
                      update_auto=self.update_auto.isChecked(),
                      quick_launch_hotkey=self.quick_launch_hotkey.currentData(),
                      dnd_enabled=self.dnd.isChecked(),
@@ -4517,6 +4529,12 @@ class Panel(QWidget):
         self.sync_approvals()
         self._claude_toasts_muted = False
         self.sync_claude_toasts()
+        from todo_ai import TodoScheduler
+        self.todo_ai = TodoScheduler(self)
+        self.notifications.stored.connect(self.todo_ai.on_event)
+        self.todo_ai.changed.connect(self._workbench_changed)
+        if live:
+            self.todo_ai.start()
         from update_ui import UpdateController
         self.updates = UpdateController(self)
         if live:
@@ -5281,6 +5299,11 @@ class Panel(QWidget):
         if choices is not None and choices.get('tutorial') and self.prefs.get('workbench_tutorial_seen') is not True:
             QTimer.singleShot(0, self, self.open_workbench_tutorial)
 
+    def _workbench_changed(self):
+        window = self.workbench_window
+        if window is not None and window.isVisible() and not window.note_dirty:
+            window.refresh()
+
     def tray_notice(self, title, body=''):
         """A short Windows notification from the tray icon (real app only)."""
         if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
@@ -5660,6 +5683,7 @@ class Panel(QWidget):
         self.notify_clock.stop()
         self.approvals.stop()
         self.updates.stop()
+        self.todo_ai.stop()
         self.hotkey.unregister()
         QApplication.instance().removeNativeEventFilter(self.hotkey.filter)
         self.sync_claude_toasts()   # closing: put the Claude app's pop-ups back.

@@ -233,6 +233,7 @@ class NotificationCenter(QObject):
 
     fired = Signal(dict)
     recorded = Signal()
+    stored = Signal(dict)       # Every event kept in the history (quiet or not).
 
     def __init__(self, store, prefs):
         super().__init__()
@@ -260,6 +261,7 @@ class NotificationCenter(QObject):
             return False
         self._recent[same] = now
         self.recorded.emit()
+        self.stored.emit(dict(event))
         # Silent events (a background run finishing) are history only.
         if not event.get('silent') and not quiet_now(self.prefs(), now):
             self.fired.emit(dict(event))
