@@ -60,3 +60,11 @@ Name: "{userstartup}\Petoken"; Filename: "{app}\petoken.exe"; Tasks: startup
 
 [Run]
 Filename: "{app}\petoken.exe"; Description: "{cm:LaunchProgram,Petoken}"; Flags: nowait postinstall skipifsilent
+; Petoken's own one-click update runs the installer silently with /RELAUNCH=1.
+Filename: "{app}\petoken.exe"; Flags: nowait; Check: WantRelaunch
+
+[Code]
+function WantRelaunch: Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;

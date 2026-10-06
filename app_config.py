@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 from localization import DEFAULT_LANGUAGE, normalize_language
@@ -36,6 +37,11 @@ DEFAULT_PREFERENCES = {
     "quick_launch_hotkey": "Ctrl+Alt+Space",
     "launch_folders": [],
     "mute_claude_toasts": True,
+    "update_check": True,
+    "update_auto": False,
+    "update_skip": "",
+    "update_checked_at": 0,
+    "onboarding_done": False,
 }
 
 
@@ -82,6 +88,18 @@ def normalize_preferences(data):
     if preferences.get("quick_launch_hotkey") not in ("Ctrl+Alt+Space", "Alt+Shift+Space",
                                                       "Ctrl+Alt+K", "off"):
         preferences["quick_launch_hotkey"] = "Ctrl+Alt+Space"
+    # Someone upgrading already knows Petoken: only a first start (no saved
+    # preferences yet) gets the welcome guide.
+    if "onboarding_done" not in raw:
+        preferences["onboarding_done"] = bool(raw)
+    for key, fallback in (("update_check", True), ("update_auto", False), ("onboarding_done", False)):
+        if not isinstance(preferences.get(key), bool):
+            preferences[key] = fallback
+    if not isinstance(preferences.get("update_skip"), str):
+        preferences["update_skip"] = ""
+    checked = preferences.get("update_checked_at")
+    if isinstance(checked, bool) or not isinstance(checked, (int, float)) or not math.isfinite(checked):
+        preferences["update_checked_at"] = 0
     if not isinstance(preferences.get("mute_claude_toasts"), bool):
         preferences["mute_claude_toasts"] = True
     folders = preferences.get("launch_folders")

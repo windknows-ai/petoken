@@ -3865,6 +3865,24 @@ class Settings(QDialog):
         scale_box.setLayout(scale_row)
         self.pet_scale_label = label()
         self.forms['general'].addRow(self.pet_scale_label, scale_box)
+        self.update_check = QCheckBox()
+        self.update_check.setChecked(bool(panel.prefs.get('update_check', True)))
+        self.update_auto = QCheckBox()
+        self.update_auto.setChecked(bool(panel.prefs.get('update_auto', False)))
+        self.update_now = QPushButton()
+        self.update_now.clicked.connect(lambda: getattr(self.parentWidget(), 'updates', None)
+                                        and self.parentWidget().updates.check_now(manual=True))
+        update_row = QHBoxLayout()
+        update_row.addWidget(self.update_check)
+        update_row.addWidget(self.update_auto)
+        update_row.addWidget(self.update_now)
+        update_row.addStretch(1)
+        self.update_label = label()
+        self.forms['general'].addRow(self.update_label, update_row)
+        self.onboarding_again = QPushButton()
+        self.onboarding_again.clicked.connect(lambda: self.parentWidget().open_onboarding())
+        self.onboarding_label = label()
+        self.forms['general'].addRow(self.onboarding_label, self.onboarding_again)
         self.pet_scale.valueChanged.connect(self._preview_pet_scale)
         about = QVBoxLayout()
         about.setContentsMargins(14, 14, 14, 10)
@@ -4064,6 +4082,14 @@ class Settings(QDialog):
             self.tabs.setTabText(index, t(f'settings_page_{key}'))
         self.about_heading.setText(t('about_data'))
         self.diagnostics_button.setText(t('diagnostics_export'))
+        self.update_label.setText(t('update_setting'))
+        self.update_check.setText(t('update_check'))
+        self.update_auto.setText(t('update_auto_short'))
+        self.update_now.setText(t('update_check_now'))
+        self.update_check.setToolTip(t('update_tip'))
+        self.update_auto.setToolTip(t('update_tip'))
+        self.onboarding_label.setText(t('onboarding_setting'))
+        self.onboarding_again.setText(t('onboarding_open'))
         self.diagnostics_button.setToolTip(t('diagnostics_tip'))
         for index in range(4):
             self.about_titles[index].setText(f"{index + 1}. {t(f'about_{index + 1}_title')}")
@@ -4112,6 +4138,8 @@ class Settings(QDialog):
                      star_ring_enabled=self.star_ring.isChecked(),
                      assistant_hints=self.assistant_hints.isChecked(),
                      mute_claude_toasts=self.mute_claude_toasts.isChecked(),
+                     update_check=self.update_check.isChecked(),
+                     update_auto=self.update_auto.isChecked(),
                      quick_launch_hotkey=self.quick_launch_hotkey.currentData(),
                      dnd_enabled=self.dnd.isChecked(),
                      dnd_scheduled=self.dnd_scheduled.isChecked(),
@@ -4424,6 +4452,7 @@ class Panel(QWidget):
             'wb_tutorial': self.tray_more.addAction('', self.open_workbench_tutorial),
             'collapse_expand': self.tray_more.addAction('', self.toggle_compact),
             'move_right': self.tray_more.addAction('', self.reset_position),
+            'update_check_now': self.tray_more.addAction('', lambda: self.updates.check_now(manual=True)),
         })
         menu.addSeparator()
         self.tray_actions['exit_petoken'] = menu.addAction('', self.shutdown)
@@ -4488,6 +4517,10 @@ class Panel(QWidget):
         self.sync_approvals()
         self._claude_toasts_muted = False
         self.sync_claude_toasts()
+        from update_ui import UpdateController
+        self.updates = UpdateController(self)
+        if live:
+            self.updates.start_schedule()
         # Reports open instantly: count once in the background after start-up.
         import reports
         self.report_cache = reports.ReportCache()
@@ -5215,6 +5248,44 @@ class Panel(QWidget):
             return None
         return dict(files=recap['files'], duration_s=None, usd=None)
 
+    def open_onboarding(self):
+        from onboarding import OnboardingWizard
+        OnboardingWizard(self).exec()
+
+    def finish_onboarding(self, choices):
+        """Apply the welcome guide (``None``: skipped, keep the defaults)."""
+        self.prefs['onboarding_done'] = True
+        if choices is not None:
+            self.prefs.update(language=choices['language'],
+                              quick_launch_hotkey=choices['quick_launch_hotkey'],
+                              assistant_hints=choices['assistant_hints'],
+                              update_check=choices['update_check'],
+                              update_auto=choices['update_auto'])
+            claude = choices.get('claude') or {}
+            if 'mute_claude_toasts' in claude:
+                self.prefs['mute_claude_toasts'] = claude['mute_claude_toasts']
+            switches = (('claude_sync', claude_statusline), ('claude_notify', claude_events),
+                        ('claude_approval', claude_approval))
+            for key, module in switches:
+                if claude.get(key) and module.state() == 'off':
+                    try:
+                        module.enable()      # Backs up Claude Code's settings first.
+                    except (OSError, ValueError):
+                        pass
+            self._claude_hooks_on = claude_events.state() == 'on'
+            self.apply_language()
+            self.sync_approvals()
+            self.sync_hotkey()
+            self.sync_claude_toasts()
+        self.persist()
+        if choices is not None and choices.get('tutorial') and self.prefs.get('workbench_tutorial_seen') is not True:
+            QTimer.singleShot(0, self, self.open_workbench_tutorial)
+
+    def tray_notice(self, title, body=''):
+        """A short Windows notification from the tray icon (real app only)."""
+        if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
+            self.tray.showMessage(title, body or ' ', self.windowIcon(), 6000)
+
     def sync_claude_toasts(self):
         """While Petoken runs, the Claude desktop app's own pop-ups are muted
         (Petoken announces Claude tasks itself); restored on exit."""
@@ -5588,6 +5659,7 @@ class Panel(QWidget):
         self.closing = True
         self.notify_clock.stop()
         self.approvals.stop()
+        self.updates.stop()
         self.hotkey.unregister()
         QApplication.instance().removeNativeEventFilter(self.hotkey.filter)
         self.sync_claude_toasts()   # closing: put the Claude app's pop-ups back.
@@ -5646,7 +5718,10 @@ def main():
     from pet import DesktopPet
     panel.pet=DesktopPet(panel)
     panel.restore_companion()
-    if not args.smoke and panel.prefs.get('workbench_tutorial_seen') is not True:
+    if not args.smoke and panel.prefs.get('onboarding_done') is not True:
+        # First start: the welcome guide (it can open the workbench tutorial).
+        QTimer.singleShot(0, panel, panel.open_onboarding)
+    elif not args.smoke and panel.prefs.get('workbench_tutorial_seen') is not True:
         QTimer.singleShot(0, panel, panel.open_workbench_tutorial)
     if args.smoke:
         panel.show()

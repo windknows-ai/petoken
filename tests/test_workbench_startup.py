@@ -18,21 +18,27 @@ class WorkbenchStartupTests(unittest.TestCase):
             lock.tryLock.return_value = True
             stack.enter_context(patch('widget.PREF_DIR'))
             stack.enter_context(patch('pet.DesktopPet'))
+            stack.enter_context(patch('diagnostics.install_error_log'))
             timer = stack.enter_context(patch('widget.QTimer.singleShot'))
             self.assertEqual(widget.main(), 0)
             panel.restore_companion.assert_called_once()
             lock.unlock.assert_called_once()
             return panel, timer
 
-    def test_unseen_normal_launch_schedules_optional_guide(self):
-        for preferences in [{}, {'workbench_tutorial_seen': False}]:
+    def test_first_start_opens_the_welcome_guide(self):
+        for preferences in [{}, {'onboarding_done': False, 'workbench_tutorial_seen': True}]:
             with self.subTest(preferences=preferences):
                 panel, timer = self.startup(preferences)
-                timer.assert_called_once_with(0, panel, panel.open_workbench_tutorial)
-                panel.open_workbench_tutorial.assert_not_called()
+                timer.assert_called_once_with(0, panel, panel.open_onboarding)
+                panel.open_onboarding.assert_not_called()
+
+    def test_unseen_normal_launch_schedules_optional_guide(self):
+        panel, timer = self.startup({'onboarding_done': True, 'workbench_tutorial_seen': False})
+        timer.assert_called_once_with(0, panel, panel.open_workbench_tutorial)
+        panel.open_workbench_tutorial.assert_not_called()
 
     def test_seen_normal_launch_preserves_quiet_startup(self):
-        _, timer = self.startup({'workbench_tutorial_seen': True})
+        _, timer = self.startup({'onboarding_done': True, 'workbench_tutorial_seen': True})
         timer.assert_not_called()
 
     def test_ordinary_smoke_does_not_schedule_first_use_guide(self):
