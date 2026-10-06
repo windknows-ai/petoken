@@ -18,6 +18,7 @@ from codex_compat import (THREAD_REQUIRED, THREAD_OPTIONAL, TURN_REQUIRED,
                           installed_version, inspect_table, log_fingerprint,
                           probe_database, state_database, version_string)
 from codex_approval import CodexApprovalReader
+from codex_recap import TOP_LEVEL_SOURCES, epoch, recap_row, thread_rows
 
 
 def quota_window(limits, minutes, now=None):
@@ -746,6 +747,70 @@ class CodexStore:
         self._scope_sessions = ()
         self.compatibility = self._probe_compatibility()
 
+    def task_history(self, since_epoch):
+        """Thread history starting at an inclusive UTC epoch cutoff.
+
+        None requests all local history, including unknown start times (last).
+        USD is the existing API-equivalent estimate, never subscription billing.
+        This explicit report read does not mutate live polling caches.
+        """
+        if since_epoch is not None and (not isinstance(since_epoch, (int, float))
+                or isinstance(since_epoch, bool) or not math.isfinite(since_epoch) or since_epoch < 0):
+            raise ValueError('since_epoch must be nonnegative epoch seconds or None')
+        state = {}
+        try:
+            value = json.loads((self.home/'.codex-global-state.json').read_text(encoding='utf-8'))
+            if isinstance(value, dict):
+                state = value
+        except (OSError, ValueError):
+            pass
+        by_id, ambiguous = {}, set()
+        for row in thread_rows(self.home):
+            if row.get('source') not in TOP_LEVEL_SOURCES:
+                continue
+            if row['id'] in by_id and by_id[row['id']] != row:
+                ambiguous.add(row['id'])
+            by_id[row['id']] = row
+        rows = [row for key, row in by_id.items() if key not in ambiguous]
+        sessions, readable = [], {}
+        for row in rows:
+            path = row.get('rollout_path')
+            if not path:
+                continue
+            session = SessionUsage(path)
+            session.refresh()
+            try:
+                stat = session.path.stat()
+                complete = (session.offset == stat.st_size and
+                            session.source_stamp == (stat.st_dev, stat.st_ino, stat.st_mtime_ns))
+            except OSError:
+                complete = False
+            if (session.meta_seen and session.session_id == row['id'] and session.source_available
+                    and session.available and not session.partial and complete
+                    and (not session.fork_from or epoch(session.created) is not None)):
+                sessions.append(session)
+                readable[row['id']] = session
+        records = unique_records(sessions)
+        by_session = {}
+        for record in records:
+            by_session.setdefault(record['session'], []).append(record)
+        history = []
+        for row in rows:
+            times = recap_row(self.home, row)
+            start = times['started_at']
+            if since_epoch is not None and (start is None or start < since_epoch):
+                continue
+            measured = by_session.get(row['id'], []) if row['id'] in readable else []
+            total = summarize(measured)['tokens']['total_tokens']
+            priced = bool(measured) and all(record.get('usd') is not None
+                and record['tokens'].get('cache_write_input_tokens') is not None for record in measured)
+            history.append(dict(thread_id=row['id'], title=conversation_title(row),
+                project=project_identity(row, state)[0], started_at=start,
+                finished_at=times['finished_at'], total_tokens=total,
+                usd=sum(record['usd'] for record in measured) if priced else None))
+        return sorted(history, key=lambda item: (item['started_at'] is None,
+                      -(item['started_at'] or 0), item['thread_id']))
+
     def _probe_compatibility(self):
         database = state_database(self.home)
         threads = probe_database(database, 'threads', THREAD_REQUIRED, THREAD_OPTIONAL)
@@ -1016,6 +1081,11 @@ class CodexStore:
                     notes=sorted(set().union(*(s.notes for s in sessions))), codex_activity=codex_activity,
                     working_context=working_context, scope_activity=scope_activity,
                     active_tasks=active_tasks)
+
+
+def task_history(since_epoch):
+    """Convenience history read using CODEX_HOME/the default local Codex home."""
+    return CodexStore().task_history(since_epoch)
 
 
 def sample_age(timestamp):
