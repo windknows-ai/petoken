@@ -8,7 +8,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community** — the free, open-source edition of Petoken. v1.5.0 follows Codex and Claude Code side by side (blue and gold task Stars), tells you when a task finishes, fails or waits for your approval, shows remaining context and quotas in a small card above the character, and keeps a local workbench for projects, todos, notes and reminders.
+**Petoken Community** — the free, open-source edition of Petoken. v1.6.0 turns the companion into a time-saving assistant: it predicts when your limits run out, lets you approve Claude Code's requests, answer its questions and accept its plans right on the character, jumps to a task's window in one click, starts new tasks from anywhere and reports what AI did for you today and this week — beside the Codex and Claude Code usage tracking, notifications and local workbench of earlier versions.
 
 ## What it does
 
@@ -20,15 +20,20 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Quotas and resets**: Codex 5-hour / weekly usage with reset countdowns (Pro accounts have only the weekly window); Claude Code Pro/Max windows after turning on **Settings → Sync Claude usage**.
 - **Usage card**: while tasks run, a small card above the character shows, for each open app, the context, 5-hour and weekly amounts left and when they reset.
 - **Notifications**: the character cheers, looks sad or waves and a pop-up appears when a task finishes, fails or waits for your approval, or when the 5-hour limit runs low; 30-day history, Do Not Disturb and personal reminders.
+- **Predictions and tips** (new in 1.6): when a limit will run out at your current pace, which open app still has room, context almost full, a task with no progress, a used-up limit coming back.
+- **Answer Claude on the character** (new in 1.6, opt-in): permission requests (Allow / Always allow / Deny), Claude's multiple-choice questions and its plans (Accept / Accept and allow edits / Revise).
+- **Recaps and one-click jump** (new in 1.6): finished-task notices say which files changed, how long it took and what it cost; one click brings the task's window to the front.
+- **Quick launch** (new in 1.6): a shortcut opens a small box — what to do, which folder, Claude Code or Codex — and the task starts in a new terminal.
+- **Reports** (new in 1.6): today / this week — tasks, AI working time, files changed, tokens and cost — plus a searchable task history.
 - **Workbench**: local projects, todos, plain-text notes and reminders, with optional task-to-project links.
 - **Cost**: an API-equivalent estimate (USD / CAD / EUR / CNY) only when model pricing and token evidence support it; otherwise `N/A`.
 - **Token Analytics**: model / session / date grouping with local lifetime history.
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v1.5.0
+## Latest stable release: v1.6.0
 
-Download the **one-click installer** [Petoken-Setup-v1.5.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.5.0/Petoken-Setup-v1.5.0.exe), or the portable ZIP from the [v1.5.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0). Verify SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v1.6.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.6.0/Petoken-Setup-v1.6.0.exe) from the [v1.6.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -68,10 +73,50 @@ and reactions while still keeping the history.
 | Failed | under 1 s* | — | — |
 | Waiting for approval | under 1 s* | a few seconds | — |
 
-\* With **Settings → Claude instant notifications** on (adds hooks to Claude
-Code's settings, backed up first). Without it, finished tasks are noticed by
-regular checks. The Codex desktop app does not expose approval or failure
-state to other programs, so those stay silent.
+\* With **Settings → Claude → Claude instant notifications** on (adds hooks to
+Claude Code's settings, backed up first). Without it, finished tasks are noticed
+by regular checks. The Codex desktop app does not expose approval or failure
+state to other programs, so those stay silent. Background Claude runs that you
+did not open yourself (`claude -p`, scripts, agents) are kept in the history
+without a pop-up. While Petoken runs, the Claude desktop app's own pop-ups are
+muted so you get one notice, not two (Settings → Claude; your setting comes
+back when Petoken exits).
+
+### Time-saving assistant (v1.6)
+
+- **Predictions and tips.** From your pace over the last hour (or since the
+  window opened) Petoken predicts when the 5-hour and weekly limits run out and
+  whether that is before they reset, and suggests the other open app when it
+  still has room. It also flags context almost full (time to `/compact`), a
+  task with no progress for 20 minutes, and a used-up limit or rate limit that
+  has come back. Hints appear as one line in the usage card; each also raises
+  one notification. Settings → Assistant → Predictions and tips.
+- **Answer Claude on the character** (opt-in: Settings → Claude → Approve
+  Claude on the pet). When Claude Code asks for permission, a card beside the
+  character offers Allow, Always allow (saved to the project's local settings,
+  listed and revocable under Allowed rules), Deny or Answer in Claude. Claude's
+  multiple-choice questions and plans get their own cards: pick options or type
+  an answer; accept a plan, accept and allow edits, or ask for changes with a
+  note. Without an answer (45 s for permissions, 5 minutes for questions and
+  plans), or when Petoken is closed, Claude Code asks you itself as usual.
+  Works in the CLI and the desktop app's Code tab. Codex does not offer a way
+  for other programs to answer yet.
+- **Recaps and one-click jump.** Finished-task notices say how many files the
+  task changed, how long the turn took and its API-equivalent cost (Codex:
+  files). Clicking a notice, or ↗ in a Star's details, raises the window the
+  task runs in (Claude desktop, terminal, VS Code; Codex where Codex can match
+  it).
+- **Quick launch.** Ctrl+Alt+Space (choose another shortcut or turn it off in
+  Settings → Assistant), the character menu or the tray open a small box: what
+  to do, a project folder (recent ones offered) and Claude Code or Codex. Start
+  opens a new terminal running that CLI on your prompt; the task then shows up
+  as a Star. The prompt is passed as data, never through a shell, and no
+  permission flags are added.
+- **Reports.** Workbench → Reports (also in the character menu) shows today or
+  this week: tasks worked on, AI working time (each turn from prompt to last
+  reply), files changed, tokens, API-equivalent cost and the change against the
+  previous period, followed by a searchable history of Claude sessions and Codex
+  threads. Double-click a row to jump to its window.
 
 ### Workbench
 
@@ -93,17 +138,20 @@ If a source is missing or stale, its views show that limitation honestly. No oth
 
 ## Install and use
 
-1. Download **Petoken-Setup-v1.5.0.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps.
+1. Download **Petoken-Setup-v1.6.0.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps. Upgrading keeps your settings and workbench.
    - Windows may show "Windows protected your PC" because the installer is not code-signed yet: choose **More info → Run anyway**.
-   - Portable alternative: download `Petoken-v1.5.0-Windows-x64.zip`, extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
-2. Use Codex or Claude Code as usual; Petoken follows their running tasks. Optionally turn on **Settings → Sync Claude usage** for Claude quotas. The interface starts in English; switch to Simplified Chinese in Settings → Language.
+2. Use Codex or Claude Code as usual; Petoken follows their running tasks. In **Settings → Claude** you can turn on Sync Claude usage (quotas), Claude instant notifications and Approve Claude on the pet. The interface starts in English; switch to Simplified Chinese in Settings → General → Language.
 
-Interact: click the character to open the panel; drag to move; right-click for the menu; `Alt + Arrow keys` moves the panel.
+Interact: click the character to open the panel; drag to move; right-click for the menu (quick launch, workbench, reports, settings; display options under More); `Alt + Arrow keys` moves the panel.
+
+No administrator rights or system changes are needed. Petoken's Claude Code hooks are per-user PowerShell scripts started with `-ExecutionPolicy Bypass` for that run only, so they work with Windows' default script policy; on managed PCs where Group Policy enforces a script policy they may be blocked, and Claude Code then simply asks as usual.
 
 ## Privacy / local-first
 
 - Petoken reads local Codex task metadata and numeric usage events, window task titles and activity state, and memory-only media metadata for the music display. It also reads Claude Code's local session transcripts — numeric usage and session metadata only; message content is discarded in memory — and its live-session registry. No other provider's data is read.
 - **Sync Claude usage** is opt-in: it adds a status-line command to Claude Code's settings (backed up first) that keeps only usage numbers. Turn it off in Settings to remove it.
+- **Approve Claude on the pet** is opt-in: a hook hands each request to Petoken through files under `%LOCALAPPDATA%\CodexWisp\claude-approvals` that are deleted once answered; a small step log keeps times and tool names only. Recaps, reports and predictions read tool names, file paths, timestamps and usage numbers from local transcripts, never message text or file contents.
+- Muting the Claude desktop app's pop-ups changes only that app's entry in your own Windows notification settings and restores it when Petoken exits.
 - Never exports transcripts or credentials, never sends model requests, never records audio or keystrokes, never uploads local usage anywhere.
 - Details: [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) and [`SECURITY.md`](SECURITY.md).
 
@@ -121,11 +169,11 @@ Run the test suite:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`; `-Installer` also builds the setup program and needs [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
+Build the one-click installer (`dist\Petoken-Setup-v<version>.exe`, needs [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\build.ps1 -Package -Installer
+.\build.ps1 -Installer
 ```
 
 ## Documentation
@@ -139,9 +187,8 @@ Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`; 
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.5.0 release notes: [`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
-- Notifications QA checklist (human accepted): [`docs/V1_6_NOTIFICATIONS_QA.md`](docs/V1_6_NOTIFICATIONS_QA.md)
-- Previous release notes: [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md), [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
+- v1.6.0 release notes: [`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md)
+- Previous release notes: [`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md), [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md), [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
 - Historical v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)
 
 ## Community and licensing

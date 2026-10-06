@@ -6,7 +6,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community（社区版）** 是 Petoken 免费、开源的版本。v1.5.0 同时跟踪 Codex 和 Claude Code（蓝色和金色的任务星星），任务完成、出错或等你确认时会提醒你，在人物头顶的小卡片里显示剩余的上下文和额度，还有一个本机工作台，用来管理项目、待办、便签和提醒。
+**Petoken Community（社区版）** 是 Petoken 免费、开源的版本。v1.6.0 让它成为帮你省时间的 AI 助手：提前预测额度什么时候用完；在人物旁边直接批准 Claude Code 的权限请求、回答它的提问、审批它的计划；一键跳到任务所在的窗口；在任何地方快速派活；每天、每周告诉你 AI 帮你做了多少。之前版本的 Codex 和 Claude Code 用量跟踪、通知和本机工作台都还在。
 
 ## 能做什么
 
@@ -18,6 +18,11 @@ Petoken 是住在 Windows 桌面上的小伙伴。它会跟踪 Codex 和 Claude 
 - **额度和重置时间**：Codex 的 5 小时 / 每周额度和重置倒计时（Pro 账号只有每周额度）；Claude Code 的 Pro/Max 额度需要打开 **设置 → 同步 Claude 用量**。
 - **用量卡片**：任务运行时，人物头顶的小卡片会为每个开着的 App 显示剩余的上下文、5 小时和每周额度，以及重置时间。
 - **通知**：任务完成、出错、等你确认，或 5 小时额度快用完时，人物会欢呼、难过或招手，同时弹出通知；通知记录保留 30 天，还有免打扰和个人提醒。
+- **预测和建议**（1.6 新增）：按现在的速度，额度什么时候用完；另一个开着的 App 还有多少额度；上下文快满了；任务长时间没有进展；用完的额度恢复了。
+- **在人物旁边回复 Claude**（1.6 新增，需要打开）：权限请求（允许 / 以后都允许 / 拒绝）、Claude 的选择题、Claude 的计划（接受 / 接受并允许编辑 / 修改）。
+- **任务小结和一键直达**（1.6 新增）：任务完成的通知会写改了哪些文件、用了多久、花了多少钱；点一下就能切到任务所在的窗口。
+- **快速派活**（1.6 新增）：按快捷键弹出小窗口，写下要做什么、选项目文件夹和 Claude Code 或 Codex，就会在新终端里开始。
+- **日报 / 周报**（1.6 新增）：今天 / 本周处理的任务、AI 工作时长、改过的文件、用量和费用，还有可以搜索的历史任务。
 - **工作台**：本机的项目、待办、纯文本便签和提醒，可以把任务关联到项目。
 - **跟着你做事**：你打字时她也在打字，你放音乐时她戴上耳机并显示歌名，你开麦克风时她拿起麦克风。
 - **费用**：只有在模型价格和 token 数据都齐全时，才给出等价 API 费用估算（美元 / 加元 / 欧元 / 人民币），否则显示 `N/A`。
@@ -25,9 +30,9 @@ Petoken 是住在 Windows 桌面上的小伙伴。它会跟踪 Codex 和 Claude 
 - **诚实显示未知**：未知的模型就写「未知」，拿不到的数字就写 `N/A`，真正的 0 才写 0，不完整的数据会明确标出。
 - 日常 / Token 两种模式，完整 / 简洁两种数字格式，简体中文 / 英文界面，固定显示、始终置顶、人物大小可调。
 
-## 最新版本：v1.5.0
+## 最新版本：v1.6.0
 
-推荐下载 **一键安装程序** [Petoken-Setup-v1.5.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.5.0/Petoken-Setup-v1.5.0.exe)，也可以在 [v1.5.0 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0) 下载免安装的压缩包。可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
+在 [v1.6.0 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) 下载 **一键安装程序** [Petoken-Setup-v1.6.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.6.0/Petoken-Setup-v1.6.0.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 支持的来源
 
@@ -49,7 +54,15 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 | 出错 | 1 秒内* | — | — |
 | 等你确认 | 1 秒内* | 几秒内 | — |
 
-\* 需要打开 **设置 → Claude 即时通知**（会在 Claude Code 的设置里加入 hooks，修改前先备份）。不打开时，任务完成会通过定期检查发现。Codex 桌面版不向其他程序公开「出错」和「等待确认」状态，所以这两项不会提醒。
+\* 需要打开 **设置 → Claude → Claude 即时通知**（会在 Claude Code 的设置里加入 hooks，修改前先备份）。不打开时，任务完成会通过定期检查发现。Codex 桌面版不向其他程序公开「出错」和「等待确认」状态，所以这两项不会提醒。不是你亲自打开的后台 Claude 会话（`claude -p`、脚本、agent）完成时只记进历史，不弹窗。Petoken 运行时会关掉 Claude 桌面版自己的弹窗，避免同一件事弹两次（设置 → Claude；退出 Petoken 时恢复你原来的设置）。
+
+### 省时间的 AI 助手（v1.6）
+
+- **预测和建议。** 根据最近一小时（或者从额度窗口开始到现在）的用量速度，预测 5 小时和每周额度什么时候用完、会不会在重置之前用完；如果另一个开着的 App 还有额度，会建议你先切过去。上下文快满（该 `/compact` 了）、任务 20 分钟没有进展、用完的额度或速率限制恢复了，也会提醒你。提示会显示在用量卡片里的一行，每种情况也会发一条通知。可以在 设置 → 助手与通知 → 预测和建议 里关掉。
+- **在人物旁边回复 Claude**（需要打开：设置 → Claude → 在桌宠上批准 Claude）。Claude Code 请求权限时，人物旁边会弹出卡片：允许、以后都允许（保存到项目的本地设置里，可以在「已允许的规则」里查看和撤销）、拒绝，或者交回 Claude 自己处理。Claude 的选择题和计划有专门的卡片：点选项或者自己写答案；接受计划、接受并允许编辑，或者写意见要求修改。一段时间没有回答（权限请求 45 秒，提问和计划 5 分钟），或者 Petoken 没在运行，Claude Code 会像平常一样自己问你。命令行和桌面版 Code 页面都支持。Codex 目前还不允许其他程序代为回答。
+- **任务小结和一键直达。** 任务完成的通知会写改了几个文件、这一轮用了多久、等价 API 费用（Codex 显示改过的文件）。点通知、星星详情里的 ↗ 或者报告里的一行，就会切到任务所在的窗口（Claude 桌面版、终端、VS Code；Codex 在能确认对应窗口时支持）。
+- **快速派活。** 按 Ctrl+Alt+Space（可以在 设置 → 助手与通知 里换成别的快捷键或者关掉），或者从人物右键菜单、托盘打开一个小窗口：写下要做什么、选项目文件夹（会列出最近用过的）、选 Claude Code 或 Codex。点「开始」就会打开新终端运行对应的命令行工具，任务随后会变成一颗星星。你写的内容作为数据传递，不经过任何 shell，也不会加任何跳过权限的参数。
+- **日报 / 周报。** 工作台 → 报告（人物右键菜单里也有）：今天或本周处理的任务、AI 工作时长（每一轮从你提问到回复完成）、改过的文件、用量、等价 API 费用和比上期的变化，下面是可以搜索的 Claude 和 Codex 历史任务。双击一行就能切到那个任务的窗口。
 
 ### 工作台
 
@@ -66,17 +79,20 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 
 ## 安装和使用
 
-1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0) 下载 **Petoken-Setup-v1.5.0.exe**，双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。
+1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v1.6.0) 下载 **Petoken-Setup-v1.6.0.exe**，双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。升级时会保留你的设置和工作台。
    - Windows 可能提示「Windows 已保护你的电脑」，因为安装程序还没有数字签名。点「更多信息」→「仍要运行」即可。
-   - 不想安装的话，也可以下载 `Petoken-v1.5.0-Windows-x64.zip`，**完整解压整个文件夹**后运行 `petoken.exe`（`_internal` 文件夹是程序的一部分，不能只复制 exe）。
-2. 像平常一样使用 Codex 或 Claude Code，Petoken 会自动跟随正在运行的任务。想看 Claude 额度可以打开 **设置 → 同步 Claude 用量**。界面默认是英文，可以在 设置 → 语言 里切换成简体中文。
+2. 像平常一样使用 Codex 或 Claude Code，Petoken 会自动跟随正在运行的任务。在 **设置 → Claude** 里可以打开「同步 Claude 用量」（显示额度）、「Claude 即时通知」和「在桌宠上批准 Claude」。界面默认是英文，可以在 设置 → 常规 → 界面语言 里切换成简体中文。
 
-操作：点人物打开面板；拖动人物可以移动；右键打开菜单；`Alt + 方向键` 移动面板。
+操作：点人物打开面板；拖动人物可以移动；右键打开菜单（快速派活、工作台、报告、设置；显示相关的选项在「更多」里）；`Alt + 方向键` 移动面板。
+
+不需要管理员权限，也不需要改系统设置。Petoken 给 Claude Code 装的 hook 是当前用户自己的 PowerShell 脚本，启动时带 `-ExecutionPolicy Bypass`，只对那一次运行生效，所以在 Windows 默认的脚本策略下也能运行。公司管理的电脑如果用组策略强制了脚本策略，hook 可能会被拦住，这时 Claude Code 会照常自己问你。
 
 ## 隐私 / 本地优先
 
 - Petoken 读取本机 Codex 的任务元数据和用量数字、窗口里的任务标题和活动状态，以及只存在内存里的媒体信息（用于显示歌名）。它也读取 Claude Code 本机的会话记录（只取用量数字和会话元数据，消息内容在内存里直接丢弃）和运行中会话的登记信息。不读取其他任何来源的数据。
 - **同步 Claude 用量** 需要你手动打开：它会在 Claude Code 的设置里加一条状态栏命令（修改前先备份），只记录用量数字。在设置里关掉就会移除。
+- **在桌宠上批准 Claude** 需要你手动打开：hook 通过 `%LOCALAPPDATA%\CodexWisp\claude-approvals` 里的文件把请求交给 Petoken，回答后马上删除；一个小日志只记录时间和工具名。任务小结、报告和预测只从本机记录里读取工具名、文件路径、时间和用量数字，不读取对话内容和文件内容。
+- 关掉 Claude 桌面版的弹窗，只改你自己 Windows 通知设置里 Claude 这一项，退出 Petoken 时恢复。
 - 从不导出对话记录或凭据，从不发送模型请求，从不录音或记录按键，从不上传本机用量。
 - 详情见 [`docs/USAGE_MODEL.md`](docs/USAGE_MODEL.md) 和 [`SECURITY.md`](SECURITY.md)。
 
@@ -94,11 +110,11 @@ py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-打包 Windows 版本（`dist\petoken\` 和 `dist\petoken-Windows-x64.zip`；加 `-Installer` 会同时生成安装程序，需要 [Inno Setup 6](https://jrsoftware.org/isinfo.php)）：
+打包一键安装程序（生成 `dist\Petoken-Setup-v<版本号>.exe`，需要 [Inno Setup 6](https://jrsoftware.org/isinfo.php)）：
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\build.ps1 -Package -Installer
+.\build.ps1 -Installer
 ```
 
 ## 文档
@@ -112,7 +128,8 @@ py -3.13 -m venv .venv
 - 安全策略：[`SECURITY.md`](SECURITY.md)
 - 参与贡献：[`CONTRIBUTING.md`](CONTRIBUTING.md)
 - 第三方组件：[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.5.0 发布说明：[`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
+- v1.6.0 发布说明：[`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md)
+- 上一版发布说明：[`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
 
 ## 社区和许可
 

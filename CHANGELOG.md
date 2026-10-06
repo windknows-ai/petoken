@@ -2,6 +2,30 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V1.6.0 — 2026-10-06
+
+Time-saving assistant; human QA of the new cards and reports on 2026-10-06.
+
+### Added
+- **Predictions and tips**: when the 5-hour / weekly limit runs out at your pace and whether before it resets, a switch suggestion to the open app with room, context almost full, no progress for 20 minutes, a used-up limit coming back. One line in the usage card plus one notification each.
+- **Answer Claude on the character** (opt-in): permission requests (Allow / Always allow / Deny / Answer in Claude, with revocable always-allow rules), Claude's multiple-choice questions and its plans (Accept / Accept and allow edits / Revise with a note). Claude Code asks itself when there is no answer in time or Petoken is closed.
+- **Recaps** on finished-task notices (files changed, turn time, cost) and **one-click jump** to a task's window from notices, Star details and reports.
+- **Quick launch**: a global shortcut (selectable), the character menu or the tray start Claude Code or Codex on a prompt in a new terminal.
+- **Reports** in the workbench: today / this week with tasks, AI working time, files changed, tokens, cost and the change from the previous period; searchable task history for both apps.
+- Prices for gpt-6.1-sol, gpt-6-sol, gpt-6-luna and gpt-5.5 (official, checked 2026-10-06).
+
+### Changed
+- Settings is split into General / Tasks / Claude / Assistant / About tabs; the character and tray menus keep everyday actions on top and the rest under More.
+- While Petoken runs the Claude desktop app's own pop-ups are muted (restored on exit), and background Claude runs (`claude -p`, scripts, agents) finish quietly in the history.
+- Installed Claude Code hooks are brought up to date when Petoken starts.
+- Releases ship the one-click installer only.
+
+### Fixed
+- Approval cards that outlived their request (answered in Claude, session closed) disappear instead of reappearing on the next start.
+- Dark focus frame on report and allowed-rules rows.
+
+See [release notes](docs/RELEASE_NOTES_v1.6.0.md).
+
 ## V1.5.0 — 2026-10-05
 
 Notifications and reminders (roadmap phase "1.6 reminders and notifications"); human visual QA accepted on 2026-10-05.
