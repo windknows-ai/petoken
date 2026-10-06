@@ -2,6 +2,27 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V1.5.0 — 2026-10-05
+
+Notifications and reminders (roadmap phase "1.6 reminders and notifications"); human visual QA accepted on 2026-10-05.
+
+### Added
+- Notifications when a task finishes, fails or waits for your approval, and when the 5-hour limit drops to 20 % left: the character cheers, looks sad or waves (new artwork) and a Windows notification appears.
+- Opt-in **Claude instant notifications**: Claude Code hooks deliver finished / failed / waiting events in under a second (CLI and desktop Code tab).
+- Codex: finished tasks by regular checks; waiting-for-approval for Codex CLI tasks from Codex's own control socket. The Codex desktop app does not expose these states.
+- Workbench **Notifications** tab: 30-day history with type colours and filter; once / daily / weekly personal reminders that can link a todo.
+- **Do Not Disturb**, manual or scheduled (default 22:00–08:00).
+
+### Changed
+- Todos, notes and reminders are added through a dialog (Add → write → confirm), like projects; workbench lists separate rows with dividers.
+- Only a pending approval opens its task from a notification; the rest is history.
+- Settings opens on its own without opening the usage panel.
+
+### Fixed
+- Dark focus frame on clicked workbench rows; the notification list jumping to the top after a double-click.
+
+See [release notes](docs/RELEASE_NOTES_v1.5.0.md).
+
 ## V1.4.0 — 2026-10-05
 
 Codex + Claude Code companion with a usage card and a local workbench. Combines the work developed under the V1.4 (workbench) and V1.5 (dual provider) working names; human visual QA accepted on 2026-10-05.

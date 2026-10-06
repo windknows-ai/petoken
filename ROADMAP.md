@@ -21,6 +21,12 @@ Directions only — no schedule promises. `Available now` always matches [Releas
 
 The compact Codex-only implementation and rebuilt package passed technical and independent review; human visual QA was accepted on 2026-10-04. The refinements developed under the V1.4 working name are included in v1.3.0 by user request.
 
+## Released — v1.5.0 (2026-10-05)
+
+- Notifications for finished, failed and waiting tasks and low limits, with character reactions
+- Opt-in Claude Code instant notifications; Codex CLI approval waits
+- Workbench notification history, personal reminders and Do Not Disturb
+
 ## Released — v1.4.0 (2026-10-05)
 
 - Claude Code as a second provider beside Codex, with gold Stars and project-named tasks

@@ -6,7 +6,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community** — the free, open-source edition of Petoken. v1.4.0 follows Codex and Claude Code side by side (blue and gold task Stars), shows remaining context and quotas in a small card above the character, and adds a local workbench for projects, todos and notes.
+**Petoken Community** — the free, open-source edition of Petoken. v1.5.0 follows Codex and Claude Code side by side (blue and gold task Stars), tells you when a task finishes, fails or waits for your approval, shows remaining context and quotas in a small card above the character, and keeps a local workbench for projects, todos, notes and reminders.
 
 ## What it does
 
@@ -17,15 +17,16 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Task-level live usage**: input / output / reasoning / cache splits for the current task.
 - **Quotas and resets**: Codex 5-hour / weekly usage with reset countdowns (Pro accounts have only the weekly window); Claude Code Pro/Max windows after turning on **Settings → Sync Claude usage**.
 - **Usage card**: while tasks run, a small card above the character shows, for each open app, the context, 5-hour and weekly amounts left and when they reset.
-- **Workbench**: local projects, todos and plain-text notes, with optional task-to-project links.
+- **Notifications**: the character cheers, looks sad or waves and a pop-up appears when a task finishes, fails or waits for your approval, or when the 5-hour limit runs low; 30-day history, Do Not Disturb and personal reminders.
+- **Workbench**: local projects, todos, plain-text notes and reminders, with optional task-to-project links.
 - **Cost**: an API-equivalent estimate (USD / CAD / EUR / CNY) only when model pricing and token evidence support it; otherwise `N/A`.
 - **Token Analytics**: model / session / date grouping with local lifetime history.
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v1.4.0
+## Latest stable release: v1.5.0
 
-Download [Petoken-v1.4.0-Windows-x64.zip](https://github.com/windknows-ai/petoken/releases/download/v1.4.0/Petoken-v1.4.0-Windows-x64.zip) from the [v1.4.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.4.0). Verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download [Petoken-v1.5.0-Windows-x64.zip](https://github.com/windknows-ai/petoken/releases/download/v1.5.0/Petoken-v1.5.0-Windows-x64.zip) from the [v1.5.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0). Verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -50,6 +51,26 @@ is not drawn. Click the character to open the full usage panel. **Usage panel
 (always shown)** in the character's right-click menu keeps it open and on top;
 it starts unchecked every time Petoken opens.
 
+### Notifications
+
+When a task finishes, fails or waits for your approval, or the 5-hour limit
+drops to 20 % left, the character reacts and a Windows notification appears;
+clicking a waiting-for-approval notice opens that task. Everything is kept for
+30 days under **Notifications** in the workbench, beside once / daily / weekly
+personal reminders. **Do Not Disturb** (manual or scheduled) silences pop-ups
+and reactions while still keeping the history.
+
+| | Claude Code | Codex CLI | Codex desktop app |
+| --- | --- | --- | --- |
+| Finished | under 1 s* | a few seconds | a few seconds |
+| Failed | under 1 s* | — | — |
+| Waiting for approval | under 1 s* | a few seconds | — |
+
+\* With **Settings → Claude instant notifications** on (adds hooks to Claude
+Code's settings, backed up first). Without it, finished tasks are noticed by
+regular checks. The Codex desktop app does not expose approval or failure
+state to other programs, so those stay silent.
+
 ### Workbench
 
 A native Home / Projects / Todos / Notes workbench opens from the Hub,
@@ -64,13 +85,13 @@ explains the pet and the workbench.
 | Source | Status | What you get |
 | --- | --- | --- |
 | Codex desktop client and CLI | Supported | Verified usage totals, available 5-hour / weekly quotas with resets, supported API-equivalent cost, working/idle context |
-| Claude Code (CLI / desktop Code tab) | Supported since v1.4.0 | Deduplicated usage totals, API-equivalent cost from Anthropic list prices, working/idle from Claude Code's session registry; 5-hour / weekly limits after turning on **Settings → Sync Claude usage** (Pro/Max, via Claude Code's status line), otherwise N/A |
+| Claude Code (CLI / desktop Code tab) | Supported | Deduplicated usage totals, API-equivalent cost from Anthropic list prices, working/idle from Claude Code's session registry; 5-hour / weekly limits after turning on **Settings → Sync Claude usage** (Pro/Max, via Claude Code's status line), otherwise N/A |
 
 If a source is missing or stale, its views show that limitation honestly. No other provider is read.
 
 ## Install and use
 
-1. Download `Petoken-v1.4.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.4.0).
+1. Download `Petoken-v1.5.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0).
 2. Extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
 3. Use Codex or Claude Code as usual; Petoken follows their running tasks. Optionally turn on **Settings → Sync Claude usage** for Claude quotas. The interface starts in English; switch to Simplified Chinese in Settings → Language.
 
@@ -115,9 +136,9 @@ Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v1.4.0 release notes: [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md)
-- Visual QA checklist (human accepted): [`docs/V1_5_DUAL_PROVIDER_QA.md`](docs/V1_5_DUAL_PROVIDER_QA.md)
-- Previous release notes: [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
+- v1.5.0 release notes: [`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
+- Notifications QA checklist (human accepted): [`docs/V1_6_NOTIFICATIONS_QA.md`](docs/V1_6_NOTIFICATIONS_QA.md)
+- Previous release notes: [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md), [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
 - Historical v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)
 
 ## Community and licensing

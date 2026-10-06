@@ -153,14 +153,24 @@ def frame_for(state_or_entry, phase):
     return pixmap if not pixmap.isNull() else None
 
 
+_SPRITE_TABLE = None
+
+
 def load_sprites():
     """Build the DesktopPet sprite table.
 
     Keys are registry states plus activity aliases (``working``,
     ``usage``), so the renderer and QA can address every pose by name
     while activity logic keeps its own vocabulary.
+
+    Decoded once per process: each source is about 6 MB in memory, and
+    QPixmap copies share the same data, so extra pets (tests, previews)
+    cost nothing more.
     """
-    table = {entry.state: sprite_for(entry.state) for entry in REGISTRY}
-    table['working'] = table['codex_working']
-    table['usage'] = table['idle']
-    return table
+    global _SPRITE_TABLE
+    if _SPRITE_TABLE is None:
+        table = {entry.state: sprite_for(entry.state) for entry in REGISTRY}
+        table['working'] = table['codex_working']
+        table['usage'] = table['idle']
+        _SPRITE_TABLE = table
+    return dict(_SPRITE_TABLE)
