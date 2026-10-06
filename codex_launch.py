@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 from pathlib import Path
 import queue
 import re
@@ -42,6 +43,43 @@ def available():
     """Native CLI and PowerShell are present; login/network health is not probed."""
     cli, shell = _executables()
     return bool(cli and shell)
+
+
+def _daemon_flags(cli, project):
+    """Keep installed daemon launches; bypass missing installs on capable CLIs.
+
+    Read-only layout selection follows Codex's managed_install.rs (including
+    legacy launch markers). --help only probes support, never starts a daemon.
+    https://github.com/openai/codex/blob/main/codex-rs/app-server-daemon/src/managed_install.rs
+    https://learn.chatgpt.com/docs/changelog (--no-daemon)
+    """
+    configured = os.environ.get('CODEX_HOME', '')
+    home = Path(configured) if configured else Path.home()/'.codex'
+    if not home.is_absolute():
+        home = project/home
+    root = home/'packages/app-server-daemon'
+    if not os.path.lexists(root/'current'):
+        state = home/'app-server-daemon'
+        for package, markers in (
+                ('app-server-daemon', ('daemon.pid', 'daemon.stderr.log',
+                                      'daemon-updater.pid', 'daemon-updater.stderr.log')),
+                ('standalone', ('app-server.pid', 'app-server.stderr.log',
+                                'app-server-updater.pid', 'app-server-updater.stderr.log'))):
+            if any(os.path.lexists(state/name) for name in markers):
+                root = home/'packages'/package
+                break
+    if any((root/'current'/relative).is_file() for relative in ('bin/codex.exe', 'codex.exe')):
+        return []
+    try:
+        result = subprocess.run([cli, '--help'], cwd=project, stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL, timeout=2, encoding='utf-8', errors='replace',
+            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise RuntimeError('Cannot check Codex support for running without a daemon') from error
+    if result.returncode != 0:
+        raise RuntimeError('Cannot check Codex support for running without a daemon')
+    # Older CLIs without this flag keep their original startup behavior.
+    return ['--no-daemon'] if re.search(r'(?m)^\s+--no-daemon\s*$', result.stdout) else []
 
 
 def _model_catalog():
@@ -230,7 +268,7 @@ def launch_command(folder, prompt, *, external_id=None, model=None, effort=None)
             argv.extend(['-m', model])
         if effort is not None:
             argv.extend(['-c', f'model_reasoning_effort={json.dumps(effort)}'])
-    arguments = subprocess.list2cmdline([*argv, '--', prompt])
+    arguments = subprocess.list2cmdline([*argv, *_daemon_flags(cli, project), '--', prompt])
     encoded = _encoded_script(dict(executable=cli, folder=str(project), arguments=arguments,
                                   external_id=external_id))
     command = [shell, '-NoLogo', '-NoProfile', '-NoExit', '-EncodedCommand', encoded]
