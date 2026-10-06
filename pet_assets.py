@@ -177,6 +177,7 @@ SOURCE_MAX_SIDE = 768
 SOURCE_CACHE_SIZE = 48
 _FRAME_CACHE = OrderedDict()
 _COUNT_CACHE = {}
+_OWN_CACHE = {}
 
 
 def pose_source(path):
@@ -212,6 +213,14 @@ def _art(state):
 def frame_count(state):
     """How many frames of ``state`` exist on disk (checked once per process)."""
     return _art(state)[0]
+
+
+def has_own_art(state):
+    """The pose has its own picture (not a fallback): it draws its own symbols."""
+    entry = entry_for(state)
+    if entry.state not in _OWN_CACHE:
+        _OWN_CACHE[entry.state] = ((ASSETS_DIR.parent / entry.path).is_file() or frame_count(state) > 0)
+    return _OWN_CACHE[entry.state]
 
 
 def has_blink(state):

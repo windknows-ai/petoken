@@ -5986,6 +5986,12 @@ def main():
         from tools.preview_workbench import main as preview_main
         return preview_main([argument for argument in sys.argv[1:]
                              if argument != '--preview-workbench'])
+    if '--preview-v2-0' in sys.argv[1:]:
+        # 2.0 test build with adjustable synthetic data (see tools/preview_v2_0.py).
+        if __name__ == '__main__':
+            sys.modules['widget'] = sys.modules[__name__]
+        from tools.preview_v2_0 import main as preview_main
+        return preview_main([argument for argument in sys.argv[1:] if argument != '--preview-v2-0'])
     if any(argument in ('--preview-v1-3', '--preview-v1-4', '--preview-v1-5') for argument in sys.argv[1:]):
         # Frozen/script entry is __main__; keep the preview on this module's
         # globals so its temporary preference directory isolates the real UI.

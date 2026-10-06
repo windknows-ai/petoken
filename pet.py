@@ -457,8 +457,11 @@ class DesktopPet(QWidget):
         if f.next_index is not None and f.state!='typing':
             layer(self.pose_pixmap(f.state,f.next_index),f.next_alpha)
         p.setOpacity(1.)
-        for particle in f.particles:
-            self.paint_particle(p,particle,sx,sy,sw)
+        # Symbols drawn by code stand in for art that does not exist yet; a
+        # pose with its own picture (hearts, bubbles) needs no second set.
+        if not assets.has_own_art(f.state) or f.state in assets.registered_states():
+            for particle in f.particles:
+                self.paint_particle(p,particle,sx,sy,sw)
         p.restore()
 
     PARTICLE_COLORS={'heart':'#FF6F9F','sparkle':'#FFD36E','note':'#9B8CFF','z':'#A9B8FF',

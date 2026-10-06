@@ -166,7 +166,9 @@ def _ago(at, now, language):
         at = _epoch(at)
     if not at:
         return ''
-    minutes = max(1, int((now - at) // 60))
+    minutes = int((now - at) // 60)
+    if minutes < 1:
+        return text('ago_now', language)
     if minutes < 60:
         return text('ago_minutes', language, n=minutes)
     if minutes < 48 * 60:
@@ -281,7 +283,7 @@ class ContinuationCard(QWidget):
         if note:
             self.note_heading.setText(text('handoff_note_heading', self.language,
                                            ago=_ago(note.get('created_at'), time.time(), self.language)
-                                           or text('ago_minutes', self.language, n=1)))
+                                           or text('ago_now', self.language)))
             self.note_text.setText(note['body'])
             self.delete_button.setVisible(bool(note.get('id')))
         self.adjustSize()
