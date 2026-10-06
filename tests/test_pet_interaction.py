@@ -61,7 +61,7 @@ class PetInteractionTests(unittest.TestCase):
                 self.mouse(QEvent.MouseMove, self.head(.35 if n % 2 else .6), Qt.NoButton, Qt.NoButton)
         self.assertEqual(self.pet.current_state, 'headpat_happy')
 
-    def test_poke_opens_panel_and_too_many_pokes_pout(self):
+    def test_clicks_poke_without_opening_the_panel_and_many_clicks_pout(self):
         local = QPoint(136, 260)
         with patch.object(self.pet, 'toggle_panel') as toggle:
             self.mouse(QEvent.MouseButtonPress, local)
@@ -73,7 +73,10 @@ class PetInteractionTests(unittest.TestCase):
             self.assertEqual(self.pet.current_state, 'poked')   # Four clicks: still fine.
             self.mouse(QEvent.MouseButtonPress, local)
             self.mouse(QEvent.MouseButtonRelease, local, Qt.NoButton)
-        self.assertEqual(toggle.call_count, 5)
+            # A sixth click while she pouts keeps her pouting.
+            self.mouse(QEvent.MouseButtonPress, local)
+            self.mouse(QEvent.MouseButtonRelease, local, Qt.NoButton)
+        toggle.assert_not_called()
         self.assertEqual(self.pet.current_state, 'pout')
 
     def test_long_press_acts_cute_without_opening_the_panel(self):

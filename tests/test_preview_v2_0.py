@@ -96,5 +96,47 @@ class PreviewV20Tests(unittest.TestCase):
         self.assertTrue(preview.pet.frame is not None)
 
 
+class CombinedPreviewTests(unittest.TestCase):
+    """Both windows share one pet: 1.x tasks and the star ring with 2.0 features."""
+
+    def test_both_windows_drive_the_same_pet(self):
+        temp = tempfile.TemporaryDirectory()
+        patches = [patch('widget.PREF_DIR', Path(temp.name)),
+                   patch('quick_launch.build_command', lambda *a, **k: ['preview']),
+                   patch('claude_launch.launch', lambda argv: None)]
+        for item in patches:
+            item.start()
+        from tools.preview_v1_3 import Preview as BasePreview
+        from tools.preview_v2_0 import Preview
+        base = BasePreview(3, 'zh_CN')
+        preview = Preview('zh_CN', base)
+        try:
+            self.assertIs(preview.pet, base.pet)
+            self.assertIsNone(preview.pet.preview_state)       # 1.x "idle" lets her act.
+            self.assertEqual(base.panel.task_manager.total_task_count(), 3)   # Star ring tasks.
+            preview.pet.interact('headpat_happy', 2)
+            self.assertEqual(preview.pet.current_state, 'headpat_happy')
+            base.pose.setCurrentText('music')
+            self.assertEqual(preview.pet.current_state, 'music')
+            base.pose.setCurrentText('idle')
+            preview.pet.interaction_state = None          # The pat is over.
+            preview.panel.start_focus(25)
+            self.assertEqual(preview.pet.current_state, 'focus_read')
+            preview.make_review()
+        finally:
+            preview.panel.focus_mode.abandon()
+            for card in (preview.panel._focus_card, preview.panel._continuation_card):
+                if card is not None:
+                    card.close()
+            preview.store.close()
+            base.cleanup()
+            base.deleteLater()
+            preview.deleteLater()
+            APP.processEvents()
+            for item in reversed(patches):
+                item.stop()
+            temp.cleanup()
+
+
 if __name__ == '__main__':
     unittest.main()

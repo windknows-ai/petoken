@@ -21,6 +21,7 @@ from usage_overlay import UsageOverlay, UsagePresence, build_sections
 
 POKES_TO_POUT=5        # Clicks on her within POKE_WINDOW_S seconds.
 POKE_WINDOW_S=4
+POUT_S=2.4            # Each further click while pouting restarts this.
 
 
 class DesktopPet(QWidget):
@@ -592,13 +593,15 @@ class DesktopPet(QWidget):
                 local=getattr(self,'_press_local',None)
                 side=(self.box_fraction(local)[0]-.5)*2 if local is not None else 0
                 self.animator.poke(max(-1.,min(1.,side)))
-                # Only clicking her again and again on purpose makes her pout.
+                # Only clicking her again and again on purpose makes her pout,
+                # and more clicks while she pouts keep her pouting.
                 self._pokes=[t for t in self._pokes if now-t<POKE_WINDOW_S]+[now]
-                annoyed=len(self._pokes)>=POKES_TO_POUT
-                if annoyed:
-                    self._pokes=[]
-                self.interact('pout' if annoyed else 'poked',2.4 if annoyed else .45)
-                self.toggle_panel()
+                pouting=self.interaction_state=='pout' and now<self.interaction_until
+                if pouting or len(self._pokes)>=POKES_TO_POUT:
+                    self.interact('pout',POUT_S)
+                else:
+                    self.interact('poked',.45)
+                # A left click is for her; the panel opens from the right-click menu.
             else:
                 self.panel.prefs['pet_position']=[self.x(),self.y()]
                 self.panel.persist()

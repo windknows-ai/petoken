@@ -2,9 +2,13 @@
 
 Everything runs on synthetic data in a temporary folder: no Claude Code or
 Codex data is read, no real terminal is opened, and nothing is saved to your
-real settings or workbench. Use it to try poses, interactions and moods,
-focus mode at higher speed, project notes, usage goals with any numbers,
-todos waiting for review, and points and stickers.
+real settings or workbench. Two control windows drive the same pet:
+
+- the 1.x window (tools/preview_v1_3.py): tasks and the star ring, the hub,
+  usage cards, task details, notifications and approval requests;
+- the 2.0 window (this file): poses, interactions and moods, focus mode at
+  higher speed, project notes and the where-I-left-off card, usage goals
+  with any numbers, todos waiting for review, points and stickers.
 
 Run: petoken.exe --preview-v2-0 [--language zh_CN]
 """
@@ -66,19 +70,36 @@ def row(*widgets):
 
 
 class Preview(QWidget):
-    def __init__(self, language='zh_CN'):
+    def __init__(self, language='zh_CN', base=None):
+        """``base``: the 1.x synthetic preview whose panel and pet are shared."""
         super().__init__()
+        self.base = base
         self.clock = VirtualClock()
         self.folder = tempfile.TemporaryDirectory(prefix='petoken-v2-preview-')
         root = Path(self.folder.name)
-        self.panel = Panel(live=False)
-        self.panel.preview_toasts = True
-        self.panel.prefs.update(language=language)
         from pet import DesktopPet
         from workbench_store import WorkbenchStore
+        if base is not None:
+            self.panel, self.pet = base.panel, base.pet
+            # The 1.x window pins a pose; its "idle" means "let her act".
+            original = base.set_pose
+
+            def set_pose(*_):
+                original()
+                if base.pose.currentText() == 'idle':
+                    self.pet.preview_state = None
+                    self.pet.update_activity()
+            base.pose.currentTextChanged.disconnect()
+            base.pose.currentTextChanged.connect(set_pose)
+            set_pose()
+            self.pet.activity_timer.start(100)
+        else:
+            self.panel = Panel(live=False)
+            self.panel.pet = self.pet = DesktopPet(self.panel)
+        self.panel.preview_toasts = True
+        self.panel.prefs.update(language=language)
         self.store = WorkbenchStore(root / 'workbench.sqlite3')
         self.panel.workbench_store = lambda: self.store
-        self.panel.pet = self.pet = DesktopPet(self.panel)
         self.panel.focus_mode.clock = self.clock
         self.panel.companion.clock = self.clock
         # A scheduler on the preview store that never opens a terminal.
@@ -108,7 +129,7 @@ class Preview(QWidget):
 
     # Layout ---------------------------------------------------------------
     def _build(self):
-        self.setWindowTitle('Petoken 2.0 可调数据测试版 / adjustable test build')
+        self.setWindowTitle('Petoken 2.0 测试版 · 陪伴功能 / companionship')
         outer = QVBoxLayout(self)
         banner = QLabel('只用合成数据：不读 Claude Code / Codex，不开终端，不保存你的设置和工作台。\n'
                         'Synthetic data only: nothing real is read, opened or saved.')
@@ -417,6 +438,8 @@ class Preview(QWidget):
 
     def closeEvent(self, event):
         self.panel.focus_mode.abandon()
+        if self.base is not None:
+            self.base.close()
         self.panel.tray.hide()
         self.pet.close()
         QApplication.instance().quit()
@@ -434,10 +457,23 @@ def main(argv=None):
         stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
         # No real terminal is ever opened from the test build.
         stack.enter_context(patch('quick_launch.build_command', lambda *a, **k: ['preview']))
-        preview = Preview(args.language)
+        from tools.preview_v1_3 import Preview as BasePreview
+        base = BasePreview(3, args.language)
+        base.panel.preview_toasts = True
+        base.setWindowTitle('Petoken 测试版 · 任务、星环、用量卡片、审批、通知 / tasks, star ring, cards')
+        app.aboutToQuit.connect(base.cleanup)
+        preview = Preview(args.language, base)
         stack.enter_context(patch('claude_launch.launch', lambda argv: preview.panel.tray_notice(
             '（测试版）已模拟打开终端', '真实版本会在这里打开 Claude Code 或 Codex')))
+        base.show()
         preview.show()
+
+        def place():
+            # Side by side once both windows have their real frames.
+            screen = QApplication.primaryScreen().availableGeometry()
+            base.move(screen.left() + 20, screen.top() + 20)
+            preview.move(base.frameGeometry().right() + 12, screen.top() + 20)
+        QTimer.singleShot(200, place)
         return app.exec()
 
 

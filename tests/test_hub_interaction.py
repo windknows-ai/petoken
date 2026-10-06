@@ -89,13 +89,16 @@ class HubInteractionTests(unittest.TestCase):
         QTest.qWait(450)
         self.pet.update_activity()
         self.assertFalse(self.panel.isVisible())
+        # 2.0: a left click is for her (a poke); the panel opens from the menu.
         QTest.mouseClick(self.pet, Qt.LeftButton, pos=QPoint(120, 160))
+        self.assertFalse(self.panel.isVisible())
+        self.pet.show_panel()
         self.assertTrue(self.panel.isVisible())
         QTest.mouseMove(self.pet, QPoint(-100, -100))
         QTest.qWait(800)
         self.pet.update_activity()
         self.assertTrue(self.panel.isVisible())
-        QTest.mouseClick(self.pet, Qt.LeftButton, pos=QPoint(120, 160))
+        self.pet.toggle_panel()
         self.assertFalse(self.panel.isVisible())
 
     def test_context_check_keeps_open_topmost_until_unchecked(self):

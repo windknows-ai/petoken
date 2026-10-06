@@ -173,7 +173,7 @@ class UiTests(unittest.TestCase):
         self.assertEqual(self.panel.scope_button.text(),'Project ▾')
         self.assertIn('Estimated Cost',self.panel.cost_label.text())
         self.assertIn('Never Translate This Project',self.panel.pet.toolTip())
-        self.assertIn('Click to view usage',self.panel.pet.toolTip())
+        self.assertIn('Right-click for the menu',self.panel.pet.toolTip())
         self.assertEqual((self.panel.total.text(),self.panel.prefs['scope']),before)
 
     def test_settings_language_selector_and_labels_follow_selected_language(self):
