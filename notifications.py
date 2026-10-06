@@ -217,6 +217,15 @@ class NotificationCenter(QObject):
         if self._active is None or preference != self._preference:
             self._active, self._preference = current, preference
             return  # New baseline: a changed view is not a finished task.
+        # Explicit approval state (Codex control socket, see
+        # docs/V1_6_CODEX_APPROVAL.md): announce the step into waiting only.
+        for key, task in current.items():
+            before = (self._active.get(key) or {}).get('awaiting_approval')
+            if task.get('awaiting_approval') is True and before is not True:
+                self.ingest(dict(kind='needs_approval', provider=key[0], task_key=key[1], at=now,
+                                 project=((task.get('display') or {}).get('project') or ''),
+                                 detail='', dedupe=f'approval:{key[0]}:{key[1]}:{now:.0f}',
+                                 source='poll'), now)
         for key, task in self._active.items():
             if key in current or key[0] in hooks_providers:
                 continue

@@ -95,6 +95,20 @@ class CenterTests(unittest.TestCase):
         self.center.observe_tasks([], 'codex', hooks_providers=('claude',), now=now)
         self.assertEqual(len(self.store.list_events()), 1)
 
+    def test_codex_approval_state_announces_each_wait_once(self):
+        now = time.time()
+        task = lambda waiting: dict(provider_id='codex', task_key='t1', activity_at=now,
+                                    awaiting_approval=waiting, display=dict(project='p'))
+        self.center.observe_tasks([task(True)], 'auto', now=now)  # Baseline: no replay.
+        self.center.observe_tasks([task(True)], 'auto', now=now + 2)
+        self.assertEqual(self.store.list_events('needs_approval'), [])
+        self.center.observe_tasks([task(False)], 'auto', now=now + 4)
+        self.center.observe_tasks([task(True)], 'auto', now=now + 200)
+        self.center.observe_tasks([task(True)], 'auto', now=now + 202)
+        self.center.observe_tasks([task(None)], 'auto', now=now + 204)
+        events = self.store.list_events('needs_approval')
+        self.assertEqual([(e['provider'], e['task_key']) for e in events], [('codex', 't1')])
+
     def test_low_quota_once_per_window(self):
         now = time.time()
         limits = lambda used, reset: dict(primary=dict(windowDurationMins=300, usedPercent=used, resetsAt=reset))
