@@ -73,6 +73,42 @@ class RecapTests(unittest.TestCase):
             status='completed', changes={'a.py': {'type': 'update'}}))])
         self.assertEqual(recap(self.home, 'task')['files'], ['a.py'])
 
+    def test_file_change_windows_extended_drive_paths(self):
+        for index, (root, cwd, path) in enumerate([
+            (r'\\?\D:\Project', r'D:\Project', r'D:\Project\a.py'),
+            (r'D:\Project', r'\\?\D:\Project', r'\\?\D:\Project\a.py'),
+            (r'\\?\D:\Project', r'\\?\D:\Project\src', 'a.py'),
+        ]):
+            with self.subTest(root=root, cwd=cwd, path=path):
+                thread = 'drive-' + str(index)
+                self.fixture.add(thread, cwd=root, events=[
+                    dict(type='turn_context', payload=dict(cwd=cwd)),
+                    event('item_completed', item=dict(type='FileChange', status='completed',
+                        changes={path: {'type': 'update'}, r'E:\outside.py': {'type': 'add'},
+                                 r'D:\Project-other\outside.py': {'type': 'add'}}))])
+                expected = ['src/a.py'] if index == 2 else ['a.py']
+                self.assertEqual(recap(self.home, thread)['files'], expected)
+
+    def test_file_change_windows_extended_unc_paths(self):
+        for index, (root, cwd, path) in enumerate([
+            (r'\\?\UNC\server\share\Project', r'\\server\share\Project',
+             r'\\server\share\Project\a.py'),
+            (r'\\server\share\Project', r'\\?\UNC\server\share\Project',
+             r'\\?\UNC\server\share\Project\a.py'),
+            (r'\\?\unc\server\share\Project', r'\\?\UNC\server\share\Project\src', 'a.py'),
+        ]):
+            with self.subTest(root=root, cwd=cwd, path=path):
+                thread = 'unc-' + str(index)
+                self.fixture.add(thread, cwd=root, events=[
+                    dict(type='turn_context', payload=dict(cwd=cwd)),
+                    event('item_completed', item=dict(type='FileChange', status='completed',
+                        changes={path: {'type': 'update'},
+                                 r'\\?\UNC\server\other\Project\outside.py': {'type': 'add'},
+                                 r'\\other\share\Project\outside.py': {'type': 'add'},
+                                 r'..\..\outside.py': {'type': 'add'}}))])
+                expected = ['src/a.py'] if index == 2 else ['a.py']
+                self.assertEqual(recap(self.home, thread)['files'], expected)
+
     def test_failed_declined_and_proposed_changes_are_not_modifications(self):
         changes = {'a.py': {'type': 'add'}}
         self.fixture.add(events=[event('patch_apply_begin', changes=changes),
