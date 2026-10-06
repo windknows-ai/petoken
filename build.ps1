@@ -1,7 +1,9 @@
 param(
     [switch]$Package,
+    [switch]$Installer,
     [string]$PythonPath,
-    [string]$OutputDirectory
+    [string]$OutputDirectory,
+    [string]$InnoSetup
 )
 
 $ErrorActionPreference = 'Stop'
@@ -93,6 +95,16 @@ if ($Package) {
     if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
     Compress-Archive -Path $app -DestinationPath $zip -CompressionLevel Optimal
     Write-Host "Created $zip"
+}
+
+if ($Installer) {
+    # One-click installer (Inno Setup 6, per-user, no administrator rights).
+    $iscc = if ($InnoSetup) { $InnoSetup } else { Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe' }
+    if (-not (Test-Path -LiteralPath $iscc)) { throw 'Inno Setup 6 not found: install it or pass -InnoSetup <path to ISCC.exe>.' }
+    $version = & $python -c "import sys; sys.path.insert(0, r'$repo'); from app_config import APP_VERSION; print(APP_VERSION)"
+    & $iscc /Q "/DAppVersion=$version" "/DSourceDir=$app" "/DOutputDir=$distributionDirectory" (Join-Path $repo 'installer\petoken.iss')
+    if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
+    Write-Host "Created $distributionDirectory\Petoken-Setup-v$version.exe"
 }
 
 Write-Host "Built $app\petoken.exe"

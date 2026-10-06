@@ -1,8 +1,10 @@
 # Petoken
 
-> A Codex and Claude Code desktop companion with local usage and cost intelligence on Windows.
+**English** | [简体中文](README.zh-CN.md)
 
-*Codex 与 Claude Code 的本机用量与成本桌宠：跟随你的任务，诚实显示 token 用量、额度与费用。*
+> A Codex and Claude Code desktop companion with local usage and cost intelligence on Windows.
+>
+> Codex 与 Claude Code 的桌面 AI 编程小伙伴：跟着你的任务，诚实地显示 token 用量、额度和费用。
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
@@ -26,7 +28,7 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 
 ## Latest stable release: v1.5.0
 
-Download [Petoken-v1.5.0-Windows-x64.zip](https://github.com/windknows-ai/petoken/releases/download/v1.5.0/Petoken-v1.5.0-Windows-x64.zip) from the [v1.5.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0). Verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v1.5.0.exe](https://github.com/windknows-ai/petoken/releases/download/v1.5.0/Petoken-Setup-v1.5.0.exe), or the portable ZIP from the [v1.5.0 release](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0). Verify SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -91,9 +93,10 @@ If a source is missing or stale, its views show that limitation honestly. No oth
 
 ## Install and use
 
-1. Download `Petoken-v1.5.0-Windows-x64.zip` from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0).
-2. Extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
-3. Use Codex or Claude Code as usual; Petoken follows their running tasks. Optionally turn on **Settings → Sync Claude usage** for Claude quotas. The interface starts in English; switch to Simplified Chinese in Settings → Language.
+1. Download **Petoken-Setup-v1.5.0.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps.
+   - Windows may show "Windows protected your PC" because the installer is not code-signed yet: choose **More info → Run anyway**.
+   - Portable alternative: download `Petoken-v1.5.0-Windows-x64.zip`, extract the **entire folder** and run `petoken.exe` (`_internal` is part of the program — do not copy the exe alone).
+2. Use Codex or Claude Code as usual; Petoken follows their running tasks. Optionally turn on **Settings → Sync Claude usage** for Claude quotas. The interface starts in English; switch to Simplified Chinese in Settings → Language.
 
 Interact: click the character to open the panel; drag to move; right-click for the menu; `Alt + Arrow keys` moves the panel.
 
@@ -118,11 +121,11 @@ Run the test suite:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
+Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`; `-Installer` also builds the setup program and needs [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\build.ps1 -Package
+.\build.ps1 -Package -Installer
 ```
 
 ## Documentation
@@ -143,4 +146,4 @@ Build the Windows package (`dist\petoken\` plus `dist\petoken-Windows-x64.zip`):
 
 ## Community and licensing
 
-Petoken Community is open source. The application source code is MIT-licensed (see [LICENSE](LICENSE)); character artwork is excluded from the MIT grant (see [docs/ARTWORK.md](docs/ARTWORK.md)). Bug reports and ideas are welcome via [GitHub Issues](https://github.com/windknows-ai/petoken/issues) — see [CONTRIBUTING.md](CONTRIBUTING.md). Petoken is an independent project with no affiliation with or endorsement by OpenAI or any game publisher.
+Petoken Community is open source. The application source code is MIT-licensed (see [LICENSE](LICENSE)); character artwork is excluded from the MIT grant (see [docs/ARTWORK.md](docs/ARTWORK.md)). Bug reports and ideas are welcome via [GitHub Issues](https://github.com/windknows-ai/petoken/issues) — see [CONTRIBUTING.md](CONTRIBUTING.md). Petoken is an independent project with no affiliation with or endorsement by OpenAI, Anthropic or any game publisher.

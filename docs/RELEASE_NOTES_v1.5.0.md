@@ -28,10 +28,16 @@ This release delivers the roadmap phase called "1.6 reminders and notifications"
 
 ## Install
 
-Download `Petoken-v1.5.0-Windows-x64.zip` and `SHA256SUMS.txt` from the
-[GitHub release](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0).
-Verify the ZIP's SHA-256, extract the entire folder and run `petoken.exe`;
-keep `_internal` alongside it. Settings, workbench records and history from
+**Easiest:** download `Petoken-Setup-v1.5.0.exe` and run it. It installs per
+user (no administrator rights), adds Start menu / optional desktop shortcuts and
+an uninstaller (Windows Settings → Apps). The installer is not code-signed yet,
+so Windows SmartScreen may ask you to choose **More info → Run anyway**.
+
+**Portable:** download `Petoken-v1.5.0-Windows-x64.zip`, extract the entire
+folder and run `petoken.exe`; keep `_internal` alongside it.
+
+Verify either file against `SHA256SUMS.txt` from the
+[GitHub release](https://github.com/windknows-ai/petoken/releases/tag/v1.5.0). Settings, workbench records and history from
 v1.4.0 carry over.
 
 ## Privacy
