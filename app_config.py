@@ -35,6 +35,7 @@ DEFAULT_PREFERENCES = {
     "assistant_hints": True,
     "quick_launch_hotkey": "Ctrl+Alt+Space",
     "launch_folders": [],
+    "mute_claude_toasts": True,
 }
 
 
@@ -81,6 +82,8 @@ def normalize_preferences(data):
     if preferences.get("quick_launch_hotkey") not in ("Ctrl+Alt+Space", "Alt+Shift+Space",
                                                       "Ctrl+Alt+K", "off"):
         preferences["quick_launch_hotkey"] = "Ctrl+Alt+Space"
+    if not isinstance(preferences.get("mute_claude_toasts"), bool):
+        preferences["mute_claude_toasts"] = True
     folders = preferences.get("launch_folders")
     preferences["launch_folders"] = ([f for f in folders if isinstance(f, str) and f][:8]
                                      if isinstance(folders, list) else [])

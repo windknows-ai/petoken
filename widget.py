@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBox
     QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy, QTimeEdit)
 
 import claude_approval
+import claude_toasts
 from claude_usage import strip_scope
 import claude_events
 import claude_statusline
@@ -3809,6 +3810,10 @@ class Settings(QDialog):
         approval_row.addStretch(1)
         self.claude_approval_label = label()
         self.forms['claude'].addRow(self.claude_approval_label, approval_row)
+        self.mute_claude_toasts = QCheckBox()
+        self.mute_claude_toasts.setChecked(bool(panel.prefs.get('mute_claude_toasts', True)))
+        self.mute_claude_toasts_label = label()
+        self.forms['claude'].addRow(self.mute_claude_toasts_label, self.mute_claude_toasts)
         from quick_launch import HOTKEYS
         self.quick_launch_hotkey = QComboBox()
         for name in (*HOTKEYS, 'off'):
@@ -3965,6 +3970,10 @@ class Settings(QDialog):
         self.claude_approval.setToolTip(approval_tip)
         self.claude_approval_label.setToolTip(approval_tip)
         self.claude_approval_rules.setText(t('approval_rules'))
+        self.mute_claude_toasts_label.setText(t('mute_claude_toasts'))
+        self.mute_claude_toasts.setAccessibleName(t('mute_claude_toasts'))
+        self.mute_claude_toasts.setToolTip(t('mute_claude_toasts_tip'))
+        self.mute_claude_toasts_label.setToolTip(t('mute_claude_toasts_tip'))
         hotkey = getattr(self.parentWidget(), 'hotkey', None)
         chosen = self.quick_launch_hotkey.currentData()
         active = getattr(hotkey, 'registered', None)
@@ -4040,6 +4049,7 @@ class Settings(QDialog):
                      always_on_top=self.topmost.isChecked(),
                      star_ring_enabled=self.star_ring.isChecked(),
                      assistant_hints=self.assistant_hints.isChecked(),
+                     mute_claude_toasts=self.mute_claude_toasts.isChecked(),
                      quick_launch_hotkey=self.quick_launch_hotkey.currentData(),
                      dnd_enabled=self.dnd.isChecked(),
                      dnd_scheduled=self.dnd_scheduled.isChecked(),
@@ -4075,6 +4085,7 @@ class Settings(QDialog):
                 pass
         panel.sync_approvals()
         panel.sync_hotkey()
+        panel.sync_claude_toasts()
         panel.task_manager.set_visible(prefs['star_ring_enabled'])
         # Every save retires outstanding requests for the previous
         # settings, even when only scope/pinned changed: the new epoch
@@ -4411,6 +4422,8 @@ class Panel(QWidget):
         self.approvals = ApprovalController(self)
         self.approvals.requested.connect(self._approval_requested)
         self.sync_approvals()
+        self._claude_toasts_muted = False
+        self.sync_claude_toasts()
 
     def anchor_to_pet(self):
         pet = getattr(self, 'pet', None)
@@ -5133,6 +5146,19 @@ class Panel(QWidget):
             return None
         return dict(files=recap['files'], duration_s=None, usd=None)
 
+    def sync_claude_toasts(self):
+        """While Petoken runs, the Claude desktop app's own pop-ups are muted
+        (Petoken announces Claude tasks itself); restored on exit."""
+        wanted = self.live and not self.closing and self.prefs.get('mute_claude_toasts', True)
+        try:
+            if wanted and not self._claude_toasts_muted:
+                self._claude_toasts_muted = bool(claude_toasts.mute())
+            elif not wanted and self._claude_toasts_muted:
+                claude_toasts.restore()
+                self._claude_toasts_muted = False
+        except Exception:
+            pass   # Notification settings are a convenience; never block Petoken.
+
     def sync_hotkey(self):
         """Ctrl+Alt+Space opens quick launch while the setting is on."""
         wanted = self.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space')
@@ -5491,6 +5517,7 @@ class Panel(QWidget):
         self.approvals.stop()
         self.hotkey.unregister()
         QApplication.instance().removeNativeEventFilter(self.hotkey.filter)
+        self.sync_claude_toasts()   # closing: put the Claude app's pop-ups back.
         self.stop.set()
         self.active.stop.set()
         self.activity.close()

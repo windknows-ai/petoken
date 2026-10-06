@@ -255,7 +255,8 @@ class UiTests(unittest.TestCase):
         self.assertEqual(settings.findChildren(QDoubleSpinBox),[])
         boxes=settings.findChildren(QCheckBox)
         self.assertEqual(set(boxes), {settings.topmost, settings.star_ring, settings.claude_sync,
-                                      settings.claude_notify, settings.claude_approval, settings.assistant_hints, settings.dnd,
+                                      settings.claude_notify, settings.claude_approval, settings.mute_claude_toasts,
+                                      settings.assistant_hints, settings.dnd,
                                       settings.dnd_scheduled})
         self.assertEqual(settings.topmost_label.text(),'Always on Top')
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
