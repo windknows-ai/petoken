@@ -573,7 +573,14 @@ class FocusCard(QWidget):
                           (text('focus_break_note', language, minutes=summary['break_min'])
                            if summary.get('break_min') else ''))
         self.note.setVisible(bool(self.note.text()))
+        self.fit_height()
+
+    def fit_height(self):
+        """Tall enough for the wrapped lines (adjustSize alone cuts long todo names off)."""
         self.adjustSize()
+        layout = self.layout()
+        if layout.hasHeightForWidth():
+            self.resize(self.width(), max(self.height(), layout.totalHeightForWidth(self.width())))
 
     def place_beside(self, pet):
         screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()

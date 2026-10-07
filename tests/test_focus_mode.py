@@ -149,6 +149,16 @@ class FocusModeTests(unittest.TestCase):
         self.assertIn('Take a 5-minute break', card.note.text())
         card.deleteLater()
 
+    def test_card_is_tall_enough_for_long_todo_names(self):
+        long = 'make the settings page follow the system dark mode and remember the choice'
+        card = FocusCard('en', dict(start=0, end=1500, planned=1500, completed=True, todos=[long, long],
+                                    ai_finished=2, files=6, tokens=1_840_000, loading=False, todo_id='t',
+                                    todo_title=long, todo_done=False, break_min=5))
+        card.show()
+        APP.processEvents()
+        self.assertGreaterEqual(card.lines.height(), card.lines.heightForWidth(card.lines.width()))
+        card.close()
+
     def test_reports_count_focus_time(self):
         from tests.test_reports import DATA, NOW
         data = dict(DATA, focus=[(NOW - 3600, NOW - 2100, True), (NOW - 40 * 86400, NOW - 40 * 86400 + 60, False)])
