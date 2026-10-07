@@ -299,6 +299,9 @@ def read_registry(home, alive=_process_alive):
         session = _text(data.get('sessionId'))
         if not session or not alive(data.get('pid'), data.get('procStart')):
             continue
+        from claude_probe import is_probe_cwd
+        if is_probe_cwd(data.get('cwd')):
+            continue   # Petoken's own background refresh of the limits.
         updated = data.get('statusUpdatedAt', data.get('updatedAt'))
         activity_at = (updated / 1000 if isinstance(updated, (int, float))
                        and not isinstance(updated, bool) and updated > 0 else None)

@@ -21,12 +21,25 @@ reads Claude's limits picks it up unchanged.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import threading
 import time
 from pathlib import Path
 
 INTERVALS = (0, 1, 5, 15)          # Minutes; 0 is off.
+# The refresh runs in its own folder. Claude Code registers the run as a
+# session for its few seconds; Petoken ignores sessions in this folder, so
+# the star ring and notifications never react to a refresh.
+PROBE_DIRNAME = 'claude-probe'
+
+
+def is_probe_cwd(cwd):
+    """True for a session started by the background refresh."""
+    if not isinstance(cwd, str) or not cwd:
+        return False
+    parts = [part for part in re.split(r'[\\/]+', cwd.strip().lower()) if part]
+    return len(parts) >= 2 and parts[-1] == PROBE_DIRNAME and parts[-2] == 'codexwisp'
 SNAPSHOT_NAME = 'petoken-probe.json'
 TIMEOUT_S = 60
 PROMPT = 'ok'
@@ -144,7 +157,9 @@ class ClaudeProbe:
 
         def work():
             try:
-                windows = probe(self.cli, self.folder.parent, self.runner)
+                cwd = self.folder.parent / PROBE_DIRNAME
+                cwd.mkdir(parents=True, exist_ok=True)
+                windows = probe(self.cli, cwd, self.runner)
                 if windows:
                     write_snapshot(windows, self.folder)
             except OSError:

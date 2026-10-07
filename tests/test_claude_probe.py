@@ -65,5 +65,25 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
 
 
+class IgnoredByTasksTests(unittest.TestCase):
+    """The refresh registers as a Claude Code session for a few seconds;
+    the star ring and notifications must not react to it."""
+
+    def test_probe_sessions_are_not_tasks(self):
+        import claude_events
+        import claude_usage
+        with tempfile.TemporaryDirectory() as home:
+            sessions = Path(home) / 'sessions'
+            sessions.mkdir()
+            for name, cwd in (('probe', 'C:/Users/me/AppData/Local/CodexWisp/claude-probe'),
+                              ('real', 'D:/work/site')):
+                (sessions / f'{name}.json').write_text(json.dumps(dict(
+                    pid=1, sessionId=name, cwd=cwd, kind='interactive')), encoding='utf-8')
+            self.assertEqual(set(claude_usage.read_registry(home, alive=lambda *a: True)), {'real'})
+            self.assertEqual(claude_events.interactive_sessions(home), {'real'})
+        self.assertTrue(claude_probe.is_probe_cwd('C:\\x\\CodexWisp\\claude-probe\\'))
+        self.assertFalse(claude_probe.is_probe_cwd('D:/work/claude-probe'))
+
+
 if __name__ == '__main__':
     unittest.main()

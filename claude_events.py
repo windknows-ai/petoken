@@ -166,7 +166,9 @@ def interactive_sessions(home=None):
             data = json.loads(path.read_text(encoding='utf-8'))
         except (OSError, ValueError):
             continue
-        if isinstance(data, dict) and data.get('kind', 'interactive') == 'interactive':
+        from claude_probe import is_probe_cwd
+        if (isinstance(data, dict) and data.get('kind', 'interactive') == 'interactive'
+                and not is_probe_cwd(data.get('cwd'))):
             session = _clean(data.get('sessionId'))
             if session:
                 found.add(session)
