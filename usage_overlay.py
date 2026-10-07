@@ -177,8 +177,12 @@ def section_hint(assistant, provider, task_key, context, quotas, language, now):
     return text(key, language, **values)
 
 
-def build_sections(panel, presence, now=None):
-    """One section per open app, in registry order."""
+def build_sections(panel, presence, now=None, idle=False):
+    """One section per open app, in registry order.
+
+    ``idle``: the card is kept on while nothing runs. With no app open,
+    it then shows each app whose limits are known, instead of nothing.
+    """
     now = time.time() if now is None else now
     language = panel.prefs.get('language')
     apps = presence.apps
@@ -186,6 +190,11 @@ def build_sections(panel, presence, now=None):
         # Process list unreadable: fall back to the apps with running tasks.
         universe = getattr(getattr(panel, 'task_manager', None), '_universe', None) or {}
         apps = {(task or {}).get('provider_id') for task in universe.values()}
+    if idle and not apps:
+        known = {'codex': ((getattr(panel, 'quota', None) or {}).get('limits')
+                           if (getattr(panel, 'quota_provider', None) or 'codex') == 'codex' else None),
+                 'claude': presence.claude_limits}
+        apps = {provider for provider, limits in known.items() if limits}
     sections, quotas, tasks = [], {}, {}
     for provider in PROVIDER_ORDER:
         if provider not in apps:

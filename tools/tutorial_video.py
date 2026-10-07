@@ -1,7 +1,9 @@
 """Render the Petoken 2.0 tutorial video (Chinese narration and subtitles).
 
 Usage:
-    python tools/tutorial_video.py OUT_DIR --ffmpeg PATH [--silent-too] [--only N]
+    python tools/tutorial_video.py OUT_DIR --ffmpeg PATH [--minutes 6.8] [--only N] [--stills]
+
+With --minutes there is no narration: subtitles only, scenes timed by text length.
 
 Everything runs on synthetic data in a temporary folder (the same sandbox
 as the adjustable test build): no real Claude Code or Codex data is read and
@@ -773,6 +775,8 @@ def main(argv=None):
     parser.add_argument('--ffmpeg', required=True)
     parser.add_argument('--only', type=int, default=None, help='Render only the first N scenes (a quick check)')
     parser.add_argument('--stills', action='store_true', help='Save one still per scene and stop')
+    parser.add_argument('--minutes', type=float, default=None,
+                        help='No narration: subtitles only, the whole video this many minutes long')
     args = parser.parse_args(argv)
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -795,12 +799,18 @@ def main(argv=None):
         print('capturing…', flush=True)
         stills = capture_all(pv, base)
         print(f'{len(stills)} captures', flush=True)
-        # Narration first: it decides how long each scene lasts.
-        lines = [scene['say'] for scene in scenes]
-        wavs = narrate(lines, out_dir / 'voice')
-        speech = [wav_seconds(w) for w in wavs]
-        durations = [max(4.0, s + LEAD_S + PAD_S) for s in speech]
-        print(f'narration {sum(durations) / 60:.1f} min', flush=True)
+        if args.minutes:
+            # Subtitles only: each scene gets time in proportion to its text.
+            weights = [len(scene['say']) + 10 for scene in scenes]
+            durations = [args.minutes * 60 * w / sum(weights) for w in weights]
+            speech = [d - LEAD_S - .6 for d in durations]
+            wavs = None
+        else:
+            # Narration first: it decides how long each scene lasts.
+            wavs = narrate([scene['say'] for scene in scenes], out_dir / 'voice')
+            speech = [wav_seconds(w) for w in wavs]
+            durations = [max(4.0, s + LEAD_S + PAD_S) for s in speech]
+        print(f'length {sum(durations) / 60:.1f} min', flush=True)
         clipper = PetClip(base.panel)
         clips = {}
         for n, scene in enumerate(scenes):
@@ -816,8 +826,6 @@ def main(argv=None):
                 image.save(str(out_dir / f'scene_{n:02d}.png'))
             finish(pv, base)
             return 0
-        audio = out_dir / 'narration.wav'
-        join_audio(wavs, durations, audio)
         silent = out_dir / 'video_only.mp4'
         proc = subprocess.Popen([args.ffmpeg, '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
                                  '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-', '-c:v', 'h264_nvenc', '-preset', 'p7',
@@ -835,12 +843,16 @@ def main(argv=None):
             print(f'scene {done}/{len(durations)}', flush=True)
         proc.stdin.close()
         proc.wait()
-        voiced = out_dir / 'Petoken-2.0-使用说明.mp4'
-        subprocess.run([args.ffmpeg, '-y', '-loglevel', 'error', '-i', str(silent), '-i', str(audio),
-                        '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', str(voiced)], check=True)
-        quiet = out_dir / 'Petoken-2.0-使用说明（无配音）.mp4'
-        silent.replace(quiet)
-        print('done', voiced, quiet, flush=True)
+        final = out_dir / 'Petoken-2.0-使用说明.mp4'
+        if wavs is None:
+            silent.replace(final)
+        else:
+            audio = out_dir / 'narration.wav'
+            join_audio(wavs, durations, audio)
+            subprocess.run([args.ffmpeg, '-y', '-loglevel', 'error', '-i', str(silent), '-i', str(audio),
+                            '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart',
+                            str(final)], check=True)
+        print('done', final, flush=True)
         finish(pv, base)
     return 0
 

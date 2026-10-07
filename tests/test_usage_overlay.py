@@ -304,8 +304,35 @@ class PanelOverlayTests(unittest.TestCase):
         self.assertTrue(codex['rows'][1]['na'])
         self.assertEqual(claude['note'], 'Turn on Sync Claude usage in Settings')
 
+    def test_idle_card_is_on_by_default_and_can_be_turned_off(self):
+        pet = self.panel.pet
+        pet.presence = _Presence(frozenset({'codex'}))
+        pet.show()
+        pet.sync_usage_overlay()
+        self.assertTrue(pet.usage_overlay_visible())                 # Idle, default on.
+        menu = pet.context_menu()
+        card = next(a for a in menu.actions() if a.text() == pet.tr_text('usage_card_menu'))
+        self.assertTrue(card.isChecked())
+        card.setChecked(False)
+        self.assertFalse(self.panel.prefs['usage_card_idle'])
+        self.assertFalse(pet.usage_overlay_visible())
+        menu.deleteLater()
+        pet.toggle_usage_card_idle(True)
+        self.assertTrue(pet.usage_overlay_visible())
+        pet.hide()
+
+    def test_idle_with_no_app_open_shows_apps_with_known_limits(self):
+        presence = _Presence(frozenset())
+        self.assertEqual(overlay.build_sections(self.panel, presence), [])
+        shown = [s['provider'] for s in overlay.build_sections(self.panel, presence, idle=True)]
+        self.assertEqual(shown, ['codex'])                          # Claude's limits unknown.
+        presence = _Presence(frozenset(), claude_limits=dict(primary=dict(usedPercent=10)))
+        shown = [s['provider'] for s in overlay.build_sections(self.panel, presence, idle=True)]
+        self.assertEqual(shown, ['codex', 'claude'])
+
     def test_overlay_shows_only_in_token_mode_and_paints(self):
         pet = self.panel.pet
+        self.panel.prefs['usage_card_idle'] = False
         pet.presence = _Presence(frozenset({'codex'}))
         pet.show()
         pet.sync_usage_overlay()

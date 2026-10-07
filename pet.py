@@ -205,14 +205,24 @@ class DesktopPet(QWidget):
             self.usage_overlay.hide()
 
     def usage_overlay_wanted(self):
-        return self.token_bubble_visible() and self.isVisible()
+        """Always while an AI works; when idle too if the user keeps it on (the default)."""
+        return self.isVisible() and (self.token_bubble_visible() or self.usage_card_idle())
+
+    def usage_card_idle(self):
+        return bool(self.panel.prefs.get('usage_card_idle',True))
+
+    def toggle_usage_card_idle(self,enabled):
+        self.panel.prefs['usage_card_idle']=bool(enabled)
+        self.panel.persist()
+        self.sync_usage_overlay()
 
     def usage_overlay_visible(self):
         return self.usage_overlay is not None and self.usage_overlay.isVisible()
 
     def sync_usage_overlay(self):
         """Show, refresh or hide the usage card to match Token Mode."""
-        sections=build_sections(self.panel,self.presence) if self.usage_overlay_wanted() else []
+        sections=(build_sections(self.panel,self.presence,idle=not self.token_bubble_visible())
+                  if self.usage_overlay_wanted() else [])
         if not sections:
             if self.usage_overlay_visible():
                 self.usage_overlay.hide()
@@ -713,6 +723,11 @@ class DesktopPet(QWidget):
         usage.setChecked(self.panel.is_pinned())
         usage.setToolTip(self.tr_text('panel_pinned_help'))
         usage.toggled.connect(self.panel.set_panel_pinned)
+        card=menu.addAction(self.tr_text('usage_card_menu'))
+        card.setCheckable(True)
+        card.setChecked(self.usage_card_idle())
+        card.setToolTip(self.tr_text('usage_card_help'))
+        card.toggled.connect(self.toggle_usage_card_idle)
         # Everyday actions on top; occasional ones and toggles under More.
         menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch).setToolTip(self.tr_text('menu_tip_launch'))
         mode=getattr(self.panel,'focus_mode',None)

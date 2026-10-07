@@ -30,9 +30,9 @@ Petoken 是住在 Windows 桌面上的小伙伴。它会跟踪 Codex 和 Claude 
 - **诚实显示未知**：未知的模型就写「未知」，拿不到的数字就写 `N/A`，真正的 0 才写 0，不完整的数据会明确标出。
 - 日常 / Token 两种模式，完整 / 简洁两种数字格式，简体中文 / 英文界面，固定显示、始终置顶、人物大小可调。
 
-## 最新版本：v2.0.1
+## 最新版本：v2.0.2
 
-在 [v2.0.1 发布页](https://github.com/windknows-ai/petoken/releases/tag/v2.0.1) 下载 **一键安装程序** [Petoken-Setup-v2.0.1.exe](https://github.com/windknows-ai/petoken/releases/download/v2.0.1/Petoken-Setup-v2.0.1.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
+在 [v2.0.2 发布页](https://github.com/windknows-ai/petoken/releases/tag/v2.0.2) 下载 **一键安装程序** [Petoken-Setup-v2.0.2.exe](https://github.com/windknows-ai/petoken/releases/download/v2.0.2/Petoken-Setup-v2.0.2.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 支持的来源
 

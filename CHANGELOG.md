@@ -2,6 +2,14 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.0.2 — 2026-10-06
+
+### Added
+- Right-click **Usage card (also when idle)**: the usage card above her head stays on when no AI is working (on by default).
+
+### Fixed
+- The focus summary card no longer cuts off long todo names.
+
 ## V2.0.1 — 2026-10-06
 
 ### Added
