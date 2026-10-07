@@ -329,8 +329,10 @@ class AnalysisView(QWidget):
         layout.setSpacing(10)
         top = QHBoxLayout()
         self.range = QComboBox()
+        from report_charts import DEFAULT_RANGE
         for key in CHART_RANGES:
             self.range.addItem('', key)
+        self.range.setCurrentIndex(self.range.findData(DEFAULT_RANGE))
         self.range.currentIndexChanged.connect(lambda _: self.render())
         top.addWidget(self.range)
         top.addStretch()

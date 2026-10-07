@@ -174,6 +174,14 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(len(weekly['labels']), 12)
         self.assertEqual(weekly['tokens']['claude'][-2], 900)   # Last week.
         self.assertEqual([nice_max(v) for v in (0, 3, 7, 12, 260)], [1, 5, 10, 20, 500])
+        # Today by the hour (to 15:00) and this week from Monday (Mon-Wed).
+        hours = buckets('today', NOW)
+        self.assertEqual((len(hours), hours[0][2], hours[-1][2]), (16, '0:00', '15:00'))
+        today = series(DATA, 'today', NOW)
+        self.assertEqual(today['tokens']['claude'][14], 1000)   # 14:00-15:00.
+        self.assertEqual(today['tokens']['claude'][13], 500)
+        week = buckets('thisweek', NOW)
+        self.assertEqual([label for _, _, label in week], ['10/5', '10/6', '10/7'])
 
 
 if __name__ == '__main__':

@@ -17,16 +17,28 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 import theme
 
-RANGES = ('7d', '30d', '12w')
+RANGES = ('today', 'thisweek', '7d', '30d', '12w')
+DEFAULT_RANGE = '7d'
 COLORS = {'claude': QColor('#E0A43C'), 'codex': QColor('#5B8FE8'), 'total': QColor(theme.VIOLET)}
 
 
 def buckets(kind, now):
-    """[(start, end, label)] oldest first: days, or weeks starting Monday."""
+    """[(start, end, label)] oldest first: hours of today, days, or weeks
+    starting Monday. Today and this week stop at the current hour or day."""
     local = datetime.fromtimestamp(now)
     midnight = local.replace(hour=0, minute=0, second=0, microsecond=0)
     out = []
-    if kind == '12w':
+    if kind == 'today':
+        for hour in range(local.hour + 1):
+            start = midnight + timedelta(hours=hour)
+            out.append((start.timestamp(), (start + timedelta(hours=1)).timestamp(), f'{hour}:00'))
+    elif kind == 'thisweek':
+        monday = midnight - timedelta(days=local.weekday())
+        for n in range(local.weekday() + 1):
+            start = monday + timedelta(days=n)
+            out.append((start.timestamp(), (start + timedelta(days=1)).timestamp(),
+                        f'{start.month}/{start.day}'))
+    elif kind == '12w':
         monday = midnight - timedelta(days=local.weekday())
         for n in range(11, -1, -1):
             start = monday - timedelta(weeks=n)
@@ -178,6 +190,13 @@ class LineChart(QWidget):
             p.setPen(QPen(color, 2.2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
             p.setBrush(Qt.NoBrush)
             p.drawPath(path)
+            if len(values) <= 14:
+                # Few points (an early hour, a Monday): mark each one.
+                p.setPen(Qt.NoPen)
+                p.setBrush(color)
+                for index, value in enumerate(values):
+                    p.drawEllipse(QPointF(self._x(plot, index),
+                                          plot.bottom() - plot.height() * value / top), 3, 3)
         # Legend.
         x = 16.0
         p.setFont(QFont('Segoe UI', 9))

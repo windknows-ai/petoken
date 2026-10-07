@@ -1,7 +1,9 @@
 # Petoken v2.0.1
 
-Two fixes after v2.0.0.
+Two fixes after v2.0.0, and two more ranges for the charts.
 
+- **Today and this week in Analysis.** Reports > Analysis can now show today
+  hour by hour, and this week day by day from Monday.
 - **Background refresh of Claude's limits stays invisible.** While the
   refresh asked Claude its tiny question, Claude Code briefly registered it as
   a session, so the star ring flickered. The refresh now runs in its own
@@ -20,8 +22,9 @@ Everything in [v2.0.0](RELEASE_NOTES_v2.0.0.md) is unchanged.
 
 # Petoken v2.0.1（中文）
 
-v2.0.0 之后的两处修复。
+v2.0.0 之后的两处修复，以及图表多了两个范围。
 
+- **分析里加了「今天」和「本周」。** 报告 →「分析」现在可以按小时看今天，按天看本周（从周一算）。
 - **后台刷新 Claude 额度不再惊动星环。** 刷新时 Claude Code 会短暂登记一个会话，星环会闪一下。现在刷新在专用文件夹里运行，任务列表和提醒都会跳过它。
 - **只对新任务好奇。** 以前 AI 任务每次从空闲变回进行中，她都会好奇一下。现在只有第一次见到的任务才算，而且最多每 10 分钟一次。
 

@@ -4,6 +4,9 @@ Concise summaries of released versions. Version-specific detail lives in the rel
 
 ## V2.0.1 — 2026-10-06
 
+### Added
+- Reports > Analysis: **Today (hourly)** and **This week (from Monday)** ranges.
+
 ### Fixed
 - The background refresh of Claude's limits no longer makes the star ring flicker or counts as a task: it runs in its own folder, which the task list and notifications skip.
 - She shows curiosity only for brand-new AI tasks (at most every ten minutes), not each time a task goes quiet and busy again.
