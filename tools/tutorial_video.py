@@ -46,6 +46,37 @@ FADE_S = .25
 PAD_S = .9                                  # Silence after each narration.
 LEAD_S = .25                                # Silence before it.
 LANG = 'zh_CN'                              # Language of the captured windows.
+# Sample data and labels in each language.
+UI = {
+    'zh_CN': dict(
+        header='Petoken 2.0 使用说明', chapter='第 {n} 章 · {name}', splash='第 {n} 章',
+        out='Petoken-2.0-使用说明.mp4', font='Microsoft YaHei UI',
+        todos=('写首页的深色模式', '整理 README 截图'),
+        notes=(('周会记录', '下周发布 2.0：先做验收，再写发布说明。'), ('API 想法', '登录接口加上限流；错误信息改成中文。')),
+        handoffs=('旧的留言：先把表单样式统一', '提交按钮还没接上，下次先做它'),
+        history=('给登录页加上表单校验', '修复首页布局', '写单元测试', '整理依赖', '优化图片加载'),
+        give_prompt='把首页做成支持深色模式：跟随系统，也能手动切换。', last_task='给登录页加上表单校验',
+        quick_prompt='给登录页加上表单校验，错误信息用中文。', efforts=(('high', '高'), ('medium', '中')),
+        na_note='在设置里打开「同步 Claude 用量」', review_title='给设置页加深色模式', rename=()),
+    'en': dict(
+        header='Petoken 2.0 Guide', chapter='Chapter {n} · {name}', splash='Chapter {n}',
+        out='Petoken-2.0-Guide.mp4', font='Segoe UI',
+        todos=('Dark mode for the home page', 'Tidy up the README screenshots'),
+        notes=(('Weekly sync', 'Ship 2.0 next week: review first, then the release notes.'),
+               ('API ideas', 'Rate-limit the login endpoint; friendlier error messages.')),
+        handoffs=('Older note: make the form styles consistent', 'Submit button is not wired up yet, start there'),
+        history=('Validate the login form', 'Fix the home page layout', 'Write unit tests', 'Tidy dependencies',
+                 'Speed up image loading'),
+        give_prompt='Add dark mode to the home page: follow the system, with a manual switch too.',
+        last_task='Validate the login form', quick_prompt='Validate the login form with clear error messages.',
+        efforts=(('high', 'High'), ('medium', 'Medium')), na_note='Turn on Sync Claude usage in Settings',
+        review_title='Dark mode for the settings page',
+        rename=(('：修登录按钮', ': fix the login button'), ('：写测试', ': write tests'))),
+}
+
+
+def U(key):
+    return UI[LANG][key]
 
 
 def pump(seconds):
@@ -122,12 +153,19 @@ def seed(pv):
                                                   'D:\\work\\' + project['name']) or dict(
             project, directory='D:\\work\\' + project['name'])
     website, petoken = pv.projects[1], pv.projects[0]
-    for title in ('写首页的深色模式', '整理 README 截图'):
+    for todo in store.list_todos():          # The test build's own todos, in this language.
+        title = todo['title']
+        for old, new in U('rename'):
+            title = title.replace(old, new)
+        if title != todo['title']:
+            store.update_todo(todo['id'], title, todo.get('project_id'), bool(todo.get('done')))
+    for title in U('todos'):
         store.create_todo(title, website['id'])
-    store.create_note('周会记录', '下周发布 2.0：先做验收，再写发布说明。', petoken['id'])
-    store.create_note('API 想法', '登录接口加上限流；错误信息改成中文。', website['id'])
-    store.add_handoff(website['id'], '旧的留言：先把表单样式统一')
-    store.add_handoff(website['id'], '提交按钮还没接上，下次先做它')
+    (first, body1), (second, body2) = U('notes')
+    store.create_note(first, body1, petoken['id'])
+    store.create_note(second, body2, website['id'])
+    for note in U('handoffs'):
+        store.add_handoff(website['id'], note)
     store.set_goal(website['id'], weekly_tokens=50_000_000)
     store.set_goal(petoken['id'], weekly_tokens=2_000_000_000)
     now = time.time()
@@ -149,8 +187,7 @@ def seed(pv):
             turns.append((at, at + rng.randint(300, 4000), project))
             if d < 6:
                 history.append(dict(provider=provider, id=f'{provider}{d}{k}',
-                                    title=rng.choice(('给登录页加上表单校验', '修复首页布局', '写单元测试',
-                                                      '整理依赖', '优化图片加载')),
+                                    title=rng.choice(U('history')),
                                     project=project, started_at=at - 900, finished_at=at, tokens=tokens,
                                     usd=tokens / 1e6 * 2.1))
     history.sort(key=lambda row: -row['finished_at'])
@@ -201,7 +238,7 @@ def capture_all(pv, base, size=(1120, 820)):
             shot['marks'][key] = rect_in(widget, window)
         out[name] = shot
 
-    pv.make_review()
+    make_review(pv)
     tab(0, 'wb_home')
     tab(1, 'wb_todos', lambda: window.todo_list.setCurrentRow(1), dict(todo_ai=window.todo_ai_button))
     tab(2, 'wb_notes', lambda: window.notes_list.setCurrentRow(0))
@@ -239,11 +276,11 @@ def capture_all(pv, base, size=(1120, 820)):
     from project_start import HandoffHistory, ProjectPresetDialog
     from collection_view import GoalDialog
     todos = store.list_todos()
-    todo = next(t for t in todos if t['title'].endswith('写首页的深色模式'))
+    todo = next(t for t in todos if t['title'] == U('todos')[0])
     with patch('quick_launch.launch_options', return_value=[
-            dict(id='claude-opus-5-5', label='Opus 5.5', efforts=[('high', '高'), ('medium', '中')])]):
+            dict(id='claude-opus-5-5', label='Opus 5.5', efforts=list(U('efforts')))]):
         dialog = GiveToAiDialog(window, panel, todo, None, [r'D:\work\website'])
-        dialog.prompt.setPlainText('把首页做成支持深色模式：跟随系统，也能手动切换。')
+        dialog.prompt.setPlainText(U('give_prompt'))
         out['give_ai'] = grab(dialog)
         dialog.deleteLater()
         website = pv.projects[1]
@@ -257,7 +294,7 @@ def capture_all(pv, base, size=(1120, 820)):
     dialog = ReviewDialog(window, panel, record, review, note)
     out['review'] = grab(dialog)
     dialog.deleteLater()
-    pv.last_task.setText('给登录页加上表单校验')
+    pv.last_task.setText(U('last_task'))
     pv.project.setCurrentIndex(1)
     pv._history()
     panel.show_continuation(pv.projects[1], store)
@@ -277,8 +314,8 @@ def capture_all(pv, base, size=(1120, 820)):
     out['focus_dialog'] = grab(dialog)
     dialog.deleteLater()
     card = FocusCard(LANG, dict(start=0, end=1500, planned=1500, completed=True,
-                                   todos=['写首页的深色模式', '整理 README 截图'], ai_finished=2, files=6,
-                                   tokens=1_840_000, loading=False, todo_id='x', todo_title='写首页的深色模式',
+                                   todos=list(U('todos')), ai_finished=2, files=6,
+                                   tokens=1_840_000, loading=False, todo_id='x', todo_title=U('todos')[0],
                                    todo_done=False, break_min=5),
                      panel.prefs.get('token_number_format'))
     card.show()
@@ -290,10 +327,10 @@ def capture_all(pv, base, size=(1120, 820)):
     from quick_launch import QuickLaunchDialog
     from widget import STYLE
     with patch('quick_launch.launch_options', return_value=[
-            dict(id='claude-opus-5-5', label='Opus 5.5', efforts=[('high', '高')])]):
+            dict(id='claude-opus-5-5', label='Opus 5.5', efforts=list(U('efforts'))[:1])]):
         dialog = QuickLaunchDialog(panel)
         dialog.setStyleSheet(STYLE)
-        dialog.prompt.setPlainText('给登录页加上表单校验，错误信息用中文。')
+        dialog.prompt.setPlainText(U('quick_prompt'))
         dialog.folder.clear()
         dialog.folder.addItems(['D:\\work\\website', 'D:\\work\\petoken'])
         out['quick_launch'] = grab(dialog)
@@ -342,7 +379,7 @@ def capture_all(pv, base, size=(1120, 820)):
     overlay = uo.UsageOverlay(pet)
     overlay.set_sections([uo.provider_section('codex', pro, 70, '', LANG, now),
                           uo.provider_section('claude', None, 20, '', LANG, now,
-                                              note='在设置里打开「同步 Claude 用量」')])
+                                              note=U('na_note'))])
     out['card_na'] = grab(overlay)
     overlay.deleteLater()
     # On screen: the ring, the card and the panel, on a plain backdrop.
@@ -389,7 +426,7 @@ def capture_all(pv, base, size=(1120, 820)):
     base.count.setValue(0)
     pump(1.0)
     panel_b = base.panel
-    panel_b.start_focus(25, dict(id='x', title='写首页的深色模式', project_id=None))
+    panel_b.start_focus(25, dict(id='x', title=U('todos')[0], project_id=None))
     base.pet.interaction_state = None
     pump(1.5)
     tag = base.pet.focus_tag
@@ -568,8 +605,8 @@ def font(size, bold=False):
     return f
 
 
-CLOSERS = '，。、；：！？」）～…,.;:!?)'
-OPENERS = '「（('
+CLOSERS = '，。、；：！？」）～…,.;:!?)”'
+OPENERS = '「（(“'
 ACCENT = QColor('#D63F7A')            # Words in 「」 in the subtitles.
 WORD = "+-_./'"
 
@@ -584,10 +621,10 @@ def units(text):
     """
     styled, inside = [], False
     for ch in text:
-        if ch == '「':
+        if ch in '「“':
             inside = True
         styled.append((ch, inside))
-        if ch == '」':
+        if ch in '」”':
             inside = False
     out, i = [], 0
     while i < len(styled):
@@ -617,7 +654,15 @@ def _metrics(size, bold):
 
 
 def _width(chars, size):
-    return sum(_metrics(size, hl).horizontalAdvance(ch) for ch, hl in chars)
+    """Width of styled characters, measured run by run (as they are drawn)."""
+    total, run, style = 0, '', None
+    for ch, hl in list(chars) + [('', None)]:
+        if run and (hl != style or not ch):
+            total += _metrics(size, bool(style)).horizontalAdvance(run)
+            run = ''
+        style = hl
+        run += ch
+    return total
 
 
 def rich_wrap(text, width, size=30):
@@ -684,11 +729,11 @@ def chunks(text, width=TEXT_W):
             out[-1] += piece
         else:
             out.append(piece)
-    for sentence in [s for s in re.split(r'(?<=[。；！？])', text) if s.strip()]:
+    for sentence in [s for s in re.split(r'(?<=[。；！？])|(?<=[.!?;])(?=\s)', text) if s and s.strip()]:
         if fits(sentence):
             add(sentence)
         else:                                  # One long sentence: split at commas too.
-            for part in [s for s in re.split(r'(?<=[，、：])', sentence) if s]:
+            for part in [s for s in re.split(r'(?<=[，、：])|(?<=[,:])(?=\s)', sentence) if s]:
                 add(part)
     return out or [text]
 
@@ -743,7 +788,7 @@ class Renderer:
     def header(self, p, scene):
         p.setPen(VIOLET)
         p.setFont(font(26, True))
-        p.drawText(QRectF(60, 34, 600, 50), Qt.AlignLeft | Qt.AlignVCenter, 'Petoken 2.0 使用说明')
+        p.drawText(QRectF(60, 34, 600, 50), Qt.AlignLeft | Qt.AlignVCenter, U('header'))
         index = self.chapter_index[scene['chapter']]
         x = 1860
         for n in range(len(CHAPTERS) - 1, -1, -1):
@@ -770,7 +815,7 @@ class Renderer:
         p.setPen(MUTED)
         p.setFont(font(20))
         p.drawText(QRectF(r.left() + 34, r.top() + 28, r.width() - 68, 30), Qt.AlignLeft,
-                   f'第 {index + 1} 章 · {CHAPTERS[index][1]}')
+                   U('chapter').format(n=index + 1, name=CHAPTERS[index][1]))
         p.setPen(INK)
         p.setFont(font(40, True))
         y = r.top() + 68
@@ -849,7 +894,7 @@ class Renderer:
                     color.setAlphaF(appear)
                     p.setPen(color)
                     p.drawText(QRectF(x, y, 2000, line_h), Qt.AlignLeft | Qt.AlignVCenter, run)
-                    x += _width([(c, style) for c in run], 30)
+                    x += _metrics(30, bool(style)).horizontalAdvance(run)
                     run = ''
                 style = hl if ch else style
                 run += ch
@@ -871,7 +916,7 @@ class Renderer:
         white.setAlphaF(alpha)
         p.setPen(white)
         p.setFont(font(28))
-        p.drawText(box.adjusted(0, 22, 0, -100), Qt.AlignCenter, f'第 {index + 1} 章')
+        p.drawText(box.adjusted(0, 22, 0, -100), Qt.AlignCenter, U('splash').format(n=index + 1))
         p.setFont(font(62, True))
         p.drawText(box.adjusted(0, 58, 0, -14), Qt.AlignCenter, CHAPTERS[index][1])
         gold = QColor('#FFD27A')
@@ -964,10 +1009,36 @@ class Renderer:
         p.end()
 
 
+def make_review(pv):
+    """A todo the AI finished, waiting for review (the test build's, in this language)."""
+    project = pv.projects[0]
+    title = U('review_title')
+    todo = pv.store.create_todo(f'{title} #875', project['id'])
+    pv.store.schedule_todo(todo['id'], time.time(), 'claude', project['directory'], title)
+    pv.store.update_schedule(todo['id'], state='started', started_at=time.time(), task_key='claude:preview')
+    from notifications import recap_detail
+    with patch('todo_ai.TodoScheduler._outcome', return_value=None):
+        pv.panel.todo_ai.on_event(dict(kind='finished', provider='claude', task_key='claude:preview',
+                                       detail=recap_detail(dict(files=['src/theme.css', 'src/settings.py'],
+                                                                duration_s=420, usd=.35))))
+
+
+def use_language(language):
+    """Captured windows, sample data, labels and the scene script in ``language``."""
+    global LANG, FONT, CHAPTERS, SCENES
+    LANG = language
+    FONT = U('font')
+    _METRICS.clear()
+    if language == 'en':
+        from tools import tutorial_script_en as script
+    else:
+        from tools import tutorial_script as script
+    CHAPTERS, SCENES = script.CHAPTERS, script.SCENES
+
+
 def setup(stack, language='zh_CN'):
     """The sandboxed test build with sample data: (v2 preview, base preview)."""
-    global LANG
-    LANG = language
+    use_language(language)
     directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-tutorial-'))
     stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
     stack.enter_context(patch('quick_launch.build_command', lambda *a, **k: ['tutorial']))
@@ -990,15 +1061,17 @@ def main(argv=None):
     parser.add_argument('--ffmpeg', required=True)
     parser.add_argument('--only', type=int, default=None, help='Render only the first N scenes (a quick check)')
     parser.add_argument('--stills', action='store_true', help='Save one still per scene and stop')
+    parser.add_argument('--language', choices=('zh_CN', 'en'), default='zh_CN')
     parser.add_argument('--minutes', type=float, default=None,
                         help='No narration: subtitles only, the whole video this many minutes long')
     args = parser.parse_args(argv)
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     app = QApplication.instance() or QApplication([])
+    use_language(args.language)
     scenes = SCENES[:args.only] if args.only else SCENES
     with ExitStack() as stack:
-        pv, base = setup(stack)
+        pv, base = setup(stack, args.language)
         print('capturing…', flush=True)
         stills = capture_all(pv, base)
         print(f'{len(stills)} captures', flush=True)
@@ -1046,7 +1119,7 @@ def main(argv=None):
             print(f'scene {done}/{len(durations)}', flush=True)
         proc.stdin.close()
         proc.wait()
-        final = out_dir / 'Petoken-2.0-使用说明.mp4'
+        final = out_dir / U('out')
         if wavs is None:
             # No narration: a light background track, with a little room, faded in and out.
             from tools.tutorial_music import render as compose, write as write_wav
