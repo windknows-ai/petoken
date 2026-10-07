@@ -170,8 +170,11 @@ def _window(raw, now):
     if not isinstance(raw, dict):
         return None
     used, reset = raw.get('used_percentage'), raw.get('resets_at')
-    if isinstance(used, bool) or not isinstance(used, (int, float)) or not 0 <= used <= 100:
+    if isinstance(used, bool) or not isinstance(used, (int, float)) or not 0 <= used <= 200:
         return None
+    # Past the limit Claude Code reports more than 100% (e.g. 101%): that is
+    # "nothing left", not bad data to skip for an older, emptier snapshot.
+    used = min(used, 100)
     if isinstance(reset, bool) or not isinstance(reset, (int, float)) or reset <= now:
         return None  # Claude Code drops a window once it resets; so do we.
     return dict(used=float(used), resets_at=float(reset))

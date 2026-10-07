@@ -2,6 +2,15 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.0.3 — 2026-10-07
+
+### Changed
+- Quick launch shortcut is **Alt+Shift+Space** (the old default moves over once).
+
+### Fixed
+- Wrapped text is never cut off: labels keep the height their text needs and windows grow to fit (checked in every window, Chinese and English); the focus summary card widens for its buttons.
+- Claude's 5-hour or weekly limit past 100% shows 0 left instead of an older number.
+
 ## V2.0.2 — 2026-10-06
 
 ### Added

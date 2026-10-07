@@ -72,9 +72,9 @@ def parse(lines):
         for key in ('five_hour', 'seven_day'):
             window = windows.get(key) or {}
             used, reset = window.get('utilization'), window.get('resetsAt')
-            if (isinstance(used, (int, float)) and not isinstance(used, bool) and 0 <= used <= 1
+            if (isinstance(used, (int, float)) and not isinstance(used, bool) and 0 <= used <= 2
                     and isinstance(reset, (int, float)) and not isinstance(reset, bool)):
-                out[key] = (round(used * 100, 1), float(reset))
+                out[key] = (round(min(used, 1) * 100, 1), float(reset))     # Over the limit: 100%.
         if out:
             return out
     return None

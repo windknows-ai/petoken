@@ -4421,11 +4421,26 @@ class WheelGuard(QObject):
     the page it sits in instead of changing the value: you were most likely
     scrolling, not choosing. Clicking still opens and changes them."""
 
+    # One app-wide filter does both jobs (each filter costs a Python call per event):
+    # the wheel guard here, and TextFit (wrapped labels never cut off).
+    WHEEL = None
+
     def eventFilter(self, obj, event):
-        from PySide6.QtCore import QEvent
+        kind = event.type()
+        if WheelGuard.WHEEL is None:
+            from PySide6.QtCore import QEvent
+            WheelGuard.WHEEL = QEvent.Wheel
+            TextFit.EVENTS = frozenset((QEvent.Resize, QEvent.Show, QEvent.Paint, QEvent.FontChange,
+                                        QEvent.StyleChange))
+        if kind in TextFit.EVENTS:
+            if isinstance(obj, QLabel) and obj.wordWrap():
+                fit_label(obj)
+            return False
+        if kind != WheelGuard.WHEEL:
+            return False
         from PySide6.QtGui import QWheelEvent
         from PySide6.QtWidgets import QAbstractScrollArea, QAbstractSpinBox
-        if event.type() != QEvent.Wheel or not isinstance(obj, (QComboBox, QAbstractSpinBox, QSlider)):
+        if not isinstance(obj, (QComboBox, QAbstractSpinBox, QSlider)):
             return False
         parent = obj.parentWidget()
         while parent is not None and not isinstance(parent, QAbstractScrollArea):
@@ -4444,24 +4459,16 @@ def install_wheel_guard():
     if app is not None and getattr(app, '_petoken_wheel_guard', None) is None:
         app._petoken_wheel_guard = WheelGuard(app)
         app.installEventFilter(app._petoken_wheel_guard)
-    install_text_fit()
 
 
-class TextFit(QObject):
+class TextFit:
     """Wrapped text is never cut off: every word-wrapped label keeps at
     least the height its text needs at its current width, so the layout
     (and the window, if needed) grows instead of squeezing the label.
-    Labels with a fixed or maximum height are left alone."""
+    Labels with a fixed or maximum height are left alone. Runs inside
+    WheelGuard's filter."""
 
-    EVENTS = None
-
-    def eventFilter(self, obj, event):
-        if TextFit.EVENTS is None:
-            from PySide6.QtCore import QEvent
-            TextFit.EVENTS = (QEvent.Resize, QEvent.Show, QEvent.Paint, QEvent.FontChange, QEvent.StyleChange)
-        if event.type() in TextFit.EVENTS and isinstance(obj, QLabel) and obj.wordWrap():
-            fit_label(obj)
-        return False
+    EVENTS = frozenset()
 
 
 def fit_label(label):
@@ -4511,10 +4518,8 @@ def _grow_windows():
 
 
 def install_text_fit():
-    app = QApplication.instance()
-    if app is not None and getattr(app, '_petoken_text_fit', None) is None:
-        app._petoken_text_fit = TextFit(app)
-        app.installEventFilter(app._petoken_text_fit)
+    """Part of the wheel guard's filter (kept for callers)."""
+    install_wheel_guard()
 
 
 class Panel(QWidget):

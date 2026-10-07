@@ -170,7 +170,8 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(pet.current_state, 'microphone')
         state.stable['microphone'] = False
         pet.update_activity()
-        self.assertEqual(pet.current_state, 'music')
+        # Music alternates with guitar every two minutes of the clock.
+        self.assertIn(pet.current_state, ('music', 'guitar'))
         state.stable['music'] = False
         pet.update_activity()
         self.assertEqual(pet.current_state, 'typing')

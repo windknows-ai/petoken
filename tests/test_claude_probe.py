@@ -33,6 +33,19 @@ class ProbeTests(unittest.TestCase):
         limits, _ = claude_statusline.account_limits(claude_statusline.read_snapshots(self.folder))
         self.assertEqual(limits['primary']['usedPercent'], 42.0)
         self.assertEqual(limits['secondary']['usedPercent'], 88.0)
+        over = EVENT.replace('0.42', '1.01')                     # Past the limit.
+        self.assertEqual(claude_probe.parse([over])['five_hour'][0], 100.0)
+
+    def test_over_the_limit_wins_over_an_older_emptier_snapshot(self):
+        import json as _json
+        now = time.time()
+        self.folder.mkdir(parents=True)
+        for name, used, written in (('old', 15, now - 600), ('new', 101, now)):
+            (self.folder / f'{name}.json').write_text(_json.dumps(dict(
+                session_id=name, written_at=written, five_hour=dict(used_percentage=used, resets_at=now + 999),
+                seven_day=None)), encoding='utf-8')
+        limits, _ = claude_statusline.account_limits(claude_statusline.read_snapshots(self.folder, now=now))
+        self.assertEqual(limits['primary']['usedPercent'], 100)          # Was the old 15%: "85 left".
 
     def test_command_is_quiet_and_cheap(self):
         argv = claude_probe.command('claude.exe')

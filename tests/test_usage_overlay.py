@@ -114,7 +114,7 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(sampled, NOW - 30)
 
     def test_invalid_expired_and_old_data_is_dropped(self):
-        self.write('expired', snapshot('expired', five=(50.0, NOW - 1), week=(150.0, NOW + 9)))
+        self.write('expired', snapshot('expired', five=(50.0, NOW - 1), week=(250.0, NOW + 9)))
         self.write('ancient', snapshot('ancient', written=NOW - bridge.SNAPSHOT_MAX_AGE_S - 1))
         self.write('broken', '{nope')
         self.write('flag', dict(written_at=True))

@@ -655,14 +655,6 @@ def _strip(line):
     return line[start:end]
 
 
-def wrap(text, metrics, width):
-    """Plain lines of ``text`` (for titles)."""
-    size = metrics.font().pixelSize()
-    bold = metrics.font().weight() >= QFont.DemiBold
-    return [''.join(ch for ch, _ in line) for line in
-            rich_wrap(text, width, size)] if not bold else _bold_wrap(text, width, size)
-
-
 def _bold_wrap(text, width, size):
     lines, line = [], ''
     for unit in units(text):
@@ -709,8 +701,8 @@ def _portrait():
         return None
     image = pixmap.toImage()
     w, h = image.width(), image.height()
-    side = int(w * .58)
-    return image.copy(int(w * .21), int(h * .07), side, side)
+    side = int(w * .46)                       # Her face sits a little right of and below the centre.
+    return image.copy(int(w * .56 - side / 2), int(h * .53 - side / 2), side, side)
 
 
 def _ease_out(x):
@@ -782,7 +774,7 @@ class Renderer:
         p.setPen(INK)
         p.setFont(font(40, True))
         y = r.top() + 68
-        for line in wrap(scene['title'], QFontMetrics(font(40, True)), r.width() - 68):
+        for line in _bold_wrap(scene['title'], r.width() - 68, 40):
             p.drawText(QRectF(r.left() + 34, y, r.width() - 68, 54), Qt.AlignLeft | Qt.AlignVCenter, line)
             y += 54
         y += 18
@@ -1056,7 +1048,18 @@ def main(argv=None):
         proc.wait()
         final = out_dir / 'Petoken-2.0-使用说明.mp4'
         if wavs is None:
-            silent.replace(final)
+            # No narration: a light background track, with a little room, faded in and out.
+            from tools.tutorial_music import render as compose, write as write_wav
+            total = sum(durations)
+            music = out_dir / 'music.wav'
+            write_wav(music, compose(total + 1))
+            mix = (f'aecho=0.8:0.55:95|190:0.28|0.16,lowpass=f=7500,pan=stereo|c0=c0|c1=c0,'
+                   f'afade=t=in:d=2,afade=t=out:st={max(0.0, total - 4):.2f}:d=4,loudnorm=I=-21:TP=-2,aresample=48000')
+            subprocess.run([args.ffmpeg, '-y', '-loglevel', 'error', '-i', str(silent), '-i', str(music),
+                            '-map', '0:v', '-map', '1:a', '-af', mix, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
+                            '-shortest', '-movflags', '+faststart', str(final)], check=True)
+            silent.unlink()
+            music.unlink()
         else:
             audio = out_dir / 'narration.wav'
             join_audio(wavs, durations, audio)
