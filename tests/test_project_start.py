@@ -105,6 +105,16 @@ class ProjectStartTests(unittest.TestCase):
         self.panel.prefs['continuation_card'] = False
         self.assertIsNone(watcher.observe([dict(task, task_key='s4')], now=10 ** 6))
 
+    def test_a_task_waking_up_again_is_not_new(self):
+        watcher = ContinuationWatcher(self.panel)
+        task = dict(provider_id='claude', task_key='s1', display=dict(project='other'))
+        watcher.observe([], now=0)
+        watcher.observe([task], now=10)
+        self.assertEqual((watcher.fresh, watcher.new), (1, 1))
+        watcher.observe([], now=20)                 # Went quiet...
+        watcher.observe([task], now=30)             # ...and busy again: back, but not new.
+        self.assertEqual((watcher.fresh, watcher.new), (1, 0))
+
     def test_match_project_by_name_or_folder(self):
         self.assertEqual(match_project([self.project], 'SITE')['id'], self.project['id'])
         self.assertIsNone(match_project([self.project], 'api'))

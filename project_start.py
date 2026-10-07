@@ -381,7 +381,9 @@ class ContinuationWatcher:
     def __init__(self, panel):
         self.panel = panel
         self.known = None          # Task keys seen in the previous snapshot.
-        self.fresh = 0             # Tasks that started in the latest snapshot.
+        self.fresh = 0             # Tasks back in the latest snapshot (new or resumed).
+        self.ever = set()          # Every task key seen since Petoken started.
+        self.new = 0               # Tasks never seen before, in the latest snapshot.
 
     def observe(self, tasks, now=None):
         """Returns the project to show a card for, or None."""
@@ -389,11 +391,15 @@ class ContinuationWatcher:
         current = {(t.get('provider_id'), t.get('task_key')): t for t in tasks or []}
         if self.known is None:
             self.known = set(current)
-            self.fresh = 0
+            self.ever |= self.known
+            self.fresh = self.new = 0
             return None             # A first snapshot is not "starting" anything.
         fresh = [task for key, task in current.items() if key not in self.known]
         self.known = set(current)
         self.fresh = len(fresh)
+        # A task going quiet and busy again is not a new one.
+        self.new = sum(1 for key in current if key not in self.ever)
+        self.ever |= self.known
         if not fresh or not self.panel.prefs.get('continuation_card', True):
             return None
         store = self.panel.workbench_store()

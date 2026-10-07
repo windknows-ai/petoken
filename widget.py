@@ -4413,6 +4413,9 @@ class Settings(QDialog):
         self.accept()
 
 
+CURIOUS_GAP_S = 600   # She shows curiosity about new tasks at most this often.
+
+
 class WheelGuard(QObject):
     """The mouse wheel over a closed drop-down, number box or slider scrolls
     the page it sits in instead of changing the value: you were most likely
@@ -5246,8 +5249,11 @@ class Panel(QWidget):
             project = self.continuation.observe(tasks or [])
             if project is not None:
                 self.show_continuation(project)
-            elif self.continuation.fresh and getattr(self, 'pet', None) is not None:
-                self.pet.interact('curious', 2.5)   # A new AI task: she leans in.
+            elif (self.continuation.new and getattr(self, 'pet', None) is not None
+                  and time.monotonic() - getattr(self, '_curious_at', -1e9) > CURIOUS_GAP_S):
+                # A brand-new AI task: she leans in (at most once in a while).
+                self._curious_at = time.monotonic()
+                self.pet.interact('curious', 2.5)
             events = self.assistant.observe_tasks(tasks or [])
             if self.prefs.get('assistant_hints', True):
                 for event in events:

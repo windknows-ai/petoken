@@ -2,6 +2,12 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.0.1 — 2026-10-06
+
+### Fixed
+- The background refresh of Claude's limits no longer makes the star ring flicker or counts as a task: it runs in its own folder, which the task list and notifications skip.
+- She shows curiosity only for brand-new AI tasks (at most every ten minutes), not each time a task goes quiet and busy again.
+
 ## V2.0.0 — 2026-10-06
 
 The companionship release: she comes alive. Human QA on 2026-10-06.
