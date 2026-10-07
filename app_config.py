@@ -38,7 +38,8 @@ DEFAULT_PREFERENCES = {
     "dnd_start": "22:00",
     "dnd_end": "08:00",
     "assistant_hints": True,
-    "quick_launch_hotkey": "Ctrl+Alt+Space",
+    "quick_launch_hotkey": "Alt+Shift+Space",
+    "hotkey_default_2_0_3": True,
     "launch_folders": [],
     "mute_claude_toasts": True,
     "update_check": True,
@@ -99,9 +100,14 @@ def normalize_preferences(data):
         preferences["workbench_tutorial_seen"] = False
     if not isinstance(preferences.get("assistant_hints"), bool):
         preferences["assistant_hints"] = True
+    # 2.0.3: Alt+Shift+Space is the default. Ctrl+Alt+Space was the old
+    # default, so it moves once; choosing it again later sticks.
+    if raw and not raw.get("hotkey_default_2_0_3") and preferences.get("quick_launch_hotkey") == "Ctrl+Alt+Space":
+        preferences["quick_launch_hotkey"] = "Alt+Shift+Space"
+    preferences["hotkey_default_2_0_3"] = True
     if preferences.get("quick_launch_hotkey") not in ("Ctrl+Alt+Space", "Alt+Shift+Space",
                                                       "Ctrl+Alt+K", "off"):
-        preferences["quick_launch_hotkey"] = "Ctrl+Alt+Space"
+        preferences["quick_launch_hotkey"] = "Alt+Shift+Space"
     # Someone upgrading already knows Petoken: only a first start (no saved
     # preferences yet) gets the welcome guide.
     if "onboarding_done" not in raw:

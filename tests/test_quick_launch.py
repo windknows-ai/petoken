@@ -115,11 +115,22 @@ class HotkeyTests(unittest.TestCase):
         def register(mods, key):
             tried.append((mods, key))
             return (mods, key) in free
-        self.assertEqual(hotkey.register('Alt+Shift+Space', register), 'Ctrl+Alt+K')
-        self.assertEqual(tried, [quick_launch.HOTKEYS['Alt+Shift+Space'], quick_launch.HOTKEYS['Ctrl+Alt+K']])
+        self.assertEqual(hotkey.register('Ctrl+Alt+Space', register), 'Ctrl+Alt+K')
+        self.assertEqual(tried, [quick_launch.HOTKEYS['Ctrl+Alt+Space'], quick_launch.HOTKEYS['Ctrl+Alt+K']])
         free.clear()
         hotkey.unregister(lambda: None)
-        self.assertIsNone(hotkey.register('Ctrl+Alt+Space', register))
+        self.assertIsNone(hotkey.register('Alt+Shift+Space', register))
+
+    def test_default_is_alt_shift_space_and_the_old_default_moves_once(self):
+        from app_config import normalize_preferences
+        self.assertEqual(quick_launch.DEFAULT_HOTKEY, 'Alt+Shift+Space')
+        self.assertEqual(normalize_preferences({})['quick_launch_hotkey'], 'Alt+Shift+Space')
+        moved = normalize_preferences(dict(language='en', quick_launch_hotkey='Ctrl+Alt+Space'))
+        self.assertEqual(moved['quick_launch_hotkey'], 'Alt+Shift+Space')
+        chosen = normalize_preferences(dict(moved, quick_launch_hotkey='Ctrl+Alt+Space'))
+        self.assertEqual(chosen['quick_launch_hotkey'], 'Ctrl+Alt+Space')     # Picked again: kept.
+        self.assertEqual(normalize_preferences(dict(language='en', quick_launch_hotkey='Ctrl+Alt+K'))
+                         ['quick_launch_hotkey'], 'Ctrl+Alt+K')
 
 
 if __name__ == '__main__':

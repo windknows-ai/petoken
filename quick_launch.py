@@ -1,6 +1,6 @@
 """Quick launch (V1.6 C): hand a new task to Claude Code or Codex.
 
-A global hotkey (Ctrl+Alt+Space, opt-out in Settings), the pet's menu or
+A global hotkey (Alt+Shift+Space, opt-out in Settings), the pet's menu or
 the tray open a small window: what to do, which project folder, which
 app. Start opens a new terminal in that folder running the app's CLI on
 the prompt (``claude_launch`` / Codex's ``codex_launch``); the task then
@@ -32,11 +32,11 @@ WM_HOTKEY = 0x0312
 # Choices in Settings, in fallback order: when the chosen one is taken by
 # another program, the next free one is used instead.
 HOTKEYS = {
-    'Ctrl+Alt+Space': (MOD_CONTROL | MOD_ALT, 0x20),
     'Alt+Shift+Space': (MOD_ALT | MOD_SHIFT, 0x20),
+    'Ctrl+Alt+Space': (MOD_CONTROL | MOD_ALT, 0x20),
     'Ctrl+Alt+K': (MOD_CONTROL | MOD_ALT, 0x4B),
 }
-DEFAULT_HOTKEY = 'Ctrl+Alt+Space'
+DEFAULT_HOTKEY = 'Alt+Shift+Space'
 MAX_RECENT = 8
 
 
@@ -337,7 +337,7 @@ class _HotkeyFilter(QAbstractNativeEventFilter):
 
 
 class GlobalHotkey(QObject):
-    """Ctrl+Alt+Space anywhere in Windows (RegisterHotKey); install
+    """Alt+Shift+Space anywhere in Windows (RegisterHotKey); install
     ``self.filter`` on the application to receive it."""
 
     pressed = Signal()

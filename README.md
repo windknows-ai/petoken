@@ -106,7 +106,7 @@ back when Petoken exits).
   files). Clicking a notice, or ↗ in a Star's details, raises the window the
   task runs in (Claude desktop, terminal, VS Code; Codex where Codex can match
   it).
-- **Quick launch.** Ctrl+Alt+Space (choose another shortcut or turn it off in
+- **Quick launch.** Alt+Shift+Space (choose another shortcut or turn it off in
   Settings → Assistant), the character menu or the tray open a small box: what
   to do, a project folder (recent ones offered) and Claude Code or Codex. Start
   opens a new terminal running that CLI on your prompt; the task then shows up

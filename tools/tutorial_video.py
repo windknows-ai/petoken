@@ -42,9 +42,10 @@ FONT = 'Microsoft YaHei UI'
 CONTENT = QRectF(60, 118, 1230, 790)        # Where captures and her clips go.
 SIDE = QRectF(1330, 118, 530, 790)          # Chapter, scene title and steps.
 SUB = QRectF(60, 932, 1800, 118)            # Subtitle bar.
-FADE_S = .35
+FADE_S = .25
 PAD_S = .9                                  # Silence after each narration.
 LEAD_S = .25                                # Silence before it.
+LANG = 'zh_CN'                              # Language of the captured windows.
 
 
 def pump(seconds):
@@ -164,13 +165,17 @@ def seed(pv):
                                         dedupe=f'seed-{n}'), now=now - n * 1800)
 
 
-def capture_all(pv, base):
-    """Every still the script refers to: {name: dict(image, dpr, marks)}."""
+def capture_all(pv, base, size=(1120, 820)):
+    """Every still the script refers to: {name: dict(image, dpr, marks)}.
+
+    ``size``: the workbench size, or None to keep the size it opens with.
+    """
     from workbench import QDialog  # noqa: F401  (ensures workbench is importable)
     out = {}
     panel, store = pv.panel, pv.store
     window = panel.workbench_window
-    window.resize(1120, 820)
+    if size:
+        window.resize(*size)
     window.apply_language()
     window.show()
     pump(.5)
@@ -259,10 +264,10 @@ def capture_all(pv, base):
     pump(.3)
     out['continuation'] = grab(panel._continuation_card)
     panel._continuation_card.close()
-    dialog = HandoffHistory(window, 'zh_CN', store, pv.projects[1])
+    dialog = HandoffHistory(window, LANG, store, pv.projects[1])
     out['history'] = grab(dialog)
     dialog.deleteLater()
-    dialog = GoalDialog(window, 'zh_CN', pv.projects[1], store.get_goal(pv.projects[1]['id']))
+    dialog = GoalDialog(window, LANG, pv.projects[1], store.get_goal(pv.projects[1]['id']))
     out['goal'] = grab(dialog)
     dialog.deleteLater()
     # Focus.
@@ -271,12 +276,11 @@ def capture_all(pv, base):
     dialog.setStyleSheet(panel.styleSheet())
     out['focus_dialog'] = grab(dialog)
     dialog.deleteLater()
-    card = FocusCard('zh_CN', dict(start=0, end=1500, planned=1500, completed=True,
+    card = FocusCard(LANG, dict(start=0, end=1500, planned=1500, completed=True,
                                    todos=['写首页的深色模式', '整理 README 截图'], ai_finished=2, files=6,
                                    tokens=1_840_000, loading=False, todo_id='x', todo_title='写首页的深色模式',
                                    todo_done=False, break_min=5),
                      panel.prefs.get('token_number_format'))
-    card.adjustSize()
     card.show()
     pump(.3)
     out['focus_card'] = grab(card)
@@ -336,8 +340,8 @@ def capture_all(pv, base):
     now = time.time()
     pro = dict(planType='pro', secondary=dict(windowDurationMins=10080, usedPercent=37, resetsAt=now + 3 * 86400))
     overlay = uo.UsageOverlay(pet)
-    overlay.set_sections([uo.provider_section('codex', pro, 70, '', 'zh_CN', now),
-                          uo.provider_section('claude', None, 20, '', 'zh_CN', now,
+    overlay.set_sections([uo.provider_section('codex', pro, 70, '', LANG, now),
+                          uo.provider_section('claude', None, 20, '', LANG, now,
                                               note='在设置里打开「同步 Claude 用量」')])
     out['card_na'] = grab(overlay)
     overlay.deleteLater()
@@ -373,7 +377,7 @@ def capture_all(pv, base):
 
     overlay = base.pet.usage_overlay
     base.panel.hide()
-    pump(.8)
+    pump(4.0)                      # Let the comet trails from moving her fade out.
     pet_rect = base.pet.frameGeometry()
     shoot('ring', {})
     out['card'] = grab(overlay) if overlay is not None else out['ring']
@@ -564,33 +568,132 @@ def font(size, bold=False):
     return f
 
 
-def wrap(text, metrics, width):
-    lines, line = [], ''
+CLOSERS = '，。、；：！？」）～…,.;:!?)'
+OPENERS = '「（('
+ACCENT = QColor('#D63F7A')            # Words in 「」 in the subtitles.
+WORD = "+-_./'"
+
+
+def units(text):
+    """Pieces that never break across lines, each a list of (char, highlighted).
+
+    An English word (with the spaces after it) is one piece; closing
+    punctuation sticks to the piece before it and opening brackets to the
+    piece after, so no line starts with "，" and "Claude" is never split.
+    Text inside 「」 is highlighted.
+    """
+    styled, inside = [], False
     for ch in text:
-        if ch in '，。、；：！？」）' and line:     # Never start a line with punctuation.
-            line += ch
-        elif metrics.horizontalAdvance(line + ch) > width and line:
-            lines.append(line)
-            line = ch
+        if ch == '「':
+            inside = True
+        styled.append((ch, inside))
+        if ch == '」':
+            inside = False
+    out, i = [], 0
+    while i < len(styled):
+        ch, j = styled[i][0], i + 1
+        if ch.isascii() and (ch.isalnum() or ch in WORD):
+            while j < len(styled) and styled[j][0].isascii() and (styled[j][0].isalnum() or styled[j][0] in WORD):
+                j += 1
+            while j < len(styled) and styled[j][0] == ' ':
+                j += 1
+        unit = styled[i:j]
+        if out and (ch in CLOSERS or out[-1][-1][0] in OPENERS):
+            out[-1] = out[-1] + unit
         else:
-            line += ch
+            out.append(unit)
+        i = j
+    return out
+
+
+_METRICS = {}
+
+
+def _metrics(size, bold):
+    key = (size, bold)
+    if key not in _METRICS:
+        _METRICS[key] = QFontMetrics(font(size, bold))
+    return _METRICS[key]
+
+
+def _width(chars, size):
+    return sum(_metrics(size, hl).horizontalAdvance(ch) for ch, hl in chars)
+
+
+def rich_wrap(text, width, size=30):
+    """Lines (lists of (char, highlighted)) that all fit in ``width``."""
+    lines, line, used = [], [], 0
+    for unit in units(text):
+        unit_width = _width(unit, size)
+        if line and used + unit_width > width:
+            lines.append(line)
+            line, used = [], 0
+            if all(ch == ' ' for ch, _ in unit):
+                continue
+        if unit_width > width:                 # A word longer than a line: break it anywhere.
+            for char in unit:
+                char_width = _width([char], size)
+                if line and used + char_width > width:
+                    lines.append(line)
+                    line, used = [], 0
+                line.append(char)
+                used += char_width
+            continue
+        line += unit
+        used += unit_width
     if line:
         lines.append(line)
+    return [_strip(l) for l in lines if _strip(l)]
+
+
+def _strip(line):
+    start, end = 0, len(line)
+    while start < end and line[start][0] == ' ':
+        start += 1
+    while end > start and line[end - 1][0] == ' ':
+        end -= 1
+    return line[start:end]
+
+
+def wrap(text, metrics, width):
+    """Plain lines of ``text`` (for titles)."""
+    size = metrics.font().pixelSize()
+    bold = metrics.font().weight() >= QFont.DemiBold
+    return [''.join(ch for ch, _ in line) for line in
+            rich_wrap(text, width, size)] if not bold else _bold_wrap(text, width, size)
+
+
+def _bold_wrap(text, width, size):
+    lines, line = [], ''
+    for unit in units(text):
+        piece = ''.join(ch for ch, _ in unit)
+        if line and _metrics(size, True).horizontalAdvance(line + piece) > width:
+            lines.append(line.strip())
+            line = piece.lstrip()
+        else:
+            line += piece
+    if line.strip():
+        lines.append(line.strip())
     return lines
 
 
-def chunks(text, width):
+TEXT_W = 1580                                   # Subtitle text width inside the bubble.
+
+
+def chunks(text, width=TEXT_W):
     """The narration in pieces of at most two subtitle lines, split at sentence ends."""
-    metrics = QFontMetrics(font(30))
     out = []
 
+    def fits(piece):
+        return len(rich_wrap(piece, width)) <= 2
+
     def add(piece):
-        if out and len(wrap(out[-1] + piece, metrics, width)) <= 2:
+        if out and fits(out[-1] + piece):
             out[-1] += piece
         else:
             out.append(piece)
     for sentence in [s for s in re.split(r'(?<=[。；！？])', text) if s.strip()]:
-        if len(wrap(sentence, metrics, width)) <= 2:
+        if fits(sentence):
             add(sentence)
         else:                                  # One long sentence: split at commas too.
             for part in [s for s in re.split(r'(?<=[，、：])', sentence) if s]:
@@ -598,14 +701,32 @@ def chunks(text, width):
     return out or [text]
 
 
+def _portrait():
+    """Her face, for the subtitle bubble."""
+    import pet_assets
+    pixmap = pet_assets.sprite_for('idle')
+    if pixmap is None or pixmap.isNull():
+        return None
+    image = pixmap.toImage()
+    w, h = image.width(), image.height()
+    side = int(w * .58)
+    return image.copy(int(w * .21), int(h * .07), side, side)
+
+
+def _ease_out(x):
+    x = max(0.0, min(1.0, x))
+    return 1 - (1 - x) ** 3
+
+
 class Renderer:
     def __init__(self, stills, clips, speech):
         self.stills, self.clips = stills, clips
         self.chapter_index = {key: n for n, (key, _) in enumerate(CHAPTERS)}
+        self.face = _portrait()
         # Subtitle pieces, each shown for its share of the spoken length.
         self.captions = []
         for scene, seconds in zip(SCENES, speech):
-            pieces = chunks(scene['say'], SUB.width() - 80)
+            pieces = chunks(scene['say'])
             total = sum(len(piece) for piece in pieces)
             at, timed = LEAD_S, []
             for piece in pieces:
@@ -614,11 +735,12 @@ class Renderer:
             self.captions.append(timed)
 
     def caption(self, n_scene, t):
-        text = self.captions[n_scene][0][1]
-        for at, piece in self.captions[n_scene]:
-            if t >= at - .15:
-                text = piece
-        return text
+        """(text, seconds since it appeared)."""
+        at, text = self.captions[n_scene][0]
+        for start, piece in self.captions[n_scene]:
+            if t >= start - .15:
+                at, text = start - .15, piece
+        return text, max(0.0, t - at)
 
     def background(self, p):
         g = QLinearGradient(0, 0, 0, H)
@@ -683,17 +805,96 @@ class Renderer:
                 if y > r.bottom() - 60:
                     break
 
-    def subtitle(self, p, text, alpha=1.0):
-        metrics = QFontMetrics(font(30))
-        lines = wrap(text, metrics, SUB.width() - 80)
+    def subtitle(self, p, text, age):
+        """A speech bubble from her: the words pop in, words in 「」 stand out."""
+        bubble = QRectF(178, 924, 1682, 132)
+        face = QPointF(108, 990)
+        bob = 9 * math.sin(math.pi * min(1.0, age / .32)) if age < .32 else 0.0
+        # Bubble with a little tail towards her.
+        path = QPainterPath()
+        path.addRoundedRect(bubble, 34, 34)
+        tail = QPainterPath()
+        tail.moveTo(bubble.left() + 2, bubble.center().y() - 18)
+        tail.lineTo(bubble.left() - 26, bubble.center().y() + 6)
+        tail.lineTo(bubble.left() + 2, bubble.center().y() + 20)
+        tail.closeSubpath()
+        path = path.united(tail)
         p.setPen(Qt.NoPen)
-        p.setBrush(QColor(35, 30, 86, int(225 * alpha)))
-        p.drawRoundedRect(SUB, 20, 20)
-        p.setPen(QColor(255, 255, 255, int(255 * alpha)))
-        p.setFont(font(30))
-        top = SUB.center().y() - len(lines) * 21
+        p.setBrush(QColor(35, 30, 86, 28))
+        p.drawPath(path.translated(0, 6))
+        p.setBrush(QColor(255, 255, 255, 246))
+        p.setPen(QPen(QColor('#B9AEE6'), 3))
+        p.drawPath(path)
+        # Her face.
+        ring = QRectF(face.x() - 60, face.y() - 60 - bob, 120, 120)
+        g = QLinearGradient(ring.topLeft(), ring.bottomLeft())
+        g.setColorAt(0, QColor('#F4EFFF'))
+        g.setColorAt(1, QColor('#CFC3F2'))
+        p.setPen(QPen(QColor(255, 255, 255), 5))
+        p.setBrush(g)
+        p.drawEllipse(ring)
+        if self.face is not None:
+            clip = QPainterPath()
+            clip.addEllipse(ring.adjusted(4, 4, -4, -4))
+            p.save()
+            p.setClipPath(clip)
+            p.setRenderHint(QPainter.SmoothPixmapTransform)
+            p.drawImage(ring.adjusted(4, 4, -4, -4), self.face)
+            p.restore()
+        # The words.
+        appear = _ease_out(age / .28)
+        lines = rich_wrap(text, TEXT_W)
+        line_h = 46
+        top = bubble.center().y() - len(lines) * line_h / 2 + (1 - appear) * 12
         for i, line in enumerate(lines):
-            p.drawText(QRectF(SUB.left() + 40, top + i * 42, SUB.width() - 80, 42), Qt.AlignCenter, line)
+            x = bubble.left() + (bubble.width() - _width(line, 30)) / 2
+            y = top + i * line_h
+            run, style = '', None
+            for ch, hl in line + [('', None)]:
+                if hl != style and run:
+                    p.setFont(font(30, style))
+                    color = QColor(ACCENT if style else INK)
+                    color.setAlphaF(appear)
+                    p.setPen(color)
+                    p.drawText(QRectF(x, y, 2000, line_h), Qt.AlignLeft | Qt.AlignVCenter, run)
+                    x += _width([(c, style) for c in run], 30)
+                    run = ''
+                style = hl if ch else style
+                run += ch
+
+    def splash(self, p, scene, t):
+        """The chapter name, sliding in at the start of each chapter."""
+        if t > 1.9:
+            return
+        index = self.chapter_index[scene['chapter']]
+        alpha = min(_ease_out(t / .35), 1.0 if t < 1.4 else max(0.0, 1 - (t - 1.4) / .5))
+        shift = (1 - _ease_out(t / .45)) * -90
+        box = QRectF(CONTENT.center().x() - 380 + shift, CONTENT.top() + 40, 760, 170)
+        p.setPen(Qt.NoPen)
+        color = QColor(VIOLET)
+        color.setAlphaF(.93 * alpha)
+        p.setBrush(color)
+        p.drawRoundedRect(box, 40, 40)
+        white = QColor(255, 255, 255)
+        white.setAlphaF(alpha)
+        p.setPen(white)
+        p.setFont(font(28))
+        p.drawText(box.adjusted(0, 22, 0, -100), Qt.AlignCenter, f'第 {index + 1} 章')
+        p.setFont(font(62, True))
+        p.drawText(box.adjusted(0, 58, 0, -14), Qt.AlignCenter, CHAPTERS[index][1])
+        gold = QColor('#FFD27A')
+        gold.setAlphaF(alpha)
+        p.setBrush(gold)
+        p.setPen(Qt.NoPen)
+        for dx, dy, r in ((44, 34, 9), (box.width() - 52, 40, 7), (box.width() - 84, box.height() - 34, 5)):
+            c = QPointF(box.left() + dx, box.top() + dy)
+            star = QPainterPath()
+            star.moveTo(c.x(), c.y() - r * 2)
+            star.quadTo(c.x(), c.y(), c.x() + r * 2, c.y())
+            star.quadTo(c.x(), c.y(), c.x(), c.y() + r * 2)
+            star.quadTo(c.x(), c.y(), c.x() - r * 2, c.y())
+            star.quadTo(c.x(), c.y(), c.x(), c.y() - r * 2)
+            p.drawPath(star)
 
     def still(self, p, name, marks, t, duration):
         shot = self.stills[name]
@@ -762,11 +963,33 @@ class Renderer:
         else:
             self.clip(p, self.clips[n_scene], t)
         self.side(p, scene, n_scene)
-        self.subtitle(p, self.caption(n_scene, t))
+        if n_scene == 0 or SCENES[n_scene - 1]['chapter'] != scene['chapter']:
+            self.splash(p, scene, t)
+        self.subtitle(p, *self.caption(n_scene, t))
         fade = min(1.0, t / FADE_S, (duration - t) / FADE_S)
         if fade < 1.0:
             p.fillRect(0, 0, W, H, QColor(236, 232, 248, int(255 * (1 - max(0.0, fade)))))
         p.end()
+
+
+def setup(stack, language='zh_CN'):
+    """The sandboxed test build with sample data: (v2 preview, base preview)."""
+    global LANG
+    LANG = language
+    directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-tutorial-'))
+    stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
+    stack.enter_context(patch('quick_launch.build_command', lambda *a, **k: ['tutorial']))
+    stack.enter_context(patch('claude_launch.launch', lambda argv: None))
+    realistic_fixtures()
+    from tools.preview_v1_3 import Preview as BasePreview
+    from tools.preview_v2_0 import Preview
+    base = BasePreview(3, language)
+    base.panel.connection.setText('')
+    pv = Preview(language, base)
+    base.hide()
+    pv.hide()
+    seed(pv)
+    return pv, base
 
 
 def main(argv=None):
@@ -783,19 +1006,7 @@ def main(argv=None):
     app = QApplication.instance() or QApplication([])
     scenes = SCENES[:args.only] if args.only else SCENES
     with ExitStack() as stack:
-        directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-tutorial-'))
-        stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
-        stack.enter_context(patch('quick_launch.build_command', lambda *a, **k: ['tutorial']))
-        stack.enter_context(patch('claude_launch.launch', lambda argv: None))
-        realistic_fixtures()
-        from tools.preview_v1_3 import Preview as BasePreview
-        from tools.preview_v2_0 import Preview
-        base = BasePreview(3, 'zh_CN')
-        base.panel.connection.setText('')
-        pv = Preview('zh_CN', base)
-        base.hide()
-        pv.hide()
-        seed(pv)
+        pv, base = setup(stack)
         print('capturing…', flush=True)
         stills = capture_all(pv, base)
         print(f'{len(stills)} captures', flush=True)

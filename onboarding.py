@@ -138,7 +138,7 @@ class OnboardingWizard(QDialog):
         for name in (*HOTKEYS, 'off'):
             self.hotkey.addItem(name, name)
         self.hotkey.setCurrentIndex(max(0, self.hotkey.findData(
-            self.panel.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space'))))
+            self.panel.prefs.get('quick_launch_hotkey', 'Alt+Shift+Space'))))
         self.hotkey_label = QLabel()
         form.addRow(self.hotkey_label, self.hotkey)
         layout.addLayout(form)

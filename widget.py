@@ -3897,7 +3897,7 @@ class Settings(QDialog):
         for name in (*HOTKEYS, 'off'):
             self.quick_launch_hotkey.addItem(name, name)
         self.quick_launch_hotkey.setCurrentIndex(max(0, self.quick_launch_hotkey.findData(
-            panel.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space'))))
+            panel.prefs.get('quick_launch_hotkey', 'Alt+Shift+Space'))))
         self.quick_launch_hotkey_label = label()
         self.forms['assistant'].addRow(self.quick_launch_hotkey_label, self.quick_launch_hotkey)
         self.schedule_missed = QComboBox()
@@ -4444,6 +4444,77 @@ def install_wheel_guard():
     if app is not None and getattr(app, '_petoken_wheel_guard', None) is None:
         app._petoken_wheel_guard = WheelGuard(app)
         app.installEventFilter(app._petoken_wheel_guard)
+    install_text_fit()
+
+
+class TextFit(QObject):
+    """Wrapped text is never cut off: every word-wrapped label keeps at
+    least the height its text needs at its current width, so the layout
+    (and the window, if needed) grows instead of squeezing the label.
+    Labels with a fixed or maximum height are left alone."""
+
+    EVENTS = None
+
+    def eventFilter(self, obj, event):
+        if TextFit.EVENTS is None:
+            from PySide6.QtCore import QEvent
+            TextFit.EVENTS = (QEvent.Resize, QEvent.Show, QEvent.Paint, QEvent.FontChange, QEvent.StyleChange)
+        if event.type() in TextFit.EVENTS and isinstance(obj, QLabel) and obj.wordWrap():
+            fit_label(obj)
+        return False
+
+
+def fit_label(label):
+    if label.maximumHeight() < 16777215 or label.width() <= 0 or not label.text():
+        return
+    base = label.property('_fit_base')
+    if base is None:
+        base = label.minimumHeight()
+        label.setProperty('_fit_base', base)
+    need = max(int(base), label.heightForWidth(label.width()))
+    if need != label.minimumHeight():
+        label.setMinimumHeight(need)
+        _grow_later(label.window())
+
+
+_GROW = set()
+
+
+def _grow_later(window):
+    if window is None or window in _GROW:
+        return
+    _GROW.add(window)
+    QTimer.singleShot(0, _grow_windows)
+
+
+def _grow_windows():
+    """Windows grow (within the screen) to what their contents need."""
+    windows = list(_GROW)
+    _GROW.clear()
+    for window in windows:
+        try:
+            if not window.isVisible() or window.isMaximized() or window.isFullScreen():
+                continue
+            need = window.minimumSizeHint().expandedTo(window.minimumSize())
+            if need.width() <= window.width() and need.height() <= window.height():
+                continue
+            screen = (window.screen() or QApplication.primaryScreen()).availableGeometry()
+            width = min(max(window.width(), need.width()), screen.width())
+            height = min(max(window.height(), need.height()), screen.height())
+            window.resize(width, height)
+            frame = window.frameGeometry()
+            if frame.bottom() > screen.bottom() or frame.right() > screen.right():
+                window.move(max(screen.left(), min(frame.left(), screen.right() - frame.width())),
+                            max(screen.top(), min(frame.top(), screen.bottom() - frame.height())))
+        except RuntimeError:                     # Deleted meanwhile.
+            continue
+
+
+def install_text_fit():
+    app = QApplication.instance()
+    if app is not None and getattr(app, '_petoken_text_fit', None) is None:
+        app._petoken_text_fit = TextFit(app)
+        app.installEventFilter(app._petoken_text_fit)
 
 
 class Panel(QWidget):
@@ -5608,8 +5679,8 @@ class Panel(QWidget):
             pass   # Notification settings are a convenience; never block Petoken.
 
     def sync_hotkey(self):
-        """Ctrl+Alt+Space opens quick launch while the setting is on."""
-        wanted = self.prefs.get('quick_launch_hotkey', 'Ctrl+Alt+Space')
+        """The chosen shortcut (Alt+Shift+Space by default) opens quick launch while the setting is on."""
+        wanted = self.prefs.get('quick_launch_hotkey', 'Alt+Shift+Space')
         if self.live and not self.closing and wanted != 'off':
             self.hotkey.register(wanted)
         else:

@@ -485,6 +485,9 @@ class FocusDialog(QDialog):
                     focus_long_break=self.long_rest.value(), focus_long_every=self.every.value())
 
 
+CARD_WIDTH = 280
+
+
 class FocusCard(QWidget):
     """What got done in a focus session, beside the pet."""
 
@@ -500,7 +503,7 @@ class FocusCard(QWidget):
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setStyleSheet(STYLE)
-        self.setFixedWidth(280)
+        self.setFixedWidth(CARD_WIDTH)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         frame = QFrame()
@@ -577,10 +580,20 @@ class FocusCard(QWidget):
 
     def fit_height(self):
         """Tall enough for the wrapped lines (adjustSize alone cuts long todo names off)."""
-        self.adjustSize()
+        self.ensurePolished()
         layout = self.layout()
+        layout.invalidate()
+        # 280 px, or wider when the buttons need it (English is longer).
+        self.setFixedWidth(max(CARD_WIDTH, layout.minimumSize().width()))
+        self.adjustSize()
+        layout.activate()
         if layout.hasHeightForWidth():
             self.resize(self.width(), max(self.height(), layout.totalHeightForWidth(self.width())))
+
+    def showEvent(self, event):
+        # The style sheet sets the final fonts when the card is shown.
+        super().showEvent(event)
+        self.fit_height()
 
     def place_beside(self, pet):
         screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()
