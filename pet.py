@@ -116,6 +116,7 @@ class DesktopPet(QWidget):
         self.game_halo=None
         self.game_usage=None
         self.game_place=None
+        self.game_drag=None
         self.apply_language()
 
     def tr_text(self,key,**values):
@@ -228,6 +229,10 @@ class DesktopPet(QWidget):
         if self.game_place is None:
             self.game_place=Placement(self)
         self.game_place.enter(getattr(self.panel.game_mode,'monitor',None))
+        from game_mode import LongPressDrag
+        if self.game_drag is None:
+            self.game_drag=LongPressDrag(self)
+        self.game_drag.start()
         if self.game_halo is None:
             self.game_halo=GameHalo(self)
         if self.game_usage is None:
@@ -236,6 +241,8 @@ class DesktopPet(QWidget):
         self.update_activity()
 
     def leave_game(self):
+        if self.game_drag is not None:
+            self.game_drag.stop()
         for widget in (self.game_halo,self.game_usage):
             if widget is not None:
                 widget.hide()

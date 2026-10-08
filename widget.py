@@ -3731,7 +3731,8 @@ SETTINGS_LAYOUT = (
     ('assistant', ('assistant_hints_label', 'continuation_card_label', 'dnd_label', 'dnd_scheduled_label',
                    'schedule_missed_label', 'quick_launch_hotkey_label')),
     ('game', ('game_auto_label', 'game_corner_label', 'game_ring_label', 'game_display_label',
-              'game_bar_label', 'game_fast_label', 'game_extra_label', 'game_excluded_label')),
+              'game_rings_side_label', 'game_bar_label', 'game_bar_place_label', 'game_fast_label',
+              'game_extra_label', 'game_excluded_label')),
 )
 
 # (page, row label attribute, description key): the line shown under each option.
@@ -3754,6 +3755,7 @@ SETTING_DESCRIPTIONS = (
     ('game', 'game_auto_label', 'game_auto'), ('game', 'game_corner_label', 'game_corner'),
     ('game', 'game_ring_label', 'game_ring'), ('game', 'game_display_label', 'game_display'),
     ('game', 'game_bar_label', 'game_bar'), ('game', 'game_fast_label', 'game_fast'),
+    ('game', 'game_rings_side_label', 'game_rings_side'), ('game', 'game_bar_place_label', 'game_bar_place'),
     ('game', 'game_extra_label', 'game_extra'), ('game', 'game_excluded_label', 'game_excluded'),
 )
 
@@ -3965,6 +3967,13 @@ class Settings(QDialog):
         self.game_display.setCurrentIndex(max(0, self.game_display.findData(panel.prefs.get('game_display', 'rings'))))
         self.game_display_label = label()
         game.addRow(self.game_display_label, self.game_display)
+        self.game_rings_side = QComboBox()
+        for key in ('right', 'left'):
+            self.game_rings_side.addItem('', key)
+        self.game_rings_side.setCurrentIndex(max(0, self.game_rings_side.findData(
+            panel.prefs.get('game_rings_side', 'right'))))
+        self.game_rings_side_label = label()
+        game.addRow(self.game_rings_side_label, self.game_rings_side)
         chosen = panel.prefs.get('game_bar_items') or []
         self.game_bar_boxes = {}
         bar_grid = QGridLayout()
@@ -3976,6 +3985,13 @@ class Settings(QDialog):
             bar_grid.addWidget(box, index // 3, index % 3)
         self.game_bar_label = label()
         game.addRow(self.game_bar_label, bar_grid)
+        self.game_bar_reset = QPushButton()
+        self.game_bar_reset.clicked.connect(self._reset_game_bar)
+        place_row = QHBoxLayout()
+        place_row.addWidget(self.game_bar_reset)
+        place_row.addStretch(1)
+        self.game_bar_place_label = label()
+        game.addRow(self.game_bar_place_label, place_row)
         self.game_fast = QCheckBox()
         self.game_fast.setChecked(bool(panel.prefs.get('game_fast', False)))
         self.game_fast_label = label()
@@ -4308,8 +4324,12 @@ class Settings(QDialog):
         self.assistant_hints_label.setToolTip(t('assistant_hints_tip'))
         self.dnd_label.setText(t('dnd'))
         for attr in ('game_auto', 'game_corner', 'game_ring', 'game_display', 'game_bar', 'game_fast',
-                     'game_extra', 'game_excluded'):
+                     'game_extra', 'game_excluded', 'game_rings_side', 'game_bar_place'):
             getattr(self, attr + '_label').setText(t(attr))
+        for index in range(self.game_rings_side.count()):
+            self.game_rings_side.setItemText(index, t(f'game_side_{self.game_rings_side.itemData(index)}'))
+        self.game_bar_reset.setText(t('game_bar_reset'))
+        self.game_bar_reset.setEnabled(self.parentWidget().prefs.get('game_bar_pos') is not None)
         for index in range(self.game_ring.count()):
             self.game_ring.setItemText(index, t(f'game_ring_{self.game_ring.itemData(index)}'))
         for index in range(self.game_display.count()):
@@ -4388,6 +4408,12 @@ class Settings(QDialog):
         self.clinginess.setCurrentIndex(self.clinginess.findData('moderate'))
         self.apply_language()
 
+    def _reset_game_bar(self):
+        """The info bar follows her again (after it was dragged away)."""
+        panel = self.parentWidget()
+        panel.prefs['game_bar_pos'] = None
+        self.game_bar_reset.setEnabled(False)
+
     def save(self):
         panel = self.parentWidget()
         prefs = dict(panel.prefs)
@@ -4420,6 +4446,7 @@ class Settings(QDialog):
                      game_bar_items=[key for key, box in self.game_bar_boxes.items() if box.isChecked()]
                      or ['limits'],
                      game_fast=self.game_fast.isChecked(),
+                     game_rings_side=self.game_rings_side.currentData(),
                      game_extra=self.game_extra.text().strip(),
                      game_excluded=self.game_excluded.text().strip(),
                      clinginess=self.clinginess.currentData())

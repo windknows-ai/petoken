@@ -10,7 +10,8 @@ While it is on:
   silent (all of it is still recorded under Notifications; approval requests
   go back to Claude Code's terminal);
 * on the game's screen she shrinks into the bottom-right corner and lets the
-  mouse through, so she never blocks the game;
+  mouse through, so she never blocks the game. A click reaches the game; a
+  long press (half a second) on her, or on the info bar, drags it (LongPressDrag);
 * the star ring stands behind her (GameHalo): one star per running task in the
   usual colours, or a violet deep-space ring when nothing runs;
 * instead of the usage card, a compact display (GameUsage) shows either four
@@ -35,6 +36,9 @@ import theme
 from localization import text
 
 POLL_MS = 2000
+HOLD_S = .5                  # A press this long on her (or the bar) drags it.
+HOLD_SLOP = 10               # Moving further first means it was a drag in the game.
+SIDES = ('right', 'left')
 CORNER_SCALE = 70            # % of her usual size while sharing the game's screen.
 CORNER_MARGIN = 12
 DISPLAYS = ('rings', 'bar', 'hidden')
@@ -446,11 +450,24 @@ class GameUsage(QWidget):
 
     def follow(self):
         pet = self.pet
+        prefs = pet.panel.prefs
         if self.style_name == 'rings':
-            # Beside her, at shoulder height.
-            x = pet.x() + pet.width() - pet._px(18)
+            # Beside her (left or right, the user's choice), at shoulder height.
+            if prefs.get('game_rings_side') == 'left':
+                x = pet.x() + pet._px(18) - self.width()
+            else:
+                x = pet.x() + pet.width() - pet._px(18)
             y = pet.y() + pet.height() - self.height() - pet._px(20)
         else:
+            spot = prefs.get('game_bar_pos')
+            if isinstance(spot, list) and len(spot) == 2 and all(isinstance(v, int) for v in spot):
+                x, y = spot          # Dragged somewhere: it stays there.
+                screen = (QApplication.screenAt(QPoint(x, y)) or QApplication.primaryScreen()).availableGeometry()
+                x = max(screen.left(), min(x, screen.right() - self.width() + 1))
+                y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))
+                if self.pos() != QPoint(x, y):
+                    self.move(x, y)
+                return
             x = pet.x() + (pet.width() - self.width()) // 2
             y = pet.y() + pet._px(56) - self.height()
         screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()
@@ -520,3 +537,114 @@ class GameUsage(QWidget):
             vw = QFontMetricsF(p.font()).horizontalAdvance(value)
             p.drawText(QRectF(x, 0, vw + 2, self.height()), Qt.AlignLeft | Qt.AlignVCenter, value)
             x += vw + 24
+
+
+def _left_button_down():
+    """The left mouse button right now, wherever the cursor is (Windows)."""
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        button = 0x02 if user32.GetSystemMetrics(23) else 0x01     # SM_SWAPBUTTON.
+        return bool(user32.GetAsyncKeyState(button) & 0x8000)
+    except Exception:
+        return False
+
+
+class LongPressDrag(QObject):
+    """Long press to drag while she lets the mouse through.
+
+    In game mode her window (and the bar) ignore the mouse, so a click goes
+    to the game. This watches the button instead: held for HOLD_S on her or
+    on the bar without moving, the window follows the cursor until release.
+    """
+
+    def __init__(self, pet, button=_left_button_down, cursor=None, clock=time.monotonic):
+        super().__init__(pet)
+        from PySide6.QtGui import QCursor
+        self.pet = pet
+        self.button = button
+        self.cursor = cursor or QCursor.pos
+        self.clock = clock
+        self.press = None           # (target, start point, time, offset)
+        self.dragging = None
+        self._was_down = False
+        self.timer = QTimer(self)
+        self.timer.setTimerType(Qt.PreciseTimer)
+        self.timer.setInterval(16)
+        self.timer.timeout.connect(self.tick)
+
+    def start(self):
+        self._was_down = True       # Ignore a press already held when game mode began.
+        self.press = self.dragging = None
+        self.timer.start()
+
+    def stop(self):
+        if self.dragging is not None:
+            self._release()
+        self.timer.stop()
+
+    def _targets(self):
+        pet = self.pet
+        out = []
+        usage = getattr(pet, 'game_usage', None)
+        if usage is not None and usage.isVisible() and usage.style_name == 'bar':
+            out.append(('bar', usage, usage.frameGeometry()))
+        # Her sprite, not the empty space above her head.
+        box = pet.frameGeometry().adjusted(pet._px(14), pet._px(64), -pet._px(14), 0)
+        out.append(('pet', pet, box))
+        return out
+
+    def tick(self):
+        down = self.button()
+        point = self.cursor()
+        now = self.clock()
+        if not down:
+            if self.dragging is not None:
+                self._release()
+            self.press = None
+            self._was_down = False
+            return
+        if not self._was_down:                      # A fresh press.
+            self._was_down = True
+            for name, widget, box in self._targets():
+                if box.contains(point):
+                    self.press = (name, widget, point, now, point - widget.pos())
+                    break
+            return
+        if self.press is None:
+            return
+        name, widget, start, at, offset = self.press
+        if self.dragging is None:
+            if (point - start).manhattanLength() > HOLD_SLOP:
+                self.press = None                   # A drag inside the game.
+                return
+            if now - at >= HOLD_S:
+                self.dragging = name
+                if name == 'pet':
+                    self.pet.dragging = True
+                    self.pet.update_activity()
+            return
+        target = point - offset
+        if name == 'pet':
+            self.pet.move_clamped(target)
+            for extra in (getattr(self.pet, 'game_halo', None), getattr(self.pet, 'game_usage', None)):
+                if extra is not None and extra.isVisible():
+                    extra.follow()
+        else:
+            widget.move(target)
+
+    def _release(self):
+        name, widget = self.dragging, self.press[1] if self.press else None
+        self.dragging = None
+        if name == 'pet':
+            self.pet.dragging = False
+            try:
+                self.pet.interact('landing', .9)
+            except Exception:
+                self.pet.update_activity()
+        elif name == 'bar' and widget is not None:
+            self.pet.panel.prefs['game_bar_pos'] = [widget.x(), widget.y()]
+            try:
+                self.pet.panel.persist()
+            except Exception:
+                pass

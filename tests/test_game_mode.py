@@ -127,6 +127,73 @@ class PanelGameModeTests(unittest.TestCase):
             panel.prefs['game_display'] = 'rings'
             pet.hide()
 
+    def test_long_press_drags_her_and_the_bar_while_clicks_pass(self):
+        from PySide6.QtCore import QPoint
+        pet = self.panel.pet
+        pet.show()
+        state = dict(down=False, at=QPoint(0, 0), now=0.0)
+        drag = game_mode.LongPressDrag(pet, button=lambda: state['down'], cursor=lambda: state['at'],
+                                       clock=lambda: state['now'])
+        drag._was_down = False
+        box = pet.frameGeometry()
+        inside = QPoint(box.center().x(), box.bottom() - 20)
+        start = pet.pos()
+
+        def step(down, at, dt):
+            state.update(down=down, at=at, now=state['now'] + dt)
+            drag.tick()
+        # A click: nothing moves.
+        step(True, inside, 0)
+        step(False, inside, .1)
+        self.assertEqual(pet.pos(), start)
+        # A press that moves at once is a drag inside the game: ignored.
+        step(True, inside, 0)
+        step(True, inside + QPoint(40, 0), .1)
+        step(True, inside + QPoint(80, 0), .6)
+        self.assertEqual(pet.pos(), start)
+        step(False, inside, .1)
+        # Hold half a second, then move: she follows.
+        step(True, inside, 0)
+        step(True, inside, .6)
+        self.assertTrue(pet.dragging)
+        step(True, inside + QPoint(-60, -30), .02)
+        self.assertEqual(pet.pos(), start + QPoint(-60, -30))
+        step(False, inside, .02)
+        self.assertFalse(pet.dragging)
+        pet.move(start)
+        # The bar, once dragged, stays where it was put.
+        usage = game_mode.GameUsage(pet)
+        usage.set_content('bar', [], dict(cpu=5.0), ['cpu'], 'en')
+        usage.show()
+        drag.pet.game_usage = usage
+        grab = usage.frameGeometry().center()
+        step(True, grab, 0)
+        step(True, grab, .6)
+        step(True, grab + QPoint(100, 50), .02)
+        step(False, grab, .02)
+        self.assertEqual(self.panel.prefs['game_bar_pos'], [usage.x(), usage.y()])
+        pet.move(pet.pos() + QPoint(30, 0))
+        usage.follow()
+        self.assertEqual([usage.x(), usage.y()], self.panel.prefs['game_bar_pos'])   # Didn't follow her.
+        self.panel.prefs['game_bar_pos'] = None
+        drag.pet.game_usage = None
+        usage.deleteLater()
+        pet.hide()
+
+    def test_rings_go_left_or_right(self):
+        pet = self.panel.pet
+        usage = game_mode.GameUsage(pet)
+        usage.set_content('rings', [dict(provider='claude', name='Claude Code',
+                                         rows=[dict(kind='five', remaining=50), dict(kind='week', remaining=50)])],
+                          None, [], 'en')
+        right = usage.x()
+        self.panel.prefs['game_rings_side'] = 'left'
+        usage.follow()
+        self.assertLess(usage.x(), right)
+        self.assertLessEqual(usage.x() + usage.width(), pet.x() + pet.width() // 2)
+        self.panel.prefs['game_rings_side'] = 'right'
+        usage.deleteLater()
+
     def test_compact_display_content(self):
         import time
         import usage_overlay as uo

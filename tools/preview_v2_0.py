@@ -243,6 +243,13 @@ class Preview(QWidget):
             display.addItem(label, value)
         display.currentIndexChanged.connect(lambda _: self.panel.prefs.update(game_display=display.currentData()))
         form.addRow('用量显示', display)
+        side = QComboBox()
+        for label, value in (('右边', 'right'), ('左边', 'left')):
+            side.addItem(label, value)
+        side.currentIndexChanged.connect(lambda _: self.panel.prefs.update(game_rings_side=side.currentData()))
+        form.addRow('小圆环在她哪边', side)
+        form.addRow(row(QLabel('游戏中：单击会穿过她；长按她或信息条半秒可以拖动。'),
+                        button('信息条回到她头顶', lambda: self.panel.prefs.update(game_bar_pos=None))))
 
         # Projects and notes.
         form = group('项目、开工和「上次做到哪」 / Projects')

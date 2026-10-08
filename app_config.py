@@ -38,6 +38,8 @@ DEFAULT_PREFERENCES = {
     "game_bar_items": ["limits", "cpu", "gpu", "gpu_temp"],
     "game_corner": True,
     "game_fast": False,
+    "game_rings_side": "right",
+    "game_bar_pos": None,
     "claude_probe_minutes": 0,
     "star_ring_enabled": True,
     "workbench_tutorial_seen": False,
@@ -106,6 +108,11 @@ def normalize_preferences(data):
     for key in ("game_extra", "game_excluded"):
         if not isinstance(preferences.get(key), str):
             preferences[key] = ""
+    if preferences.get("game_rings_side") not in ("right", "left"):
+        preferences["game_rings_side"] = "right"
+    spot = preferences.get("game_bar_pos")
+    if not (isinstance(spot, list) and len(spot) == 2 and all(isinstance(v, int) for v in spot)):
+        preferences["game_bar_pos"] = None
     if preferences.get("game_ring") not in ("tasks", "space"):
         preferences["game_ring"] = "tasks"
     if preferences.get("game_display") not in ("rings", "bar", "hidden"):
