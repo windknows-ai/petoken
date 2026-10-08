@@ -3,8 +3,8 @@
 Continuous, no fades or cuts: she rises from her idle pose (frame by frame),
 the star ring gathers behind her, then each piece of armour forms on her
 body: a line of light first traces the piece's outline, and the piece fills
-in behind it. Then the spear, a short MVP moment (light rays, a flash along
-her silhouette, a slight push-in) and the effects settle. Leaving game mode
+in behind it. Then the sword, a short MVP moment (a showcase spotlight comes
+on from above, her MVP poses, a slight push-in) and the effects settle. Leaving game mode
 plays the armour coming off, quickly, in reverse.
 
 The art is a series of stage images on one canvas (docs/V2_1_ART_PROMPTS.md):
@@ -165,6 +165,9 @@ class Pieces:
                 self.stages.append((piece, outline, box, direction, image))
             previous = image
         self.form2 = previous
+        # She ends on the first frame of her second-form idle, where the pet takes over.
+        if (folder / 'form2_idle_1.png').exists():
+            self.form2 = _scaled(folder / 'form2_idle_1.png', side)
         for name in MVP:
             if (folder / f'{name}.png').exists():
                 self.mvp.append(_scaled(folder / f'{name}.png', side))
@@ -346,10 +349,9 @@ class TransformStage(QWidget):
 
     @staticmethod
     def _ring_flare(name, f):
+        # A gentle lift while she is on show, nothing blinding.
         if name == 'mvp':
-            return math.sin(min(1.0, f * 1.6) * math.pi) * .8 + .2
-        if name == 'settle':
-            return .2 * (1 - f)
+            return .25 * math.sin(min(1.0, f) * math.pi)
         return 0.0
 
     def _burst(self, x, y, count, speed=90, life=.9):
@@ -373,13 +375,9 @@ class TransformStage(QWidget):
         p.scale(zoom, zoom)
         p.translate(-centre)
         target = box.translated(0, -lift)
-        if name == 'mvp':
-            self._paint_rays(p, target, f)
+        if name in ('mvp', 'settle'):
+            self._paint_spotlight(p, target, name, f)
         self._paint_body(p, target, name, f)
-        if name == 'mvp' and f < .25:
-            p.setOpacity((1 - f / .25) * .85)
-            p.drawImage(target, self.pieces.flash)
-            p.setOpacity(1)
         p.resetTransform()
         self._paint_particles(p)
 
@@ -400,9 +398,9 @@ class TransformStage(QWidget):
         if name == 'arm':
             return 1.0 + .04 * f
         if name == 'mvp':
-            return 1.04 + .08 * _ease(min(1.0, f * 2))
+            return 1.04 + .04 * _ease(min(1.0, f * 2))
         if name == 'settle':
-            return 1.12 - .12 * _ease(f)
+            return 1.08 - .08 * _ease(f)
         return 1.0
 
     def _rise_frame(self, f):
@@ -534,29 +532,47 @@ class TransformStage(QWidget):
         p.drawImage(rect.adjusted(-2, -2, 2, 2), line)
         p.setOpacity(1)
 
-    def _paint_rays(self, p, target, f):
-        """Rays of light turning behind her during the MVP moment."""
-        centre = QPointF(target.center().x(), target.center().y() - target.height() * .05)
-        strength = math.sin(min(1.0, f * 1.4) * math.pi * .5) * (1 - max(0.0, f - .75) / .25)
-        p.save()
-        p.translate(centre)
-        p.rotate(self.t * 25)
-        length = target.width() * 1.05
-        for n in range(14):
-            p.rotate(360 / 14)
-            g = QLinearGradient(QPointF(0, 0), QPointF(length, 0))
-            c = QColor(GLOW)
-            c.setAlpha(int(110 * strength))
-            g.setColorAt(0, c)
-            g.setColorAt(1, QColor(0, 0, 0, 0))
-            p.setPen(Qt.NoPen)
-            p.setBrush(g)
-            width = target.width() * (.05 if n % 2 else .025)
-            p.drawPolygon([QPointF(0, 0), QPointF(length, -width), QPointF(length, width)])
-        p.restore()
-        if f < .05 and not getattr(self, '_mvp_burst', False):
-            self._mvp_burst = True
-            self._burst(centre.x(), centre.y(), 60, 260, 1.4)
+    def _paint_spotlight(self, p, target, name, f):
+        """A showcase spotlight: it comes on from the top down onto her, leaves a
+        pool of light at her feet, and dims as the moment ends."""
+        if name == 'mvp':
+            reach = _ease(min(1.0, f / .3))                     # The beam travels down.
+            strength = 1.0
+        else:
+            reach, strength = 1.0, 1 - _ease(f)
+        if strength <= 0:
+            return
+        top_y = min(target.top() - target.height() * .55, 0.0)
+        floor = target.bottom() - target.height() * .02
+        bottom = top_y + (floor - top_y) * reach
+        cx = target.center().x()
+        narrow, wide = target.width() * .1, target.width() * .48
+        spread = narrow + (wide - narrow) * reach
+        beam = QLinearGradient(QPointF(cx, top_y), QPointF(cx, floor))
+        beam.setColorAt(0, QColor(235, 244, 255, 0))                  # No hard edge at the window top.
+        beam.setColorAt(.18, QColor(235, 244, 255, int(150 * strength)))
+        beam.setColorAt(.6, QColor(200, 222, 255, int(70 * strength)))
+        beam.setColorAt(1, QColor(180, 205, 255, int(30 * strength)))
+        p.setPen(Qt.NoPen)
+        p.setBrush(beam)
+        p.drawPolygon([QPointF(cx - narrow, top_y), QPointF(cx + narrow, top_y),
+                       QPointF(cx + spread, bottom), QPointF(cx - spread, bottom)])
+        if reach >= .99:
+            pool = QRadialGradient(QPointF(cx, floor), wide)
+            pool.setColorAt(0, QColor(225, 238, 255, int(120 * strength)))
+            pool.setColorAt(1, QColor(0, 0, 0, 0))
+            p.setBrush(pool)
+            p.save()
+            p.translate(cx, floor)
+            p.scale(1, .22)
+            p.drawEllipse(QPointF(0, 0), wide, wide)
+            p.restore()
+        # Dust drifting in the beam.
+        if name == 'mvp' and self.frames % 4 == 0:
+            x = cx + self.rng.uniform(-.8, .8) * spread * .7
+            y = top_y + self.rng.uniform(.15, .9) * (bottom - top_y)
+            self.particles.append(Particle(x, y, self.rng.uniform(-6, 6), self.rng.uniform(4, 14),
+                                           self.rng.uniform(.8, 1.6), self.rng.uniform(1.2, 2.6), None))
 
     def _paint_particles(self, p):
         for particle in self.particles:

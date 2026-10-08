@@ -249,6 +249,28 @@ class DesktopPet(QWidget):
             self.game_halo.intro=0.0
         self.update_activity()
 
+    # Game moods: (pose, weight, seconds). Mostly she stands guard; now and then
+    # she watches closely, gets tense, cheers, sips, or twirls her sword.
+    GAME_MOODS=(('game_watch',5,9),('game_tense',2,5),('game_cheer',2,4),('game_drink',2,6),('game_bored',2,6))
+
+    def _game_pose(self,now):
+        import random
+        pose,until=getattr(self,'_game_mood',(None,0.0))
+        if pose is not None and now<until:
+            return pose
+        if pose is not None or not hasattr(self,'_game_next'):
+            # Between moods: her second-form idle for 40-90 s.
+            self._game_mood=(None,0.0)
+            self._game_next=now+random.uniform(40,90)
+        elif now>=self._game_next:
+            choices=[m for m in self.GAME_MOODS if assets.has_own_art(m[0])]
+            if choices:
+                name,_,seconds=random.choices(choices,weights=[m[1] for m in choices])[0]
+                self._game_mood=(name,now+seconds)
+                return name
+            self._game_next=now+60
+        return 'form2_idle' if 'form2_idle' in self.sprites else 'idle'
+
     def _transform_side(self):
         sx,sy,sw,sh=geometry.scaled_sprite_rect(self.pet_scale)
         dpr=self.devicePixelRatioF() or 1.0
@@ -257,7 +279,7 @@ class DesktopPet(QWidget):
     def _load_form2(self):
         """Her second form's pose: form2_idle once it exists, else the finished armour."""
         import transform
-        if 'form2_idle' in self.sprites or not transform.available():
+        if assets.has_own_art('form2_idle') or not transform.available():
             return
         path=transform.art_dir()/f'{transform.FORM2}.png'
         pixmap=QPixmap(str(path))
@@ -297,8 +319,11 @@ class DesktopPet(QWidget):
                 self.game_halo.flare=0.0
             if leaving:
                 self._finish_leave()
-            self.update()
             self.update_activity()
+            # Straight to the pose she ends in: no cross-fade from the pose
+            # she had before the transformation (it flashed for a moment).
+            self.animator.cut(self.current_state,time.monotonic())
+            self.update()
         stage.finished.connect(done)
         stage.start()
         return True
@@ -432,7 +457,7 @@ class DesktopPet(QWidget):
         if task=='music' and int(time.time()//120)%2:
             task='guitar'   # Every other two minutes of music she plays along.
         # Game mode: her game pose (form 2 once its art exists); tasks and moods wait.
-        game_pose=('form2_idle' if 'form2_idle' in self.sprites else 'idle') if gaming else None
+        game_pose=self._game_pose(now) if gaming else None
         # Being dragged > notification > preview > interaction > game > focus > task > mood.
         state=(('dragged' if self.dragging and 'dragged' in self.sprites else None)
                or self.reaction_state or self.preview_state or self.interaction_state
@@ -893,7 +918,7 @@ class DesktopPet(QWidget):
             game.setCheckable(True)
             game.setChecked(mode.active)
             game.setToolTip(self.tr_text('game_mode_menu_tip'))
-            game.triggered.connect(lambda _=False: mode.toggle())
+            game.triggered.connect(lambda _=False,game_mode=mode: game_mode.toggle())   # Bound now: 'mode' is reused below.
         # Everyday actions on top; occasional ones and toggles under More.
         menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch).setToolTip(self.tr_text('menu_tip_launch'))
         mode=getattr(self.panel,'focus_mode',None)

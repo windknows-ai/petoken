@@ -223,6 +223,51 @@ class PanelGameModeTests(unittest.TestCase):
         self.panel.prefs['game_rings_side'] = 'right'
         usage.deleteLater()
 
+    def test_the_menu_item_switches_game_mode(self):
+        pet = self.panel.pet
+        for expected in (True, False):
+            menu = pet.context_menu()
+            action = next(a for a in menu.actions() if a.text() == pet.tr_text('game_mode_menu'))
+            self.assertEqual(action.isChecked(), not expected)
+            action.trigger()
+            self.assertEqual(self.panel.game_mode.active, expected)
+            menu.deleteLater()
+
+    def test_game_moods_come_and_go(self):
+        from unittest.mock import patch
+        pet = self.panel.pet
+        for name in ('_game_mood', '_game_next'):
+            if hasattr(pet, name):
+                delattr(pet, name)
+        with patch('pet_assets.has_own_art', return_value=True), patch('random.uniform', return_value=60), \
+                patch('random.choices', return_value=[('game_drink', 2, 6)]):
+            self.assertIn(pet._game_pose(0), ('form2_idle', 'idle'))      # She starts on guard...
+            self.assertIn(pet._game_pose(59), ('form2_idle', 'idle'))
+            self.assertEqual(pet._game_pose(61), 'game_drink')             # ...then a mood...
+            self.assertEqual(pet._game_pose(66), 'game_drink')
+            self.assertIn(pet._game_pose(68), ('form2_idle', 'idle'))     # ...and back on guard.
+
+    def test_v2_1_art_can_live_outside_the_repository(self):
+        import os
+        from unittest.mock import patch
+        import pet_assets
+        with patch.object(pet_assets, 'ASSETS_DIR', pet_assets.ASSETS_DIR.parent / 'no-assets-here'), \
+                patch.dict(os.environ, PETOKEN_V2_1_ART='D:/art'):
+            self.assertEqual(pet_assets._file('assets/v2_1/form2_idle_1.png').as_posix(), 'D:/art/form2_idle_1.png')
+            self.assertTrue(pet_assets._file('assets/v2_0/idle_1.png').as_posix().endswith('assets/v2_0/idle_1.png'))
+
+    def test_windows_that_lost_always_on_top_get_it_back(self):
+        pet = self.panel.pet
+        pet.show()
+        lost = int(pet.winId())
+        repaired = []
+        count = self.panel.keep_on_top(
+            get_style=lambda hwnd: 0 if hwnd == lost else 0x8,      # Only her window lost it.
+            set_position=repaired.append)
+        self.assertEqual((count, repaired), (1, [lost]))
+        self.assertEqual(self.panel.keep_on_top(get_style=lambda hwnd: 0x8, set_position=repaired.append), 0)
+        pet.hide()
+
     def test_compact_display_content(self):
         import time
         import usage_overlay as uo

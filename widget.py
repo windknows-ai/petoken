@@ -5575,6 +5575,9 @@ class Panel(QWidget):
         pet = getattr(self, 'pet', None)
         if pet is not None and self.game_mode.active:
             pet.sync_game()
+        self._topmost_beat = getattr(self, '_topmost_beat', 0) + 1
+        if self.live and self._topmost_beat % 2 == 0:
+            self.keep_on_top()
         # Both providers share the same visual-clock arming path.
         try:
             self.task_manager.sync_motion()
@@ -6244,6 +6247,46 @@ class Panel(QWidget):
             window.move(position)
         self.task_manager.apply_topmost(on_top)
 
+
+    def keep_on_top(self, get_style=None, set_position=None):
+        """Put back the native always-on-top of our windows that lost it.
+
+        Windows can drop a window's WS_EX_TOPMOST (after some window
+        recreations, or when other apps reshuffle the topmost band) while Qt
+        still believes it is on top, so the pet, the usage card or the panel
+        sometimes fell behind other windows while the stars stayed in front.
+        Checked every two seconds; it never activates or moves anything.
+        Returns how many windows were repaired.
+        """
+        if sys.platform != 'win32' and get_style is None:
+            return 0
+        if get_style is None or set_position is None:
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.windll.user32
+            user32.GetWindowLongW.argtypes = (wintypes.HWND, ctypes.c_int)
+            user32.SetWindowPos.argtypes = (wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
+                                            ctypes.c_int, ctypes.c_int, wintypes.UINT)
+            get_style = get_style or (lambda hwnd: user32.GetWindowLongW(hwnd, -20))       # GWL_EXSTYLE
+            set_position = set_position or (lambda hwnd: user32.SetWindowPos(
+                hwnd, wintypes.HWND(-1), 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010))           # TOPMOST, no move/size/activate
+        repaired = 0
+        for window in QApplication.topLevelWidgets():
+            try:
+                if not window.isVisible() or not window.windowFlags() & Qt.WindowStaysOnTopHint:
+                    continue
+                hwnd = int(window.winId())
+                if not get_style(hwnd) & 0x00000008:              # WS_EX_TOPMOST lost.
+                    set_position(hwnd)
+                    repaired += 1
+            except Exception:
+                continue
+        if repaired:
+            try:
+                self.task_manager._stack_halo(force=True)          # She stays in front of her stars.
+            except Exception:
+                pass
+        return repaired
 
     def set_always_on_top(self, enabled):
         self.prefs['always_on_top'] = bool(enabled)

@@ -244,6 +244,13 @@ class Animator:
         if hop:
             self.lift.kick(hop)
 
+    def cut(self, state, now):
+        """Show ``state`` at once: no cross-fade and no squash (the transformation
+        has already shown the change)."""
+        self.previous = self.changed = None
+        self.state, self.started = state, now
+        self._index = 0
+
     def poke(self, side=0.0):
         """A click on the body: squash, and lean away from the click side."""
         self.squash.kick(2.2)

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass, field
+import os
 from pathlib import Path
 
 ASSETS_DIR = Path(__file__).parent / "assets"
@@ -49,6 +50,23 @@ class AssetEntry:
 
 def _v2(name, count):
     return tuple(f"assets/v2_0/{name}_{n}.png" for n in range(1, count + 1))
+
+
+def _v21(name, count):
+    return tuple(f"assets/v2_1/{name}_{n}.png" for n in range(1, count + 1))
+
+
+def _file(path):
+    """A registry path on disk. 2.1 art may live outside the repository until
+    its branch is merged (PETOKEN_V2_1_ART, as in transform.py)."""
+    p = Path(path)
+    if p.is_absolute():
+        return p
+    if path.startswith("assets/v2_1/") and not (ASSETS_DIR / "v2_1").is_dir():
+        other = os.environ.get("PETOKEN_V2_1_ART")
+        if other:
+            return Path(other) / path[len("assets/v2_1/"):]
+    return ASSETS_DIR.parent / path
 
 
 REGISTRY = (
@@ -99,6 +117,15 @@ COMPANION_REGISTRY = tuple(
                blink=f"assets/v2_0/{name}_blink.png" if blink else "")
     for name, frames, fallback, blink in _COMPANION)
 
+# 2.1 game mode: her second form (docs/V2_1_ART_PROMPTS.md). Until the art
+# exists each falls back to her idle pose.
+_GAME = (("form2_idle", 4, True), ("game_watch", 3, True), ("game_tense", 2, True), ("game_cheer", 2, False),
+         ("game_victory", 2, False), ("game_defeat", 2, True), ("game_drink", 2, False), ("game_bored", 2, True))
+GAME_REGISTRY = tuple(
+    AssetEntry(name, f"assets/v2_1/{name}.png", "assets/v1_1/idle.png", frames=_v21(name, frames),
+               blink=f"assets/v2_1/{name}_blink.png" if blink else "")
+    for name, frames, blink in _GAME)
+
 # Activity-layer names that are not character poses.
 ALIASES = {"working": "codex_working", "usage": "idle"}
 
@@ -110,7 +137,7 @@ PREVIEW_STATES = ("idle", "typing", "microphone", "music", "working", "usage",
 def entry_for(state):
     """Return the registry entry for ``state``; unknown states map to idle."""
     key = ALIASES.get(state, state)
-    for entry in REGISTRY + COMPANION_REGISTRY:
+    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY:
         if entry.state == key:
             return entry
     return REGISTRY[0]
@@ -127,7 +154,7 @@ def companion_states():
 def validate_path(path):
     """Lightweight check: exists, loads, non-zero, alpha-capable PNG data."""
     from PySide6.QtGui import QImage
-    file = ASSETS_DIR.parent / path if not Path(path).is_absolute() else Path(path)
+    file = _file(path)
     if not file.is_file():
         return False, "missing file"
     image = QImage(str(file))
@@ -141,7 +168,7 @@ def validate_path(path):
 def load_path(path):
     """Load ``path`` to a QPixmap, or None when missing/broken."""
     from PySide6.QtGui import QPixmap
-    file = ASSETS_DIR.parent / path if not Path(path).is_absolute() else Path(path)
+    file = _file(path)
     pixmap = QPixmap(str(file))
     return pixmap if not pixmap.isNull() else None
 
@@ -188,7 +215,7 @@ def pose_source(path):
         return pixmap
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QImage, QPixmap
-    file = ASSETS_DIR.parent / path if not Path(path).is_absolute() else Path(path)
+    file = _file(path)
     image = QImage(str(file))
     if image.isNull():
         return None
@@ -206,7 +233,7 @@ def _art(state):
     entry = entry_for(state)
     if entry.state not in _COUNT_CACHE:
         _COUNT_CACHE[entry.state] = (len(existing_frames(entry)),
-                                     bool(entry.blink and (ASSETS_DIR.parent / entry.blink).is_file()))
+                                     bool(entry.blink and _file(entry.blink).is_file()))
     return _COUNT_CACHE[entry.state]
 
 
@@ -219,7 +246,7 @@ def has_own_art(state):
     """The pose has its own picture (not a fallback): it draws its own symbols."""
     entry = entry_for(state)
     if entry.state not in _OWN_CACHE:
-        _OWN_CACHE[entry.state] = ((ASSETS_DIR.parent / entry.path).is_file() or frame_count(state) > 0)
+        _OWN_CACHE[entry.state] = (_file(entry.path).is_file() or frame_count(state) > 0)
     return _OWN_CACHE[entry.state]
 
 
@@ -234,8 +261,7 @@ def blink_for(state):
 
 def existing_frames(entry):
     """Return the entry's frame paths that actually exist on disk, in order."""
-    return [path for path in entry.frames
-            if (ASSETS_DIR.parent / path).is_file()]
+    return [path for path in entry.frames if _file(path).is_file()]
 
 
 def frame_for(state_or_entry, phase):
@@ -273,7 +299,7 @@ def load_sprites():
         # Companion poses share the V1.1 pixmap they fall back to, so they
         # cost no extra memory until their own art exists.
         paths = {resolve_path(entry): table[entry.state] for entry in REGISTRY}
-        for entry in COMPANION_REGISTRY:
+        for entry in COMPANION_REGISTRY + GAME_REGISTRY:
             path = resolve_path(entry)
             table[entry.state] = paths.get(path) or (pose_source(path) if path else None)
         table['working'] = table['codex_working']
