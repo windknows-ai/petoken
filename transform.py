@@ -533,10 +533,10 @@ class TransformStage(QWidget):
         p.setOpacity(1)
 
     def _paint_spotlight(self, p, target, name, f):
-        """A showcase spotlight: it comes on from the top down onto her, leaves a
-        pool of light at her feet, and dims as the moment ends."""
+        """A showcase spotlight: soft-edged, brighter in the middle, coming on from
+        the top down onto her; a soft pool at her feet; it dims as the moment ends."""
         if name == 'mvp':
-            reach = _ease(min(1.0, f / .3))                     # The beam travels down.
+            reach = _ease(min(1.0, f / .3))                     # The light travels down.
             strength = 1.0
         else:
             reach, strength = 1.0, 1 - _ease(f)
@@ -546,33 +546,65 @@ class TransformStage(QWidget):
         floor = target.bottom() - target.height() * .02
         bottom = top_y + (floor - top_y) * reach
         cx = target.center().x()
-        narrow, wide = target.width() * .1, target.width() * .48
+        narrow, wide = target.width() * .14, target.width() * .6
         spread = narrow + (wide - narrow) * reach
-        beam = QLinearGradient(QPointF(cx, top_y), QPointF(cx, floor))
-        beam.setColorAt(0, QColor(235, 244, 255, 0))                  # No hard edge at the window top.
-        beam.setColorAt(.18, QColor(235, 244, 255, int(150 * strength)))
-        beam.setColorAt(.6, QColor(200, 222, 255, int(70 * strength)))
-        beam.setColorAt(1, QColor(180, 205, 255, int(30 * strength)))
-        p.setPen(Qt.NoPen)
-        p.setBrush(beam)
-        p.drawPolygon([QPointF(cx - narrow, top_y), QPointF(cx + narrow, top_y),
-                       QPointF(cx + spread, bottom), QPointF(cx - spread, bottom)])
+        # Drawn small, then scaled up smoothly: the edges come out soft.
+        k = 6
+        area = QRectF(cx - wide * 1.4, top_y, wide * 2.8, floor - top_y + target.height() * .1)
+        small = QImage(max(1, int(area.width() / k)), max(1, int(area.height() / k)),
+                       QImage.Format_ARGB32_Premultiplied)
+        small.fill(Qt.transparent)
+        q = QPainter(small)
+        q.setRenderHint(QPainter.Antialiasing)
+        q.scale(1 / k, 1 / k)
+        q.translate(-area.x(), -area.y())
+        q.setPen(Qt.NoPen)
+        # Layers from the wide, faint outside to the bright core.
+        for share, alpha in ((1.0, 30), (.75, 32), (.5, 38), (.28, 44)):
+            beam = QLinearGradient(QPointF(cx, top_y), QPointF(cx, floor))
+            beam.setColorAt(0, QColor(235, 244, 255, 0))
+            beam.setColorAt(.2, QColor(236, 244, 255, int(alpha * strength)))
+            beam.setColorAt(.75, QColor(214, 230, 255, int(alpha * .85 * strength)))
+            beam.setColorAt(1, QColor(200, 220, 255, int(alpha * .7 * strength)))
+            q.setBrush(beam)
+            half_top, half_bottom = narrow * share, spread * share
+            q.drawPolygon([QPointF(cx - half_top, top_y), QPointF(cx + half_top, top_y),
+                           QPointF(cx + half_bottom, bottom), QPointF(cx - half_bottom, bottom)])
+        # Faint streaks inside the beam, drifting slowly.
+        for n in range(5):
+            drift = math.sin(self.t * .7 + n * 1.9) * .25
+            offset = (n - 2) / 2.5 + drift * .3
+            streak = QLinearGradient(QPointF(cx, top_y), QPointF(cx, bottom))
+            streak.setColorAt(0, QColor(255, 255, 255, 0))
+            streak.setColorAt(.3, QColor(255, 255, 255, int(22 * strength)))
+            streak.setColorAt(1, QColor(255, 255, 255, 0))
+            q.setBrush(streak)
+            x0, x1 = cx + narrow * offset * .6, cx + spread * offset * .8
+            w0, w1 = narrow * .08, spread * .07
+            q.drawPolygon([QPointF(x0 - w0, top_y), QPointF(x0 + w0, top_y),
+                           QPointF(x1 + w1, bottom), QPointF(x1 - w1, bottom)])
         if reach >= .99:
             pool = QRadialGradient(QPointF(cx, floor), wide)
-            pool.setColorAt(0, QColor(225, 238, 255, int(120 * strength)))
+            pool.setColorAt(0, QColor(228, 240, 255, int(95 * strength)))
+            pool.setColorAt(.5, QColor(210, 228, 255, int(40 * strength)))
             pool.setColorAt(1, QColor(0, 0, 0, 0))
-            p.setBrush(pool)
-            p.save()
-            p.translate(cx, floor)
-            p.scale(1, .22)
-            p.drawEllipse(QPointF(0, 0), wide, wide)
-            p.restore()
+            q.setBrush(pool)
+            q.save()
+            q.translate(cx, floor)
+            q.scale(1, .22)
+            q.drawEllipse(QPointF(0, 0), wide * 1.1, wide * 1.1)
+            q.restore()
+        q.end()
+        p.save()
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        p.drawImage(area, small)
+        p.restore()
         # Dust drifting in the beam.
-        if name == 'mvp' and self.frames % 4 == 0:
-            x = cx + self.rng.uniform(-.8, .8) * spread * .7
-            y = top_y + self.rng.uniform(.15, .9) * (bottom - top_y)
-            self.particles.append(Particle(x, y, self.rng.uniform(-6, 6), self.rng.uniform(4, 14),
-                                           self.rng.uniform(.8, 1.6), self.rng.uniform(1.2, 2.6), None))
+        if name == 'mvp' and self.frames % 5 == 0:
+            x = cx + self.rng.uniform(-.7, .7) * spread * .7
+            y = top_y + self.rng.uniform(.2, .9) * (bottom - top_y)
+            self.particles.append(Particle(x, y, self.rng.uniform(-5, 5), self.rng.uniform(3, 10),
+                                           self.rng.uniform(.9, 1.7), self.rng.uniform(1.0, 2.0), None))
 
     def _paint_particles(self, p):
         for particle in self.particles:

@@ -202,6 +202,7 @@ class GameHalo(QWidget):
         self.stars = []             # Provider ids, one per running task.
         self.space = True
         self.intro = 1.0            # 0 → 1 while the ring flies in behind her (transform.py).
+        self.hide_stars = False     # While they are flying in or out (StarFlight).
         self.flare = 0.0            # Extra brightness for the MVP moment.
         self.angle = 0.0
         self.t = 0.0
@@ -253,14 +254,52 @@ class GameHalo(QWidget):
         self.angle = (self.angle + dt * 18) % 360       # Even rotation: 20 s a turn.
         self.follow()
         self.update()
-        if self.pet.isVisible() and not getattr(self.pet, 'veiled', False):
-            self.pet.raise_()                           # She stays in front of the ring.
+        # She stays in front of the ring, but never over an open menu.
+        if (self.pet.isVisible() and not getattr(self.pet, 'veiled', False)
+                and QApplication.activePopupWidget() is None and self.frames_since_raise() >= 30):
+            self.pet.raise_()
+
+    def frames_since_raise(self):
+        self._raise_count = getattr(self, '_raise_count', 0) + 1
+        if self._raise_count >= 30:                     # About twice a second is plenty.
+            self._raise_count = 0
+            return 30
+        return self._raise_count
 
     def _ellipse(self):
         """The ring, as a circle standing behind her upper body."""
         w, h = self.width(), self.height()
         r = min(w, h) * .42 / self.ROOM          # The ring is sized by her, not by the window.
         return QRectF(w / 2 - r, h / 2 - r * .3 - r, 2 * r, 2 * r)
+
+    def _transform(self):
+        """Tilt (a halo seen a little from the side) and, while flying in, wider and turning."""
+        from PySide6.QtGui import QTransform
+        intro = max(0.0, min(1.0, self.intro))
+        centre = self._ellipse().center()
+        t = QTransform()
+        t.translate(centre.x(), centre.y())
+        t.rotate(-14 - (1 - intro) * 200)
+        grow = 1 + (1 - intro) * .6
+        t.scale(grow, grow * .9)
+        t.translate(-centre.x(), -centre.y())
+        return t
+
+    def _star_angle(self, index, count):
+        return math.radians(self.angle * 1.4 + index * 360 / max(1, count) - 90)
+
+    def star_points(self):
+        """(provider, global point) of each task star, as drawn right now."""
+        ring = self._ellipse()
+        centre = ring.center()
+        transform = self._transform()
+        out = []
+        count = len(self.stars)
+        for index, provider in enumerate(self.stars):
+            a = self._star_angle(index, count)
+            local = QPointF(centre.x() + ring.width() / 2 * math.cos(a), centre.y() + ring.height() / 2 * math.sin(a))
+            out.append((provider, QPointF(self.mapToGlobal(transform.map(local).toPoint()))))
+        return out
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -269,21 +308,14 @@ class GameHalo(QWidget):
         centre = ring.center()
         breath = .5 + .5 * math.sin(self.t * 2 * math.pi / 4.0)     # 4 s breathing.
         intro = max(0.0, min(1.0, self.intro))
-        if intro <= 0:
-            return
         breath = min(1.0, breath + self.flare)
-        p.setOpacity(intro)
-        # A slight tilt, like a halo seen a little from the side; while flying in
-        # it closes from wide and fast-turning to its place behind her.
-        p.translate(centre)
-        p.rotate(-14 - (1 - intro) * 200)
-        p.scale(1 + (1 - intro) * .6, (1 + (1 - intro) * .6) * .9)
-        p.translate(-centre)
-        if self.space:
-            self._paint_space(p, ring, centre, breath)
-        else:
-            self._paint_plain(p, ring, centre, breath)
-        self._paint_stars(p, ring, centre, breath)
+        p.setTransform(self._transform())
+        if intro > 0:
+            p.setOpacity(intro)
+            self._paint_space(p, ring, centre, breath)       # The same deep-space ring with or without tasks.
+        if not self.hide_stars:
+            p.setOpacity(1)                                  # Stars ride the ring even as it flies in.
+            self._paint_stars(p, ring, centre, breath)
 
     @staticmethod
     def _mix(position):
@@ -343,46 +375,127 @@ class GameHalo(QWidget):
             size = .7 + 1.5 * twinkle
             p.drawEllipse(QPointF(centre.x() + r * k * math.cos(a), centre.y() + r * k * math.sin(a)), size, size)
 
-    def _paint_plain(self, p, ring, centre, breath):
-        """With tasks: a calm violet band, so the coloured stars stand out."""
-        r = ring.width() / 2
-        haze = QRadialGradient(centre, r * 1.15)
-        for stop, alpha in ((.75, 0), (.87, 45 + 25 * breath), (1, 0)):
-            c = QColor(theme.VIOLET)
-            c.setAlpha(int(alpha))
-            haze.setColorAt(stop, c)
-        p.setPen(Qt.NoPen)
-        p.setBrush(haze)
-        p.drawEllipse(centre, r * 1.15, r * 1.15)
-        c = QColor('#B8A8FF')
-        c.setAlpha(170)
-        p.setBrush(Qt.NoBrush)
-        p.setPen(QPen(c, 1.6))
-        p.drawEllipse(ring)
-
     def _paint_stars(self, p, ring, centre, breath):
         count = len(self.stars)
         for index, provider in enumerate(self.stars):
-            a = math.radians(self.angle * 1.4 + index * 360 / max(1, count) - 90)
-            pos = QPointF(centre.x() + ring.width() / 2 * math.cos(a), centre.y() + ring.height() / 2 * math.sin(a))
-            color = QColor(STAR.get(provider, theme.ICE))
-            halo = QRadialGradient(pos, 14)
-            soft = QColor(color)
-            soft.setAlpha(int(120 + 60 * breath))
-            halo.setColorAt(0, soft)
-            halo.setColorAt(1, QColor(0, 0, 0, 0))
+            a = self._star_angle(index, count)
+            rx, ry = ring.width() / 2, ring.height() / 2
+            pos = QPointF(centre.x() + rx * math.cos(a), centre.y() + ry * math.sin(a))
+            paint_star(p, pos, QColor(STAR.get(provider, theme.ICE)), breath, self.t + index, 1.8)
+            # A short comet tail behind it along the ring.
             p.setPen(Qt.NoPen)
-            p.setBrush(halo)
-            p.drawEllipse(pos, 14, 14)
-            path = QPainterPath()
-            r = 7
-            path.moveTo(pos.x(), pos.y() - r)
-            for dx, dy in ((r, 0), (0, r), (-r, 0), (0, -r)):
-                path.quadTo(pos.x(), pos.y(), pos.x() + dx, pos.y() + dy)
-            p.setBrush(QColor(255, 255, 255))
-            p.drawPath(path)
-            p.setBrush(color)
-            p.drawEllipse(pos, 2.2, 2.2)
+            for k in range(1, 9):
+                back = a - math.radians(k * 2.6)
+                tail = QColor(STAR.get(provider, theme.ICE))
+                tail.setAlpha(int(200 * (1 - k / 9) * (.7 + .3 * breath)))
+                p.setBrush(tail)
+                size = 3.4 * (1 - k / 10)
+                p.drawEllipse(QPointF(centre.x() + rx * math.cos(back), centre.y() + ry * math.sin(back)), size, size)
+
+
+def paint_star(p, pos, color, breath=1.0, phase=0.0, scale=1.0):
+    """One task star: a coloured glow, a four-pointed white sparkle with a slow
+    twinkle, and a coloured heart (the game ring and the flights share it)."""
+    glow = QRadialGradient(pos, 18 * scale)
+    soft = QColor(color)
+    soft.setAlpha(int(190 + 60 * breath))
+    glow.setColorAt(0, soft)
+    soft.setAlpha(90)
+    glow.setColorAt(.45, soft)
+    glow.setColorAt(1, QColor(0, 0, 0, 0))
+    p.setPen(Qt.NoPen)
+    p.setBrush(glow)
+    p.drawEllipse(pos, 18 * scale, 18 * scale)
+    twinkle = .85 + .15 * math.sin(phase * 2.3)
+    r = 8.5 * scale * twinkle
+    path = QPainterPath()
+    path.moveTo(pos.x(), pos.y() - r)
+    for dx, dy in ((r, 0), (0, r), (-r, 0), (0, -r)):
+        path.quadTo(pos.x(), pos.y(), pos.x() + dx, pos.y() + dy)
+    p.setBrush(QColor(255, 255, 255, 240))
+    p.drawPath(path)
+    p.setBrush(color.lighter(130))
+    p.drawEllipse(pos, 2.6 * scale, 2.6 * scale)
+
+
+class StarFlight(QWidget):
+    """Task stars flying between the usual star ring and the ring behind her.
+
+    ``starts`` and ``ends`` are callables giving [(provider, global point)];
+    they are read every frame, so both rings may keep turning meanwhile.
+    """
+
+    DURATION = 1.3
+
+    def __init__(self, starts, ends, on_frame=None, on_done=None):
+        super().__init__(None)
+        _clickless(self)
+        self.starts, self.ends = starts, ends
+        self.on_frame, self.on_done = on_frame, on_done
+        self.t = 0.0
+        self._last = None
+        self._first = list(starts())
+        self.timer = QTimer(self)
+        self.timer.setTimerType(Qt.PreciseTimer)
+        self.timer.setInterval(1000 // 60)
+        self.timer.timeout.connect(self._tick)
+
+    def start(self):
+        self._place()
+        self.show()
+        self.raise_()
+        self.timer.start()
+
+    def _place(self):
+        points = [pt for _, pt in self._first] + [pt for _, pt in self.ends()]
+        if not points:
+            return
+        xs, ys = [pt.x() for pt in points], [pt.y() for pt in points]
+        margin = 60
+        self.setGeometry(QRect(int(min(xs)) - margin, int(min(ys)) - margin - 80,
+                               int(max(xs) - min(xs)) + 2 * margin, int(max(ys) - min(ys)) + 2 * margin + 80))
+
+    def _tick(self):
+        now = time.monotonic()
+        dt = 0.0 if self._last is None else min(.05, now - self._last)
+        self._last = now
+        self.t += dt
+        f = min(1.0, self.t / self.DURATION)
+        if self.on_frame is not None:
+            self.on_frame(f)
+        self.update()
+        if f >= 1.0:
+            self.timer.stop()
+            self.hide()
+            if self.on_done is not None:
+                self.on_done()
+            self.deleteLater()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        f = min(1.0, self.t / self.DURATION)
+        e = f * f * (3 - 2 * f)
+        ends = list(self.ends())
+        origin = QPointF(self.pos())
+        for index, (provider, start) in enumerate(self._first):
+            end = ends[index][1] if index < len(ends) else start
+            # A gentle arc, so they swoop rather than slide.
+            lift = 70 * math.sin(math.pi * e) * (1 if index % 2 else .7)
+            color = QColor(STAR.get(provider, theme.ICE))
+            for k in range(6, -1, -1):                       # The trail first, then the star.
+                g = max(0.0, e - k * .035)
+                x = start.x() + (end.x() - start.x()) * g
+                y = start.y() + (end.y() - start.y()) * g - 70 * math.sin(math.pi * g) * (1 if index % 2 else .7)
+                point = QPointF(x, y) - origin
+                if k:
+                    c = QColor(color)
+                    c.setAlpha(int(140 * (1 - k / 7)))
+                    p.setPen(Qt.NoPen)
+                    p.setBrush(c)
+                    p.drawEllipse(point, 3.2 * (1 - k / 8), 3.2 * (1 - k / 8))
+                else:
+                    paint_star(p, point, color, 1.0, self.t * 3 + index)
 
 
 class GameUsage(QWidget):
@@ -669,9 +782,28 @@ class LongPressDrag(QObject):
         elif not down and self._right_at is not None:
             start, self._right_at = self._right_at, None
             if start is not False and (point - start).manhattanLength() <= HOLD_SLOP:
+                old = self.menu
+                self.menu = None
+                if old is not None:
+                    try:
+                        was_open = old.isVisible()
+                        old.close()
+                        old.deleteLater()
+                    except RuntimeError:
+                        was_open = False
+                    if was_open:
+                        return              # A second right click closes the menu.
                 menu = self.pet.context_menu()
+                menu.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+                menu.aboutToHide.connect(lambda m=menu: self._menu_closed(m))
                 menu.popup(point)
+                menu.raise_()
                 self.menu = menu
+
+    def _menu_closed(self, menu):
+        if self.menu is menu:
+            self.menu = None
+        menu.deleteLater()
 
     def _release(self):
         name, widget = self.dragging, self.press[1] if self.press else None

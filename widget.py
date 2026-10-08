@@ -4982,7 +4982,7 @@ class Panel(QWidget):
         self.continuation = ContinuationWatcher(self)
         self._continuation_card = None
         # 2.1 game mode: quiet, out of the way, the ring behind her.
-        from game_mode import GameMode
+        from game_mode import GameMode, StarFlight
         self.stats_sampler = None
         self.game_mode = GameMode(self)
         self.game_mode.changed.connect(self._game_changed)
@@ -6030,30 +6030,107 @@ class Panel(QWidget):
         self._focus_phase = phase
 
     def _game_changed(self, active):
-        """Game mode starts or ends: her place, the ring, the cards, the switch."""
+        """Game mode starts or ends: her place, the rings, the cards, the switch.
+
+        The usual star ring doesn't just vanish: its stars fly to the ring
+        behind her while it fades, and back again when the game ends.
+        """
+        from game_mode import StarFlight
         self.tray_actions['game_mode_menu'].setChecked(active)
         pet = getattr(self, 'pet', None)
         manager = getattr(self, 'task_manager', None)
         if active:
             if self._continuation_card is not None:
                 self._continuation_card.close()
-            if manager is not None:
-                self._ring_before_game = bool(self.prefs.get('star_ring_enabled', True))
-                manager.suspended = True        # New tasks must not bring it back.
-                manager.set_visible(False)
-                self.prefs['star_ring_enabled'] = self._ring_before_game   # Not a setting change.
+            ring_on = bool(self.prefs.get('star_ring_enabled', True))
+            self._ring_before_game = ring_on
+            orbs = self._orb_points() if manager is not None and ring_on else []
+            layers = self._ring_layers() if manager is not None and ring_on else []
             if pet is not None and pet.isVisible():
                 pet.enter_game()
+            halo = getattr(pet, 'game_halo', None)
+
+            def hide_ring():
+                for window in layers:
+                    window.setWindowOpacity(1.0)
+                if manager is not None:
+                    manager.suspended = True        # New tasks must not bring it back.
+                    manager.set_visible(False)
+                    self.prefs['star_ring_enabled'] = self._ring_before_game   # Not a setting change.
+                if halo is not None:
+                    halo.hide_stars = False
+            if halo is not None and halo.isVisible() and (orbs or layers):
+                halo.hide_stars = True
+                matched = self._match_stars(orbs, halo)
+                self._flight = StarFlight(lambda: matched, halo.star_points,
+                                          on_frame=lambda f: [w.setWindowOpacity(1 - f) for w in layers],
+                                          on_done=hide_ring)
+                self._flight.start()
+            else:
+                hide_ring()
             self.approvals.tick()   # Hand any open request back to Claude Code.
         else:
-            if pet is not None:
-                pet.leave_game()
-            if manager is not None:
+            def ring_back(points):
+                if manager is None:
+                    return
                 manager.suspended = False
                 manager.set_visible(getattr(self, '_ring_before_game', True))
+                layers = self._ring_layers()
+                for window in layers:
+                    window.setWindowOpacity(0.0)
+
+                def ends():
+                    return self._match_stars(self._orb_points(), None, [provider for provider, _ in points])
+
+                def restore():
+                    for window in self._ring_layers():
+                        window.setWindowOpacity(1.0)
+                self._flight = StarFlight(lambda: points, ends,
+                                          on_frame=lambda f: [w.setWindowOpacity(f) for w in layers],
+                                          on_done=restore)
+                self._flight.start()
+            if pet is not None:
+                pet.leave_game(on_left=ring_back)
+            else:
+                ring_back([])
             if self.stats_sampler is not None:
                 self.stats_sampler.stop()
                 self.stats_sampler = None
+
+    def _orb_points(self):
+        """(provider, global centre) of every visible star of the usual ring."""
+        manager = getattr(self, 'task_manager', None)
+        out = []
+        for key, orb in list(getattr(manager, '_windows', {}).items()):
+            try:
+                if orb.isVisible():
+                    out.append((key[0], QPointF(orb.frameGeometry().center())))
+            except RuntimeError:
+                continue
+        return out
+
+    def _ring_layers(self):
+        """The usual ring's windows (stars, orbit layers), not her."""
+        manager = getattr(self, 'task_manager', None)
+        pet = getattr(self, 'pet', None)
+        try:
+            return [w for w in manager.capture_windows() if w is not pet]
+        except Exception:
+            return []
+
+    @staticmethod
+    def _match_stars(points, halo=None, providers=None):
+        """``points`` reordered to pair with the other ring's stars, same app first."""
+        wanted = providers if providers is not None else list(getattr(halo, 'stars', []))
+        left = list(points)
+        out = []
+        for provider in wanted:
+            pick = next((item for item in left if item[0] == provider), left[0] if left else None)
+            if pick is None:
+                break
+            left.remove(pick)
+            out.append(pick)
+        return out
 
     def check_goals(self):
         """Compare this week's project usage with the goals (cached report data)."""

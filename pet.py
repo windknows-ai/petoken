@@ -328,7 +328,10 @@ class DesktopPet(QWidget):
         stage.start()
         return True
 
-    def leave_game(self):
+    def leave_game(self,on_left=None):
+        """Game mode ends: the armour comes off, then ``on_left(star points)``
+        with where the ring's stars were, so they can fly back to their ring."""
+        self._on_left=on_left
         if self.game_drag is not None:
             self.game_drag.stop()
         if self.isVisible() and self._play_transform(leaving=True):
@@ -336,12 +339,17 @@ class DesktopPet(QWidget):
         self._finish_leave()
 
     def _finish_leave(self):
+        halo=self.game_halo
+        points=halo.star_points() if halo is not None and halo.isVisible() and not halo.hide_stars else []
         for widget in (self.game_halo,self.game_usage):
             if widget is not None:
                 widget.hide()
         if self.game_place is not None:
             self.game_place.leave()
         self.update_activity()
+        on_left,self._on_left=getattr(self,'_on_left',None),None
+        if on_left is not None:
+            on_left(points)
 
     def sync_game(self):
         """Once a second in game mode: the ring's stars and the compact display."""
@@ -355,7 +363,8 @@ class DesktopPet(QWidget):
         stars=[(task or {}).get('provider_id') for task in universe.values()]
         halo=self.game_halo
         if halo is not None:
-            halo.set_stars(stars,space=mode.ring_style=='space' or not stars)
+            # "Always deep space": the ring without task stars.
+            halo.set_stars(stars if mode.ring_style=='tasks' else [],space=True)
             halo.follow()
             if not halo.isVisible():
                 halo.show()

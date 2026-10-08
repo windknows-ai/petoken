@@ -209,6 +209,46 @@ class PanelGameModeTests(unittest.TestCase):
         self.assertIsNone(drag.menu)
         pet.hide()
 
+    def test_right_clicks_never_stack_menus(self):
+        from PySide6.QtCore import QPoint
+        pet = self.panel.pet
+        pet.show()
+        state = dict(right=False)
+        box = pet.frameGeometry()
+        on_her = QPoint(box.center().x(), box.bottom() - 20)
+        drag = game_mode.LongPressDrag(pet, button=lambda: False, cursor=lambda: on_her,
+                                       right=lambda: state['right'])
+
+        def right_click():
+            for down in (True, False):
+                state['right'] = down
+                drag.tick()
+        right_click()
+        first = drag.menu
+        self.assertTrue(first.isVisible())
+        self.assertTrue(first.windowFlags() & __import__('PySide6.QtCore', fromlist=['Qt']).Qt.WindowStaysOnTopHint)
+        right_click()                              # Again: closes it, opens nothing new.
+        self.assertIsNone(drag.menu)
+        right_click()                              # And again: one fresh menu.
+        self.assertIsNotNone(drag.menu)
+        drag.menu.close()
+        pet.hide()
+
+    def test_stars_fly_between_the_rings(self):
+        from PySide6.QtCore import QPointF
+        done, frames = [], []
+        flight = game_mode.StarFlight(lambda: [('claude', QPointF(100, 100)), ('codex', QPointF(200, 120))],
+                                      lambda: [('claude', QPointF(300, 300)), ('codex', QPointF(320, 340))],
+                                      on_frame=frames.append, on_done=lambda: done.append(1))
+        flight.start()
+        flight._tick()
+        flight.t = flight.DURATION
+        flight._tick()
+        self.assertEqual(done, [1])
+        self.assertEqual(frames[-1], 1.0)
+        matched = type(self.panel)._match_stars([('codex', 1), ('claude', 2)], providers=['claude', 'codex'])
+        self.assertEqual(matched, [('claude', 2), ('codex', 1)])
+
     def test_rings_go_left_or_right(self):
         pet = self.panel.pet
         usage = game_mode.GameUsage(pet)
