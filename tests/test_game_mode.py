@@ -114,6 +114,13 @@ class PanelGameModeTests(unittest.TestCase):
             self.assertTrue(pet.game_usage.isVisible())
             panel.announce(dict(kind='finished', provider='claude'))
             self.assertEqual(reactions, [])                          # Quiet while gaming.
+            # A task starting during the game must not bring the usual ring back.
+            from tests import test_ui as ui
+            panel.task_manager.apply_snapshot([ui._codex_entry('new-in-game')], preference='auto',
+                                              language='en', pet_rect=ui._CENTER_PET_RECT,
+                                              screen_rect=ui._SCREEN_RECT)
+            self.assertFalse(panel.task_manager._visible)
+            self.assertFalse(any(orb.isVisible() for orb in panel.task_manager._windows.values()))
             panel.prefs['game_display'] = 'hidden'
             pet.sync_game()
             self.assertFalse(pet.game_usage.isVisible())
@@ -178,6 +185,28 @@ class PanelGameModeTests(unittest.TestCase):
         self.panel.prefs['game_bar_pos'] = None
         drag.pet.game_usage = None
         usage.deleteLater()
+        pet.hide()
+
+    def test_a_right_click_on_her_opens_her_menu_in_game_mode(self):
+        from PySide6.QtCore import QPoint
+        pet = self.panel.pet
+        pet.show()
+        state = dict(right=False, at=QPoint(0, 0))
+        drag = game_mode.LongPressDrag(pet, button=lambda: False, cursor=lambda: state['at'],
+                                       right=lambda: state['right'])
+        box = pet.frameGeometry()
+        on_her = QPoint(box.center().x(), box.bottom() - 20)
+        for right in (True, False):
+            state.update(right=right, at=on_her)
+            drag.tick()
+        self.assertTrue(drag.menu.isVisible())
+        drag.menu.close()
+        drag.menu = None
+        away = QPoint(box.left() - 200, box.top())       # Elsewhere: the game's own right click.
+        for right in (True, False):
+            state.update(right=right, at=away)
+            drag.tick()
+        self.assertIsNone(drag.menu)
         pet.hide()
 
     def test_rings_go_left_or_right(self):

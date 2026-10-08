@@ -4,7 +4,7 @@ import time
 from collections import OrderedDict
 from datetime import datetime
 from PySide6.QtCore import Qt,QTimer,QPoint,QPointF,QRectF,QSize
-from PySide6.QtGui import (QColor,QPainter,QPainterPath,QPixmap,QFont,QFontMetrics,QPen,
+from PySide6.QtGui import (QColor,QImage,QPainter,QPainterPath,QPixmap,QFont,QFontMetrics,QPen,
                            QKeySequence,QShortcut)
 from PySide6.QtWidgets import QWidget,QApplication,QMenu
 from localization import text
@@ -117,6 +117,8 @@ class DesktopPet(QWidget):
         self.game_usage=None
         self.game_place=None
         self.game_drag=None
+        self.veiled=False           # True while the transformation draws her instead.
+        self.transform_stage=None
         self.apply_language()
 
     def tr_text(self,key,**values):
@@ -198,6 +200,9 @@ class DesktopPet(QWidget):
         self.update()
 
     def showEvent(self,event):
+        import transform
+        if transform.available():
+            transform.CACHE.get(self._transform_side())   # Ready before the first game.
         if self.motion:
             self._last_tick=None
             self.timer.start()
@@ -237,12 +242,75 @@ class DesktopPet(QWidget):
             self.game_halo=GameHalo(self)
         if self.game_usage is None:
             self.game_usage=GameUsage(self)
+        self._load_form2()
+        played=self._play_transform(leaving=False)
         self.sync_game()
+        if played and self.game_halo is not None:
+            self.game_halo.intro=0.0
         self.update_activity()
+
+    def _transform_side(self):
+        sx,sy,sw,sh=geometry.scaled_sprite_rect(self.pet_scale)
+        dpr=self.devicePixelRatioF() or 1.0
+        return min(768,max(128,round(sw*dpr)))
+
+    def _load_form2(self):
+        """Her second form's pose: form2_idle once it exists, else the finished armour."""
+        import transform
+        if 'form2_idle' in self.sprites or not transform.available():
+            return
+        path=transform.art_dir()/f'{transform.FORM2}.png'
+        pixmap=QPixmap(str(path))
+        if not pixmap.isNull():
+            self.sprites['form2_idle']=pixmap
+
+    def _play_transform(self,leaving):
+        """Start the transformation (or its reverse); False when it can't play now."""
+        import transform
+        if not transform.available() or not self.isVisible():
+            return False
+        pieces=transform.CACHE.get(self._transform_side())
+        if pieces is None:
+            return False        # Being prepared (first time): this switch is immediate.
+        if self.transform_stage is not None:
+            self.transform_stage.timer.stop()
+            self.transform_stage.close()
+            self.transform_stage.deleteLater()
+        idle=None
+        source=self.sprites.get('idle') if not leaving else None
+        if source is not None and not source.isNull():
+            idle=source.toImage().scaled(pieces.side,pieces.side,Qt.IgnoreAspectRatio,
+                                         Qt.SmoothTransformation).convertToFormat(QImage.Format_ARGB32_Premultiplied)
+        speed=2.0 if self.panel.prefs.get('game_fast') else 1.0
+        stage=transform.TransformStage(self,pieces,leaving=leaving,speed=speed,idle=idle)
+        self.transform_stage=stage
+        self.veiled=True
+        self.update()
+
+        def done():
+            self.veiled=False
+            self.transform_stage=None
+            stage.close()
+            stage.deleteLater()
+            if self.game_halo is not None:
+                self.game_halo.intro=1.0
+                self.game_halo.flare=0.0
+            if leaving:
+                self._finish_leave()
+            self.update()
+            self.update_activity()
+        stage.finished.connect(done)
+        stage.start()
+        return True
 
     def leave_game(self):
         if self.game_drag is not None:
             self.game_drag.stop()
+        if self.isVisible() and self._play_transform(leaving=True):
+            return      # The rest happens when the armour has come off.
+        self._finish_leave()
+
+    def _finish_leave(self):
         for widget in (self.game_halo,self.game_usage):
             if widget is not None:
                 widget.hide()
@@ -475,6 +543,8 @@ class DesktopPet(QWidget):
         return bool(mode and mode.is_token)
 
     def paintEvent(self,event):
+        if self.veiled:
+            return      # The transformation (transform.py) draws her right now.
         p=QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         p.setRenderHint(QPainter.TextAntialiasing)

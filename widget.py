@@ -1290,7 +1290,9 @@ class TaskPanelManager(HaloScene):
         wanted = [t for t in filter_tasks_for_preference(ordered_universe, preference)]
         self._page_keys = sorted((task_identity(t) for t in wanted), key=lambda k: self._slots[k])
         if not self.legacy_exterior_motion:
-            self._visible = bool((getattr(self.panel, 'prefs', None) or {}).get('star_ring_enabled', True))
+            # Game mode suspends the ring (its own ring stands behind her instead).
+            self._visible = (bool((getattr(self.panel, 'prefs', None) or {}).get('star_ring_enabled', True))
+                             and not getattr(self, 'suspended', False))
             self.page_index = min(self.page_index, self.page_count - 1)
             if self.expanded_identity in self._page_keys:
                 self.page_index = self._page_keys.index(self.expanded_identity) // halo_geometry.MAX_SAFE_STARS
@@ -6034,6 +6036,7 @@ class Panel(QWidget):
                 self._continuation_card.close()
             if manager is not None:
                 self._ring_before_game = bool(self.prefs.get('star_ring_enabled', True))
+                manager.suspended = True        # New tasks must not bring it back.
                 manager.set_visible(False)
                 self.prefs['star_ring_enabled'] = self._ring_before_game   # Not a setting change.
             if pet is not None and pet.isVisible():
@@ -6043,6 +6046,7 @@ class Panel(QWidget):
             if pet is not None:
                 pet.leave_game()
             if manager is not None:
+                manager.suspended = False
                 manager.set_visible(getattr(self, '_ring_before_game', True))
             if self.stats_sampler is not None:
                 self.stats_sampler.stop()

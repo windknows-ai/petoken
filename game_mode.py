@@ -201,6 +201,8 @@ class GameHalo(QWidget):
         _clickless(self)
         self.stars = []             # Provider ids, one per running task.
         self.space = True
+        self.intro = 1.0            # 0 → 1 while the ring flies in behind her (transform.py).
+        self.flare = 0.0            # Extra brightness for the MVP moment.
         self.angle = 0.0
         self.t = 0.0
         self._last = None
@@ -221,14 +223,16 @@ class GameHalo(QWidget):
             self.stars, self.space = providers, space
             self.update()
 
+    ROOM = 1.75                 # Window side / her height: room for the ring flying in.
+
     def follow(self):
         pet = self.pet
-        side = round(pet.height() * 1.05)
+        side = round(pet.height() * self.ROOM)
         if self.size() != QSize(side, side):
             self.setFixedSize(side, side)
         # Centred on her upper body, so the ring frames her from behind.
         x = pet.x() + (pet.width() - side) // 2
-        y = pet.y() + round(pet.height() * .58) - side // 2
+        y = pet.y() + round(pet.height() * .58) - side // 2 + round(side * .42 / self.ROOM * .3)
         if self.pos() != QPoint(x, y):
             self.move(x, y)
 
@@ -249,14 +253,14 @@ class GameHalo(QWidget):
         self.angle = (self.angle + dt * 18) % 360       # Even rotation: 20 s a turn.
         self.follow()
         self.update()
-        if self.pet.isVisible():
+        if self.pet.isVisible() and not getattr(self.pet, 'veiled', False):
             self.pet.raise_()                           # She stays in front of the ring.
 
     def _ellipse(self):
         """The ring, as a circle standing behind her upper body."""
         w, h = self.width(), self.height()
-        r = min(w, h) * .4
-        return QRectF(w / 2 - r, h * .44 - r, 2 * r, 2 * r)
+        r = min(w, h) * .42 / self.ROOM          # The ring is sized by her, not by the window.
+        return QRectF(w / 2 - r, h / 2 - r * .3 - r, 2 * r, 2 * r)
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -264,10 +268,16 @@ class GameHalo(QWidget):
         ring = self._ellipse()
         centre = ring.center()
         breath = .5 + .5 * math.sin(self.t * 2 * math.pi / 4.0)     # 4 s breathing.
-        # A slight tilt, like a halo seen a little from the side.
+        intro = max(0.0, min(1.0, self.intro))
+        if intro <= 0:
+            return
+        breath = min(1.0, breath + self.flare)
+        p.setOpacity(intro)
+        # A slight tilt, like a halo seen a little from the side; while flying in
+        # it closes from wide and fast-turning to its place behind her.
         p.translate(centre)
-        p.rotate(-14)
-        p.scale(1, .9)
+        p.rotate(-14 - (1 - intro) * 200)
+        p.scale(1 + (1 - intro) * .6, (1 + (1 - intro) * .6) * .9)
         p.translate(-centre)
         if self.space:
             self._paint_space(p, ring, centre, breath)
@@ -462,7 +472,8 @@ class GameUsage(QWidget):
             spot = prefs.get('game_bar_pos')
             if isinstance(spot, list) and len(spot) == 2 and all(isinstance(v, int) for v in spot):
                 x, y = spot          # Dragged somewhere: it stays there.
-                screen = (QApplication.screenAt(QPoint(x, y)) or QApplication.primaryScreen()).availableGeometry()
+                screen = (QApplication.screenAt(QPoint(x, y)) or pet.screen()
+                          or QApplication.primaryScreen()).availableGeometry()
                 x = max(screen.left(), min(x, screen.right() - self.width() + 1))
                 y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))
                 if self.pos() != QPoint(x, y):
@@ -539,15 +550,24 @@ class GameUsage(QWidget):
             x += vw + 24
 
 
-def _left_button_down():
-    """The left mouse button right now, wherever the cursor is (Windows)."""
+def _button_down(right=False):
+    """A mouse button right now, wherever the cursor is (Windows)."""
     try:
         import ctypes
         user32 = ctypes.windll.user32
-        button = 0x02 if user32.GetSystemMetrics(23) else 0x01     # SM_SWAPBUTTON.
+        swapped = bool(user32.GetSystemMetrics(23))                 # SM_SWAPBUTTON.
+        button = 0x02 if swapped != right else 0x01
         return bool(user32.GetAsyncKeyState(button) & 0x8000)
     except Exception:
         return False
+
+
+def _left_button_down():
+    return _button_down(False)
+
+
+def _right_button_down():
+    return _button_down(True)
 
 
 class LongPressDrag(QObject):
@@ -558,11 +578,15 @@ class LongPressDrag(QObject):
     on the bar without moving, the window follows the cursor until release.
     """
 
-    def __init__(self, pet, button=_left_button_down, cursor=None, clock=time.monotonic):
+    def __init__(self, pet, button=_left_button_down, cursor=None, clock=time.monotonic,
+                 right=_right_button_down):
         super().__init__(pet)
         from PySide6.QtGui import QCursor
         self.pet = pet
         self.button = button
+        self.right = right
+        self._right_at = None       # Where a right press on her began.
+        self.menu = None
         self.cursor = cursor or QCursor.pos
         self.clock = clock
         self.press = None           # (target, start point, time, offset)
@@ -598,6 +622,7 @@ class LongPressDrag(QObject):
         down = self.button()
         point = self.cursor()
         now = self.clock()
+        self._right_click(point)
         if not down:
             if self.dragging is not None:
                 self._release()
@@ -631,7 +656,22 @@ class LongPressDrag(QObject):
                 if extra is not None and extra.isVisible():
                     extra.follow()
         else:
-            widget.move(target)
+            # Kept on a screen the same way it is placed later, so it never jumps.
+            self.pet.panel.prefs['game_bar_pos'] = [target.x(), target.y()]
+            widget.follow()
+
+    def _right_click(self, point):
+        """A right click on her opens her menu (Settings included), as outside games."""
+        down = self.right()
+        if down and self._right_at is None:
+            box = self._targets()[-1][2]
+            self._right_at = point if box.contains(point) else False
+        elif not down and self._right_at is not None:
+            start, self._right_at = self._right_at, None
+            if start is not False and (point - start).manhattanLength() <= HOLD_SLOP:
+                menu = self.pet.context_menu()
+                menu.popup(point)
+                self.menu = menu
 
     def _release(self):
         name, widget = self.dragging, self.press[1] if self.press else None
