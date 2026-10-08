@@ -138,6 +138,19 @@ class AssistantQuotaTests(unittest.TestCase):
 
 
 class OverlayHintTests(unittest.TestCase):
+    def test_used_up_week_says_so_in_red(self):
+        from usage_overlay import section_advice
+        assistant = Assistant()
+        quotas = {'claude': limits(33, NOW + 3 * 3600, 100, NOW + 86400)}
+        assistant.observe_quota(quotas, NOW)
+        self.assertEqual(assistant.hint('claude', None, None, quotas, NOW), ('hint_week_out', {}))
+        self.assertEqual(section_advice(assistant, 'claude', None, None, quotas, 'zh_CN', NOW),
+                         ('本周额度已用完，重置后才能继续', True))
+        quotas['codex'] = limits(10, NOW + 3 * 3600, 20, NOW + 86400)
+        assistant.observe_quota(quotas, NOW)
+        text, out = section_advice(assistant, 'claude', None, None, quotas, 'en', NOW)
+        self.assertEqual((text, out), ('Weekly limit used up · use Codex for now', True))
+
     def test_section_hint_text(self):
         from usage_overlay import section_hint
         assistant = Assistant()

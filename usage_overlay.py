@@ -160,10 +160,21 @@ def _working_task(panel, provider):
 
 def section_hint(assistant, provider, task_key, context, quotas, language, now):
     """One line of advice for a section, or None."""
+    advice = section_advice(assistant, provider, task_key, context, quotas, language, now)
+    return advice[0] if advice else None
+
+
+def section_advice(assistant, provider, task_key, context, quotas, language, now):
+    """(text, used_up) for a section, or None. ``used_up`` lines are drawn in red."""
+    from forecast import OUT_HINTS
     advice = assistant.hint(provider, task_key, context, quotas, now) if assistant else None
     if advice is None:
         return None
     key, values = advice
+    return _advice_text(key, values, language), key in OUT_HINTS
+
+
+def _advice_text(key, values, language):
     values = dict(values)
     if 'time' in values:
         values['time'] = format_duration(values['time'])
@@ -219,8 +230,9 @@ def build_sections(panel, presence, now=None, idle=False):
                  if panel.prefs.get('assistant_hints', True) else None)
     for section in sections:
         task_key, context = tasks[section['provider']]
-        section['hint'] = section_hint(assistant, section['provider'], task_key, context,
+        advice = section_advice(assistant, section['provider'], task_key, context,
                                        quotas, language, now)
+        section['hint'], section['hint_out'] = advice if advice else (None, False)
     return sections
 
 
@@ -375,7 +387,7 @@ class UsageOverlay(QWidget):
             y += u(SECTION_H)
             if section.get('hint'):
                 p.setFont(self._font('hint', bold=True))
-                p.setPen(HINT)
+                p.setPen(RING_CRITICAL if section.get('hint_out') else HINT)
                 width = self.width() - 2 * u(PAD)
                 p.drawText(QRectF(u(PAD), y, width, u(HINT_H)), Qt.AlignLeft | Qt.AlignVCenter,
                            p.fontMetrics().elidedText(section['hint'], Qt.ElideRight, int(width)))

@@ -225,6 +225,25 @@ class Preview(QWidget):
         form.addRow(row(button('立刻到时间', self.focus_now), button('提前结束', self.panel.focus_mode.stop),
                         button('跳过休息', self.panel.focus_mode.skip_break)))
 
+        # 2.1 game mode.
+        form = group('游戏模式 / Game mode')
+        why = QLabel('真实使用时，全屏游戏在前台几秒后自动进入。测试版用下面的按钮切换；'
+                     '「1.x 窗口的任务数」决定身后星环有几颗星（0 = 深空星环）。')
+        why.setWordWrap(True)
+        form.addRow(why)
+        form.addRow(row(button('进入 / 退出游戏模式', self.toggle_game),
+                        button('模拟和游戏同屏（缩到角落）', lambda: self.toggle_game(corner=True))))
+        ring = QComboBox()
+        for label, value in (('跟着任务（没任务是深空）', 'tasks'), ('始终深空', 'space')):
+            ring.addItem(label, value)
+        ring.currentIndexChanged.connect(lambda _: self.panel.prefs.update(game_ring=ring.currentData()))
+        form.addRow('身后的星环', ring)
+        display = QComboBox()
+        for label, value in (('四个小圆环', 'rings'), ('横向信息条', 'bar'), ('不显示', 'hidden')):
+            display.addItem(label, value)
+        display.currentIndexChanged.connect(lambda _: self.panel.prefs.update(game_display=display.currentData()))
+        form.addRow('用量显示', display)
+
         # Projects and notes.
         form = group('项目、开工和「上次做到哪」 / Projects')
         self.project = QComboBox()
@@ -362,6 +381,19 @@ class Preview(QWidget):
                 self.pet.preview_state = None
                 self.pet.update_activity()
         QTimer.singleShot(int(seconds * 1000), restore)
+
+    def toggle_game(self, corner=False):
+        mode = self.panel.game_mode
+        if corner and not mode.active:
+            # As if a fullscreen game ran on her screen.
+            geometry = (self.pet.screen() or QApplication.primaryScreen()).geometry()
+            mode.toggle()
+            if mode.active:
+                mode.monitor = (geometry.left(), geometry.top(), geometry.right() + 1, geometry.bottom() + 1)
+                self.pet.leave_game()
+                self.pet.enter_game()
+            return
+        mode.toggle()
 
     def focus_now(self):
         mode = self.panel.focus_mode

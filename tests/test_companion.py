@@ -181,7 +181,10 @@ class CompanionTests(unittest.TestCase):
         pet.update_activity()
         self.assertEqual(pet.current_state, 'working')
         phase = pet.phase
-        QTest.qWait(180)
+        for _ in range(20):             # Up to 2 s on a busy machine.
+            QTest.qWait(100)
+            if pet.phase > phase:
+                break
         self.assertGreater(pet.phase, phase)
         panel.app_mode.update(False, True, now=3)
         panel.app_mode.update(False, True, now=6)

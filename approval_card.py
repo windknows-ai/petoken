@@ -503,6 +503,15 @@ class ApprovalController(QObject):
         return self.panel.prefs.get('language')
 
     def _show(self, now=None):
+        game = getattr(self.panel, 'game_mode', None)
+        if game is not None and game.active and self.queue:
+            # Gaming: no card. Each request goes back to Claude Code's own prompt.
+            for request in list(self.queue):
+                try:
+                    self.broker.answer(request['id'], 'ask')
+                except Exception:
+                    pass
+            self.queue.clear()
         if not self.queue:
             self._hide()
             return

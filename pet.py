@@ -112,6 +112,10 @@ class DesktopPet(QWidget):
             self.presence.start()
         # Created on first use: most pets never enter Token Mode.
         self.usage_overlay=None
+        # 2.1 game mode: the ring behind her, the compact display, her place.
+        self.game_halo=None
+        self.game_usage=None
+        self.game_place=None
         self.apply_language()
 
     def tr_text(self,key,**values):
@@ -203,10 +207,78 @@ class DesktopPet(QWidget):
             self.focus_tag.hide()
         if self.usage_overlay is not None:
             self.usage_overlay.hide()
+        for widget in (self.game_halo,self.game_usage):
+            if widget is not None:
+                widget.hide()
 
     def usage_overlay_wanted(self):
-        """Always while an AI works; when idle too if the user keeps it on (the default)."""
-        return self.isVisible() and (self.token_bubble_visible() or self.usage_card_idle())
+        """Always while an AI works; when idle too if the user keeps it on (the default).
+        Never in game mode: the compact display replaces it."""
+        return (self.isVisible() and not self.game_active()
+                and (self.token_bubble_visible() or self.usage_card_idle()))
+
+    def game_active(self):
+        mode=getattr(self.panel,'game_mode',None)
+        return bool(mode and mode.active)
+
+    def enter_game(self):
+        """Game mode starts: corner and click-through if needed, the ring behind
+        her, the compact display."""
+        from game_mode import GameHalo, GameUsage, Placement
+        if self.game_place is None:
+            self.game_place=Placement(self)
+        self.game_place.enter(getattr(self.panel.game_mode,'monitor',None))
+        if self.game_halo is None:
+            self.game_halo=GameHalo(self)
+        if self.game_usage is None:
+            self.game_usage=GameUsage(self)
+        self.sync_game()
+        self.update_activity()
+
+    def leave_game(self):
+        for widget in (self.game_halo,self.game_usage):
+            if widget is not None:
+                widget.hide()
+        if self.game_place is not None:
+            self.game_place.leave()
+        self.update_activity()
+
+    def sync_game(self):
+        """Once a second in game mode: the ring's stars and the compact display."""
+        mode=getattr(self.panel,'game_mode',None)
+        if not (mode and mode.active and self.isVisible()):
+            for widget in (self.game_halo,self.game_usage):
+                if widget is not None and widget.isVisible():
+                    widget.hide()
+            return
+        universe=getattr(getattr(self.panel,'task_manager',None),'_universe',None) or {}
+        stars=[(task or {}).get('provider_id') for task in universe.values()]
+        halo=self.game_halo
+        if halo is not None:
+            halo.set_stars(stars,space=mode.ring_style=='space' or not stars)
+            halo.follow()
+            if not halo.isVisible():
+                halo.show()
+                self.raise_()
+        usage=self.game_usage
+        if usage is None:
+            return
+        if mode.display=='hidden':
+            usage.hide()
+            return
+        sections=build_sections(self.panel,self.presence,idle=True)
+        stats=None
+        items=mode.bar_items
+        if mode.display=='bar' and any(i!='limits' for i in items):
+            if self.panel.stats_sampler is None:
+                from system_stats import StatsSampler
+                self.panel.stats_sampler=StatsSampler(
+                    lambda: bool(self.game_active() and mode.display=='bar'))
+                self.panel.stats_sampler.start()
+            stats=self.panel.stats_sampler.latest
+        usage.set_content(mode.display,sections,stats,items,self.panel.prefs.get('language'))
+        if not usage.isVisible():
+            usage.show()
 
     def usage_card_idle(self):
         return bool(self.panel.prefs.get('usage_card_idle',True))
@@ -250,6 +322,12 @@ class DesktopPet(QWidget):
             self.focus_tag.close()
             self.focus_tag.deleteLater()
             self.focus_tag=None
+        for name in ('game_halo','game_usage'):
+            widget=getattr(self,name)
+            if widget is not None:
+                widget.close()
+                widget.deleteLater()
+                setattr(self,name,None)
         screen = getattr(self, '_halo_screen', None)
         if screen is not None:
             try:
@@ -270,16 +348,20 @@ class DesktopPet(QWidget):
             self.interaction_state=None
         task=(monitor.state.state(codex_working=bool(codex_working and codex_working.is_token))
               if monitor else 'idle')
-        if self.mood_enabled and now>=self._mood_next:
+        gaming=self.game_active()
+        if self.mood_enabled and not gaming and now>=self._mood_next:
             self._mood_next=now+1
             self.update_mood(now,task)
         focus=getattr(getattr(self.panel,'focus_mode',None),'phase','idle')
         focus_pose={'focus':'focus_read','break':'focus_tea','focus_over':'focus_done','break_over':'stretch_break'}.get(focus)
         if task=='music' and int(time.time()//120)%2:
             task='guitar'   # Every other two minutes of music she plays along.
-        # Being dragged > notification > preview > interaction > focus > task > mood.
+        # Game mode: her game pose (form 2 once its art exists); tasks and moods wait.
+        game_pose=('form2_idle' if 'form2_idle' in self.sprites else 'idle') if gaming else None
+        # Being dragged > notification > preview > interaction > game > focus > task > mood.
         state=(('dragged' if self.dragging and 'dragged' in self.sprites else None)
                or self.reaction_state or self.preview_state or self.interaction_state
+               or game_pose
                or (focus_pose if focus_pose in self.sprites else None)
                or (task if task!='idle' else None)
                or (self.mood.pose if self.mood_enabled and self.mood.pose in self.sprites else None)
@@ -728,6 +810,13 @@ class DesktopPet(QWidget):
         card.setChecked(self.usage_card_idle())
         card.setToolTip(self.tr_text('usage_card_help'))
         card.toggled.connect(self.toggle_usage_card_idle)
+        mode=getattr(self.panel,'game_mode',None)
+        if mode is not None:
+            game=menu.addAction(self.tr_text('game_mode_menu'))
+            game.setCheckable(True)
+            game.setChecked(mode.active)
+            game.setToolTip(self.tr_text('game_mode_menu_tip'))
+            game.triggered.connect(lambda _=False: mode.toggle())
         # Everyday actions on top; occasional ones and toggles under More.
         menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch).setToolTip(self.tr_text('menu_tip_launch'))
         mode=getattr(self.panel,'focus_mode',None)

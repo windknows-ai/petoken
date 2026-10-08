@@ -30,6 +30,14 @@ DEFAULT_PREFERENCES = {
     "clinginess": "moderate",
     "continuation_card": True,
     "usage_card_idle": True,
+    "game_auto": True,
+    "game_extra": "",
+    "game_excluded": "",
+    "game_ring": "tasks",
+    "game_display": "rings",
+    "game_bar_items": ["limits", "cpu", "gpu", "gpu_temp"],
+    "game_corner": True,
+    "game_fast": False,
     "claude_probe_minutes": 0,
     "star_ring_enabled": True,
     "workbench_tutorial_seen": False,
@@ -92,6 +100,22 @@ def normalize_preferences(data):
         preferences["continuation_card"] = True
     if not isinstance(preferences.get("usage_card_idle"), bool):
         preferences["usage_card_idle"] = True
+    for key in ("game_auto", "game_corner", "game_fast"):
+        if not isinstance(preferences.get(key), bool):
+            preferences[key] = DEFAULT_PREFERENCES[key]
+    for key in ("game_extra", "game_excluded"):
+        if not isinstance(preferences.get(key), str):
+            preferences[key] = ""
+    if preferences.get("game_ring") not in ("tasks", "space"):
+        preferences["game_ring"] = "tasks"
+    if preferences.get("game_display") not in ("rings", "bar", "hidden"):
+        preferences["game_display"] = "rings"
+    items = preferences.get("game_bar_items")
+    preferences["game_bar_items"] = list(items) if isinstance(items, list) else items    # Never the shared default.
+    items = preferences.get("game_bar_items")
+    if not isinstance(items, list) or not all(
+            item in ("limits", "cpu", "gpu", "gpu_temp", "vram", "ram") for item in items):
+        preferences["game_bar_items"] = list(DEFAULT_PREFERENCES["game_bar_items"])
     if preferences.get("clinginess") not in ("quiet", "moderate", "clingy"):
         preferences["clinginess"] = "moderate"
     if not isinstance(preferences.get("star_ring_enabled"), bool):

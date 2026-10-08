@@ -17,7 +17,8 @@ from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QPointF, QRect, 
 from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QLinearGradient, QRadialGradient, QPixmap, QPolygonF, QKeySequence, QRegion, QShortcut
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QTabWidget,
     QHBoxLayout, QFrame, QProgressBar, QMenu, QSystemTrayIcon, QDialog,
-    QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy, QTimeEdit)
+    QFormLayout, QComboBox, QCheckBox, QSlider, QDialogButtonBox, QScrollArea, QSizePolicy, QTimeEdit,
+    QGridLayout, QLineEdit)
 
 import claude_approval
 import claude_toasts
@@ -3716,7 +3717,7 @@ class TaskPanelManager(HaloScene):
         self.last_activated = None
 
 
-SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'about')
+SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'game', 'about')
 
 
 # Which options each page shows, in order (row label attributes).
@@ -3729,6 +3730,8 @@ SETTINGS_LAYOUT = (
                 'codex_hooks_label', 'mute_claude_toasts_label')),
     ('assistant', ('assistant_hints_label', 'continuation_card_label', 'dnd_label', 'dnd_scheduled_label',
                    'schedule_missed_label', 'quick_launch_hotkey_label')),
+    ('game', ('game_auto_label', 'game_corner_label', 'game_ring_label', 'game_display_label',
+              'game_bar_label', 'game_fast_label', 'game_extra_label', 'game_excluded_label')),
 )
 
 # (page, row label attribute, description key): the line shown under each option.
@@ -3748,6 +3751,10 @@ SETTING_DESCRIPTIONS = (
     ('assistant', 'assistant_hints_label', 'assistant_hints'),
     ('assistant', 'continuation_card_label', 'continuation'), ('assistant', 'dnd_label', 'dnd'),
     ('assistant', 'dnd_scheduled_label', 'dnd_scheduled'),
+    ('game', 'game_auto_label', 'game_auto'), ('game', 'game_corner_label', 'game_corner'),
+    ('game', 'game_ring_label', 'game_ring'), ('game', 'game_display_label', 'game_display'),
+    ('game', 'game_bar_label', 'game_bar'), ('game', 'game_fast_label', 'game_fast'),
+    ('game', 'game_extra_label', 'game_extra'), ('game', 'game_excluded_label', 'game_excluded'),
 )
 
 
@@ -3935,6 +3942,50 @@ class Settings(QDialog):
         schedule.addStretch()
         self.dnd_scheduled_label = label()
         self.forms['assistant'].addRow(self.dnd_scheduled_label, schedule)
+        # 2.1 game mode.
+        from game_mode import BAR_ITEMS, DISPLAYS, RING_STYLES
+        game = self.forms['game']
+        self.game_auto = QCheckBox()
+        self.game_auto.setChecked(bool(panel.prefs.get('game_auto', True)))
+        self.game_auto_label = label()
+        game.addRow(self.game_auto_label, self.game_auto)
+        self.game_corner = QCheckBox()
+        self.game_corner.setChecked(bool(panel.prefs.get('game_corner', True)))
+        self.game_corner_label = label()
+        game.addRow(self.game_corner_label, self.game_corner)
+        self.game_ring = QComboBox()
+        for key in RING_STYLES:
+            self.game_ring.addItem('', key)
+        self.game_ring.setCurrentIndex(max(0, self.game_ring.findData(panel.prefs.get('game_ring', 'tasks'))))
+        self.game_ring_label = label()
+        game.addRow(self.game_ring_label, self.game_ring)
+        self.game_display = QComboBox()
+        for key in DISPLAYS:
+            self.game_display.addItem('', key)
+        self.game_display.setCurrentIndex(max(0, self.game_display.findData(panel.prefs.get('game_display', 'rings'))))
+        self.game_display_label = label()
+        game.addRow(self.game_display_label, self.game_display)
+        chosen = panel.prefs.get('game_bar_items') or []
+        self.game_bar_boxes = {}
+        bar_grid = QGridLayout()
+        bar_grid.setContentsMargins(0, 0, 0, 0)
+        for index, key in enumerate(BAR_ITEMS):
+            box = QCheckBox()
+            box.setChecked(key in chosen)
+            self.game_bar_boxes[key] = box
+            bar_grid.addWidget(box, index // 3, index % 3)
+        self.game_bar_label = label()
+        game.addRow(self.game_bar_label, bar_grid)
+        self.game_fast = QCheckBox()
+        self.game_fast.setChecked(bool(panel.prefs.get('game_fast', False)))
+        self.game_fast_label = label()
+        game.addRow(self.game_fast_label, self.game_fast)
+        self.game_extra = QLineEdit(panel.prefs.get('game_extra', ''))
+        self.game_extra_label = label()
+        game.addRow(self.game_extra_label, self.game_extra)
+        self.game_excluded = QLineEdit(panel.prefs.get('game_excluded', ''))
+        self.game_excluded_label = label()
+        game.addRow(self.game_excluded_label, self.game_excluded)
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -4256,6 +4307,17 @@ class Settings(QDialog):
         self.assistant_hints.setToolTip(t('assistant_hints_tip'))
         self.assistant_hints_label.setToolTip(t('assistant_hints_tip'))
         self.dnd_label.setText(t('dnd'))
+        for attr in ('game_auto', 'game_corner', 'game_ring', 'game_display', 'game_bar', 'game_fast',
+                     'game_extra', 'game_excluded'):
+            getattr(self, attr + '_label').setText(t(attr))
+        for index in range(self.game_ring.count()):
+            self.game_ring.setItemText(index, t(f'game_ring_{self.game_ring.itemData(index)}'))
+        for index in range(self.game_display.count()):
+            self.game_display.setItemText(index, t(f'game_display_{self.game_display.itemData(index)}'))
+        for key, box in self.game_bar_boxes.items():
+            box.setText(t(f'game_item_{key}'))
+        self.game_extra.setPlaceholderText(t('game_extra_hint'))
+        self.game_excluded.setPlaceholderText(t('game_excluded_hint'))
         self.continuation_card_label.setText(t('continuation_setting'))
         self.continuation_card.setAccessibleName(t('continuation_setting'))
         self.continuation_card.setToolTip(t('continuation_setting_tip'))
@@ -4351,6 +4413,15 @@ class Settings(QDialog):
                      dnd_start=self.dnd_start.time().toString('HH:mm'),
                      dnd_end=self.dnd_end.time().toString('HH:mm'),
                      pet_scale_percent=int(self.pet_scale.value()),
+                     game_auto=self.game_auto.isChecked(),
+                     game_corner=self.game_corner.isChecked(),
+                     game_ring=self.game_ring.currentData(),
+                     game_display=self.game_display.currentData(),
+                     game_bar_items=[key for key, box in self.game_bar_boxes.items() if box.isChecked()]
+                     or ['limits'],
+                     game_fast=self.game_fast.isChecked(),
+                     game_extra=self.game_extra.text().strip(),
+                     game_excluded=self.game_excluded.text().strip(),
                      clinginess=self.clinginess.currentData())
         # Legacy `manual_fx` / `prices` keys stay untouched in the file for
         # backward-compatible loading, but no longer drive pricing or FX.
@@ -4766,6 +4837,8 @@ class Panel(QWidget):
             'show_hide': menu.addAction('', self.toggle_visible),
             'show_hide_pet': menu.addAction('', self.toggle_pet),
             'launch_menu': menu.addAction('', self.open_quick_launch),
+            # In game mode she lets the mouse through: the switch lives here too.
+            'game_mode_menu': menu.addAction('', lambda: self.game_mode.toggle()),
             'workbench_open': menu.addAction('', self.open_workbench),
             'wb_reports': menu.addAction('', self.open_reports),
             'settings_help': menu.addAction('', self.open_settings),
@@ -4781,6 +4854,7 @@ class Panel(QWidget):
         })
         menu.addSeparator()
         self.tray_actions['exit_petoken'] = menu.addAction('', self.shutdown)
+        self.tray_actions['game_mode_menu'].setCheckable(True)
         self.tray.setContextMenu(menu)
         self.tray.activated.connect(lambda reason:self.toggle_visible() if reason == QSystemTrayIcon.DoubleClick else None)
         self.tray.show()
@@ -4878,6 +4952,11 @@ class Panel(QWidget):
         from project_start import ContinuationWatcher
         self.continuation = ContinuationWatcher(self)
         self._continuation_card = None
+        # 2.1 game mode: quiet, out of the way, the ring behind her.
+        from game_mode import GameMode
+        self.stats_sampler = None
+        self.game_mode = GameMode(self)
+        self.game_mode.changed.connect(self._game_changed)
         # Reports open instantly: count once in the background after start-up.
         import reports
         self.report_cache = (reports.ReportCache(lambda: reports.load(store_path=PREF_DIR / 'workbench.sqlite3'))
@@ -5326,9 +5405,10 @@ class Panel(QWidget):
                 tasks or [], preference,
                 hooks_providers=('claude',) if self._claude_hooks_on else ())
             project = self.continuation.observe(tasks or [])
-            if project is not None:
+            gaming = self.game_mode.active
+            if project is not None and not gaming:
                 self.show_continuation(project)
-            elif (self.continuation.new and getattr(self, 'pet', None) is not None
+            elif (not gaming and self.continuation.new and getattr(self, 'pet', None) is not None
                   and time.monotonic() - getattr(self, '_curious_at', -1e9) > CURIOUS_GAP_S):
                 # A brand-new AI task: she leans in (at most once in a while).
                 self._curious_at = time.monotonic()
@@ -5463,6 +5543,9 @@ class Panel(QWidget):
             return
         if self.live:
             self.claude_probe.tick()
+        pet = getattr(self, 'pet', None)
+        if pet is not None and self.game_mode.active:
+            pet.sync_game()
         # Both providers share the same visual-clock arming path.
         try:
             self.task_manager.sync_motion()
@@ -5726,7 +5809,8 @@ class Panel(QWidget):
 
     def _approval_requested(self, request):
         pet = getattr(self, 'pet', None)
-        if pet is not None and not quiet_now(self.prefs):
+        game = getattr(self, 'game_mode', None)
+        if pet is not None and not quiet_now(self.prefs) and not (game is not None and game.active):
             # A question or a plan to confirm: she thinks it over with you.
             asks = (request or {}).get('tool') in ('AskUserQuestion', 'ExitPlanMode')
             pet.react('question' if asks else 'needs_approval')
@@ -5769,6 +5853,9 @@ class Panel(QWidget):
         focus = getattr(self, 'focus_mode', None)
         if focus is not None and focus.quiet(event.get('kind')):
             return  # Focusing: recorded in Notifications, but no pop-up or reaction.
+        game = getattr(self, 'game_mode', None)
+        if game is not None and game.quiet(event.get('kind')):
+            return  # Gaming: recorded in Notifications, nothing else.
         pet = getattr(self, 'pet', None)
         if pet is not None:
             pet.react(event.get('kind'), event)
@@ -5909,6 +5996,30 @@ class Panel(QWidget):
             pet.update_activity()
             pet.update()
         self._focus_phase = phase
+
+    def _game_changed(self, active):
+        """Game mode starts or ends: her place, the ring, the cards, the switch."""
+        self.tray_actions['game_mode_menu'].setChecked(active)
+        pet = getattr(self, 'pet', None)
+        manager = getattr(self, 'task_manager', None)
+        if active:
+            if self._continuation_card is not None:
+                self._continuation_card.close()
+            if manager is not None:
+                self._ring_before_game = bool(self.prefs.get('star_ring_enabled', True))
+                manager.set_visible(False)
+                self.prefs['star_ring_enabled'] = self._ring_before_game   # Not a setting change.
+            if pet is not None and pet.isVisible():
+                pet.enter_game()
+            self.approvals.tick()   # Hand any open request back to Claude Code.
+        else:
+            if pet is not None:
+                pet.leave_game()
+            if manager is not None:
+                manager.set_visible(getattr(self, '_ring_before_game', True))
+            if self.stats_sampler is not None:
+                self.stats_sampler.stop()
+                self.stats_sampler = None
 
     def check_goals(self):
         """Compare this week's project usage with the goals (cached report data)."""
@@ -6249,7 +6360,12 @@ class Panel(QWidget):
         self.task_manager.shutdown()
         if getattr(self, 'provider_poller', None) is not None:
             self.provider_poller.close()
+        self.game_mode.timer.stop()
+        if self.stats_sampler is not None:
+            self.stats_sampler.stop()
         if hasattr(self,'pet'):
+            if self.game_mode.active:
+                self.pet.leave_game()     # Save her usual place, not the game corner.
             self.prefs['pet_position']=[self.pet.x(),self.pet.y()]
             self.pet.close()
         if self.rates.thread.is_alive():

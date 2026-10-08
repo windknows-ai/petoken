@@ -27,6 +27,7 @@ import time
 from usage import quota_window
 
 CONTEXT_FULL_USED = 90
+OUT_HINTS = frozenset(('hint_out', 'hint_out_switch', 'hint_week_out', 'hint_week_out_switch'))
 CONTEXT_REARM_USED = 70        # Below this again (after /compact) a task may warn again.
 STUCK_AFTER_S = 20 * 60
 RECENT_SPAN_S = 10 * 60
@@ -212,13 +213,18 @@ class Assistant:
     def hint(self, provider, task_key, context, quotas, now=None):
         """The most useful one-line advice for an app's card section.
 
-        Returns (key, values) for localization, or None.
+        Returns (key, values) for localization, or None. Keys in OUT_HINTS
+        mean a limit is used up (shown in red).
         """
         now = time.time() if now is None else now
         other = self.better_provider(provider, quotas, now) if provider in quotas else None
         five = self.pace.status(provider, 300, now)
         if five and five['left'] <= 0:
             return ('hint_out_switch', dict(other=other)) if other else ('hint_out', {})
+        week_now = self.pace.status(provider, 10080, now)
+        if week_now and week_now['left'] <= 0:
+            # Used up: say so (in red), never "out in 0m".
+            return ('hint_week_out_switch', dict(other=other)) if other else ('hint_week_out', {})
         short = self.pace.short(provider, 300, now)
         if short:
             return (('hint_run_out_switch', dict(time=short['run_out_in'], other=other)) if other
