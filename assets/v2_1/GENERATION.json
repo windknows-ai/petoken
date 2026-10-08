@@ -1380,7 +1380,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "71e867ccb4c379d4b60ee5363ab2979ee593c3cbb863540be133ebcdcd67ad53",
+        "sha256": "de29df0db04aad5aee67a35388183351250e08abe0cd9a301b35f11d13677c71",
         "pass": true,
         "composition": {
           "parent": "xform_armor_3",
@@ -1429,6 +1429,35 @@
         "unchanged_original_costume_and_hair_restored": true,
         "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-60de906d-ddb5-4226-a169-3f815eb6b159.png",
         "colors": "silver-white / icy blue / indigo-violet; only armor metal recolored; original hair/costume/face and alpha preserved"
+      },
+      "remaining_gold_correction": {
+        "method": "Built-in imagegen localized gold-to-silver edit; authorized Pillow selected RGB-only composition; exact original alpha preserved",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e719292f-1878-4445-b991-6bfaad0da6b2.png",
+        "references": [
+          "assets/v2_1/xform_armor_2.png (edit target)",
+          "assets/v2_1/xform_armor_6.png (silver color reference)"
+        ],
+        "prompt_summary": "Change only tan/yellow-gold hip/tasset trim to cool pearl silver with ice-blue/lavender shading; preserve all geometry, skin, other costume parts, pose and alpha",
+        "selection_rule": "warm original metal within x425..954,y695..1079; generated replacement must be cool; intersect existing tasset/cape transition masks to preserve shared skin and greave pixels",
+        "mask": "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\v2.1-art-batch2\\gold-trim-followup\\xform_armor_2-mask.png",
+        "mask_sha256": "1560db34eb47cf03eeebeecca5b904f7befda16fdade44ca09762e6bce0a9f39",
+        "mask_bbox": [
+          437,
+          699,
+          927,
+          1047
+        ],
+        "changed_pixels": 10700,
+        "outside_mask_changed_pixels": 0,
+        "alpha_changed_pixels": 0,
+        "before_sha256": "71e867ccb4c379d4b60ee5363ab2979ee593c3cbb863540be133ebcdcd67ad53",
+        "after_sha256": "de29df0db04aad5aee67a35388183351250e08abe0cd9a301b35f11d13677c71",
+        "alpha_bbox": [
+          47,
+          24,
+          1207,
+          1219
+        ]
       }
     },
     "xform_armor_3": {
@@ -1571,7 +1600,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "94ec0dbd1e9619fb1ac1c5eb794de8e05bb8883d8f112684b11421cc889b36f7",
+        "sha256": "6ac6f73050042bd5dacca6288893a952fef48e27ed7227d15a046059d1d5cc58",
         "pass": true,
         "composition": {
           "parent": "xform_armor_4",
@@ -1620,6 +1649,35 @@
         "unchanged_original_costume_and_hair_restored": true,
         "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-60de906d-ddb5-4226-a169-3f815eb6b159.png",
         "colors": "silver-white / icy blue / indigo-violet; only armor metal recolored; original hair/costume/face and alpha preserved"
+      },
+      "remaining_gold_correction": {
+        "method": "Built-in imagegen localized gold-to-silver edit; authorized Pillow selected RGB-only composition; exact original alpha preserved",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e719292f-1878-4445-b991-6bfaad0da6b2.png",
+        "references": [
+          "assets/v2_1/xform_armor_2.png (edit target)",
+          "assets/v2_1/xform_armor_6.png (silver color reference)"
+        ],
+        "prompt_summary": "Change only tan/yellow-gold hip/tasset trim to cool pearl silver with ice-blue/lavender shading; preserve all geometry, skin, other costume parts, pose and alpha",
+        "selection_rule": "warm original metal within x425..954,y695..1079; generated replacement must be cool; intersect existing tasset/cape transition masks to preserve shared skin and greave pixels",
+        "mask": "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\v2.1-art-batch2\\gold-trim-followup\\xform_armor_3-mask.png",
+        "mask_sha256": "3f9458586876ce47d3f2f9746524816d06bdb5bbea6902c810de4e15e2cf1ec2",
+        "mask_bbox": [
+          437,
+          699,
+          927,
+          1047
+        ],
+        "changed_pixels": 10715,
+        "outside_mask_changed_pixels": 0,
+        "alpha_changed_pixels": 0,
+        "before_sha256": "94ec0dbd1e9619fb1ac1c5eb794de8e05bb8883d8f112684b11421cc889b36f7",
+        "after_sha256": "6ac6f73050042bd5dacca6288893a952fef48e27ed7227d15a046059d1d5cc58",
+        "alpha_bbox": [
+          47,
+          24,
+          1207,
+          1219
+        ]
       }
     },
     "xform_armor_4": {
@@ -1784,7 +1842,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "dd512200aa57716f2e19644e54de622042f3fa7ba549d093b56a23294909335d",
+        "sha256": "79e879aa319f9ef9d8381895581d0e83d6f886a3f125a6425889055db2ca9609",
         "pass": true,
         "composition": {
           "parent": "xform_armor_5",
@@ -1833,6 +1891,35 @@
         "unchanged_original_costume_and_hair_restored": true,
         "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-60de906d-ddb5-4226-a169-3f815eb6b159.png",
         "colors": "silver-white / icy blue / indigo-violet; only armor metal recolored; original hair/costume/face and alpha preserved"
+      },
+      "remaining_gold_correction": {
+        "method": "Built-in imagegen localized gold-to-silver edit; authorized Pillow selected RGB-only composition; exact original alpha preserved",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e719292f-1878-4445-b991-6bfaad0da6b2.png",
+        "references": [
+          "assets/v2_1/xform_armor_2.png (edit target)",
+          "assets/v2_1/xform_armor_6.png (silver color reference)"
+        ],
+        "prompt_summary": "Change only tan/yellow-gold hip/tasset trim to cool pearl silver with ice-blue/lavender shading; preserve all geometry, skin, other costume parts, pose and alpha",
+        "selection_rule": "warm original metal within x425..954,y695..1079; generated replacement must be cool; intersect existing tasset/cape transition masks to preserve shared skin and greave pixels",
+        "mask": "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\v2.1-art-batch2\\gold-trim-followup\\xform_armor_4-mask.png",
+        "mask_sha256": "89a99d819cae3f3b39b8a57b9a093ff387a4019919b50ee0aff808e32a75b63d",
+        "mask_bbox": [
+          437,
+          749,
+          927,
+          1047
+        ],
+        "changed_pixels": 8813,
+        "outside_mask_changed_pixels": 0,
+        "alpha_changed_pixels": 0,
+        "before_sha256": "dd512200aa57716f2e19644e54de622042f3fa7ba549d093b56a23294909335d",
+        "after_sha256": "79e879aa319f9ef9d8381895581d0e83d6f886a3f125a6425889055db2ca9609",
+        "alpha_bbox": [
+          47,
+          24,
+          1207,
+          1219
+        ]
       }
     },
     "xform_armor_5": {
@@ -2139,7 +2226,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "0c3c163b42fdbc1e0ddfaf74f8e6393c787495864fd5f2dec49044699865464e",
+        "sha256": "af980a8cd473135310293eb555a962aba399464379f9ea0fa3195ac393208f26",
         "pass": true,
         "composition": {
           "parent": "xform_armor_6",
@@ -2188,6 +2275,35 @@
         "unchanged_original_costume_and_hair_restored": true,
         "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-60de906d-ddb5-4226-a169-3f815eb6b159.png",
         "colors": "silver-white / icy blue / indigo-violet; only armor metal recolored; original hair/costume/face and alpha preserved"
+      },
+      "remaining_gold_correction": {
+        "method": "Built-in imagegen localized gold-to-silver edit; authorized Pillow selected RGB-only composition; exact original alpha preserved",
+        "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e719292f-1878-4445-b991-6bfaad0da6b2.png",
+        "references": [
+          "assets/v2_1/xform_armor_2.png (edit target)",
+          "assets/v2_1/xform_armor_6.png (silver color reference)"
+        ],
+        "prompt_summary": "Change only tan/yellow-gold hip/tasset trim to cool pearl silver with ice-blue/lavender shading; preserve all geometry, skin, other costume parts, pose and alpha",
+        "selection_rule": "warm original metal within x425..954,y695..1079; generated replacement must be cool; intersect existing tasset/cape transition masks to preserve shared skin and greave pixels",
+        "mask": "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\v2.1-art-batch2\\gold-trim-followup\\xform_armor_5-mask.png",
+        "mask_sha256": "89a99d819cae3f3b39b8a57b9a093ff387a4019919b50ee0aff808e32a75b63d",
+        "mask_bbox": [
+          437,
+          749,
+          927,
+          1047
+        ],
+        "changed_pixels": 8813,
+        "outside_mask_changed_pixels": 0,
+        "alpha_changed_pixels": 0,
+        "before_sha256": "0c3c163b42fdbc1e0ddfaf74f8e6393c787495864fd5f2dec49044699865464e",
+        "after_sha256": "af980a8cd473135310293eb555a962aba399464379f9ea0fa3195ac393208f26",
+        "alpha_bbox": [
+          47,
+          24,
+          1207,
+          1219
+        ]
       }
     },
     "xform_armor_6": {
@@ -6181,7 +6297,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "71e867ccb4c379d4b60ee5363ab2979ee593c3cbb863540be133ebcdcd67ad53",
+        "sha256": "de29df0db04aad5aee67a35388183351250e08abe0cd9a301b35f11d13677c71",
         "pass": true,
         "composition": {
           "parent": "xform_armor_3",
@@ -6228,7 +6344,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "94ec0dbd1e9619fb1ac1c5eb794de8e05bb8883d8f112684b11421cc889b36f7",
+        "sha256": "6ac6f73050042bd5dacca6288893a952fef48e27ed7227d15a046059d1d5cc58",
         "pass": true,
         "composition": {
           "parent": "xform_armor_4",
@@ -6275,7 +6391,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "dd512200aa57716f2e19644e54de622042f3fa7ba549d093b56a23294909335d",
+        "sha256": "79e879aa319f9ef9d8381895581d0e83d6f886a3f125a6425889055db2ca9609",
         "pass": true,
         "composition": {
           "parent": "xform_armor_5",
@@ -6322,7 +6438,7 @@
         "lowest_alpha_y": 1218,
         "baseline_y": 1218,
         "transparent_borders": true,
-        "sha256": "0c3c163b42fdbc1e0ddfaf74f8e6393c787495864fd5f2dec49044699865464e",
+        "sha256": "af980a8cd473135310293eb555a962aba399464379f9ea0fa3195ac393208f26",
         "pass": true,
         "composition": {
           "parent": "xform_armor_6",
@@ -11511,5 +11627,59 @@
       }
     }
   },
-  "history_note": "First-batch original gold/spear prompts and old verification are provenance only; current deliverables and current verification are under stages/validation. Nine prior accepted sprites were explicitly corrected on user request."
+  "history_note": "First-batch original gold/spear prompts and old verification are provenance only; current deliverables and current verification are under stages/validation. Nine prior accepted sprites were explicitly corrected on user request.",
+  "remaining_gold_followup": {
+    "date": "2026-10-08",
+    "reason": "User screenshot showed tan/gold partial-stage tasset trim omitted by the previous master-matching palette pass",
+    "corrected_stages": [
+      "xform_armor_2",
+      "xform_armor_3",
+      "xform_armor_4",
+      "xform_armor_5"
+    ],
+    "other_38_sprites_sha256_unchanged": [
+      "xform_rise_0a",
+      "xform_rise_0b",
+      "xform_rise_1",
+      "xform_rise_2",
+      "xform_rise_3",
+      "xform_base",
+      "xform_armor_1",
+      "xform_armor_6",
+      "xform_armor_7",
+      "xform_weapon_1",
+      "xform_weapon_2",
+      "mvp_1",
+      "mvp_2",
+      "mvp_3",
+      "form2_idle_1",
+      "form2_idle_2",
+      "form2_idle_3",
+      "form2_idle_4",
+      "form2_idle_blink",
+      "game_watch_1",
+      "game_watch_2",
+      "game_watch_3",
+      "game_watch_blink",
+      "game_tense_1",
+      "game_tense_2",
+      "game_tense_blink",
+      "game_cheer_1",
+      "game_cheer_2",
+      "game_victory_1",
+      "game_victory_2",
+      "game_defeat_1",
+      "game_defeat_2",
+      "game_defeat_blink",
+      "game_drink_1",
+      "game_drink_2",
+      "game_bored_1",
+      "game_bored_2",
+      "game_bored_blink"
+    ],
+    "four_alpha_channels_changed_pixels": 0,
+    "tool": "built-in imagegen + authorized Pillow RGB-only mask composition",
+    "prompt": "Precise local COLOR CORRECTION ONLY. Image 1 is the locked edit target xform_armor_2; image 2 is the correct final armor COLOR REFERENCE, not a pose or costume replacement. On image1 change ONLY the remaining TAN/YELLOW-GOLD metallic edging of the hip/tasset armor hanging from the waist on both sides, its small central waist borders and any small tan trim on the greaves, to PEARL SILVER-WHITE, cool lavender-blue shading and icy-blue highlights exactly like image2. This remaining warm/gold trim is between y690..1070. Keep every existing plate outline, crystal shape, dark indigo fill and cloth pattern unchanged. Do not add the breastplate, shoulders, gloves, cape, circlet or weapon from image2. Preserve image1 face, eyes, skin color, hair, clothes, two open hands, hovering pose, canvas registration, proportions, baseline and all alpha edges. No recoloring skin or hair. All formerly gold metal should become unmistakably cool silver, zero beige/gold remaining in those tassets. Existing gold outline dark strokes remain dark indigo/black rather than disappearing. Pixel geometry locked. Transparent RGBA 1254x1254. No text/background/effects/shadow.",
+    "selected_composition": "Only shared tasset metal RGB colors adopted; intersect original transition masks to preserve unrelated skin/greave pixels; no new geometry or alpha used."
+  }
 }
