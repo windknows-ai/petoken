@@ -16,6 +16,15 @@ import halo_geometry
 from tools.preview_v1_3 import ANCHORS, MAX_TASKS, Preview, fixture_tasks, main, parse_args
 
 
+
+def usage_panel_action(menu):
+    """The 'usage panel (always shown)' switch, now under 显示 / Show."""
+    for action in menu.actions():
+        sub = action.menu()
+        if sub is not None and sub.actions() and sub.actions()[0].isCheckable():
+            return sub.actions()[0]
+    return menu.actions()[0]
+
 class PreviewFixtureTests(unittest.TestCase):
     def test_fixture_unknown_zero_partial_and_provider_identity(self):
         for count in (0, 1, 8, 24, 64):
@@ -81,7 +90,7 @@ class PreviewTests(unittest.TestCase):
                     self.assertEqual(preview.panel.isVisible(), visible)
                     self.assertEqual(preview.panel.is_pinned(), visible)
                     menu = preview.pet.context_menu()
-                    self.assertEqual(menu.actions()[0].isChecked(), visible)
+                    self.assertEqual(usage_panel_action(menu).isChecked(), visible)
                     menu.deleteLater()
             finally:
                 preview.cleanup()

@@ -103,7 +103,7 @@ class WorkbenchIntegrationTests(unittest.TestCase):
         self.panel.prefs['language'] = 'en'
         self.panel.apply_language()
         self.assertEqual(self.panel.workbench_window.tabs.tabText(0), 'Home')
-        self.assertEqual(self.panel.workbench_button.text(), 'Open workbench')
+        self.assertEqual(self.panel.workbench_button.text(), 'Workbench')
         self.assertEqual(self.panel.workbench_window.note_body.toPlainText(), 'Keep draft')
 
     def test_workbench_and_hub_visibility_do_not_retire_ring_tasks(self):

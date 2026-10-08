@@ -14,6 +14,15 @@ from pet import DesktopPet
 from widget import HUB_SIZE, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, Panel, Settings, valid_panel_size
 
 
+
+def usage_panel_action(menu):
+    """The 'usage panel (always shown)' switch, now under 显示 / Show."""
+    for action in menu.actions():
+        sub = action.menu()
+        if sub is not None and sub.actions() and sub.actions()[0].isCheckable():
+            return sub.actions()[0]
+    return menu.actions()[0]
+
 class PanelPersistTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -133,7 +142,7 @@ class PanelPersistTests(unittest.TestCase):
             panel.prefs['language'] = language
             panel.apply_language()
             menu = pet.context_menu()
-            action = menu.actions()[0]
+            action = usage_panel_action(menu)
             self.assertEqual(action.text(), expected)
             self.assertFalse(action.isChecked())
             action.trigger()

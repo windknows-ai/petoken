@@ -924,40 +924,31 @@ class DesktopPet(QWidget):
             menu.deleteLater()
 
     def context_menu(self):
+        """Her menu, for someone new too: what you do most comes first, every
+        on/off switch for how she looks is under 「显示」, then Settings and Help."""
         menu=QMenu(self)
         menu.setStyleSheet(self.panel.styleSheet())
         menu.setToolTipsVisible(True)
-        usage=menu.addAction(self.tr_text('usage_panel'))
-        usage.setCheckable(True)
-        usage.setChecked(self.panel.is_pinned())
-        usage.setToolTip(self.tr_text('panel_pinned_help'))
-        usage.toggled.connect(self.panel.set_panel_pinned)
-        card=menu.addAction(self.tr_text('usage_card_menu'))
-        card.setCheckable(True)
-        card.setChecked(self.usage_card_idle())
-        card.setToolTip(self.tr_text('usage_card_help'))
-        card.toggled.connect(self.toggle_usage_card_idle)
-        mode=getattr(self.panel,'game_mode',None)
-        if mode is not None:
-            game=menu.addAction(self.tr_text('game_mode_menu'))
-            game.setCheckable(True)
-            game.setChecked(mode.active)
-            game.setToolTip(self.tr_text('game_mode_menu_tip'))
-            game.triggered.connect(lambda _=False,game_mode=mode: game_mode.toggle())   # Bound now: 'mode' is reused below.
-        # Everyday actions on top; occasional ones and toggles under More.
+        game_mode=getattr(self.panel,'game_mode',None)
+        if game_mode is not None and game_mode.active:
+            # In a game, the way out is the first thing she offers.
+            leave=menu.addAction(self.tr_text('game_mode_leave'),lambda gm=game_mode: gm.toggle())
+            leave.setToolTip(self.tr_text('game_mode_menu_tip'))
+            menu.addSeparator()
         menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch).setToolTip(self.tr_text('menu_tip_launch'))
-        mode=getattr(self.panel,'focus_mode',None)
-        if mode is not None:
+        focus_mode=getattr(self.panel,'focus_mode',None)
+        if focus_mode is not None:
             from focus_mode import CHOICES, clock_text
-            if mode.phase!='idle':
+            if focus_mode.phase!='idle':
                 note=menu.addAction(self.tr_text({'focus':'focus_menu_running','break':'focus_menu_resting',
-                                                  'focus_over':'focus_menu_over'}.get(mode.phase,'focus_menu_break_over'),
-                                                 time=clock_text(mode.remaining())))
+                                                  'focus_over':'focus_menu_over'}.get(focus_mode.phase,'focus_menu_break_over'),
+                                                 time=clock_text(focus_mode.remaining())))
                 note.setEnabled(False)
             else:
                 focus=menu.addMenu(self.tr_text('focus_menu'))
                 focus.menuAction().setToolTip(self.tr_text('menu_tip_focus'))
                 focus.setStyleSheet(self.panel.styleSheet())
+                focus.setToolTipsVisible(True)
                 for minutes in CHOICES:
                     focus.addAction(self.tr_text('focus_minutes',minutes=minutes),
                                     lambda m=minutes:self.panel.start_focus(m))
@@ -966,18 +957,42 @@ class DesktopPet(QWidget):
         menu.addAction(self.tr_text('menu_workbench'),self.panel.open_workbench).setToolTip(self.tr_text('menu_tip_workbench'))
         menu.addAction(self.tr_text('wb_reports'),self.panel.open_reports).setToolTip(self.tr_text('menu_tip_reports'))
         menu.addSeparator()
-        more=menu.addMenu(self.tr_text('menu_more'))
-        more.setStyleSheet(self.panel.styleSheet())
-        more.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
-        more.addAction(self.tr_text('wb_tutorial'),self.panel.open_workbench_tutorial)
-        more.addSeparator()
-        topmost=more.addAction(self.tr_text('always_on_top'));topmost.setCheckable(True)
+        # 显示: everything about what is on the screen, each with a tick.
+        view=menu.addMenu(self.tr_text('menu_view'))
+        view.menuAction().setToolTip(self.tr_text('menu_tip_view'))
+        view.setStyleSheet(self.panel.styleSheet())
+        view.setToolTipsVisible(True)
+        usage=view.addAction(self.tr_text('usage_panel'))
+        usage.setCheckable(True)
+        usage.setChecked(self.panel.is_pinned())
+        usage.setToolTip(self.tr_text('panel_pinned_help'))
+        usage.toggled.connect(self.panel.set_panel_pinned)
+        card=view.addAction(self.tr_text('usage_card_menu'))
+        card.setCheckable(True)
+        card.setChecked(self.usage_card_idle())
+        card.setToolTip(self.tr_text('usage_card_help'))
+        card.toggled.connect(self.toggle_usage_card_idle)
+        if game_mode is not None:
+            game=view.addAction(self.tr_text('game_mode_menu'))
+            game.setCheckable(True)
+            game.setChecked(game_mode.active)
+            game.setToolTip(self.tr_text('game_mode_menu_tip'))
+            game.triggered.connect(lambda _=False,gm=game_mode: gm.toggle())
+        view.addSeparator()
+        topmost=view.addAction(self.tr_text('always_on_top'));topmost.setCheckable(True)
         topmost.setChecked(bool(self.panel.prefs.get('always_on_top',True)))
+        topmost.setToolTip(self.tr_text('menu_tip_topmost'))
         topmost.triggered.connect(self.toggle_topmost)
-        motion=more.addAction(self.tr_text('idle_motion'));motion.setCheckable(True);motion.setChecked(self.motion)
+        motion=view.addAction(self.tr_text('idle_motion'));motion.setCheckable(True);motion.setChecked(self.motion)
+        motion.setToolTip(self.tr_text('menu_tip_motion'))
         motion.triggered.connect(self.toggle_motion)
-        more.addAction(self.tr_text('hide_pet'),self.hide)
+        view.addSeparator()
+        view.addAction(self.tr_text('hide_pet'),self.hide)
         menu.addAction(self.tr_text('pet_settings'),self.panel.open_settings).setToolTip(self.tr_text('menu_tip_settings'))
+        more=menu.addMenu(self.tr_text('menu_help'))
+        more.setStyleSheet(self.panel.styleSheet())
+        more.addAction(self.tr_text('wb_tutorial'),self.panel.open_workbench_tutorial)
+        more.addAction(self.tr_text('analytics_button'),self.panel.open_analytics)
         menu.addSeparator();menu.addAction(self.tr_text('exit'),self.panel.shutdown)
         return menu
 

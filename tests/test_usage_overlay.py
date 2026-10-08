@@ -310,7 +310,8 @@ class PanelOverlayTests(unittest.TestCase):
         pet.sync_usage_overlay()
         self.assertTrue(pet.usage_overlay_visible())                 # Idle, default on.
         menu = pet.context_menu()
-        card = next(a for a in menu.actions() if a.text() == pet.tr_text('usage_card_menu'))
+        from tests.test_game_mode import all_actions
+        card = next(a for a in all_actions(menu) if a.text() == pet.tr_text('usage_card_menu'))
         self.assertTrue(card.isChecked())
         card.setChecked(False)
         self.assertFalse(self.panel.prefs['usage_card_idle'])

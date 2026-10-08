@@ -23,6 +23,15 @@ from usage import CodexStore
 from widget import COMPACT_HEIGHT, HUB_SIZE, Panel
 
 
+
+def usage_panel_action(menu):
+    """The 'usage panel (always shown)' switch, now under 显示 / Show."""
+    for action in menu.actions():
+        sub = action.menu()
+        if sub is not None and sub.actions() and sub.actions()[0].isCheckable():
+            return sub.actions()[0]
+    return menu.actions()[0]
+
 class HubInteractionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -104,7 +113,7 @@ class HubInteractionTests(unittest.TestCase):
     def test_context_check_keeps_open_topmost_until_unchecked(self):
         self.panel.set_always_on_top(False)
         menu = self.pet.context_menu()
-        action = menu.actions()[0]
+        action = usage_panel_action(menu)
         self.assertTrue(action.isCheckable())
         self.assertFalse(action.isChecked())
         action.trigger()

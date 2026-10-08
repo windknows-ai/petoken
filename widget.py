@@ -4117,6 +4117,11 @@ class Settings(QDialog):
         self.descriptions = []
         self._build_cards()
         self.clinginess.currentIndexChanged.connect(lambda _: self._describe_clinginess())
+        # Only the options that matter for what is chosen show (less to read).
+        self.game_display.currentIndexChanged.connect(lambda _: self._sync_dependent_rows())
+        self.game_auto.toggled.connect(lambda _: self._sync_dependent_rows())
+        self.dnd_scheduled.toggled.connect(lambda _: self._sync_dependent_rows())
+        self._sync_dependent_rows()
         self.language.currentIndexChanged.connect(self.apply_language)
         self.apply_language()
 
@@ -4427,6 +4432,25 @@ class Settings(QDialog):
         self.pet_scale.setValue(pet_geometry.PET_SCALE_DEFAULT)
         self.clinginess.setCurrentIndex(self.clinginess.findData('moderate'))
         self.apply_language()
+
+    def _card_of(self, row_label):
+        frame = row_label
+        while frame is not None and frame.objectName() != 'settingCard':
+            frame = frame.parentWidget()
+        return frame
+
+    def _sync_dependent_rows(self):
+        display = self.game_display.currentData()
+        for label, wanted in ((self.game_rings_side_label, display == 'rings'),
+                              (self.game_bar_label, display == 'bar'),
+                              (self.game_bar_place_label, display == 'bar'),
+                              (self.game_extra_label, self.game_auto.isChecked()),
+                              (self.game_excluded_label, self.game_auto.isChecked())):
+            card = self._card_of(label)
+            if card is not None:
+                card.setVisible(wanted)
+        for edit in (self.dnd_start, self.dnd_end, self.dnd_to):
+            edit.setEnabled(self.dnd_scheduled.isChecked())
 
     def _reset_game_bar(self):
         """The info bar follows her again (after it was dragged away)."""
@@ -4881,7 +4905,6 @@ class Panel(QWidget):
         self.tray.setIcon(icon)
         menu = QMenu()
         self.tray_actions = {
-            'show_hide': menu.addAction('', self.toggle_visible),
             'show_hide_pet': menu.addAction('', self.toggle_pet),
             'launch_menu': menu.addAction('', self.open_quick_launch),
             # In game mode she lets the mouse through: the switch lives here too.
@@ -4893,8 +4916,9 @@ class Panel(QWidget):
         # Occasional actions stay one level down.
         self.tray_more = menu.addMenu('')
         self.tray_actions.update({
-            'analytics_button': self.tray_more.addAction('', self.open_analytics),
+            'show_hide': self.tray_more.addAction('', self.toggle_visible),
             'wb_tutorial': self.tray_more.addAction('', self.open_workbench_tutorial),
+            'analytics_button': self.tray_more.addAction('', self.open_analytics),
             'collapse_expand': self.tray_more.addAction('', self.toggle_compact),
             'move_right': self.tray_more.addAction('', self.reset_position),
             'update_check_now': self.tray_more.addAction('', lambda: self.updates.check_now(manual=True)),

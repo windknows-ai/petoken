@@ -10,6 +10,14 @@ from game_mode import GameMode, names
 APP = QApplication.instance() or QApplication([])
 
 
+def all_actions(menu):
+    """A menu's actions, its submenus' included."""
+    for action in menu.actions():
+        yield action
+        if action.menu() is not None:
+            yield from all_actions(action.menu())
+
+
 class FakeDetector:
     def __init__(self):
         self.playing = False
@@ -86,13 +94,23 @@ class PanelGameModeTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        from unittest.mock import patch
         from widget import Panel
         from pet import DesktopPet
+        # These tests are about the switching, not the animation (tests/test_transform.py):
+        # whether the art happens to be prepared by earlier tests must not matter.
+        cls.no_animation = patch('transform.available', return_value=False)
+        cls.no_animation.start()
         cls.panel = Panel(live=False)
         cls.panel.pet = DesktopPet(cls.panel)
 
+    def tearDown(self):
+        if self.panel.game_mode.active:          # A failed test must not leave it on for the next.
+            self.panel.game_mode.toggle()
+
     @classmethod
     def tearDownClass(cls):
+        cls.no_animation.stop()
         cls.panel.pet.close()
         cls.panel.closing = True
         cls.panel.close()
@@ -251,6 +269,9 @@ class PanelGameModeTests(unittest.TestCase):
 
     def test_rings_go_left_or_right(self):
         pet = self.panel.pet
+        area = (pet.screen() or APP.primaryScreen()).availableGeometry()
+        pet.move(area.center() - pet.rect().center())          # Room on both sides.
+        self.panel.prefs['game_rings_side'] = 'right'
         usage = game_mode.GameUsage(pet)
         usage.set_content('rings', [dict(provider='claude', name='Claude Code',
                                          rows=[dict(kind='five', remaining=50), dict(kind='week', remaining=50)])],
@@ -263,11 +284,45 @@ class PanelGameModeTests(unittest.TestCase):
         self.panel.prefs['game_rings_side'] = 'right'
         usage.deleteLater()
 
+    def test_menu_puts_everyday_actions_first_and_switches_under_show(self):
+        pet = self.panel.pet
+        menu = pet.context_menu()
+        top = [a.text() for a in menu.actions() if not a.isSeparator()]
+        self.assertEqual(top[0], pet.tr_text('launch_menu'))
+        view = next(a.menu() for a in menu.actions() if a.text() == pet.tr_text('menu_view'))
+        inside = [a.text() for a in view.actions()]
+        for key in ('usage_panel', 'usage_card_menu', 'game_mode_menu', 'always_on_top', 'idle_motion'):
+            self.assertIn(pet.tr_text(key), inside)
+            self.assertNotIn(pet.tr_text(key), top)
+        menu.deleteLater()
+        self.panel.game_mode.toggle()                              # In a game: the way out comes first.
+        menu = pet.context_menu()
+        self.assertEqual(menu.actions()[0].text(), pet.tr_text('game_mode_leave'))
+        menu.actions()[0].trigger()
+        self.assertFalse(self.panel.game_mode.active)
+        menu.deleteLater()
+
+    def test_settings_show_only_what_matters_for_the_choice(self):
+        from widget import Settings
+        settings = Settings(self.panel)
+        settings.show()
+        rings, bar = settings._card_of(settings.game_rings_side_label), settings._card_of(settings.game_bar_label)
+        settings.game_display.setCurrentIndex(settings.game_display.findData('rings'))
+        self.assertTrue(rings.isVisibleTo(settings) or not settings.tabs.currentIndex() == 4)
+        self.assertFalse(bar.isVisibleTo(settings))
+        settings.game_display.setCurrentIndex(settings.game_display.findData('bar'))
+        self.assertFalse(rings.isVisibleTo(settings))
+        settings.game_auto.setChecked(False)
+        self.assertFalse(settings._card_of(settings.game_extra_label).isVisibleTo(settings))
+        settings.dnd_scheduled.setChecked(False)
+        self.assertFalse(settings.dnd_start.isEnabled())
+        settings.close()
+
     def test_the_menu_item_switches_game_mode(self):
         pet = self.panel.pet
         for expected in (True, False):
             menu = pet.context_menu()
-            action = next(a for a in menu.actions() if a.text() == pet.tr_text('game_mode_menu'))
+            action = next(a for a in all_actions(menu) if a.text() == pet.tr_text('game_mode_menu'))
             self.assertEqual(action.isChecked(), not expected)
             action.trigger()
             self.assertEqual(self.panel.game_mode.active, expected)

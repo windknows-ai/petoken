@@ -414,6 +414,13 @@ class ResetRaceTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.fixture = FinalFixture(self.temp.name)
+        # Never the user's real Claude Code history: it can be hundreds of MB,
+        # and reading it made these timed polls miss their deadline.
+        home = Path(self.temp.name) / 'home'
+        home.mkdir()
+        environ = patch.dict(_os.environ, USERPROFILE=str(home), HOME=str(home))
+        environ.start()
+        self.addCleanup(environ.stop)
         self._pollers = []
         self._originals = []
 
