@@ -202,7 +202,10 @@ class DesktopPet(QWidget):
     def showEvent(self,event):
         import transform
         if transform.available():
-            transform.CACHE.get(self._transform_side())   # Ready before the first game.
+            # Ready before the first game, at her size and her corner size.
+            from game_mode import CORNER_SCALE
+            transform.CACHE.get(self._transform_side())
+            transform.CACHE.get(self._transform_side(max(50,round(self.pet_scale*CORNER_SCALE/100))))
         if self.motion:
             self._last_tick=None
             self.timer.start()
@@ -220,7 +223,7 @@ class DesktopPet(QWidget):
     def usage_overlay_wanted(self):
         """Always while an AI works; when idle too if the user keeps it on (the default).
         Never in game mode: the compact display replaces it."""
-        return (self.isVisible() and not self.game_active()
+        return (self.isVisible() and not self.game_active() and self.transform_stage is None
                 and (self.token_bubble_visible() or self.usage_card_idle()))
 
     def game_active(self):
@@ -245,9 +248,15 @@ class DesktopPet(QWidget):
         self._load_form2()
         played=self._play_transform(leaving=False)
         self.sync_game()
-        if played and self.game_halo is not None:
-            self.game_halo.intro=0.0
+        if played and self.game_halo is not None and self.transform_stage is not None:
+            stage=self.transform_stage
+            self.game_halo.intro=stage._ring_intro(*stage.timeline.at(stage.t))
         self.update_activity()
+        # Seconds until the ring flies in behind her (stars join it then).
+        if played and self.transform_stage is not None:
+            stage=self.transform_stage
+            return max(0.0,stage.timeline.until('ring')-stage.t)/stage.speed
+        return 0.0
 
     # Game moods: (pose, weight, seconds). Mostly she stands guard; now and then
     # she watches closely, gets tense, cheers, sips, or twirls her sword.
@@ -271,8 +280,8 @@ class DesktopPet(QWidget):
             self._game_next=now+60
         return 'form2_idle' if 'form2_idle' in self.sprites else 'idle'
 
-    def _transform_side(self):
-        sx,sy,sw,sh=geometry.scaled_sprite_rect(self.pet_scale)
+    def _transform_side(self,scale=None):
+        sx,sy,sw,sh=geometry.scaled_sprite_rect(scale or self.pet_scale)
         dpr=self.devicePixelRatioF() or 1.0
         return min(768,max(128,round(sw*dpr)))
 
@@ -294,22 +303,30 @@ class DesktopPet(QWidget):
         pieces=transform.CACHE.get(self._transform_side())
         if pieces is None:
             return False        # Being prepared (first time): this switch is immediate.
+        level=None
         if self.transform_stage is not None:
-            self.transform_stage.timer.stop()
-            self.transform_stage.close()
-            self.transform_stage.deleteLater()
+            old=self.transform_stage
+            level=old.timeline.level_at(old.t)      # Carry on from where she is now.
+            self.transform_stage=None
+            old.timer.stop()
+            old.close()
+            old.deleteLater()
         idle=None
-        source=self.sprites.get('idle') if not leaving else None
+        source=self.sprites.get('idle')     # The rise starts, and the reverse ends, on her idle pose.
         if source is not None and not source.isNull():
             idle=source.toImage().scaled(pieces.side,pieces.side,Qt.IgnoreAspectRatio,
                                          Qt.SmoothTransformation).convertToFormat(QImage.Format_ARGB32_Premultiplied)
         speed=2.0 if self.panel.prefs.get('game_fast') else 1.0
         stage=transform.TransformStage(self,pieces,leaving=leaving,speed=speed,idle=idle)
+        if level is not None:
+            stage.t=stage.timeline.time_for(level)
         self.transform_stage=stage
         self.veiled=True
         self.update()
 
         def done():
+            if self.transform_stage is not stage:
+                return          # Replaced by a newer switch.
             self.veiled=False
             self.transform_stage=None
             stage.close()
@@ -328,28 +345,27 @@ class DesktopPet(QWidget):
         stage.start()
         return True
 
-    def leave_game(self,on_left=None):
-        """Game mode ends: the armour comes off, then ``on_left(star points)``
-        with where the ring's stars were, so they can fly back to their ring."""
-        self._on_left=on_left
-        if self.game_drag is not None:
-            self.game_drag.stop()
+    def leave_game(self):
+        """Game mode ends: back to her own place and size, the armour comes off,
+        then clicks reach her again. She can still be long-pressed and dragged
+        while it plays."""
+        if self.game_usage is not None:
+            self.game_usage.hide()
+        if self.game_place is not None:
+            self.game_place.leave_place()
         if self.isVisible() and self._play_transform(leaving=True):
             return      # The rest happens when the armour has come off.
         self._finish_leave()
 
     def _finish_leave(self):
-        halo=self.game_halo
-        points=halo.star_points() if halo is not None and halo.isVisible() and not halo.hide_stars else []
         for widget in (self.game_halo,self.game_usage):
             if widget is not None:
                 widget.hide()
+        if self.game_drag is not None:
+            self.game_drag.stop()
         if self.game_place is not None:
-            self.game_place.leave()
+            self.game_place.leave_input()
         self.update_activity()
-        on_left,self._on_left=getattr(self,'_on_left',None),None
-        if on_left is not None:
-            on_left(points)
 
     def sync_game(self):
         """Once a second in game mode: the ring's stars and the compact display."""
@@ -372,8 +388,8 @@ class DesktopPet(QWidget):
         usage=self.game_usage
         if usage is None:
             return
-        if mode.display=='hidden':
-            usage.hide()
+        if mode.display=='hidden' or self.transform_stage is not None:
+            usage.hide()        # Not while she transforms.
             return
         sections=build_sections(self.panel,self.presence,idle=True)
         stats=None

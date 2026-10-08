@@ -165,16 +165,25 @@ class Placement:
                                     area.bottom() - pet.height() - CORNER_MARGIN))
         pet.show()
 
-    def leave(self):
+    def leave_place(self):
+        """Back to her own place and size (before the reverse transformation)."""
         pet = self.pet
-        pet.setWindowFlag(Qt.WindowTransparentForInput, False)
         if self.saved is not None:
             position, scale, corner = self.saved
             if corner:
                 pet.apply_pet_scale(scale)
                 pet.move_clamped(position)
-        self.saved = None
+            self.saved = None
+
+    def leave_input(self):
+        """Clicks reach her again (after it)."""
+        pet = self.pet
+        pet.setWindowFlag(Qt.WindowTransparentForInput, False)
         pet.show()
+
+    def leave(self):
+        self.leave_place()
+        self.leave_input()
 
 
 def _clickless(widget):
@@ -288,11 +297,17 @@ class GameHalo(QWidget):
     def _star_angle(self, index, count):
         return math.radians(self.angle * 1.4 + index * 360 / max(1, count) - 90)
 
-    def star_points(self):
-        """(provider, global point) of each task star, as drawn right now."""
+    def star_points(self, final=True):
+        """(provider, global point) of each task star: where it sits once the
+        ring is in place (``final``), or as drawn right now."""
         ring = self._ellipse()
         centre = ring.center()
-        transform = self._transform()
+        if final:
+            intro, self.intro = self.intro, 1.0
+            transform = self._transform()
+            self.intro = intro
+        else:
+            transform = self._transform()
         out = []
         count = len(self.stars)
         for index, provider in enumerate(self.stars):
@@ -421,72 +436,106 @@ def paint_star(p, pos, color, breath=1.0, phase=0.0, scale=1.0):
 class StarFlight(QWidget):
     """Task stars flying between the usual star ring and the ring behind her.
 
-    ``starts`` and ``ends`` are callables giving [(provider, global point)];
-    they are read every frame, so both rings may keep turning meanwhile.
+    ``starts`` and ``ends`` are callables giving [(provider, global point)].
+    The starts are read once when the flight begins (after ``delay`` seconds),
+    the ends every frame, so the target ring may keep turning or be dragged.
     """
 
     DURATION = 1.3
 
-    def __init__(self, starts, ends, on_frame=None, on_done=None):
+    def __init__(self, starts, ends, on_start=None, on_frame=None, on_done=None, delay=0.0):
         super().__init__(None)
         _clickless(self)
         self.starts, self.ends = starts, ends
-        self.on_frame, self.on_done = on_frame, on_done
-        self.t = 0.0
+        self.on_start, self.on_frame, self.on_done = on_start, on_frame, on_done
+        self.delay = max(0.0, delay)
+        self.t = -self.delay
         self._last = None
-        self._first = list(starts())
+        self._first = None
+        self._box = None
+        self.done = False
         self.timer = QTimer(self)
         self.timer.setTimerType(Qt.PreciseTimer)
         self.timer.setInterval(1000 // 60)
         self.timer.timeout.connect(self._tick)
 
     def start(self):
-        self._place()
+        self.timer.start()
+        if self.delay <= 0:
+            self._begin()
+
+    def _begin(self):
+        self._first = list(self.starts())
+        if self.on_start is not None:
+            self.on_start()
+        self._grow()
         self.show()
         self.raise_()
-        self.timer.start()
 
-    def _place(self):
-        points = [pt for _, pt in self._first] + [pt for _, pt in self.ends()]
+    def _grow(self):
+        points = [pt for _, pt in (self._first or [])] + [pt for _, pt in self.ends()]
         if not points:
             return
         xs, ys = [pt.x() for pt in points], [pt.y() for pt in points]
-        margin = 60
-        self.setGeometry(QRect(int(min(xs)) - margin, int(min(ys)) - margin - 80,
-                               int(max(xs) - min(xs)) + 2 * margin, int(max(ys) - min(ys)) + 2 * margin + 80))
+        need = QRect(int(min(xs)) - 50, int(min(ys)) - 130, int(max(xs) - min(xs)) + 100,
+                     int(max(ys) - min(ys)) + 180)
+        box = need if self._box is None else self._box.united(need)
+        if box != self._box:
+            self._box = box
+            self.setGeometry(box)
 
     def _tick(self):
         now = time.monotonic()
         dt = 0.0 if self._last is None else min(.05, now - self._last)
         self._last = now
+        before = self.t
         self.t += dt
-        f = min(1.0, self.t / self.DURATION)
+        if self._first is None:
+            if self.t >= 0:
+                self._begin()
+            return
+        f = max(0.0, min(1.0, self.t / self.DURATION))
         if self.on_frame is not None:
             self.on_frame(f)
+        self._grow()
         self.update()
         if f >= 1.0:
-            self.timer.stop()
-            self.hide()
-            if self.on_done is not None:
-                self.on_done()
-            self.deleteLater()
+            self.finish()
+
+    def finish(self):
+        """End now (also when a new switch interrupts it); runs on_done once."""
+        if self.done:
+            return
+        self.done = True
+        self.timer.stop()
+        if self._first is None and self.on_start is not None:
+            self.on_start()
+        if self.on_frame is not None:
+            self.on_frame(1.0)
+        self.hide()
+        if self.on_done is not None:
+            self.on_done()
+        self.deleteLater()
 
     def paintEvent(self, event):
+        if not self._first:
+            return
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        f = min(1.0, self.t / self.DURATION)
+        f = max(0.0, min(1.0, self.t / self.DURATION))
         e = f * f * (3 - 2 * f)
         ends = list(self.ends())
         origin = QPointF(self.pos())
         for index, (provider, start) in enumerate(self._first):
-            end = ends[index][1] if index < len(ends) else start
-            # A gentle arc, so they swoop rather than slide.
-            lift = 70 * math.sin(math.pi * e) * (1 if index % 2 else .7)
+            if index >= len(ends):
+                break                       # No place for it on the other ring.
+            end = ends[index][1]
             color = QColor(STAR.get(provider, theme.ICE))
-            for k in range(6, -1, -1):                       # The trail first, then the star.
+            bend = 70 * (1 if index % 2 else .7)
+            for k in range(6, -1, -1):      # The trail first, then the star.
                 g = max(0.0, e - k * .035)
                 x = start.x() + (end.x() - start.x()) * g
-                y = start.y() + (end.y() - start.y()) * g - 70 * math.sin(math.pi * g) * (1 if index % 2 else .7)
+                y = start.y() + (end.y() - start.y()) * g - bend * math.sin(math.pi * g)
                 point = QPointF(x, y) - origin
                 if k:
                     c = QColor(color)
@@ -495,7 +544,7 @@ class StarFlight(QWidget):
                     p.setBrush(c)
                     p.drawEllipse(point, 3.2 * (1 - k / 8), 3.2 * (1 - k / 8))
                 else:
-                    paint_star(p, point, color, 1.0, self.t * 3 + index)
+                    paint_star(p, point, color, 1.0, self.t * 3 + index, 1.0 + .8 * e)
 
 
 class GameUsage(QWidget):
@@ -576,11 +625,14 @@ class GameUsage(QWidget):
         prefs = pet.panel.prefs
         if self.style_name == 'rings':
             # Beside her (left or right, the user's choice), at shoulder height.
+            # Just outside her picture (her hair reaches its edges), not over her.
+            import pet_geometry
+            sx, sy, sw, sh = pet_geometry.scaled_sprite_rect(pet.pet_scale)
             if prefs.get('game_rings_side') == 'left':
-                x = pet.x() + pet._px(18) - self.width()
+                x = pet.x() + sx - self.width() - pet._px(4)
             else:
-                x = pet.x() + pet.width() - pet._px(18)
-            y = pet.y() + pet.height() - self.height() - pet._px(20)
+                x = pet.x() + sx + sw + pet._px(4)
+            y = pet.y() + sy + sh - self.height() - pet._px(10)
         else:
             spot = prefs.get('game_bar_pos')
             if isinstance(spot, list) and len(spot) == 2 and all(isinstance(v, int) for v in spot):

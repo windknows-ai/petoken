@@ -90,6 +90,19 @@ class TransformTests(unittest.TestCase):
         self.assertEqual(done, [1])
         stage.close()
 
+    def test_a_switch_mid_way_carries_on_from_where_she_is(self):
+        pieces = transform.Pieces.build(120)
+        enter, leave = transform.Timeline(pieces), transform.Timeline(pieces, leaving=True)
+        rising = enter.level_at(transform.RISE_S / 2)                 # Half risen, no armour.
+        self.assertLess(rising, .3)
+        back = leave.time_for(rising)
+        self.assertEqual(leave.at(back)[0], 'fall')                    # Straight to lying back down.
+        self.assertAlmostEqual(leave.level_at(back), rising, places=3)
+        half_armed = enter.level_at(enter.until('arm') + enter.parts[2][1] / 2)
+        self.assertAlmostEqual(enter.level_at(enter.time_for(half_armed)), half_armed, places=3)
+        self.assertEqual(leave.at(leave.time_for(half_armed))[0], 'unarm')
+        self.assertEqual(leave.time_for(1.0), 0.0)
+
     def test_no_art_means_no_animation(self):
         with patch.dict(os.environ, PETOKEN_V2_1_ART=str(self.folder / 'missing')):
             self.assertFalse(transform.available())

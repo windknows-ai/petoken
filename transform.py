@@ -176,36 +176,45 @@ class Pieces:
 
 
 class PieceCache(QObject):
-    """Builds Pieces in a worker the first time they are needed for a size."""
+    """Builds Pieces in a worker the first time they are needed for a size
+    (her usual size and her smaller corner size are both kept)."""
 
     ready = Signal()
+    KEEP = 3
 
     def __init__(self):
         super().__init__()
-        self.pieces = None
-        self._building = None
+        self.sizes = {}
+        self._building = set()
         self._lock = threading.Lock()
 
     def get(self, side):
-        pieces = self.pieces
-        if pieces is not None and pieces.side == side:
+        pieces = self.sizes.get(side)
+        if pieces is not None:
             return pieces
         with self._lock:
-            if self._building == side:
+            if side in self._building:
                 return None
-            self._building = side
+            self._building.add(side)
 
         def work():
             try:
                 built = Pieces.build(side)
             except Exception:
                 built = None
-            self.pieces = built
             with self._lock:
-                self._building = None
+                self._building.discard(side)
+                if built is not None:
+                    self.sizes[side] = built
+                    while len(self.sizes) > self.KEEP:
+                        self.sizes.pop(next(iter(self.sizes)))
             self.ready.emit()
         threading.Thread(target=work, daemon=True, name='petoken-transform-art').start()
         return None
+
+    @property
+    def pieces(self):          # The latest built set (tests and tools).
+        return next(reversed(self.sizes.values()), None)
 
 
 CACHE = PieceCache()
@@ -234,6 +243,35 @@ class Timeline:
             self.parts.append(('mvp', MVP_S))
             self.parts.append(('settle', SETTLE_S))
         self.length = sum(d for _, d in self.parts)
+
+    # How transformed she is, 0 (idle) .. 1 (second form), at each part's start and end.
+    LEVELS = {'rise': (0.0, .25), 'ring': (.25, .3), 'arm': (.3, 1.0), 'mvp': (1.0, 1.0), 'settle': (1.0, 1.0),
+              'unarm': (1.0, .3), 'fall': (.3, 0.0)}
+
+    def level_at(self, t):
+        """How transformed she is at ``t`` (so a switch mid-way can carry on from there)."""
+        name, f = self.at(t)
+        a, b = self.LEVELS[name]
+        return a + (b - a) * f
+
+    def time_for(self, level):
+        """The first moment this timeline shows ``level``."""
+        total = 0.0
+        for name, duration in self.parts:
+            a, b = self.LEVELS[name]
+            if a != b and min(a, b) - 1e-6 <= level <= max(a, b) + 1e-6:
+                return total + duration * (level - a) / (b - a)
+            total += duration
+        return 0.0 if self.leaving and level >= 1 else total
+
+    def until(self, part):
+        """Seconds (1× speed) before ``part`` starts."""
+        total = 0.0
+        for name, duration in self.parts:
+            if name == part:
+                return total
+            total += duration
+        return total
 
     def at(self, t):
         for name, duration in self.parts:
@@ -292,7 +330,9 @@ class TransformStage(QWidget):
         w, h = box.width() * 2.2, box.height() * 2.0
         x = box.center().x() - w / 2
         y = box.bottom() + box.height() * .3 - h
-        self.setGeometry(QRect(round(x), round(y), round(w), round(h)))
+        geometry = QRect(round(x), round(y), round(w), round(h))
+        if self.geometry() != geometry:
+            self.setGeometry(geometry)
         self._box = QRectF(box.x() - self.x(), box.y() - self.y(), box.width(), box.height())
 
     @staticmethod
@@ -323,6 +363,7 @@ class TransformStage(QWidget):
         self._last = now
         self.t += dt * self.speed
         self.frames += 1
+        self.place()                        # She may be dragged meanwhile.
         for particle in self.particles:
             particle.age += dt
             particle.x += particle.vx * dt
@@ -332,7 +373,9 @@ class TransformStage(QWidget):
         halo = getattr(self.pet, 'game_halo', None)
         if halo is not None:
             name, f = self.timeline.at(self.t)
-            halo.intro = self._ring_intro(name, f)
+            # Eased towards its target, so a switch mid-way never makes it jump.
+            target = self._ring_intro(name, f)
+            halo.intro += (target - halo.intro) * min(1.0, dt * self.speed * 10)
             halo.flare = self._ring_flare(name, f)
         if self.t >= self.timeline.length:
             self.timer.stop()

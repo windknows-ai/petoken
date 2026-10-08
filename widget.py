@@ -1177,7 +1177,25 @@ class TaskPanelManager(HaloScene):
         area = QRect(self._last_screen_rect[0], self._last_screen_rect[1],
                      self._last_screen_rect[2] - self._last_screen_rect[0] + 1,
                      self._last_screen_rect[3] - self._last_screen_rect[1] + 1)
-        return next((p for p in candidates if area.contains(QRect(*p, w, h))), None)
+        # Never on her usage card: above the ring means above the card too.
+        blocks = []
+        pet = getattr(self.panel, 'pet', None)
+        for name in ('usage_overlay', 'game_usage'):
+            card = getattr(pet, name, None) if pet is not None else None
+            try:
+                if card is not None and card.isVisible():
+                    blocks.append(card.frameGeometry().adjusted(-4, -4, 4, 4))
+            except RuntimeError:
+                pass
+        placed = []
+        for cx, cy in candidates:
+            box = QRect(cx, cy, w, h)
+            for block in blocks:
+                if box.intersects(block) and cy < pose.cy:
+                    box.moveTop(block.top() - h - 6)
+            placed.append(box)
+        return next(((b.x(), b.y()) for b in placed
+                     if area.contains(b) and not any(b.intersects(block) for block in blocks)), None)
 
     def focus_tag_position(self, w, h):
         """The focus countdown: under the page buttons when they show, else
@@ -6032,70 +6050,85 @@ class Panel(QWidget):
     def _game_changed(self, active):
         """Game mode starts or ends: her place, the rings, the cards, the switch.
 
-        The usual star ring doesn't just vanish: its stars fly to the ring
-        behind her while it fades, and back again when the game ends.
+        The usual star ring doesn't just vanish: as the ring behind her flies
+        in, each star leaves the usual ring for its place behind her while the
+        rest of the usual ring fades; leaving, they fly back the same way.
         """
         from game_mode import StarFlight
         self.tray_actions['game_mode_menu'].setChecked(active)
         pet = getattr(self, 'pet', None)
         manager = getattr(self, 'task_manager', None)
+        flight = getattr(self, '_flight', None)
+        if flight is not None:
+            self._flight = None
+            flight.finish()                         # A switch mid-flight: land at once.
+        if manager is None:
+            return
         if active:
             if self._continuation_card is not None:
                 self._continuation_card.close()
             ring_on = bool(self.prefs.get('star_ring_enabled', True))
             self._ring_before_game = ring_on
-            orbs = self._orb_points() if manager is not None and ring_on else []
-            layers = self._ring_layers() if manager is not None and ring_on else []
-            if pet is not None and pet.isVisible():
-                pet.enter_game()
+            delay = pet.enter_game() if pet is not None and pet.isVisible() else 0.0
             halo = getattr(pet, 'game_halo', None)
 
             def hide_ring():
-                for window in layers:
-                    window.setWindowOpacity(1.0)
-                if manager is not None:
-                    manager.suspended = True        # New tasks must not bring it back.
-                    manager.set_visible(False)
-                    self.prefs['star_ring_enabled'] = self._ring_before_game   # Not a setting change.
+                self._set_ring_opacity(1.0, 1.0)
+                manager.suspended = True            # New tasks must not bring it back.
+                manager.set_visible(False)
+                self.prefs['star_ring_enabled'] = self._ring_before_game   # Not a setting change.
                 if halo is not None:
                     halo.hide_stars = False
-            if halo is not None and halo.isVisible() and (orbs or layers):
+            if halo is not None and halo.isVisible() and ring_on and self._orb_points():
                 halo.hide_stars = True
-                matched = self._match_stars(orbs, halo)
-                self._flight = StarFlight(lambda: matched, halo.star_points,
-                                          on_frame=lambda f: [w.setWindowOpacity(1 - f) for w in layers],
-                                          on_done=hide_ring)
+                self._flight = StarFlight(
+                    lambda: self._match_stars(self._orb_points(), halo), lambda: halo.star_points(),
+                    on_start=lambda: self._set_ring_opacity(0.0, None),
+                    on_frame=lambda f: self._set_ring_opacity(None, 1 - f),
+                    on_done=hide_ring, delay=delay)
                 self._flight.start()
             else:
                 hide_ring()
             self.approvals.tick()   # Hand any open request back to Claude Code.
         else:
-            def ring_back(points):
-                if manager is None:
-                    return
-                manager.suspended = False
-                manager.set_visible(getattr(self, '_ring_before_game', True))
-                layers = self._ring_layers()
-                for window in layers:
-                    window.setWindowOpacity(0.0)
-
-                def ends():
-                    return self._match_stars(self._orb_points(), None, [provider for provider, _ in points])
-
-                def restore():
-                    for window in self._ring_layers():
-                        window.setWindowOpacity(1.0)
-                self._flight = StarFlight(lambda: points, ends,
-                                          on_frame=lambda f: [w.setWindowOpacity(f) for w in layers],
-                                          on_done=restore)
-                self._flight.start()
+            halo = getattr(pet, 'game_halo', None)
+            points = (halo.star_points() if halo is not None and halo.isVisible() and not halo.hide_stars
+                      else [])
+            if halo is not None:
+                halo.hide_stars = True
             if pet is not None:
-                pet.leave_game(on_left=ring_back)
-            else:
-                ring_back([])
+                pet.leave_game()                    # Her own place first, then the armour comes off.
+            ring_on = getattr(self, '_ring_before_game', True)
+            manager.suspended = False
+            manager.set_visible(ring_on)
+            if ring_on:
+                self._set_ring_opacity(0.0, 0.0)
+                self._flight = StarFlight(
+                    lambda: points,
+                    lambda: self._match_stars(self._orb_points(), providers=[p for p, _ in points]),
+                    on_frame=lambda f: self._set_ring_opacity(None, f),
+                    on_done=lambda: self._set_ring_opacity(1.0, 1.0))
+                self._flight.start()
             if self.stats_sampler is not None:
                 self.stats_sampler.stop()
                 self.stats_sampler = None
+
+    def _set_ring_opacity(self, stars, rest):
+        """Opacity of the usual ring's stars and of its other layers (None: keep)."""
+        manager = getattr(self, 'task_manager', None)
+        orbs = list(getattr(manager, '_windows', {}).values())
+        for window in orbs if stars is not None else ():
+            try:
+                window.setWindowOpacity(stars)
+            except RuntimeError:
+                pass
+        if rest is not None:
+            for window in self._ring_layers():
+                if window not in orbs:
+                    try:
+                        window.setWindowOpacity(rest)
+                    except RuntimeError:
+                        pass
 
     def _orb_points(self):
         """(provider, global centre) of every visible star of the usual ring."""
