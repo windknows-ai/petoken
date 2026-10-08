@@ -365,7 +365,7 @@ class Preview(QWidget):
 
     def focus_now(self):
         mode = self.panel.focus_mode
-        if mode.phase != 'idle':
+        if mode.phase in ('focus', 'break'):     # Waiting for OK: nothing to fast-forward.
             self.clock.virtual += max(0, mode.ends - self.clock()) + 1
             mode.tick()
 

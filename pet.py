@@ -166,7 +166,7 @@ class DesktopPet(QWidget):
         from focus_mode import clock_text
         if mode.phase=='focus' and mode.todo_title:
             return self.tr_text('focus_pill_todo',time=clock_text(mode.remaining()),todo=mode.todo_title)
-        key='focus_pill' if mode.phase=='focus' else 'focus_pill_break'
+        key={'focus':'focus_pill','break':'focus_pill_break','focus_over':'focus_pill_over'}.get(mode.phase,'focus_pill_break_over')
         return self.tr_text(key,time=clock_text(mode.remaining()))
 
     def apply_language(self):
@@ -274,7 +274,7 @@ class DesktopPet(QWidget):
             self._mood_next=now+1
             self.update_mood(now,task)
         focus=getattr(getattr(self.panel,'focus_mode',None),'phase','idle')
-        focus_pose={'focus':'focus_read','break':'focus_tea'}.get(focus)
+        focus_pose={'focus':'focus_read','break':'focus_tea','focus_over':'focus_done','break_over':'stretch_break'}.get(focus)
         if task=='music' and int(time.time()//120)%2:
             task='guitar'   # Every other two minutes of music she plays along.
         # Being dragged > notification > preview > interaction > focus > task > mood.
@@ -734,8 +734,9 @@ class DesktopPet(QWidget):
         if mode is not None:
             from focus_mode import CHOICES, clock_text
             if mode.phase!='idle':
-                note=menu.addAction(self.tr_text('focus_menu_running' if mode.phase=='focus'
-                                                 else 'focus_menu_resting',time=clock_text(mode.remaining())))
+                note=menu.addAction(self.tr_text({'focus':'focus_menu_running','break':'focus_menu_resting',
+                                                  'focus_over':'focus_menu_over'}.get(mode.phase,'focus_menu_break_over'),
+                                                 time=clock_text(mode.remaining())))
                 note.setEnabled(False)
             else:
                 focus=menu.addMenu(self.tr_text('focus_menu'))

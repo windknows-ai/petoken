@@ -223,9 +223,8 @@ class Assistant:
         if short:
             return (('hint_run_out_switch', dict(time=short['run_out_in'], other=other)) if other
                     else ('hint_run_out', dict(time=short['run_out_in'])))
-        context = _number(context)
-        if context is not None and context >= CONTEXT_FULL_USED:
-            return 'hint_context_full', dict(left=max(0, 100 - context))
+        # Context is per task: it is announced as a notification (observe), not on the
+        # account-wide card (2.0.4).
         week = self.pace.short(provider, 10080, now)
         if week:
             return 'hint_week_run_out', dict(time=week['run_out_in'])

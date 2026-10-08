@@ -31,9 +31,9 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v2.0.3
+## Latest stable release: v2.0.4
 
-Download the **one-click installer** [Petoken-Setup-v2.0.3.exe](https://github.com/windknows-ai/petoken/releases/download/v2.0.3/Petoken-Setup-v2.0.3.exe) from the [v2.0.3 release](https://github.com/windknows-ai/petoken/releases/tag/v2.0.3) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v2.0.4.exe](https://github.com/windknows-ai/petoken/releases/download/v2.0.4/Petoken-Setup-v2.0.4.exe) from the [v2.0.4 release](https://github.com/windknows-ai/petoken/releases/tag/v2.0.4) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 

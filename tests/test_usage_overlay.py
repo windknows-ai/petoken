@@ -197,14 +197,13 @@ class OverlayRowTests(unittest.TestCase):
     def test_codex_pro_shows_five_hour_as_na(self):
         pro = dict(secondary=dict(windowDurationMins=10080, usedPercent=40, resetsAt=NOW + 7200))
         section = overlay.provider_section('codex', pro, 30, 'proj', 'en', NOW)
-        self.assertEqual([r['kind'] for r in section['rows']], ['context', 'five', 'week'])
-        self.assertEqual(section['rows'][0]['remaining'], 70)
-        self.assertTrue(section['rows'][1]['na'])           # No 5-hour window: N/A.
-        self.assertEqual(section['rows'][2]['remaining'], 60)
-        self.assertEqual(section['rows'][2]['reset'], 7200)
+        self.assertEqual([r['kind'] for r in section['rows']], ['five', 'week'])   # No context: account-wide.
+        self.assertTrue(section['rows'][0]['na'])           # No 5-hour window: N/A.
+        self.assertEqual(section['rows'][1]['remaining'], 60)
+        self.assertEqual(section['rows'][1]['reset'], 7200)
         # A Pro plan reported by Codex is N/A for 5 hours even if a window arrives.
         reported = dict(pro, planType='pro', primary=dict(windowDurationMins=300, usedPercent=5, resetsAt=NOW + 60))
-        five = overlay.provider_section('codex', reported, 30, '', 'en', NOW)['rows'][1]
+        five = overlay.provider_section('codex', reported, 30, '', 'en', NOW)['rows'][0]
         self.assertTrue(five['na'])
         self.assertIsNone(five['remaining'])
         self.assertIsNone(section['note'])
@@ -219,12 +218,12 @@ class OverlayRowTests(unittest.TestCase):
         plus = dict(primary=dict(windowDurationMins=300, usedPercent=10, resetsAt=NOW + 60),
                     secondary=dict(windowDurationMins=10080, usedPercent=40, resetsAt=NOW + 7200))
         section = overlay.provider_section('codex', plus, None, '', 'en', NOW)
-        self.assertEqual([r['kind'] for r in section['rows']], ['context', 'five', 'week'])
-        self.assertIsNone(section['rows'][0]['remaining'])
+        self.assertEqual([r['kind'] for r in section['rows']], ['five', 'week'])
+        self.assertEqual(section['rows'][0]['remaining'], 90)
 
     def test_unknown_limits_show_a_note(self):
         section = overlay.provider_section('claude', None, 5, 'p', 'en', NOW, note='Turn it on')
-        self.assertEqual([r['kind'] for r in section['rows']], ['context'])
+        self.assertEqual(section['rows'], [])
         self.assertEqual(section['note'], 'Turn it on')
 
     def test_durations_and_context_colours(self):
@@ -299,9 +298,9 @@ class PanelOverlayTests(unittest.TestCase):
     def test_sections_carry_project_context_and_claude_hint(self):
         codex, claude = overlay.build_sections(
             self.panel, _Presence(frozenset({'codex', 'claude'})))
-        self.assertEqual((codex['project'], codex['rows'][0]['remaining']), ('alpha', 60))
-        self.assertEqual([r['kind'] for r in codex['rows']], ['context', 'five', 'week'])
-        self.assertTrue(codex['rows'][1]['na'])
+        self.assertEqual(codex['project'], 'alpha')
+        self.assertEqual([r['kind'] for r in codex['rows']], ['five', 'week'])
+        self.assertTrue(codex['rows'][0]['na'])
         self.assertEqual(claude['note'], 'Turn on Sync Claude usage in Settings')
 
     def test_idle_card_is_on_by_default_and_can_be_turned_off(self):

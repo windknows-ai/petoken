@@ -434,7 +434,9 @@ class ExpandedStarTests(unittest.TestCase):
 
     def test_native_codex_card_render_contrast_both_languages_task_variants(self):
         from pathlib import Path
-        captures=Path(tempfile.mkdtemp(prefix='petoken-card-captures-'))
+        holder=tempfile.TemporaryDirectory(prefix='petoken-card-captures-',ignore_cleanup_errors=True)
+        self.addCleanup(holder.cleanup)
+        captures=Path(holder.name)
         for language in ('en','zh_CN'):
             for variant in ('primary','secondary'):
                 for case in ('known','zero','unknown','partial'):

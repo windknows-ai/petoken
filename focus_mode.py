@@ -59,7 +59,13 @@ class _Summary(QObject):
 
 
 class FocusMode(QObject):
-    """Phases: ``idle`` → ``focus`` → ``break`` → ``idle``."""
+    """Phases: ``idle`` → ``focus`` → ``focus_over`` → ``break`` → ``break_over`` → ``idle``.
+
+    Time running out never moves on by itself (2.0.4): at the end of the
+    focus she waits (``focus_over``) until you press OK, and only then the
+    break starts; at the end of the break she waits again (``break_over``)
+    until you press OK. Ending early, or a break of 0 minutes, skips them.
+    """
 
     changed = Signal()          # Phase change, and once a second while running.
     ended = Signal(dict)        # A focus phase ended: the summary (filled in further later).
@@ -80,6 +86,7 @@ class FocusMode(QObject):
         self.todo_title = ''
         self.rounds = 0
         self.break_completed = False      # The last break ran its full time.
+        self.pending_break = 0            # Minutes of the break waiting for OK.
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.tick)
@@ -98,7 +105,13 @@ class FocusMode(QObject):
         return self.phase == 'focus'
 
     def remaining(self, now=None):
-        return max(0.0, self.ends - (self.clock() if now is None else now)) if self.phase != 'idle' else 0.0
+        return (max(0.0, self.ends - (self.clock() if now is None else now))
+                if self.phase in ('focus', 'break') else 0.0)
+
+    @property
+    def waiting(self):
+        """Time is up and she waits for OK."""
+        return self.phase in ('focus_over', 'break_over')
 
     def quiet(self, kind):
         """True when a notice of ``kind`` should stay silent right now."""
@@ -109,6 +122,7 @@ class FocusMode(QObject):
         """Focus for ``minutes``, optionally on ``todo`` (a todo record)."""
         now = self.clock()
         self.break_completed = False
+        self.pending_break = 0
         self.phase, self.started, self.planned = 'focus', now, float(minutes) * 60
         self.ends = now + self.planned
         self.todo_id = (todo or {}).get('id')
@@ -126,10 +140,25 @@ class FocusMode(QObject):
         self.changed.emit()
 
     def stop(self):
-        """End the focus early (summary, no break), or end the break."""
+        """End the focus early (summary, no break), end the break, or skip the waiting."""
         if self.phase == 'focus':
             self._finish(completed=False)
-        elif self.phase == 'break':
+        elif self.phase in ('break', 'focus_over', 'break_over'):
+            self._idle()
+
+    def acknowledge(self):
+        """OK: after the focus, start the break; after the break, back to normal."""
+        if self.phase == 'focus_over':
+            minutes = self.pending_break
+            self.pending_break = 0
+            if not minutes:
+                self._idle()
+                return
+            self.phase = 'break'
+            self.ends = self.clock() + minutes * 60
+            self.timer.start()
+            self.changed.emit()
+        elif self.phase == 'break_over':
             self._idle()
 
     def abandon(self):
@@ -143,8 +172,11 @@ class FocusMode(QObject):
         self.timer.stop()
 
     def skip_break(self):
-        if self.phase == 'break':
+        if self.phase in ('break', 'focus_over'):
             self.break_completed = False
+            self.pending_break = 0
+            self._idle()
+        elif self.phase == 'break_over':
             self._idle()
 
     def tick(self):
@@ -153,7 +185,9 @@ class FocusMode(QObject):
             self._finish(completed=True)
         elif self.phase == 'break' and now >= self.ends:
             self.break_completed = True
-            self._idle()
+            self.phase = 'break_over'        # She waits for OK.
+            self.timer.stop()
+            self.changed.emit()
             language = self.panel.prefs.get('language')
             self.panel.tray_notice(text('focus_break_over', language), text('focus_break_over_body', language))
         else:
@@ -197,12 +231,12 @@ class FocusMode(QObject):
                    else rest if completed else 0)
         summary['break_min'] = minutes
         if minutes:
-            self.phase = 'break'
-            self.ends = self.clock() + minutes * 60
+            self.phase = 'focus_over'        # The break starts when you press OK.
+            self.pending_break = minutes
             language = self.panel.prefs.get('language')
             self.panel.tray_notice(text('focus_break', language, minutes=minutes),
                                    text('focus_break_body', language))
-            self.timer.start()
+            self.timer.stop()
         else:
             if not completed:
                 self.rounds = 0
@@ -281,7 +315,8 @@ class FocusTag(QWidget):
         from PySide6.QtCore import QRectF, QSize
         from PySide6.QtGui import QFontMetrics
         mode = pet.panel.focus_mode
-        label = text_for(pet, 'focus_end_button' if mode.phase == 'focus' else 'focus_end_break_button')
+        label = text_for(pet, {'focus': 'focus_end_button', 'break': 'focus_end_break_button',
+                               'focus_over': 'focus_start_break_button'}.get(mode.phase, 'focus_card_close'))
         if (text, label) != (self.text, self.label) or self.tag_rect is None:
             self.text, self.label = text, label
             metrics = QFontMetrics(self._font())
@@ -380,6 +415,8 @@ class FocusTag(QWidget):
         mode = self.pet.panel.focus_mode
         if mode.phase == 'focus':
             mode.stop()
+        elif mode.waiting:
+            mode.acknowledge()          # Start the break, or back to normal.
         else:
             mode.skip_break()
         self.sync()
@@ -493,6 +530,7 @@ class FocusCard(QWidget):
 
     again = Signal()
     todo_done = Signal(str)
+    acknowledged = Signal()     # OK: the break may start.
 
     def __init__(self, language, summary, token_style=None):
         super().__init__(None)
@@ -528,7 +566,7 @@ class FocusCard(QWidget):
         row.addWidget(self.todo_button)
         row.addStretch(1)
         self.close_button = QPushButton(text('focus_card_close', language))
-        self.close_button.clicked.connect(self.close)
+        self.close_button.clicked.connect(lambda: (self.acknowledged.emit(), self.close()))
         self.again_button = QPushButton(text('focus_again', language))
         self.again_button.setObjectName('allow')
         self.again_button.clicked.connect(lambda: (self.again.emit(), self.close()))

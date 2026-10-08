@@ -128,7 +128,8 @@ class AssistantQuotaTests(unittest.TestCase):
 
     def test_context_hint_and_weekly_hint(self):
         assistant = Assistant()
-        self.assertEqual(assistant.hint('claude', 'a', 94, {}, NOW), ('hint_context_full', dict(left=6)))
+        # A nearly full context is a notification now, not a line on the account-wide card.
+        self.assertIsNone(assistant.hint('claude', 'a', 94, {}, NOW))
         # Four days into the week, 80 % used: out in a day, three days before reset.
         assistant.observe_quota({'codex': limits(week_used=80, week_reset=NOW + 3 * 86400)}, NOW)
         key, values = assistant.hint('codex', None, 10, {}, NOW)
@@ -144,8 +145,7 @@ class OverlayHintTests(unittest.TestCase):
         assistant.observe_quota(quotas, NOW)
         self.assertEqual(section_hint(assistant, 'claude', None, 10, quotas, 'en', NOW),
                          'Out in ~1h 20m · switch to Codex?')
-        self.assertEqual(section_hint(assistant, 'codex', None, 91, quotas, 'zh_CN', NOW),
-                         '上下文只剩 9%，建议 /compact')
+        self.assertIsNone(section_hint(assistant, 'codex', None, 91, quotas, 'zh_CN', NOW))  # Context: not on the card.
         self.assertIsNone(section_hint(None, 'codex', None, 91, quotas, 'en', NOW))
 
 

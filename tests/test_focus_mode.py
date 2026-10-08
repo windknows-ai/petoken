@@ -54,18 +54,38 @@ class FocusModeTests(unittest.TestCase):
         self.mode.started = time.time() - 5
         self.now[0] = self.mode.ends = time.time() + 1
         self.mode.tick()
-        self.assertEqual(self.mode.phase, 'break')
+        self.assertEqual(self.mode.phase, 'focus_over')     # Waits for OK; no break yet.
         [summary] = self.ended
         self.assertTrue(summary['completed'])
         self.assertEqual(summary['todos'], ['ship it'])
         self.assertFalse(self.ready[0]['loading'])
         [session] = self.store.list_focus()
         self.assertTrue(session['completed'])
-        self.assertEqual(self.panel.notices[-1], 'Focus done: take a 5-minute break')
+        self.assertEqual(self.panel.notices[-1], 'Focus time is up: a 5-minute break is next')
+        self.now[0] += 3600                                  # However long she waits...
+        self.mode.tick()
+        self.assertEqual(self.mode.phase, 'focus_over')     # ...nothing moves on by itself.
+        self.mode.acknowledge()                              # OK: the break starts now.
+        self.assertEqual((self.mode.phase, self.mode.remaining()), ('break', 300))
         self.now[0] = self.mode.ends + 1
         self.mode.tick()
+        self.assertEqual(self.mode.phase, 'break_over')     # Waits for OK again.
+        self.assertEqual(self.panel.notices[-1], 'Break time is up')
+        self.mode.acknowledge()
         self.assertEqual(self.mode.phase, 'idle')
-        self.assertEqual(self.panel.notices[-1], 'Break is over')
+
+    def test_end_buttons_at_her_feet_in_every_phase(self):
+        from types import SimpleNamespace
+        tag = SimpleNamespace(pet=SimpleNamespace(panel=SimpleNamespace(focus_mode=self.mode)), sync=lambda: None)
+        self.mode.start(25)
+        self.now[0] = self.mode.ends
+        self.mode.tick()
+        focus_mode.FocusTag.end(tag)                         # "Start break".
+        self.assertEqual(self.mode.phase, 'break')
+        self.now[0] = self.mode.ends
+        self.mode.tick()
+        focus_mode.FocusTag.end(tag)                         # "OK".
+        self.assertEqual(self.mode.phase, 'idle')
 
     def test_stopping_early_has_no_break(self):
         self.mode.start(45)
@@ -82,7 +102,7 @@ class FocusModeTests(unittest.TestCase):
             self.mode.start(25)
             self.now[0] = self.mode.ends
             self.mode.tick()
-            lengths.append(self.mode.ends - self.now[0])
+            lengths.append(self.mode.pending_break * 60)
             self.mode.skip_break()
         self.assertEqual(lengths, [300, 300, 300, focus_mode.LONG_BREAK_MIN * 60])   # Defaults.
         self.panel.prefs.update(focus_break=10, focus_long_break=30, focus_long_every=2)
@@ -92,7 +112,7 @@ class FocusModeTests(unittest.TestCase):
             self.mode.start(25)
             self.now[0] = self.mode.ends
             self.mode.tick()
-            lengths.append(self.mode.ends - self.now[0])
+            lengths.append(self.mode.pending_break * 60)
             self.mode.skip_break()
         self.assertEqual(lengths, [600, 1800])
         self.panel.prefs.update(focus_break=0, focus_long_every=0)
@@ -146,7 +166,7 @@ class FocusModeTests(unittest.TestCase):
         card.update_summary(dict(start=0, end=1500, planned=1500, completed=True, todos=[], ai_finished=0,
                                  files=3, tokens=1200, loading=False, break_min=5))
         self.assertIn('3 files changed', card.lines.text())
-        self.assertIn('Take a 5-minute break', card.note.text())
+        self.assertIn('Press OK to start a 5-minute break', card.note.text())
         card.deleteLater()
 
     def test_card_is_tall_enough_for_long_todo_names(self):

@@ -2,6 +2,15 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.0.4 — 2026-10-08
+
+### Changed
+- The usage card shows only the account-wide 5-hour and weekly limits, as two larger gauges; context stays in the usage panel and a nearly full context still notifies.
+- Focus and breaks never move on by themselves: the break starts when you press OK, and the end of the break waits for OK too.
+
+### Fixed
+- Test and preview panels no longer leave a temporary notifications folder behind.
+
 ## V2.0.3 — 2026-10-07
 
 ### Changed

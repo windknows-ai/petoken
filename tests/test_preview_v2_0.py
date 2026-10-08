@@ -52,8 +52,12 @@ class PreviewV20Tests(unittest.TestCase):
         preview.pet.update_activity()
         self.assertEqual(preview.pet.current_state, 'focus_read')
         preview.focus_now()
-        self.assertEqual(preview.panel.focus_mode.phase, 'break')
+        self.assertEqual(preview.panel.focus_mode.phase, 'focus_over')   # Waits for OK.
         self.assertIsNotNone(preview.panel._focus_card)
+        preview.panel._focus_card.close_button.click()                  # OK starts the break.
+        self.assertEqual(preview.panel.focus_mode.phase, 'break')
+        preview.focus_now()
+        self.assertEqual(preview.panel.focus_mode.phase, 'break_over')
 
     def test_goals_with_any_numbers(self):
         preview = self.preview

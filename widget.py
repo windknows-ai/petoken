@@ -4808,7 +4808,10 @@ class Panel(QWidget):
         self.clock.start(1000)
         # V1.6 notifications. Non-live panels (tests, previews) keep their
         # history in a disposable folder, never in the user's data.
-        notify_dir = PREF_DIR if live else Path(tempfile.mkdtemp(prefix='petoken-notify-qa-'))
+        # The folder goes away with the panel (it used to be left behind on every test run).
+        self._notify_temp = (None if live else
+                             tempfile.TemporaryDirectory(prefix='petoken-notify-qa-', ignore_cleanup_errors=True))
+        notify_dir = PREF_DIR if live else Path(self._notify_temp.name)
         self.notifications = NotificationCenter(
             NotificationStore(notify_dir / 'notifications.sqlite3'), lambda: self.prefs)
         self.notifications.enrich = self.recap_event
@@ -5896,11 +5899,12 @@ class Panel(QWidget):
 
     def _focus_changed(self):
         phase = self.focus_mode.phase
-        if self._focus_phase == 'break' and phase == 'idle' and self.focus_mode.break_completed:
+        if (self._focus_phase == 'break' and phase in ('break_over', 'idle')
+                and self.focus_mode.break_completed):
             self.companion.award('break_taken', f'{self.focus_mode.started:.0f}')
         pet = getattr(self, 'pet', None)
         if pet is not None:
-            if phase == 'break' and self._focus_phase == 'focus':
+            if phase == 'break' and self._focus_phase == 'focus_over':
                 pet.interact('stretch_break', 3)
             pet.update_activity()
             pet.update()
@@ -5930,6 +5934,8 @@ class Panel(QWidget):
                      project_id=self.focus_mode.project_id) if summary.get('todo_id') and not summary.get('todo_done') else None
         card.again.connect(lambda: self.start_focus(int(self.prefs.get('focus_minutes', 25)), again))
         card.todo_done.connect(self._focus_todo_done)
+        card.acknowledged.connect(lambda: self.focus_mode.acknowledge()
+                                  if self.focus_mode.phase == 'focus_over' else None)
         card.destroyed.connect(lambda *_: setattr(self, '_focus_card', None))
         card.session_start = summary['start']
         self._focus_card = card

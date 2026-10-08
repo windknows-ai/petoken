@@ -1,13 +1,14 @@
 """Usage overlay above the desktop pet (V1.5).
 
-While tasks run, a small card above the pet shows, for every supported app
-that is open on this computer (Codex, Claude Code or both), how much is
-left of the context window, the 5-hour window and the weekly window, and
-when each quota resets. Each is a ring gauge (2.0): the number in the
-middle is what is left, the arc turns amber and then red as it runs low. A
-window the account does not have (Codex Pro has no 5-hour window) shows as
-a dashed N/A ring. The usage is account-wide, so no project is named. It
-replaces the single-task token bubble; the Hub keeps its own quota rows.
+A small card above the pet shows, for every supported app that is open on
+this computer (Codex, Claude Code or both), how much is left of the 5-hour
+and the weekly window and when each resets. The limits are account-wide,
+so neither a project nor a task's context is shown (2.0.4: context lives in
+the usage panel, and a task whose context is nearly full still notifies).
+Each window is a ring gauge: the number in the middle is what is left, the
+arc turns amber and then red as it runs low, and the label and reset
+countdown sit beside it. A window the account does not have (Codex Pro has
+no 5-hour window) shows as a dashed N/A ring.
 
 Input-transparent: clicks pass through to the pet and the desktop.
 """
@@ -43,7 +44,7 @@ TRACK = QColor(theme.TRACK)
 PROVIDER_DOT = {'codex': QColor(112, 162, 255), 'claude': QColor(240, 182, 70)}
 
 # Ring colours (2.0): plenty left in the app's own tone, then amber, then red.
-RING = {'context': QColor('#5B6CD8'), 'five': QColor('#5FA8F0'), 'week': QColor(theme.VIOLET)}
+RING = {'five': QColor('#5FA8F0'), 'week': QColor('#6A55D8')}
 RING_LOW = QColor('#F2A33A')       # Under LOW_AT left.
 RING_CRITICAL = QColor('#F0545C')  # Under CRITICAL_AT left.
 LOW_AT, CRITICAL_AT = 40, 20
@@ -55,12 +56,11 @@ WIDTH = 228
 PAD = 8
 RADIUS = 12
 HEADER_H = 18
-COL_GAP = 6
-RING_D = 40                        # Ring diameter.
-RING_W = 4.5                       # Ring stroke.
-LABEL_H = 13
-RESET_H = 12
-SECTION_H = HEADER_H + RING_D + 2 + LABEL_H + RESET_H
+COL_GAP = 8
+RING_D = 46                        # Ring diameter.
+RING_W = 5                         # Ring stroke.
+TEXT_GAP = 6                       # Between a ring and its label.
+SECTION_H = HEADER_H + 2 + RING_D + 2
 HINT_H = 15                    # Optional advice line under a section (forecast.py).
 HINT = QColor('#B07612')
 SECTION_GAP = 7
@@ -71,7 +71,9 @@ MAX_SCALE = 150
 FONTS = {
     'name': (12, 11, 'Segoe UI'),
     'label': (10, 10, 'Microsoft YaHei UI'),
-    'value': (13, 11, 'Segoe UI'),
+    'cell': (11, 10, 'Microsoft YaHei UI'),
+    'value': (16, 12, 'Segoe UI'),
+    'percent': (10, 10, 'Segoe UI'),
     'na': (10, 10, 'Segoe UI'),
     'reset': (10, 10, 'Segoe UI'),
     'note': (10, 10, 'Microsoft YaHei UI'),
@@ -111,13 +113,10 @@ def _number(value):
 
 def provider_section(provider, limits, context_used, project, language, now,
                      note=None, stale=False):
-    """Rows for one provider: remaining context, then each quota window
-    the account actually has. ``note`` replaces the quota rows when none
-    are known (for example Claude usage sync is off)."""
-    used = _number(context_used)
-    rows = [dict(kind='context', label=text('usage_context', language),
-                 remaining=None if used is None else max(0.0, 100 - used),
-                 used=used, reset=None)]
+    """Rows for one provider: the 5-hour and weekly windows. ``note``
+    replaces them when none are known (for example Claude usage sync is
+    off). ``context_used`` is no longer shown (the limits are account-wide)."""
+    rows = []
     windows = 0
     plan = str((limits or {}).get('planType') or (limits or {}).get('plan_type') or '').lower() \
         if isinstance(limits, dict) else ''
@@ -138,7 +137,7 @@ def provider_section(provider, limits, context_used, project, language, now,
                          expired=window.get('expired'), stale=stale))
     if not windows:
         # Nothing known yet (or usage sync is off): a note instead of two N/A rings.
-        rows = rows[:1]
+        rows = []
     return dict(provider=provider, name=PROVIDER_NAMES.get(provider, provider),
                 project=project or '', rows=rows,
                 note=None if windows else (note or text('usage_quota_unknown', language)))
@@ -402,15 +401,14 @@ class UsageOverlay(QWidget):
         p.setFont(self._font('label'))
         p.setPen(QColor(theme.MUTED))
         p.drawText(QRectF(left, y, right - left, u(HEADER_H)), Qt.AlignRight | Qt.AlignVCenter, caption)
-        top = y + u(HEADER_H)
-        width = (right - left - 2 * u(COL_GAP)) / 3
+        top = y + u(HEADER_H) + u(2)
+        width = (right - left - u(COL_GAP)) / 2
         for index, row in enumerate(section['rows']):
             self._paint_cell(p, row, left + index * (width + u(COL_GAP)), top, width)
         if section['note']:
-            x = left + len(section['rows']) * (width + u(COL_GAP))
             p.setFont(self._font('note'))
             p.setPen(QColor(theme.MUTED))
-            p.drawText(QRectF(x, top, right - x, u(SECTION_H - HEADER_H)),
+            p.drawText(QRectF(left, top, right - left, u(RING_D)),
                        Qt.AlignLeft | Qt.AlignVCenter | Qt.TextWordWrap, section['note'])
 
     @staticmethod
@@ -425,16 +423,23 @@ class UsageOverlay(QWidget):
         return RING.get(row['kind'], QColor(theme.VIOLET))
 
     def _paint_cell(self, p, row, x, y, width):
-        """One ring gauge: what is left in the middle, label and reset below."""
+        """One gauge: the ring with what is left inside, the label and reset beside it."""
         u = self._u
         language = self.pet.panel.prefs.get('language')
         remaining = row.get('remaining')
         na = bool(row.get('na'))
         dim = bool(row.get('stale') or row.get('expired'))
-        d = u(RING_D)
-        stroke = u(RING_W)
-        ring = QRectF(x + (width - d) / 2 + stroke / 2, y + stroke / 2, d - stroke, d - stroke)
+        d, stroke = u(RING_D), u(RING_W)
+        ring = QRectF(x + stroke / 2, y + stroke / 2, d - stroke, d - stroke)
         start = (90 + RING_SWEEP / 2) * 16          # Qt: 0 at 3 o'clock, counter-clockwise.
+        color = self.ring_color(row)
+        # A soft disc behind the ring, tinted with its colour.
+        if not na and remaining is not None:
+            halo = QColor(color)
+            halo.setAlpha(28)
+            p.setPen(Qt.NoPen)
+            p.setBrush(halo)
+            p.drawEllipse(ring.adjusted(stroke * .9, stroke * .9, -stroke * .9, -stroke * .9))
         track = QColor(theme.TRACK)
         pen = QPen(track, stroke, Qt.DashLine if na else Qt.SolidLine, Qt.RoundCap)
         if na:
@@ -443,40 +448,56 @@ class UsageOverlay(QWidget):
         p.setPen(pen)
         p.drawArc(ring, int(start), int(-RING_SWEEP * 16))
         if remaining is not None and remaining > 0:
-            color = self.ring_color(row)
             sweep = RING_SWEEP * min(100.0, remaining) / 100
             gradient = QConicalGradient(ring.center(), 90 + RING_SWEEP / 2)
-            gradient.setColorAt(0, color.lighter(118))
+            gradient.setColorAt(0, color.lighter(125))
             gradient.setColorAt(.75, color)
-            arc_pen = QPen(gradient, stroke, Qt.SolidLine, Qt.RoundCap)
+            gradient.setColorAt(1, color.darker(110))
             p.setOpacity(.45 if dim else 1)
-            p.setPen(arc_pen)
+            p.setPen(QPen(gradient, stroke, Qt.SolidLine, Qt.RoundCap))
             p.drawArc(ring, int(start), int(-sweep * 16))
             p.setOpacity(1)
-        # The number in the middle (N/A for a window the account lacks).
+        # The number in the middle, with a small % (N/A for a window the account lacks).
         if na:
             p.setFont(self._font('na', bold=True))
             p.setPen(QColor(theme.MUTED))
             p.drawText(ring, Qt.AlignCenter, 'N/A')
-        else:
-            value = '—' if remaining is None else f'{remaining:.0f}'
+        elif remaining is None:
             p.setFont(self._font('value', bold=True))
-            p.setPen(QColor(theme.MUTED if dim or remaining is None else theme.INK))
-            p.drawText(ring.adjusted(0, -u(1), 0, -u(1)), Qt.AlignCenter, value)
-        # Label and reset under the ring.
-        label_top = y + d + u(2)
-        p.setFont(self._font('label'))
+            p.setPen(QColor(theme.MUTED))
+            p.drawText(ring, Qt.AlignCenter, '—')
+        else:
+            value = f'{remaining:.0f}'
+            big, small = self._font('value', bold=True), self._font('percent', bold=True)
+            from PySide6.QtGui import QFontMetricsF
+            wide = QFontMetricsF(big).horizontalAdvance(value)
+            tail = QFontMetricsF(small).horizontalAdvance('%')
+            left = ring.center().x() - (wide + tail) / 2
+            p.setFont(big)
+            p.setPen(QColor(theme.MUTED if dim else (RING_CRITICAL if remaining < CRITICAL_AT else theme.INK)))
+            p.drawText(QRectF(left, ring.top(), wide + 1, ring.height() - u(1)), Qt.AlignLeft | Qt.AlignVCenter,
+                       value)
+            p.setFont(small)
+            p.setPen(QColor(theme.MUTED))
+            p.drawText(QRectF(left + wide, ring.top() + u(3), tail + 2, ring.height() - u(1)),
+                       Qt.AlignLeft | Qt.AlignVCenter, '%')
+        # Label and reset beside the ring.
+        tx = x + d + u(TEXT_GAP)
+        tw = max(0.0, x + width - tx)
+        p.setFont(self._font('cell', bold=True))
         p.setPen(QColor(theme.INK if not na else theme.MUTED))
-        p.drawText(QRectF(x, label_top, width, u(LABEL_H)), Qt.AlignHCenter | Qt.AlignVCenter,
-                   p.fontMetrics().elidedText(row['label'], Qt.ElideRight, int(width)))
+        p.drawText(QRectF(tx, y + d / 2 - u(15), tw, u(14)), Qt.AlignLeft | Qt.AlignVCenter,
+                   p.fontMetrics().elidedText(row['label'], Qt.ElideRight, int(tw)))
         reset = row.get('reset')
         if row.get('expired'):
             detail = text('awaiting_reset', language)
         elif reset is not None:
             detail = '↻ ' + format_duration(reset)
+        elif na:
+            detail = text('usage_na_short', language)
         else:
             return
         p.setFont(self._font('reset'))
         p.setPen(QColor(theme.MUTED))
-        p.drawText(QRectF(x, label_top + u(LABEL_H), width, u(RESET_H)), Qt.AlignHCenter | Qt.AlignVCenter,
-                   p.fontMetrics().elidedText(detail, Qt.ElideRight, int(width)))
+        p.drawText(QRectF(tx, y + d / 2 + u(1), tw, u(13)), Qt.AlignLeft | Qt.AlignVCenter,
+                   p.fontMetrics().elidedText(detail, Qt.ElideRight, int(tw)))
