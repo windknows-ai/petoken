@@ -25,7 +25,12 @@ GROUPS = (
     ('mood', ('greet_morning', 'bored', 'peek', 'yawn', 'greet_night', 'sleep', 'wake_stretch', 'hug')),
     ('focus', ('cheer', 'focus_read', 'stretch_break', 'focus_tea', 'focus_done')),
     ('projects', ('ready_go', 'hold_card', 'packing', 'heart', 'clap', 'worried', 'grievance', 'proud')),
+    # 2.1 game mode: the transformation, then her second form.
+    ('game', ('transform', 'form2_idle', 'game_watch', 'game_tense', 'game_cheer', 'game_drink', 'game_bored',
+              'game_victory', 'game_defeat')),
 )
+# Cards that are not a pose: their button does something else.
+SPECIAL = {'transform': 'xform_weapon_2'}
 
 
 def pose_count():
@@ -35,6 +40,16 @@ def pose_count():
 def thumbnail(state, side):
     """The pose's first picture, scaled for the guide."""
     pixmap = None
+    if state in SPECIAL:
+        state = SPECIAL[state]
+        import transform
+        folder = transform.art_dir()
+        if folder is not None:
+            from PySide6.QtGui import QPixmap
+            pixmap = QPixmap(str(folder / f'{state}.png'))
+            if not pixmap.isNull():
+                return pixmap.scaled(QSize(side, side), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        return None
     if assets.frame_count(state):
         pixmap = assets.frame_for(state, 0)
     if pixmap is None:
@@ -182,7 +197,7 @@ class GuidePage(QWidget):
         when.setStyleSheet(f'color:{theme.MUTED}; font-size:11px;')
         words.addWidget(name)
         words.addWidget(when, 1)
-        show = QPushButton(text('pose_show', language))
+        show = QPushButton(text('pose_show_transform' if state == 'transform' else 'pose_show', language))
         show.setCursor(Qt.PointingHandCursor)
         show.clicked.connect(lambda _=False, s=state: self.demo(s))
         self.show_buttons[state] = show
@@ -216,6 +231,12 @@ class GuidePage(QWidget):
         self.refresh()
 
     def demo(self, state):
+        if state == 'transform':
+            # Watch it for real: game mode by hand (the right-click menu or the tray turns it off).
+            mode = getattr(self.panel, 'game_mode', None)
+            if mode is not None and not mode.active:
+                mode.toggle()
+            return
         pet = getattr(self.panel, 'pet', None)
         if pet is not None:
             pet.demo_pose(state)

@@ -575,79 +575,89 @@ class TransformStage(QWidget):
         p.drawImage(rect.adjusted(-2, -2, 2, 2), line)
         p.setOpacity(1)
 
+    _BEAM = None
+
+    @classmethod
+    def _beam_texture(cls):
+        """A stage spotlight, computed pixel by pixel once: a cone whose light
+        falls off smoothly (no edges anywhere), a little stronger in its core,
+        faint soft grain along it, and a soft pool of light where it lands."""
+        if cls._BEAM is not None:
+            return cls._BEAM
+        w, h = 160, 240
+        image = QImage(w, h, QImage.Format_ARGB32_Premultiplied)
+        rng = random.Random(11)
+        waves = [(rng.uniform(5, 13), rng.uniform(0, 6.28), rng.uniform(.03, .07)) for _ in range(4)]
+        floor = .86                                         # Where the light lands (share of the height).
+        for y in range(h):
+            v = y / (h - 1)
+            for x in range(w):
+                u = (x - (w - 1) / 2) / ((w - 1) / 2)       # -1 .. 1 across.
+                light = 0.0
+                if v <= floor + .05:
+                    d = min(1.0, v / floor)                 # 0 at the lamp, 1 on the floor.
+                    land = max(0.0, min(1.0, (floor + .05 - v) / .1))
+                    land = land * land * (3 - 2 * land)     # Melts into the floor, no line.
+                    half = .12 + .78 * d                    # The cone opens downwards.
+                    across = u / half
+                    core = math.exp(-across * across * 2.6) * .78 + math.exp(-across * across * 9) * .32
+                    grain = 1 + sum(a * math.sin(k * across + ph + d * 2) for k, ph, a in waves)
+                    top = min(1.0, d / .16)
+                    top = top * top * (3 - 2 * top)         # Fades in under the lamp.
+                    light = core * grain * top * (1 - .35 * d) * land
+                # The pool on the floor: a flat, soft ellipse.
+                pu, pv = u / .85, (v - floor) / .06
+                light += .5 * math.exp(-(pu * pu + pv * pv) * 1.6)
+                a = max(0.0, min(1.0, light))
+                alpha = int(a * 255)
+                r, g, bl = int(232 * a), int(241 * a), int(255 * a)
+                image.setPixel(x, y, (alpha << 24) | (r << 16) | (g << 8) | bl)
+        cls._BEAM = image
+        return image
+
     def _paint_spotlight(self, p, target, name, f):
-        """A showcase spotlight: soft-edged, brighter in the middle, coming on from
-        the top down onto her; a soft pool at her feet; it dims as the moment ends."""
+        """The showcase spotlight: it comes on from the top down onto her and
+        dims as the moment ends. Soft everywhere: no hard edge or steps."""
         if name == 'mvp':
-            reach = _ease(min(1.0, f / .3))                     # The light travels down.
-            strength = 1.0
+            reach = _ease(min(1.0, f / .32))                    # The light travels down.
+            strength = .9
         else:
-            reach, strength = 1.0, 1 - _ease(f)
-        if strength <= 0:
+            reach, strength = 1.0, .9 * (1 - _ease(f))
+        if strength <= 0.01:
             return
-        top_y = min(target.top() - target.height() * .55, 0.0)
-        floor = target.bottom() - target.height() * .02
-        bottom = top_y + (floor - top_y) * reach
-        cx = target.center().x()
-        narrow, wide = target.width() * .14, target.width() * .6
-        spread = narrow + (wide - narrow) * reach
-        # Drawn small, then scaled up smoothly: the edges come out soft.
-        k = 6
-        area = QRectF(cx - wide * 1.4, top_y, wide * 2.8, floor - top_y + target.height() * .1)
-        small = QImage(max(1, int(area.width() / k)), max(1, int(area.height() / k)),
-                       QImage.Format_ARGB32_Premultiplied)
-        small.fill(Qt.transparent)
-        q = QPainter(small)
-        q.setRenderHint(QPainter.Antialiasing)
-        q.scale(1 / k, 1 / k)
-        q.translate(-area.x(), -area.y())
-        q.setPen(Qt.NoPen)
-        # Layers from the wide, faint outside to the bright core.
-        for share, alpha in ((1.0, 30), (.75, 32), (.5, 38), (.28, 44)):
-            beam = QLinearGradient(QPointF(cx, top_y), QPointF(cx, floor))
-            beam.setColorAt(0, QColor(235, 244, 255, 0))
-            beam.setColorAt(.2, QColor(236, 244, 255, int(alpha * strength)))
-            beam.setColorAt(.75, QColor(214, 230, 255, int(alpha * .85 * strength)))
-            beam.setColorAt(1, QColor(200, 220, 255, int(alpha * .7 * strength)))
-            q.setBrush(beam)
-            half_top, half_bottom = narrow * share, spread * share
-            q.drawPolygon([QPointF(cx - half_top, top_y), QPointF(cx + half_top, top_y),
-                           QPointF(cx + half_bottom, bottom), QPointF(cx - half_bottom, bottom)])
-        # Faint streaks inside the beam, drifting slowly.
-        for n in range(5):
-            drift = math.sin(self.t * .7 + n * 1.9) * .25
-            offset = (n - 2) / 2.5 + drift * .3
-            streak = QLinearGradient(QPointF(cx, top_y), QPointF(cx, bottom))
-            streak.setColorAt(0, QColor(255, 255, 255, 0))
-            streak.setColorAt(.3, QColor(255, 255, 255, int(22 * strength)))
-            streak.setColorAt(1, QColor(255, 255, 255, 0))
-            q.setBrush(streak)
-            x0, x1 = cx + narrow * offset * .6, cx + spread * offset * .8
-            w0, w1 = narrow * .08, spread * .07
-            q.drawPolygon([QPointF(x0 - w0, top_y), QPointF(x0 + w0, top_y),
-                           QPointF(x1 + w1, bottom), QPointF(x1 - w1, bottom)])
-        if reach >= .99:
-            pool = QRadialGradient(QPointF(cx, floor), wide)
-            pool.setColorAt(0, QColor(228, 240, 255, int(95 * strength)))
-            pool.setColorAt(.5, QColor(210, 228, 255, int(40 * strength)))
-            pool.setColorAt(1, QColor(0, 0, 0, 0))
-            q.setBrush(pool)
-            q.save()
-            q.translate(cx, floor)
-            q.scale(1, .22)
-            q.drawEllipse(QPointF(0, 0), wide * 1.1, wide * 1.1)
-            q.restore()
+        texture = self._beam_texture()
+        floor_y = target.bottom() - target.height() * .02
+        top_y = min(target.top() - target.height() * .6, 0.0)
+        height = (floor_y - top_y) / .86
+        width = target.width() * 1.5
+        area = QRectF(target.center().x() - width / 2, top_y, width, height)
+        layer = QImage(texture.size(), QImage.Format_ARGB32_Premultiplied)
+        layer.fill(Qt.transparent)
+        q = QPainter(layer)
+        q.drawImage(0, 0, texture)
+        if reach < 1.0:                                         # Revealed from the top, with a soft front.
+            q.setCompositionMode(QPainter.CompositionMode_DestinationIn)
+            mask = QLinearGradient(QPointF(0, 0), QPointF(0, texture.height()))
+            front = reach * .95
+            mask.setColorAt(0, QColor(0, 0, 0, 255))
+            mask.setColorAt(max(0.0, front - .12), QColor(0, 0, 0, 255))
+            mask.setColorAt(min(1.0, front + .02), QColor(0, 0, 0, 0))
+            mask.setColorAt(1, QColor(0, 0, 0, 0))
+            q.fillRect(layer.rect(), mask)
         q.end()
         p.save()
         p.setRenderHint(QPainter.SmoothPixmapTransform)
-        p.drawImage(area, small)
+        p.setCompositionMode(QPainter.CompositionMode_Screen)  # Light adds, it never greys things.
+        p.setOpacity(strength)
+        p.drawImage(area, layer)
         p.restore()
-        # Dust drifting in the beam.
-        if name == 'mvp' and self.frames % 5 == 0:
-            x = cx + self.rng.uniform(-.7, .7) * spread * .7
-            y = top_y + self.rng.uniform(.2, .9) * (bottom - top_y)
-            self.particles.append(Particle(x, y, self.rng.uniform(-5, 5), self.rng.uniform(3, 10),
-                                           self.rng.uniform(.9, 1.7), self.rng.uniform(1.0, 2.0), None))
+        # Dust drifting slowly in the light.
+        if name == 'mvp' and reach > .6 and self.frames % 6 == 0:
+            d = self.rng.uniform(.2, .85)
+            x = target.center().x() + self.rng.gauss(0, .22) * width * (.12 + .78 * d) / 2
+            y = top_y + d * (floor_y - top_y)
+            self.particles.append(Particle(x, y, self.rng.uniform(-4, 4), self.rng.uniform(2, 7),
+                                           self.rng.uniform(1.2, 2.2), self.rng.uniform(.8, 1.6), None))
 
     def _paint_particles(self, p):
         for particle in self.particles:
