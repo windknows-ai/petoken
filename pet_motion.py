@@ -26,6 +26,9 @@ from dataclasses import dataclass, field
 FPS_LIVELY = 60
 FPS_CALM = 30
 CROSSFADE_S = .14
+# The pajama change dissolves slowly from one step to the next, without the squash.
+GENTLE = ('night_change', 'night_settle')
+GENTLE_FADE_S = .5
 FRAME_BLEND = .3          # Share of each frame spent blending into the next.
 BLINK_S = .12
 BLINK_GAP = (2.5, 6.0)
@@ -230,15 +233,19 @@ class Animator:
         self.next_blink = None
         self.blink_until = float('-inf')
         self._index = 0
+        self.fade_s = CROSSFADE_S
 
     # Events ---------------------------------------------------------------
     def set_state(self, state, now):
         if state == self.state:
             return
+        gentle = state.startswith(GENTLE) or self.state.startswith(GENTLE)
+        self.fade_s = GENTLE_FADE_S if gentle else CROSSFADE_S
         if self.started is not None:
             self.previous, self.previous_index = self.state, self._index
             self.changed = now
-            self.squash.kick(-1.1)          # A small stretch as the pose changes.
+            if not gentle:
+                self.squash.kick(-1.1)      # A small stretch as the pose changes.
         self.state, self.started = state, now
         hop = profile_for(state).hop
         if hop:
@@ -350,7 +357,7 @@ class Animator:
         fade = 1.0
         previous = None
         if self.changed is not None and self.previous is not None:
-            fade = min(1.0, (now - self.changed) / CROSSFADE_S)
+            fade = min(1.0, (now - self.changed) / self.fade_s)
             if fade >= 1.0:
                 self.previous = self.changed = None
             else:

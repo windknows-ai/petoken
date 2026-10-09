@@ -139,6 +139,11 @@ NIGHT_REGISTRY = tuple(
     AssetEntry(name, f"assets/v2_3/{name}.png", "assets/v1_1/idle.png", frames=_v23(name, frames),
                blink=f"assets/v2_3/{name}_blink.png" if blink else "")
     for name, frames, blink in _NIGHT)
+# The pajama change, one picture per step (night_mode.CHANGE_ON / CHANGE_OFF).
+NIGHT_CHANGE_REGISTRY = tuple(
+    AssetEntry(name, f"assets/v2_3/{name}.png", "assets/v1_1/idle.png")
+    for name in ("night_change_0", "night_change_1", "night_change_2", "night_change_3",
+                 "night_settle_1", "night_settle_2"))
 
 # Activity-layer names that are not character poses.
 ALIASES = {"working": "codex_working", "usage": "idle"}
@@ -151,7 +156,7 @@ PREVIEW_STATES = ("idle", "typing", "microphone", "music", "working", "usage",
 def entry_for(state):
     """Return the registry entry for ``state``; unknown states map to idle."""
     key = ALIASES.get(state, state)
-    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY:
+    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY:
         if entry.state == key:
             return entry
     return REGISTRY[0]
@@ -313,7 +318,7 @@ def load_sprites():
         # Companion poses share the V1.1 pixmap they fall back to, so they
         # cost no extra memory until their own art exists.
         paths = {resolve_path(entry): table[entry.state] for entry in REGISTRY}
-        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY:
+        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY:
             path = resolve_path(entry)
             table[entry.state] = paths.get(path) or (pose_source(path) if path else None)
         table['working'] = table['codex_working']

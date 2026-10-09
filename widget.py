@@ -6210,8 +6210,14 @@ class Panel(QWidget):
             self.app_time_tracker = None
 
     def _night_changed(self, active):
+        """She changes into (or out of) her pajamas where you can see it."""
         pet = getattr(self, 'pet', None)
-        if pet is not None:
+        if pet is None:
+            return
+        steps = self.night_mode.change_steps(active)
+        if steps and pet.isVisible() and not self.game_mode.active:
+            pet.play_change(steps)
+        else:
             pet.update_activity()
 
     def _sit_too_long(self):

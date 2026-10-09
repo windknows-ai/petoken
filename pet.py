@@ -72,6 +72,8 @@ class DesktopPet(QWidget):
         # Interaction layer (head pat, poke, long press, drag) and mood layer.
         self.interaction_state=None
         self.interaction_until=0.0
+        self.change_state=None          # A step of the pajama change (night_mode.CHANGE_ON / OFF).
+        self._change=None
         self.dragging=False
         self._drag_last=None
         self._drag_started=0.0
@@ -521,6 +523,7 @@ class DesktopPet(QWidget):
         # Being dragged > notification > preview > interaction > game > focus > task > mood.
         state=(('dragged' if self.dragging and 'dragged' in self.sprites else None)
                or self.reaction_state or self.preview_state or self.interaction_state
+               or (self.change_state if not gaming else None)
                or game_pose
                or (focus_pose if focus_pose in self.sprites else None)
                or (task if task!='idle' else None)
@@ -571,6 +574,25 @@ class DesktopPet(QWidget):
         if self.mood.greeted_day and self.mood.greeted_day!=self.panel.prefs.get('mood_greeted_day'):
             self.panel.prefs['mood_greeted_day']=self.mood.greeted_day
             self.panel.persist()
+
+    def play_change(self,steps):
+        """Play the pajama change, one picture after another; a newer change replaces it."""
+        token=object()
+        self._change=token
+        steps=[(pose,seconds) for pose,seconds in steps if pose in self.sprites]
+
+        def step(index):
+            if self._change is not token:
+                return
+            if index>=len(steps):
+                self.change_state=None
+                self._change=None
+            else:
+                self.change_state=steps[index][0]
+                QTimer.singleShot(int(steps[index][1]*1000),lambda:step(index+1))
+            self.update_activity()
+        step(0)
+        return bool(steps)
 
     def demo_pose(self,pose,seconds=3.5):
         """Show ``pose`` now for a few seconds (the pose guide's Show me)."""

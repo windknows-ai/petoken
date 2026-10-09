@@ -28,9 +28,12 @@ GROUPS = (
     # 2.1 game mode: the transformation, then her second form.
     ('game', ('transform', 'form2_idle', 'game_watch', 'game_tense', 'game_cheer', 'game_drink', 'game_bored',
               'game_victory', 'game_defeat')),
+    # 2.3 late-night mode: the pajama change, then her night poses.
+    ('night', ('night_change', 'night_idle', 'night_yawn', 'night_milk', 'night_read', 'night_goodnight',
+               'night_sleep', 'night_wake')),
 )
 # Cards that are not a pose: their button does something else.
-SPECIAL = {'transform': 'xform_weapon_2'}
+SPECIAL = {'transform': 'xform_weapon_2', 'night_change': 'night_change_2'}
 
 
 def pose_count():
@@ -40,6 +43,9 @@ def pose_count():
 def thumbnail(state, side):
     """The pose's first picture, scaled for the guide."""
     pixmap = None
+    if state == 'night_change':
+        pixmap = assets.sprite_for(SPECIAL[state])
+        return pixmap.scaled(QSize(side, side), Qt.KeepAspectRatio, Qt.SmoothTransformation) if pixmap else None
     if state in SPECIAL:
         state = SPECIAL[state]
         import transform
@@ -238,5 +244,11 @@ class GuidePage(QWidget):
                 mode.toggle()
             return
         pet = getattr(self.panel, 'pet', None)
+        if state == 'night_change':
+            # Into the pajamas, a moment in them, and back out.
+            from night_mode import CHANGE_OFF, CHANGE_ON
+            if pet is not None:
+                pet.play_change(CHANGE_ON + (('night_idle', 2.5),) + CHANGE_OFF)
+            return
         if pet is not None:
             pet.demo_pose(state)

@@ -169,7 +169,7 @@ if __name__ == '__main__':
     unittest.main()
 
 
-class PanelRestTest(unittest.TestCase):
+class PanelCase(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.pref_patch = mock.patch('widget.PREF_DIR', Path(self.temp.name))
@@ -193,6 +193,7 @@ class PanelRestTest(unittest.TestCase):
         self.pref_patch.stop()
         self.temp.cleanup()
 
+class PanelRestTest(PanelCase):
     def test_settings_rest_page_saves(self):
         from widget import Settings
         settings = Settings(self.panel)
@@ -242,3 +243,43 @@ class PanelRestTest(unittest.TestCase):
         self.assertEqual(view.list.topLevelItemCount(), 0)
         self.assertTrue(view.empty.isVisibleTo(view))
         page.deleteLater()
+
+
+class ChangeTest(PanelCase):
+    def test_the_change_plays_step_by_step_and_ends_in_pajamas(self):
+        import night_mode as nm
+        self.pet.mood_enabled = False
+        self.pet.show()
+        steps = self.panel.night_mode.change_steps(True)
+        self.assertEqual(steps, nm.CHANGE_ON)                 # The art is in the repository.
+        quick = tuple((pose, 0.01) for pose, _s in steps)
+        with mock.patch.object(self.panel.night_mode, 'change_steps', return_value=quick):
+            self.panel.night_mode.toggle()
+            self.assertEqual(self.pet.current_state, 'night_change_0')
+            import time as clock
+            deadline = clock.monotonic() + 3
+            while self.pet.change_state is not None and clock.monotonic() < deadline:
+                APP.processEvents()
+            self.assertIsNone(self.pet.change_state)
+            self.assertEqual(self.pet.current_state, 'night_idle')
+            self.panel.game_mode.active = True               # Never during a game.
+            self.panel.night_mode.toggle()
+            self.assertIsNone(self.pet.change_state)
+            self.panel.game_mode.active = False
+
+    def test_a_newer_change_replaces_the_old_one(self):
+        self.pet.show()
+        self.pet.play_change((('night_change_0', 5), ('night_change_1', 5)))
+        self.pet.play_change((('night_settle_2', 5),))
+        self.assertEqual(self.pet.change_state, 'night_settle_2')
+
+    def test_gentle_fade_between_change_steps(self):
+        import pet_motion
+        animator = pet_motion.Animator()
+        animator.set_state('idle', 0)
+        animator.set_state('night_change_0', 1)
+        self.assertEqual(animator.fade_s, pet_motion.GENTLE_FADE_S)
+        animator.set_state('typing', 2)
+        self.assertEqual(animator.fade_s, pet_motion.GENTLE_FADE_S)   # Leaving the change is gentle too.
+        animator.set_state('idle', 3)
+        self.assertEqual(animator.fade_s, pet_motion.CROSSFADE_S)

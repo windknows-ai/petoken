@@ -24,6 +24,12 @@ from PySide6.QtCore import QObject, QTimer, Signal
 # Night versions of her poses: shown instead of these while it is night.
 NIGHT_POSES = {'idle': 'night_idle', 'sleep': 'night_sleep', 'yawn': 'night_yawn', 'greet_night': 'night_goodnight',
                'wake_stretch': 'night_wake', 'bored': 'night_read', 'peek': 'night_milk'}
+# The pajama change: (pose, seconds), played when the night begins and,
+# after she wakes, backwards when it ends.
+CHANGE_ON = (('night_change_0', .9), ('night_change_1', 1.0), ('night_change_2', 1.0), ('night_change_3', 1.0),
+             ('night_settle_1', 1.1), ('night_settle_2', 1.0))
+CHANGE_OFF = (('night_wake', 2.4), ('night_settle_2', .8), ('night_settle_1', 1.0), ('night_change_3', 1.0),
+              ('night_change_2', 1.0), ('night_change_1', 1.0), ('night_change_0', 1.0))
 PAUSE_S = 5 * 60                 # This long without input resets the sitting time.
 SIT_CHOICES = (30, 45, 60, 90)
 CHECK_MS = 30 * 1000
@@ -93,6 +99,12 @@ class NightMode(QObject):
         if active != self.active:
             self.active = active
             self.changed.emit(active)
+
+    def change_steps(self, active):
+        """The change to play now, or () until its pictures exist."""
+        import pet_assets
+        steps = CHANGE_ON if active else CHANGE_OFF
+        return steps if all(pet_assets.has_own_art(pose) for pose, _s in steps) else ()
 
     def pose(self, pose):
         """The night version of ``pose`` while it is night and its art exists."""
