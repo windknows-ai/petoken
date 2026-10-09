@@ -2,6 +2,11 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.2.1 — 2026-10-09
+
+### Fixed
+- Notices for tasks that finish within seconds name the task (remembered on sight, else read from Claude Code's records).
+
 ## V2.2.0 — 2026-10-09
 
 ### Added
