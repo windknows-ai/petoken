@@ -87,6 +87,9 @@ def problems(top, where):
             if w.fontMetrics().horizontalAdvance(text) > room + SLACK:
                 issue = f'combo text needs {w.fontMetrics().horizontalAdvance(text)}px, has {room}'
         elif isinstance(w, QTabBar):
+            parent = w.parentWidget()
+            if parent is not None and w.sizeHint().width() > parent.width() + SLACK:
+                found.append(f'{where}: tab bar needs {w.sizeHint().width()}px, has {parent.width()} (tabs cut off)')
             for index in range(w.count()):
                 text = w.tabText(index)
                 if w.tabRect(index).width() + SLACK < w.fontMetrics().horizontalAdvance(text) + 12:

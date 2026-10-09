@@ -1335,6 +1335,18 @@ class WorkbenchWindow(QWidget):
                 self.status.setText(self.tr('wb_folder_error'))
                 self.status.show()
 
+    def _fit_tabs(self):
+        """Every tab stays visible (English labels are longer): the window is at
+        least wide enough for the tab bar, within the screen."""
+        bar = self.tabs.tabBar()
+        bar.setUsesScrollButtons(False)
+        extra = max(0, bar.sizeHint().width() - self.tabs.width() + 12)
+        need = self.width() + extra if self.tabs.width() > 0 else bar.sizeHint().width() + 260
+        self.setMinimumWidth(max(680, min(need, 1600)))
+        screen = (self.screen() or QApplication.primaryScreen()).availableGeometry()
+        if self.width() < need:
+            self.resize(min(need, screen.width()), self.height())
+
     def apply_language(self):
         self.setWindowTitle(self.tr('workbench_open') + ' · Petoken')
         for widget, key in self._captions:
@@ -1345,6 +1357,7 @@ class WorkbenchWindow(QWidget):
                                      'wb_reports', 'wb_collection', 'wb_guide']):
             self.tabs.setTabText(index, self.tr(key))
             self.tabs.setTabToolTip(index, self.tr(key + '_tab_tip'))
+        self._fit_tabs()
         self.report_page.apply_language()
         self.collection_page.apply_language()
         self.guide_page.apply_language()
