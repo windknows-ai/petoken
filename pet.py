@@ -237,9 +237,9 @@ class DesktopPet(QWidget):
         if self.game_place is None:
             self.game_place=Placement(self)
         self.game_place.enter(getattr(self.panel.game_mode,'monitor',None))
-        from game_mode import LongPressDrag
+        from game_mode import HoverInput
         if self.game_drag is None:
-            self.game_drag=LongPressDrag(self)
+            self.game_drag=HoverInput(self)
         self.game_drag.start()
         if self.game_halo is None:
             self.game_halo=GameHalo(self)
@@ -384,7 +384,8 @@ class DesktopPet(QWidget):
             halo.follow()
             if not halo.isVisible():
                 halo.show()
-                self.raise_()
+                from game_mode import raise_quietly
+                raise_quietly(self)
         usage=self.game_usage
         if usage is None:
             return

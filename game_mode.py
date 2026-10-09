@@ -9,9 +9,11 @@ While it is on:
 * every task reaction, pop-up, approval card and Where-I-Left-Off card is
   silent (all of it is still recorded under Notifications; approval requests
   go back to Claude Code's terminal);
-* on the game's screen she shrinks into the bottom-right corner and lets the
-  mouse through, so she never blocks the game. A click reaches the game; a
-  long press (half a second) on her, or on the info bar, drags it (LongPressDrag);
+* on the game's screen she moves into the bottom-right corner; her windows
+  let the mouse through to the game, except while the cursor is over her or
+  the info bar (HoverInput): then right-click, drag and long press work as
+  usual. This needs only the cursor position, which Windows gives any
+  program, even over games that run as administrator (Genshin Impact);
 * the star ring stands behind her (GameHalo): one star per running task in the
   usual colours, or a violet deep-space ring when nothing runs;
 * instead of the usage card, a compact display (GameUsage) shows either four
@@ -39,7 +41,7 @@ POLL_MS = 2000
 HOLD_S = .5                  # A press this long on her (or the bar) drags it.
 HOLD_SLOP = 10               # Moving further first means it was a drag in the game.
 SIDES = ('right', 'left')
-CORNER_SCALE = 70            # % of her usual size while sharing the game's screen.
+CORNER_SCALE = 85            # % of her usual size while sharing the game's screen.
 CORNER_MARGIN = 12
 DISPLAYS = ('rings', 'bar', 'hidden')
 RING_STYLES = ('tasks', 'space')            # Follow the tasks, or always deep space.
@@ -47,6 +49,31 @@ BAR_ITEMS = ('limits', 'cpu', 'gpu', 'gpu_temp', 'vram', 'ram')
 DEFAULT_BAR_ITEMS = ('limits', 'cpu', 'gpu', 'gpu_temp')
 STAR = {'codex': QColor(112, 162, 255), 'claude': QColor(240, 182, 70)}
 SPACE = (QColor('#7B5CFF'), QColor('#B78CFF'), QColor('#5FB4FF'))
+
+
+def raise_quietly(widget):
+    """Bring one of her windows to the front without activating it.
+
+    Qt's raise_() activates the window on Windows; done twice a second over
+    a game, it took the focus from the game, so the game lost every drag and
+    click and soon no longer counted as the foreground window.
+    """
+    try:
+        if widget is None or not widget.isVisible():
+            return
+        import sys
+        if sys.platform != 'win32':
+            widget.raise_()
+            return
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        user32.SetWindowPos.argtypes = (wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
+                                        ctypes.c_int, ctypes.c_int, wintypes.UINT)
+        # HWND_TOP within its band; no move, no size, NO ACTIVATE, no owner order.
+        user32.SetWindowPos(int(widget.winId()), None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x0200)
+    except (RuntimeError, OSError, AttributeError):
+        pass
 
 
 def names(value):
@@ -229,7 +256,6 @@ class Placement:
             shares = False
         corner = bool(pet.panel.prefs.get('game_corner', True)) and shares
         self.saved = (pet.pos(), pet.pet_scale, corner)
-        pet.setWindowFlag(Qt.WindowTransparentForInput, True)
         if corner:
             pet.apply_pet_scale(max(50, round(pet.pet_scale * CORNER_SCALE / 100)))
             pet.move_clamped(QPoint(area.right() - pet.width() - CORNER_MARGIN,
@@ -248,9 +274,7 @@ class Placement:
 
     def leave_input(self):
         """Clicks reach her again (after it)."""
-        pet = self.pet
-        pet.setWindowFlag(Qt.WindowTransparentForInput, False)
-        pet.show()
+        set_clickthrough(self.pet, False)
 
     def leave(self):
         self.leave_place()
@@ -345,11 +369,7 @@ class GameHalo(QWidget):
         order = [self, pet, getattr(pet, 'transform_stage', None), getattr(pet, 'game_usage', None),
                  getattr(pet, 'focus_tag', None)]
         for window in order:
-            try:
-                if window is not None and window.isVisible():
-                    window.raise_()
-            except RuntimeError:
-                pass
+            raise_quietly(window)
 
     def frames_since_raise(self):
         self._raise_count = getattr(self, '_raise_count', 0) + 1
@@ -553,7 +573,7 @@ class StarFlight(QWidget):
             self.on_start()
         self._grow()
         self.show()
-        self.raise_()
+        raise_quietly(self)
 
     def _grow(self):
         points = [pt for _, pt in (self._first or [])] + [pt for _, pt in self.ends()]
@@ -735,6 +755,25 @@ class GameUsage(QWidget):
         if self.pos() != QPoint(x, y):
             self.move(x, y)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self.style_name == 'bar':
+            self._grab = event.globalPosition().toPoint() - self.pos()
+
+    def mouseMoveEvent(self, event):
+        grab = getattr(self, '_grab', None)
+        if grab is not None and event.buttons() & Qt.LeftButton:
+            target = event.globalPosition().toPoint() - grab
+            self.pet.panel.prefs['game_bar_pos'] = [target.x(), target.y()]
+            self.follow()                   # Kept on a screen, as later.
+
+    def mouseReleaseEvent(self, event):
+        if getattr(self, '_grab', None) is not None:
+            self._grab = None
+            try:
+                self.pet.panel.persist()
+            except Exception:
+                pass
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -798,160 +837,96 @@ class GameUsage(QWidget):
             x += vw + 24
 
 
-def _button_down(right=False):
-    """A mouse button right now, wherever the cursor is (Windows)."""
+def set_clickthrough(widget, through):
+    """Let the mouse pass through ``widget`` (to the game below) or take it.
+
+    Changed on the native window (WS_EX_TRANSPARENT), not with Qt's window
+    flag, which would recreate the window each time.
+    """
     try:
+        if widget is None:
+            return
+        widget.setAttribute(Qt.WA_TransparentForMouseEvents, bool(through))
+        import sys
+        if sys.platform != 'win32':
+            return
         import ctypes
+        from ctypes import wintypes
         user32 = ctypes.windll.user32
-        swapped = bool(user32.GetSystemMetrics(23))                 # SM_SWAPBUTTON.
-        button = 0x02 if swapped != right else 0x01
-        return bool(user32.GetAsyncKeyState(button) & 0x8000)
-    except Exception:
-        return False
+        user32.GetWindowLongW.argtypes = (wintypes.HWND, ctypes.c_int)
+        user32.SetWindowLongW.argtypes = (wintypes.HWND, ctypes.c_int, ctypes.c_long)
+        hwnd = int(widget.winId())
+        style = user32.GetWindowLongW(hwnd, -20)                     # GWL_EXSTYLE
+        wanted = (style | 0x20 | 0x80000) if through else (style & ~0x20)   # TRANSPARENT (+LAYERED)
+        if wanted != style:
+            user32.SetWindowLongW(hwnd, -20, wanted)
+    except (RuntimeError, OSError, AttributeError):
+        pass
 
 
-def _left_button_down():
-    return _button_down(False)
+class HoverInput(QObject):
+    """In game mode her windows let the mouse through to the game, except
+    while the cursor is over her or the info bar: then they take it, so her
+    right-click menu, dragging her and long presses work as outside games.
 
-
-def _right_button_down():
-    return _button_down(True)
-
-
-class LongPressDrag(QObject):
-    """Long press to drag while she lets the mouse through.
-
-    In game mode her window (and the bar) ignore the mouse, so a click goes
-    to the game. This watches the button instead: held for HOLD_S on her or
-    on the bar without moving, the window follows the cursor until release.
+    Only the cursor position is watched. Windows lets any program read it,
+    unlike the mouse buttons, which it hides from ordinary programs while a
+    game that runs as administrator (Genshin Impact) has the focus.
     """
 
-    def __init__(self, pet, button=_left_button_down, cursor=None, clock=time.monotonic,
-                 right=_right_button_down):
+    def __init__(self, pet, cursor=None):
         super().__init__(pet)
         from PySide6.QtGui import QCursor
         self.pet = pet
-        self.button = button
-        self.right = right
-        self._right_at = None       # Where a right press on her began.
-        self.menu = None
         self.cursor = cursor or QCursor.pos
-        self.clock = clock
-        self.press = None           # (target, start point, time, offset)
-        self.dragging = None
-        self._was_down = False
+        self.taking = {}                    # widget -> True while it takes the mouse.
         self.timer = QTimer(self)
-        self.timer.setTimerType(Qt.PreciseTimer)
-        self.timer.setInterval(16)
+        self.timer.setInterval(30)
         self.timer.timeout.connect(self.tick)
 
     def start(self):
-        self._was_down = True       # Ignore a press already held when game mode began.
-        self.press = self.dragging = None
+        self.taking = {}
+        for widget in self._targets():
+            self._set(widget, False)
         self.timer.start()
 
     def stop(self):
-        if self.dragging is not None:
-            self._release()
         self.timer.stop()
+        for widget in list(self.taking):
+            try:
+                set_clickthrough(widget, widget is not self.pet)    # She takes the mouse again; the rest never do.
+            except RuntimeError:
+                pass
+        self.taking = {}
 
     def _targets(self):
         pet = self.pet
-        out = []
+        out = [pet]
         usage = getattr(pet, 'game_usage', None)
         if usage is not None and usage.isVisible() and usage.style_name == 'bar':
-            out.append(('bar', usage, usage.frameGeometry()))
-        # Her sprite, not the empty space above her head.
-        box = pet.frameGeometry().adjusted(pet._px(14), pet._px(64), -pet._px(14), 0)
-        out.append(('pet', pet, box))
+            out.append(usage)
         return out
 
+    def _box(self, widget):
+        if widget is self.pet:
+            pet = self.pet
+            # Her picture, not the empty room around it.
+            return pet.frameGeometry().adjusted(pet._px(14), pet._px(64), -pet._px(14), 0)
+        return widget.frameGeometry()
+
+    def _set(self, widget, take):
+        if self.taking.get(widget) != take:
+            self.taking[widget] = take
+            set_clickthrough(widget, not take)
+
     def tick(self):
-        down = self.button()
         point = self.cursor()
-        now = self.clock()
-        self._right_click(point)
-        if not down:
-            if self.dragging is not None:
-                self._release()
-            self.press = None
-            self._was_down = False
-            return
-        if not self._was_down:                      # A fresh press.
-            self._was_down = True
-            for name, widget, box in self._targets():
-                if box.contains(point):
-                    self.press = (name, widget, point, now, point - widget.pos())
-                    break
-            return
-        if self.press is None:
-            return
-        name, widget, start, at, offset = self.press
-        if self.dragging is None:
-            if (point - start).manhattanLength() > HOLD_SLOP:
-                self.press = None                   # A drag inside the game.
-                return
-            if now - at >= HOLD_S:
-                self.dragging = name
-                if name == 'pet':
-                    self.pet.dragging = True
-                    self.pet.update_activity()
-            return
-        target = point - offset
-        if name == 'pet':
-            self.pet.move_clamped(target)
+        busy = QApplication.mouseButtons() != Qt.NoButton or getattr(self.pet, 'dragging', False)
+        for widget in self._targets():
+            if busy and self.taking.get(widget):
+                continue                    # Mid-press or mid-drag: keep it.
+            self._set(widget, self._box(widget).contains(point))
+        if getattr(self.pet, 'dragging', False):
             for extra in (getattr(self.pet, 'game_halo', None), getattr(self.pet, 'game_usage', None)):
                 if extra is not None and extra.isVisible():
                     extra.follow()
-        else:
-            # Kept on a screen the same way it is placed later, so it never jumps.
-            self.pet.panel.prefs['game_bar_pos'] = [target.x(), target.y()]
-            widget.follow()
-
-    def _right_click(self, point):
-        """A right click on her opens her menu (Settings included), as outside games."""
-        down = self.right()
-        if down and self._right_at is None:
-            box = self._targets()[-1][2]
-            self._right_at = point if box.contains(point) else False
-        elif not down and self._right_at is not None:
-            start, self._right_at = self._right_at, None
-            if start is not False and (point - start).manhattanLength() <= HOLD_SLOP:
-                old = self.menu
-                self.menu = None
-                if old is not None:
-                    try:
-                        was_open = old.isVisible()
-                        old.close()
-                        old.deleteLater()
-                    except RuntimeError:
-                        was_open = False
-                    if was_open:
-                        return              # A second right click closes the menu.
-                menu = self.pet.context_menu()
-                menu.setWindowFlag(Qt.WindowStaysOnTopHint, True)
-                menu.aboutToHide.connect(lambda m=menu: self._menu_closed(m))
-                menu.popup(point)
-                menu.raise_()
-                self.menu = menu
-
-    def _menu_closed(self, menu):
-        if self.menu is menu:
-            self.menu = None
-        menu.deleteLater()
-
-    def _release(self):
-        name, widget = self.dragging, self.press[1] if self.press else None
-        self.dragging = None
-        if name == 'pet':
-            self.pet.dragging = False
-            try:
-                self.pet.interact('landing', .9)
-            except Exception:
-                self.pet.update_activity()
-        elif name == 'bar' and widget is not None:
-            self.pet.panel.prefs['game_bar_pos'] = [widget.x(), widget.y()]
-            try:
-                self.pet.panel.persist()
-            except Exception:
-                pass

@@ -354,8 +354,12 @@ class TransformStage(QWidget):
     def start(self):
         self._last = None
         self.show()
-        self.raise_()
+        self._raise()
         self.timer.start()
+
+    def _raise(self):
+        from game_mode import raise_quietly
+        raise_quietly(self)                 # Never takes the focus from a game.
 
     def _tick(self):
         now = time.perf_counter()
@@ -382,7 +386,7 @@ class TransformStage(QWidget):
             self.finished.emit()
             return
         if self.frames % 30 == 0:
-            self.raise_()
+            self._raise()
         self.update()
 
     def _ring_intro(self, name, f):

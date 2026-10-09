@@ -2,6 +2,7 @@
 import unittest
 from types import SimpleNamespace
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 import game_mode
@@ -152,105 +153,61 @@ class PanelGameModeTests(unittest.TestCase):
             panel.prefs['game_display'] = 'rings'
             pet.hide()
 
-    def test_long_press_drags_her_and_the_bar_while_clicks_pass(self):
+    def test_her_windows_take_the_mouse_only_under_the_cursor(self):
         from PySide6.QtCore import QPoint
+        from unittest.mock import patch
         pet = self.panel.pet
         pet.show()
-        state = dict(down=False, at=QPoint(0, 0), now=0.0)
-        drag = game_mode.LongPressDrag(pet, button=lambda: state['down'], cursor=lambda: state['at'],
-                                       clock=lambda: state['now'])
-        drag._was_down = False
-        box = pet.frameGeometry()
-        inside = QPoint(box.center().x(), box.bottom() - 20)
-        start = pet.pos()
-
-        def step(down, at, dt):
-            state.update(down=down, at=at, now=state['now'] + dt)
-            drag.tick()
-        # A click: nothing moves.
-        step(True, inside, 0)
-        step(False, inside, .1)
-        self.assertEqual(pet.pos(), start)
-        # A press that moves at once is a drag inside the game: ignored.
-        step(True, inside, 0)
-        step(True, inside + QPoint(40, 0), .1)
-        step(True, inside + QPoint(80, 0), .6)
-        self.assertEqual(pet.pos(), start)
-        step(False, inside, .1)
-        # Hold half a second, then move: she follows.
-        step(True, inside, 0)
-        step(True, inside, .6)
-        self.assertTrue(pet.dragging)
-        step(True, inside + QPoint(-60, -30), .02)
-        self.assertEqual(pet.pos(), start + QPoint(-60, -30))
-        step(False, inside, .02)
-        self.assertFalse(pet.dragging)
-        pet.move(start)
-        # The bar, once dragged, stays where it was put.
         usage = game_mode.GameUsage(pet)
         usage.set_content('bar', [], dict(cpu=5.0), ['cpu'], 'en')
         usage.show()
-        drag.pet.game_usage = usage
-        grab = usage.frameGeometry().center()
-        step(True, grab, 0)
-        step(True, grab, .6)
-        step(True, grab + QPoint(100, 50), .02)
-        step(False, grab, .02)
-        self.assertEqual(self.panel.prefs['game_bar_pos'], [usage.x(), usage.y()])
-        pet.move(pet.pos() + QPoint(30, 0))
-        usage.follow()
-        self.assertEqual([usage.x(), usage.y()], self.panel.prefs['game_bar_pos'])   # Didn't follow her.
-        self.panel.prefs['game_bar_pos'] = None
-        drag.pet.game_usage = None
+        pet.game_usage = usage
+        cursor = dict(at=QPoint(-5000, -5000))
+        calls = []
+        with patch('game_mode.set_clickthrough', side_effect=lambda w, through: calls.append((w, through))):
+            hover = game_mode.HoverInput(pet, cursor=lambda: cursor['at'])
+            hover.start()
+            hover.tick()
+            self.assertEqual(hover.taking, {pet: False, usage: False})        # Away: all to the game.
+            box = pet.frameGeometry()
+            cursor['at'] = QPoint(box.center().x(), box.bottom() - 20)        # Over her.
+            hover.tick()
+            self.assertEqual((hover.taking[pet], hover.taking[usage]), (True, False))
+            cursor['at'] = usage.frameGeometry().center()                      # Over the bar.
+            hover.tick()
+            self.assertEqual((hover.taking[pet], hover.taking[usage]), (False, True))
+            calls.clear()
+            hover.tick()
+            self.assertEqual(calls, [])                                        # No change, no native call.
+            hover.stop()
+        self.assertIn((pet, False), calls)                                     # Leaving: clicks reach her again.
+        pet.game_usage = None
         usage.deleteLater()
         pet.hide()
 
-    def test_a_right_click_on_her_opens_her_menu_in_game_mode(self):
-        from PySide6.QtCore import QPoint
+    def test_the_bar_can_be_dragged_and_stays_put(self):
+        from PySide6.QtCore import QPoint, QPointF, QEvent
+        from PySide6.QtGui import QMouseEvent
         pet = self.panel.pet
-        pet.show()
-        state = dict(right=False, at=QPoint(0, 0))
-        drag = game_mode.LongPressDrag(pet, button=lambda: False, cursor=lambda: state['at'],
-                                       right=lambda: state['right'])
-        box = pet.frameGeometry()
-        on_her = QPoint(box.center().x(), box.bottom() - 20)
-        for right in (True, False):
-            state.update(right=right, at=on_her)
-            drag.tick()
-        self.assertTrue(drag.menu.isVisible())
-        drag.menu.close()
-        drag.menu = None
-        away = QPoint(box.left() - 200, box.top())       # Elsewhere: the game's own right click.
-        for right in (True, False):
-            state.update(right=right, at=away)
-            drag.tick()
-        self.assertIsNone(drag.menu)
-        pet.hide()
+        usage = game_mode.GameUsage(pet)
+        usage.set_content('bar', [], dict(cpu=5.0), ['cpu'], 'en')
+        usage.show()
+        start = usage.pos()
 
-    def test_right_clicks_never_stack_menus(self):
-        from PySide6.QtCore import QPoint
-        pet = self.panel.pet
-        pet.show()
-        state = dict(right=False)
-        box = pet.frameGeometry()
-        on_her = QPoint(box.center().x(), box.bottom() - 20)
-        drag = game_mode.LongPressDrag(pet, button=lambda: False, cursor=lambda: on_her,
-                                       right=lambda: state['right'])
-
-        def right_click():
-            for down in (True, False):
-                state['right'] = down
-                drag.tick()
-        right_click()
-        first = drag.menu
-        self.assertTrue(first.isVisible())
-        self.assertTrue(first.windowFlags() & __import__('PySide6.QtCore', fromlist=['Qt']).Qt.WindowStaysOnTopHint)
-        right_click()                              # Again: closes it, opens nothing new.
-        self.assertIsNone(drag.menu)
-        right_click()                              # And again: one fresh menu.
-        self.assertIsNotNone(drag.menu)
-        drag.menu.close()
-        pet.hide()
+        def send(kind, global_point, buttons):
+            event = QMouseEvent(kind, QPointF(10, 10), QPointF(global_point), Qt.LeftButton, buttons, Qt.NoModifier)
+            {QEvent.MouseButtonPress: usage.mousePressEvent, QEvent.MouseMove: usage.mouseMoveEvent,
+             QEvent.MouseButtonRelease: usage.mouseReleaseEvent}[kind](event)
+        grab = start + QPoint(10, 10)
+        send(QEvent.MouseButtonPress, grab, Qt.LeftButton)
+        send(QEvent.MouseMove, grab + QPoint(-120, -60), Qt.LeftButton)
+        send(QEvent.MouseButtonRelease, grab + QPoint(-120, -60), Qt.NoButton)
+        self.assertEqual(self.panel.prefs['game_bar_pos'], [start.x() - 120, start.y() - 60])
+        pet.move(pet.pos() + QPoint(40, 0))
+        usage.follow()
+        self.assertEqual(usage.pos(), start + QPoint(-120, -60))               # Didn't follow her.
+        self.panel.prefs['game_bar_pos'] = None
+        usage.deleteLater()
 
     def test_stars_fly_between_the_rings(self):
         from PySide6.QtCore import QPointF

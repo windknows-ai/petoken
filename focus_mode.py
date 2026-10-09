@@ -338,7 +338,8 @@ class FocusTag(QWidget):
             self._raised = 0.0
             self._pager()
         if now - getattr(self, '_raised', 0.0) > 1.0:
-            self.raise_()          # Above stars that appeared after it.
+            from game_mode import raise_quietly
+            raise_quietly(self)    # Above stars that appeared after it (without taking the focus).
             self._raised = now
 
     def _pager(self):
