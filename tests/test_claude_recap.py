@@ -100,6 +100,20 @@ class RecapTests(unittest.TestCase):
         self.assertEqual(sorted(path for _at, _project, path in found['edits']), ['a.py', 'b.py'])
         self.assertEqual(claude_recap.activity(self.home, since + 10 ** 9), dict(turns=[], edits=[]))
 
+    def test_waiting_is_not_working_and_resumed_copies_count_once(self):
+        entries = [user(0, 'go'), assistant(60, 'm1', [edit('t1', CWD + r'.py')]), assistant(120, 'm2'),
+                   user(1620, [result('t1')]), assistant(1700, 'm3')]       # 25 silent minutes in between.
+        self.write(entries)
+        self.write(entries, self.folder / 'resumed-session.jsonl')            # A resumed copy of the same turns.
+        import os
+        from claude_usage import _iso_epoch
+        since = _iso_epoch(stamp(0))
+        for path in self.folder.glob('*.jsonl'):
+            os.utime(path, (since + 2000, since + 2000))
+        found = claude_recap.activity(self.home, since)
+        self.assertEqual(sorted((round(b - since), round(e - since)) for b, e, _p in found['turns']),
+                         [(0, 120), (1620, 1700)])
+
     def test_interrupted_turn(self):
         self.write([user(0, 'do it'), assistant(5, 'm1'), user(6, [dict(type='text', text='[Request interrupted by user]')])])
         self.assertTrue(claude_recap.interrupted(self.home, SESSION))

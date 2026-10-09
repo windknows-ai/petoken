@@ -27,6 +27,9 @@ from pricing import estimate_claude_usd
 
 EDIT_TOOLS = ('Edit', 'Write', 'MultiEdit', 'NotebookEdit')
 TAIL_BYTES = 4 * 1024 * 1024
+# A turn with nothing written for this long was waiting (a background task,
+# a usage limit, a question), not working: that stretch is left out.
+IDLE_GAP_S = 15 * 60
 
 
 def transcript_files(home, session):
@@ -169,10 +172,18 @@ def _all_entries(path):
 def activity(home, since):
     """Turns and successful file edits since ``since`` (epoch seconds), for
     reports: ``turns`` are (start, end, project) from each real prompt to
-    the last reply before the next prompt; ``edits`` are (time, project,
-    relative path). Files untouched since ``since`` are skipped."""
+    the last reply before the next prompt, split where nothing was written
+    for IDLE_GAP_S; ``edits`` are (time, project, relative path). Files
+    untouched since ``since`` are skipped. A resumed session repeats the
+    earlier transcript in a new file: each stretch is listed once."""
     projects = Path(home) / 'projects'
     turns, edits = [], []
+    seen = set()
+
+    def close(start, last, cwd):
+        if start is not None and last is not None and last >= since and (start, last) not in seen:
+            seen.add((start, last))
+            turns.append((start, last, _project(cwd)))
     try:
         mains = [p for p in projects.glob('*/*.jsonl') if p.stat().st_mtime >= since]
     except OSError:
@@ -182,18 +193,23 @@ def activity(home, since):
         stamped = sorted(((_iso_epoch(e.get('timestamp')), e) for e in entries),
                          key=lambda item: item[0] or 0)
         start = cwd = None
-        last = None
+        last = previous = None
         for at, entry in stamped:
             if at is None:
                 continue
             if _is_prompt(entry):
-                if start is not None and last is not None and last >= since:
-                    turns.append((start, last, _project(cwd)))
-                start, cwd, last = at, entry.get('cwd'), None
-            elif entry.get('type') == 'assistant' and start is not None:
+                close(start, last, cwd)
+                start, cwd, last, previous = at, entry.get('cwd'), None, at
+                continue
+            if start is None:
+                continue
+            if at - previous > IDLE_GAP_S:          # It waited: the work so far is one stretch.
+                close(start, last, cwd)
+                start, last = at, None
+            previous = at
+            if entry.get('type') == 'assistant':
                 last = at
-        if start is not None and last is not None and last >= since:
-            turns.append((start, last, _project(cwd)))
+        close(start, last, cwd)
         # Successful edits, main transcript and its subagents.
         folders = {}
         for at, entry in stamped:

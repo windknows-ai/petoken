@@ -73,8 +73,8 @@ def series(data, kind, now):
         if event.get('session'):
             sessions[provider][index].add(event['session'])
     hours = [0.0] * n
-    for turn in ((data or {}).get('activity') or {}).get('turns') or []:
-        begin, stop = turn[0], turn[1]
+    from reports import merged
+    for begin, stop in merged(((data or {}).get('activity') or {}).get('turns')):   # Parallel tasks once.
         for index, (start, end, _) in enumerate(spans):
             overlap = min(stop, end) - max(begin, start)
             if overlap > 0:

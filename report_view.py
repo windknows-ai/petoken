@@ -275,6 +275,11 @@ class ReportPage(QWidget):
             ('0%' if abs(summary['change']) < .005 else f"{summary['change']:+.0%}"))
         for key, value in values.items():
             self.tiles[key][0].setText(value)
+        tip = self.tr('report_tile_time_tip')
+        if summary.get('task_seconds', 0) - summary['seconds'] >= 60:
+            tip += '\n' + self.tr('report_tile_time_parallel', time=duration_text(summary['task_seconds']))
+        for widget in self.tiles['time']:
+            widget.setToolTip(tip)
         self.tiles['cost'][0].setToolTip(self.tr('report_cost_partial') if summary['partial'] else
                                          self.tr('report_cost_note'))
         lines = []

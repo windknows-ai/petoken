@@ -69,6 +69,16 @@ class ReportTests(unittest.TestCase):
         # By 15:00 yesterday 700 tokens were used.
         self.assertAlmostEqual(summary['change'], (3600 - 700) / 700)
 
+    def test_parallel_tasks_count_once(self):
+        data = dict(DATA, activity=dict(turns=[(NOW - HOUR, NOW - HOUR + 600, 'site'),
+                                               (NOW - HOUR + 300, NOW - HOUR + 900, 'api', 'completed'),
+                                               (NOW - HOUR + 100, NOW - HOUR + 200, 'docs')], edits=[]))
+        summary = reports.summarize(data, [], 'today', NOW)
+        self.assertEqual((summary['seconds'], summary['task_seconds']), (900, 1300))
+        from report_charts import series
+        self.assertAlmostEqual(series(data, 'today', NOW)['hours'][14], 900 / 3600, places=5)
+        self.assertEqual(reports.merged([(5, 9), (1, 3), (2, 4), (9, 9)]), [(1, 4), (5, 9)])
+
     def test_week_and_empty(self):
         self.assertEqual(reports.summarize(DATA, [], 'week', NOW)['tokens'], 4300)
         empty = reports.summarize(dict(events=[], history=[], missing=['codex']), [], 'today', NOW)

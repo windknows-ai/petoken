@@ -203,6 +203,22 @@ def _usage(events, start, end):
     return providers, [dict(name=name, tokens=values['tokens']) for name, values in top]
 
 
+def merged(turns, start=None, end=None):
+    """[(start, end)] covering the turns, overlaps joined (clipped to the
+    period when given): time with at least one AI task working."""
+    spans = sorted((turn[0] if start is None else max(turn[0], start),
+                    turn[1] if end is None else min(turn[1], end)) for turn in turns or [])
+    out = []
+    for begin, stop in spans:
+        if stop <= begin:
+            continue
+        if out and begin <= out[-1][1]:
+            out[-1] = (out[-1][0], max(out[-1][1], stop))
+        else:
+            out.append((begin, stop))
+    return out
+
+
 def summarize(data, notices, kind, now):
     """The report card for 'today' or 'week' (plus the previous period)."""
     start, end, previous_start = period(kind, now)
@@ -212,8 +228,11 @@ def summarize(data, notices, kind, now):
     activity = data.get('activity') or {}
     # Turns are (start, end, project) from Claude and (start, end, project,
     # outcome) from Codex; only the times matter here.
-    seconds = sum(max(0.0, min(turn[1], end) - max(turn[0], start))
-                  for turn in activity.get('turns') or [])
+    # Wall-clock time with any AI working: parallel tasks count once (their
+    # separate total is task_seconds).
+    seconds = sum(stop - begin for begin, stop in merged(activity.get('turns'), start, end))
+    task_seconds = sum(max(0.0, min(turn[1], end) - max(turn[0], start))
+                       for turn in activity.get('turns') or [])
     files = {f'{project}/{path}' for at, project, path in activity.get('edits') or [] if start <= at < end}
     focus = [max(0.0, min(stop, end) - max(begin, start)) for begin, stop, _done in data.get('focus') or []]
     focus = [seconds for seconds in focus if seconds > 0]
@@ -228,7 +247,7 @@ def summarize(data, notices, kind, now):
                 partial=any(p['partial'] for p in providers.values()),
                 change=None if not previous_tokens else (tokens - previous_tokens) / previous_tokens,
                 finished=counts['finished'], failed=counts['failed'], approvals=counts['needs_approval'],
-                files=len(files), seconds=seconds, missing=list(data.get('missing') or []),
+                files=len(files), seconds=seconds, task_seconds=task_seconds, missing=list(data.get('missing') or []),
                 focus_count=len(focus), focus_seconds=sum(focus))
 
 
