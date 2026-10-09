@@ -147,3 +147,20 @@
 - Durable recovery/art provenance: D:\Documents\ChatGPT\petoken-takeover-backups\v2.1-art-batch2 (generation.json, palette.json, masks/, validation.json, raw references/snapshots and scripts). Firstbatch raw/masks remain in sibling v2.1-art. Local art commit only; wait for human feedback.
 
 - COMPLETE / WAITING_FOR_HUMAN_ART_QA: user-identified remaining gold tasset trim in xform_armor_2..5 corrected with imagegen silver edit and authorized RGB-only exact composition. Four original alpha channels exact;38 other sprites hash-unchanged;42 asset and30 existing composition checks PASS. Updated GENERATION.md/json and preview. Earlier master-matching recolor omitted distinct partial-stage trim; current per-stage gold masks resolve it. Local followup commit only, no merge/push.
+
+## V2.3 moon-night art first batch (2026-10-09)
+- COMPLETE / WAITING_FOR_HUMAN_ART_QA: codex/v2.3-art from6be38c8; first9 sprites delivered: night_change_0..3, night_idle_1..4, night_idle_blink. Followed V2_3_ART_PROMPTS; spec v2_0/idle_1 missing, used actual original v1_1/idle.png seated pose. Original assets untouched. No shared/runtime code, merge or push.
+- Generation: imagegen whole-pose pajama/cross-legged masters, reverse wardrobe local redraws, head-nod/hug/return inbetweens and eyes-only blink. User-authorized Pillow exact composition, alpha cleanup and one-time master baseline registration. Mask seams and knee fabric remnants repaired; first return-frame attempt rejected/regenerated because arms moved too far.
+- Verification:9/9 size1254x1254/RGBA/transparent borders/baseliney1218 PASS;9/9 single alpha-positive and alpha>8 connected component PASS;7/7 outside-mask pixel checks PASS; all5 idle lower sock-foot ROIs exact.138 older assets hash-unchanged. Full lavender preview,128px dark tiles and magnified clothing/prop edges reviewed. Runtime animation integration not tested by static art validation.
+- Changed paths: assets/v2_3/ (9PNG,GENERATION.md/json), docs/V2_3_ART_PREVIEW.png, this handoff. Provenance includes prompts, parent/mask geometry, alpha bounds and hashes.
+- Next: human accepts first batch, then remaining14 (yawn2,sleep3,milk2,read2+blink,goodnight2,wake2). Maintainer handles runtime soft-light wardrobe reveal and night-mode timing. No provider/code changes.
+- Recovery: D:\Documents\ChatGPT\petoken-takeover-backups\v2.3-art-firstbatch (raw/masks,spec,validation.json,baseline-sha256.json,qa_preview.py,night_art.py,PROGRESS.md).
+
+
+## V2.3 moon-night batch2 (2026-10-09)
+- Current progress: complete25 sprites;14 remaining B actions +2 settle transitions added,4 wardrobe stages rebuilt,5 accepted idle PNGs unchanged. Status WAITING_FOR_HUMAN_ART_QA, branch codex/v2.3-art; local-only art checkpoint; no merge/push.
+- Decisions: original v1_1/idle is canonical. change0 edits eyes only, with every other RGBA pixel and entire alpha exact; forward wardrobe0->1 pants/socks->2 upper pajamas->3 moon clip. No pillow on3; settle1 introduces pillow beside her, settle2 pulls it into crossed-legged lap, then accepted idle1.
+- Validation:25 canvas/RGBA checks;17 outside-mask exact comparisons;143 prior PNG hashes preserved;21 non-wardrobe sprites have transparent borders/baseline1218 and no tiny isolated alpha. Wardrobe retains original idle weak alpha/top-border/bottom1221 outside authorized local regions; no new isolated alpha in stages. yawn/milk/goodnight/wake bottom y>=1120 bands exact. Inspected full preview,128px dark tiles and contact seams; repaired wardrobe/pillow/sleeve artifacts before delivery.
+- Changed paths: assets/v2_3/ (4 rebuiltPNG,16 addedPNG,GENERATION.md/json), docs/V2_3_ART_PREVIEW.png, HANDOFF.md. No code or existing v1_1/v2_0/v2_1 changes.
+- Next: human accepts refreshed art; maintainer integrates night-mode timing, soft-light clothing reveals and transition order change0..3->settle1->settle2->idle1. Static art QA does not verify runtime scheduling.
+- Recovery: D:\Documents\ChatGPT\petoken-takeover-backups\v2.3-art-batch2 (generation.json,validation.json,masks,raw paths,preview/check scripts,PROGRESS.md,original-firstbatch).
