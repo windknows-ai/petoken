@@ -882,10 +882,9 @@ class CodexStore:
         enumerated thread, without touching the legacy
         working-context path. Refreshes only this thread's session;
         bounded by the verified-working count. The display carries
-        project metadata only: raw thread names/titles (which may
-        contain user-derived content) are deliberately omitted here
-        — Slice C owns visible neutral labels, and the legacy
-        working_context path is unchanged.
+        project metadata and the cleaned thread name for notifications:
+        whitespace trimmed, first line only, at most 80 characters
+        including an ellipsis when truncated. Unnamed threads omit title.
         """
         key = row.get('rollout_path')
         session = self.sessions.get(key)
@@ -897,10 +896,16 @@ class CodexStore:
         summary = summarize(unique_records([session]))
         project, project_source, project_id = project_identity(row, state)
         last_tokens = session.last.get('total_tokens')
+        display = dict(project=project)
+        title = next((value.strip() for value in (row.get('name'), row.get('title'))
+                      if isinstance(value, str) and value.strip()), '')
+        if title:
+            title = title.splitlines()[0].strip()
+            display['title'] = title[:79] + '…' if len(title) > 80 else title
         return active_task(
             PROVIDER_CODEX, row.get('id'), working=True,
             activity_valid=True, activity_at=item.get('activity_at'),
-            display=dict(project=project),
+            display=display,
             presentation=dict(
                 tokens=summary['tokens'],
                 **session.display_metadata(row),

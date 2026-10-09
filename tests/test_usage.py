@@ -400,6 +400,49 @@ class CodexTaskSourceTests(unittest.TestCase):
     def test_exec_lifecycle_is_visible_without_desktop_foreground(self):
         self.assert_terminal_task('exec')
 
+    def test_active_task_display_title_uses_name_then_title(self):
+        named, _ = self.add('cli', thread='named')
+        named.update(name='  回应问候  ', title='Initial prompt')
+        fallback, _ = self.add('cli', thread='fallback')
+        fallback.update(name='  ', title='  Fallback title  ')
+        data = self.fixture.finish().read()
+        displays = {task['task_key']: task['display'] for task in data['active_tasks']}
+        self.assertEqual(displays['named'], dict(project='Terminal', title='回应问候'))
+        self.assertEqual(displays['fallback'], dict(project='Terminal', title='Fallback title'))
+
+    def test_active_task_display_title_uses_first_line(self):
+        for field in ('name', 'title'):
+            row, _ = self.add('cli', thread=field)
+            row.update(name=None, title=None)
+            row[field] = ' \r\n  First line  \r\nSecond line\nThird line  '
+        data = self.fixture.finish().read()
+        self.assertEqual(len(data['active_tasks']), 2)
+        for task in data['active_tasks']:
+            with self.subTest(thread=task['task_key']):
+                self.assertEqual(task['display']['title'], 'First line')
+
+    def test_active_task_display_title_is_limited_to_80_characters(self):
+        for length in (80, 81, 120):
+            row, _ = self.add('cli', thread=str(length))
+            row.update(name='名' * length)
+        data = self.fixture.finish().read()
+        displays = {task['task_key']: task['display'] for task in data['active_tasks']}
+        self.assertEqual(displays['80']['title'], '名' * 80)
+        for length in (81, 120):
+            with self.subTest(length=length):
+                self.assertEqual(displays[str(length)]['title'], '名' * 79 + '…')
+                self.assertEqual(len(displays[str(length)]['title']), 80)
+
+    def test_active_task_display_omits_missing_title(self):
+        for index, name in enumerate((None, '', ' \t\r\n ')):
+            row, _ = self.add('cli', thread=str(index))
+            row.update(name=name, title=name)
+        data = self.fixture.finish().read()
+        self.assertEqual(len(data['active_tasks']), 3)
+        for task in data['active_tasks']:
+            with self.subTest(thread=task['task_key']):
+                self.assertEqual(task['display'], dict(project='Terminal'))
+
     def test_all_top_level_sources_are_selectable_and_have_independent_stars(self):
         sources = ('desktop', 'vscode', 'cli', 'exec')
         rows = [self.add(source)[0] for source in sources]
