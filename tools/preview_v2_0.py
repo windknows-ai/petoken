@@ -252,8 +252,8 @@ class Preview(QWidget):
 
         # 2.3 rest: late-night mode, sitting reminder, app time.
         form = group('作息 / Rest (2.3)')
-        why = QLabel('真实使用时，深夜模式按设置 › 作息里的时间自动开关（默认 23:00–07:00）。'
-                     '睡衣图只到了第一批（待机），其余姿势暂时还是平常的样子。')
+        why = QLabel('真实使用时，深夜模式按设置 › 作息里的时间自动开关（默认 23:00–07:00），开始和结束时她会换装。'
+                     '睡衣下的困、看书、喝牛奶、睡着等小动作跟着心情出现；工作台 › 图鉴 › 深夜可以逐个看。')
         why.setWordWrap(True)
         form.addRow(why)
         self.night_state = QLabel()
