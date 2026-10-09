@@ -335,7 +335,9 @@ class CodexEnumerationTests(unittest.TestCase):
         self.assertEqual(store.activity.enumerate_working_tasks(rows),
                          [])
 
-    def test_sensitive_thread_title_never_in_task_surface(self):
+    def test_thread_title_only_as_the_display_title(self):
+        # 2.2: the user wants notices to name the task, so the cleaned thread
+        # name is the display title; it appears nowhere else in the task.
         import json
         import sqlite3
         from contextlib import closing
@@ -353,14 +355,15 @@ class CodexEnumerationTests(unittest.TestCase):
                           activity_detection_valid=True)
         tasks = read.get('active_tasks') or []
         self.assertEqual(len(tasks), 1)
-        blob = json.dumps(tasks)
+        self.assertEqual(tasks[0]['display'].get('title'), secret)
+        rest = dict(tasks[0], display=dict(tasks[0]['display'], title=None))
+        blob = json.dumps(rest)
         self.assertNotIn(secret, blob)
         self.assertNotIn('t1.jsonl', blob)
         # Safe task-local metrics still work on the same task.
         task = tasks[0]
         self.assertTrue(task['working'])
         self.assertIn('tokens', task['presentation'])
-        self.assertNotIn('title', task['display'])
         self.assertNotIn('name', task['display'])
         self.assertIsNone(task['display'].get('project'))
         # Legacy working_context path is unchanged by this fix: it
