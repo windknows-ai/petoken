@@ -1,0 +1,1348 @@
+{
+  "version": "2.3",
+  "batch": "first9",
+  "status": "WAITING_FOR_HUMAN_ART_QA",
+  "tool": "imagegen + user-authorized Pillow local composition/alpha cleanup",
+  "reference": "assets/v1_1/idle.png",
+  "reference_fallback": "Spec assets/v2_0/idle_1.png absent; original seated idle used and preserved.",
+  "spec_source": "D:\\Documents\\ChatGPT\\petoken-claude\\docs\\V2_3_ART_PROMPTS.md",
+  "recovery": "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\v2.3-art-firstbatch",
+  "stages": {
+    "night_change_3": {
+      "name": "night_change_3",
+      "refs": [
+        "assets\\v1_1\\idle.png"
+      ],
+      "prompt": "Chibi anime girl, EXACT same established silver-lavender long wavy-haired character and big-head/small-body proportions as reference, clean thick dark-indigo/black lineart, soft cel shading, cozy bedtime mood, warm relaxed drowsy gentle expression, violet sleepy half-lidded eyes, full body, centered, true transparent RGBA background, no text, no ground, no cast shadow, no glow, no halo or scene, sticker clarity readable at128px. Same pale skin, familiar side-swept silver-lavender bangs and curled long hair tips. Wardrobe: soft pastel lavender loose long-sleeved pajama top, sleeves cover her hands, ONE tiny crescent-moon print, satin ribbon bow at collar, loose matching lavender pants, fluffy lavender-white socks. Original feather crystal ornament removed for final night look, replaced by ONE small moon hair clip. No armor, weapon or gold edging. Image1 is sole character, lineart and EXACT SEATED KNEES-UP POSE reference. Create FINAL night outfit transformation master, keeping SAME sitting cuddled knees pose and same large head shape/angle and face/bangs identity as image1. NOT crosslegged yet. Feet together forward atbottom, knees drawn up close to chest; no change in camera or proportions. Replace dark outfit with the defined lavender pajamas and thick fluffy socks. Long sleeves drape over hands wrapping knees/pillow. Hug a plump CRESCENT-MOON shaped pillow on the raised knees near her chest; moon-shaped silhouette visibly curved, plush white-lavender fabric, no printed face/eyes/text, not a full round ball. Chin softly near pillow uppercurve. Sleepy halfclosed violet eyes, tiny peaceful mouth, subtle blush. Silver-lavender long hair a little looser/messier at ends but familiar bangs and long ringlets retained. Remove tall cyan feather ornament entirely, small pale-lavender moon clip tucked at same head side(viewerRIGHT). 1254x1254 canvas, entire hair/pillow/feet inside, full body lowest sock near y1218. Do not stretch into tall adult, no separate stars/decorations/symbols, no floor/blanket/bed/background. This exact pose and pixel registration will be reused for3 reversed clothing stages; keep arms,feet and face easy to match.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-1df4f041-bf0b-461a-a69d-a2016030581c.png",
+      "method": "imagegen whole-pose master + one-time baseline/center registration; no independent registration for derived frames",
+      "source_bbox": [
+        80,
+        127,
+        1163,
+        1231
+      ],
+      "scale": 1.0,
+      "offset": [
+        85,
+        115
+      ],
+      "alpha_bbox": [
+        85,
+        115,
+        1168,
+        1219
+      ]
+    },
+    "night_change_2": {
+      "name": "night_change_2",
+      "parent": "night_change_3",
+      "refs": [
+        "assets\\v2_3\\night_change_3.png",
+        "assets\\v1_1\\idle.png"
+      ],
+      "polygons": [
+        [
+          [
+            908,
+            10
+          ],
+          [
+            1128,
+            10
+          ],
+          [
+            1128,
+            599
+          ],
+          [
+            1025,
+            599
+          ],
+          [
+            976,
+            579
+          ],
+          [
+            917,
+            550
+          ],
+          [
+            930,
+            404
+          ],
+          [
+            923,
+            306
+          ],
+          [
+            923,
+            204
+          ],
+          [
+            908,
+            100
+          ]
+        ],
+        [
+          [
+            465,
+            735
+          ],
+          [
+            700,
+            725
+          ],
+          [
+            970,
+            708
+          ],
+          [
+            988,
+            947
+          ],
+          [
+            928,
+            992
+          ],
+          [
+            776,
+            967
+          ],
+          [
+            690,
+            944
+          ],
+          [
+            526,
+            1016
+          ],
+          [
+            454,
+            932
+          ]
+        ]
+      ],
+      "excludes": [
+        [
+          [
+            535,
+            594
+          ],
+          [
+            958,
+            594
+          ],
+          [
+            958,
+            733
+          ],
+          [
+            535,
+            733
+          ]
+        ],
+        [
+          [
+            738,
+            730
+          ],
+          [
+            778,
+            730
+          ],
+          [
+            778,
+            754
+          ],
+          [
+            738,
+            754
+          ]
+        ]
+      ],
+      "prompt": "Chibi anime girl, EXACT same established silver-lavender long wavy-haired character and big-head/small-body proportions as reference, clean thick dark-indigo/black lineart, soft cel shading, cozy bedtime mood, warm relaxed drowsy gentle expression, violet sleepy half-lidded eyes, full body, centered, true transparent RGBA background, no text, no ground, no cast shadow, no glow, no halo or scene, sticker clarity readable at128px. Same pale skin, familiar side-swept silver-lavender bangs and curled long hair tips. Wardrobe: soft pastel lavender loose long-sleeved pajama top, sleeves cover her hands, ONE tiny crescent-moon print, satin ribbon bow at collar, loose matching lavender pants, fluffy lavender-white socks. Original feather crystal ornament removed for final night look, replaced by ONE small moon hair clip. No armor, weapon or gold edging. LOCAL REVERSE TRANSFORMATION STEP, IMAGE1 IS LOCKED EDIT TARGET, image2 ONLY original blue feather hair ornament reference. KEEP SAME PAJAMAS and pants/socks/pose! Remove ONLY the crescent pillow from her lap/chest: fill gap with the same lavender pajama top with one tiny white crescent print, arms in SAME embracing-knees position and sleeves covering hands, keep SAME bow at collar. Do NOT change top to original dark costume yet. Replace ONLY moon hair clip with original tall blue crystal feather ornament fromimage2 on viewerRIGHT and neaten only that hair edge. The original blue feather must fit completely within canvas with tipy16 orlower. No new jewelry or stars. Preserve literally ALL other image1 pixels: sleepyviolet half-lidded eyes, face, head angle, entire bangs, leftside andbottom curls, pajama legs/socks and baseline. NO body movement, no recenter/resize/crop, same1254x1254 transparency, no scene.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-cb02ebaa-746e-4a90-86dc-0c0af3c9cc4d.png",
+      "method": "imagegen local redraw + user-authorized exact Pillow mask composition",
+      "outside_mask_changed_pixels": 0,
+      "mask_bbox": [
+        449,
+        5,
+        1134,
+        1022
+      ],
+      "delta_bbox": [
+        450,
+        26,
+        1113,
+        1022
+      ],
+      "alpha_bbox": [
+        85,
+        26,
+        1168,
+        1219
+      ],
+      "source_alignment": [
+        2,
+        -9
+      ],
+      "source_alignment_reason": "Unchanged eye ROI integer-registration measured raw local output drift; final canvas/parent pixels unchanged"
+    },
+    "night_change_1": {
+      "name": "night_change_1",
+      "parent": "night_change_2",
+      "refs": [
+        "assets\\v2_3\\night_change_2.png",
+        "assets\\v1_1\\idle.png"
+      ],
+      "polygons": [
+        [
+          [
+            463,
+            767
+          ],
+          [
+            662,
+            755
+          ],
+          [
+            839,
+            766
+          ],
+          [
+            939,
+            841
+          ],
+          [
+            947,
+            1002
+          ],
+          [
+            941,
+            1124
+          ],
+          [
+            858,
+            1165
+          ],
+          [
+            753,
+            1033
+          ],
+          [
+            621,
+            1154
+          ],
+          [
+            467,
+            1124
+          ],
+          [
+            442,
+            962
+          ]
+        ]
+      ],
+      "excludes": [
+        [
+          [
+            648,
+            930
+          ],
+          [
+            720,
+            916
+          ],
+          [
+            773,
+            928
+          ],
+          [
+            808,
+            937
+          ],
+          [
+            873,
+            1007
+          ],
+          [
+            885,
+            1151
+          ],
+          [
+            818,
+            1235
+          ],
+          [
+            650,
+            1235
+          ],
+          [
+            620,
+            1169
+          ],
+          [
+            625,
+            1023
+          ]
+        ]
+      ],
+      "prompt": "LOCAL reverse-clothing step. IMAGE1 lockedtarget; image2 ONLY original navy costume reference. Replace ONLY image1 UPPER pajama shirt and long sleeve-covered hands with her original DEEP INDIGO/NAVY lunar-star costume and DARK GLOVES exactly fromimage2: original small star collar, white silver-trim neckline, moon/star pattern, matching flowing short skirt side panels, original dark sleeves and gloves. Remove lavender collar bow and pajama moon print. Keep arms/hands embracing knees in the SAME positions, same seated knees-up pose. DO NOT change LOWER BODY: lavender pajama PANTS and FLUFFY SOCKS stay identical to image1. This is deliberately mixed original upper outfit + night lower outfit. Preserve identical halfclosed violet eyes, expression/mouth/skin/head/hair curls and blue feather ornament, same footbaseline/canvas/crop. NO redraw/reposition head, no armor, no cape, no pillow, no new objects. True transparent1254RGBA, no ground/shadows/glow/text.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-98e4383c-107e-4201-b4f5-6e01a065004c.png",
+      "method": "imagegen local redraw + user-authorized exact Pillow mask composition",
+      "outside_mask_changed_pixels": 0,
+      "mask_bbox": [
+        437,
+        750,
+        953,
+        1162
+      ],
+      "delta_bbox": [
+        439,
+        753,
+        953,
+        1161
+      ],
+      "alpha_bbox": [
+        85,
+        26,
+        1168,
+        1219
+      ]
+    },
+    "night_change_0": {
+      "name": "night_change_0",
+      "parent": "night_change_1",
+      "refs": [
+        "assets\\v2_3\\night_change_1.png",
+        "assets\\v1_1\\idle.png"
+      ],
+      "polygons": [
+        [
+          [
+            587,
+            922
+          ],
+          [
+            653,
+            914
+          ],
+          [
+            697,
+            891
+          ],
+          [
+            747,
+            893
+          ],
+          [
+            782,
+            911
+          ],
+          [
+            823,
+            916
+          ],
+          [
+            867,
+            942
+          ],
+          [
+            911,
+            1061
+          ],
+          [
+            901,
+            1175
+          ],
+          [
+            846,
+            1240
+          ],
+          [
+            645,
+            1240
+          ],
+          [
+            588,
+            1169
+          ],
+          [
+            559,
+            1060
+          ]
+        ]
+      ],
+      "excludes": [],
+      "prompt": "LOCAL WARDROBE REVERSE EDIT of image1 ONLY below the gloved hands: replace the pale-lavender pajama pants and fluffy sock feet with the original bare knee caps and DEEP INDIGO/NAVY long stockings with white four-pointed star markings from original costume image2. Same knees-hugged seated position EXACTLY, same legs and foot tips at same pixel locations. Preserve dark upper costume, BOTH gloved hands on knees, feather ornament, sleepy half-lidded violet eyes, face, ALL hair and all canvas geometry EXACTLY from image1. No pajama pants or fluffy socks remain. Dark long stocking leg details must look like original image2, not new boots/armor. Crisp dark lineart, gentle cel shading, original chibi proportions. True transparent background,1254x1254, no ground, no shadows, no symbols, no text; no halo. Only lower knees/legs/feet change.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-4462e23d-6c05-4986-8487-3f6b6bc2c747.png",
+      "method": "imagegen local redraw + user-authorized exact Pillow mask composition",
+      "outside_mask_changed_pixels": 0,
+      "mask_bbox": [
+        554,
+        886,
+        917,
+        1246
+      ],
+      "delta_bbox": [
+        556,
+        887,
+        914,
+        1219
+      ],
+      "alpha_bbox": [
+        85,
+        26,
+        1168,
+        1219
+      ],
+      "source_alignment": [
+        0,
+        -2
+      ],
+      "source_alignment_reason": "Leg redraw registered vertically by 2px so all first-batch foot baselines are y1218; parent canvas stays fixed",
+      "refinement": "Removed overbroad glove exclusions that trapped lavender pajama fabric on knee caps; protected upper gloves through polygon boundary instead"
+    },
+    "night_idle_1": {
+      "name": "night_idle_1",
+      "refs": [
+        "assets\\v2_3\\night_change_3.png",
+        "assets\\v1_1\\idle.png"
+      ],
+      "prompt": "Chibi anime girl, EXACT same established silver-lavender long wavy-haired character and big-head/small-body proportions as reference, clean thick dark-indigo/black lineart, soft cel shading, cozy bedtime mood, warm relaxed drowsy gentle expression, violet sleepy half-lidded eyes, full body, centered, true transparent RGBA background, no text, no ground, no cast shadow, no glow, no halo or scene, sticker clarity readable at128px. Same pale skin, familiar side-swept silver-lavender bangs and curled long hair tips. Wardrobe: soft pastel lavender loose long-sleeved pajama top, sleeves cover her hands, ONE tiny crescent-moon print, satin ribbon bow at collar, loose matching lavender pants, fluffy lavender-white socks. Original feather crystal ornament removed for final night look, replaced by ONE small moon hair clip. No armor, weapon or gold edging.  Draw a NEW complete bedtime IDLE POSE of the exact pajama character in image1. She is now SITTING CROSS-LEGGED, knees opened to sides and socked feet tucked at bottom, NOT hugging raised parallel knees. Both long sleevecovered arms wrap around the SAME lavender-white plump crescent-moon pillow with its small crescent embroidered patch from image1. She cuddles it at chest and rests her chin gently on its upper rim. Very drowsy half-lidded violet eyes, tiny relaxed mouth, subtle blush. Same silver-lavender huge-head proportions, side-swept bangs, curls, tiny moon clip on viewer-right temple, pajamas tiny crescent print and small satin collar bow, pants, fluffy socks. No gloves, no dark armor, no feather ornament. Keep same size as image1, whole hair silhouette width about1100 in1254square, full chibi body, sock tips baseliney1218. No cropped parts, no floating symbols. Whole new cross-legged silhouette, hands concealed by loose sleeves, clean connected character outline. Image2 only helps identity and precise chibi ratio; completed pajamas are image1.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-23c1fc3d-bcef-41d2-b8bd-ac341acac0e3.png",
+      "method": "imagegen whole-pose master + one-time baseline/center registration; no independent registration for derived frames",
+      "source_bbox": [
+        52,
+        75,
+        1201,
+        1205
+      ],
+      "scale": 1.0,
+      "offset": [
+        52,
+        89
+      ],
+      "alpha_bbox": [
+        52,
+        89,
+        1201,
+        1219
+      ]
+    },
+    "night_idle_2": {
+      "name": "night_idle_2",
+      "parent": "night_idle_1",
+      "refs": [
+        "assets\\v2_3\\night_idle_1.png"
+      ],
+      "polygons": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1253,
+            0
+          ],
+          [
+            1253,
+            1253
+          ],
+          [
+            0,
+            1253
+          ]
+        ]
+      ],
+      "prompt": "Chibi anime girl, EXACT same established silver-lavender long wavy-haired character and big-head/small-body proportions as reference, clean thick dark-indigo/black lineart, soft cel shading, cozy bedtime mood, warm relaxed drowsy gentle expression, violet sleepy half-lidded eyes, full body, centered, true transparent RGBA background, no text, no ground, no cast shadow, no glow, no halo or scene, sticker clarity readable at128px. Same pale skin, familiar side-swept silver-lavender bangs and curled long hair tips. Wardrobe: soft pastel lavender loose long-sleeved pajama top, sleeves cover her hands, ONE tiny crescent-moon print, satin ribbon bow at collar, loose matching lavender pants, fluffy lavender-white socks. Original feather crystal ornament removed for final night look, replaced by ONE small moon hair clip. No armor, weapon or gold edging.  STRICT LOCAL animation inbetween edit to image1: FRAME2 of very slow sleepy head nod. Keep whole canvas, outermost hair contour, moon clip, all sleeves, pillow and legs PIXEL IDENTICAL. Only the visible FACE and lowest inner bang tips subtly nod down toward the pillow about6-8px: sleepy eyelids slightly lowered, chin settles6px lower onto pillow edge; shift eyes/nose/mouth together very slightly downward while keeping the SAME face shape and scale. Inner side cheek curls and a few bang tips follow the tiny nod, no new accessories, no broad head movement, no rotation of entire drawing, no resizing. Still half-open violet eyes (NOT fully closed), gentle drowsy expression. Pillow, crossedlegs, sockfeet, ribbon and garment silhouette do NOT move. Clean cel shading, transparent1254canvas, no text/no symbols. This is a SMALL but visible nod inbetween of same pose, not a new drawing.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-2ddb6bc7-d97f-4470-ace6-5861b17d88eb.png",
+      "method": "imagegen local redraw + user-authorized exact Pillow mask composition",
+      "outside_mask_changed_pixels": 0,
+      "mask_bbox": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "delta_bbox": [
+        48,
+        87,
+        1202,
+        1189
+      ],
+      "alpha_bbox": [
+        48,
+        87,
+        1202,
+        1219
+      ],
+      "refinement": "Head nod includes connected flowing hair; fixed pillow, ribbon, sleeves, crossed legs and feet protected. Replaced narrower bang-slicing masks that produced discontinuities.",
+      "excludes": [
+        [
+          [
+            563,
+            766
+          ],
+          [
+            608,
+            749
+          ],
+          [
+            645,
+            747
+          ],
+          [
+            674,
+            763
+          ],
+          [
+            676,
+            786
+          ],
+          [
+            704,
+            801
+          ],
+          [
+            776,
+            799
+          ],
+          [
+            805,
+            780
+          ],
+          [
+            854,
+            745
+          ],
+          [
+            909,
+            731
+          ],
+          [
+            933,
+            738
+          ],
+          [
+            963,
+            809
+          ],
+          [
+            979,
+            940
+          ],
+          [
+            1057,
+            1005
+          ],
+          [
+            1088,
+            1168
+          ],
+          [
+            1060,
+            1225
+          ],
+          [
+            358,
+            1225
+          ],
+          [
+            350,
+            1081
+          ],
+          [
+            415,
+            993
+          ],
+          [
+            453,
+            893
+          ],
+          [
+            481,
+            829
+          ],
+          [
+            517,
+            789
+          ]
+        ]
+      ]
+    },
+    "night_idle_3": {
+      "name": "night_idle_3",
+      "parent": "night_idle_2",
+      "refs": [
+        "assets\\v2_3\\night_idle_2.png"
+      ],
+      "polygons": [
+        [
+          [
+            466,
+            825
+          ],
+          [
+            524,
+            793
+          ],
+          [
+            577,
+            785
+          ],
+          [
+            645,
+            795
+          ],
+          [
+            731,
+            822
+          ],
+          [
+            808,
+            819
+          ],
+          [
+            887,
+            853
+          ],
+          [
+            953,
+            902
+          ],
+          [
+            968,
+            1004
+          ],
+          [
+            897,
+            1089
+          ],
+          [
+            747,
+            1102
+          ],
+          [
+            595,
+            1081
+          ],
+          [
+            472,
+            1010
+          ],
+          [
+            442,
+            920
+          ]
+        ]
+      ],
+      "prompt": "Chibi anime girl, EXACT same established silver-lavender long wavy-haired character and big-head/small-body proportions as reference, clean thick dark-indigo/black lineart, soft cel shading, cozy bedtime mood, warm relaxed drowsy gentle expression, violet sleepy half-lidded eyes, full body, centered, true transparent RGBA background, no text, no ground, no cast shadow, no glow, no halo or scene, sticker clarity readable at128px. Same pale skin, familiar side-swept silver-lavender bangs and curled long hair tips. Wardrobe: soft pastel lavender loose long-sleeved pajama top, sleeves cover her hands, ONE tiny crescent-moon print, satin ribbon bow at collar, loose matching lavender pants, fluffy lavender-white socks. Original feather crystal ornament removed for final night look, replaced by ONE small moon hair clip. No armor, weapon or gold edging.  STRICT LOCAL ANIMATION FRAME3 edit: same exact drowsy girl from image1, same nodded head, face, eyes, ALL hair and moon clip, same crosslegged pants and socks at same pixel positions. ONLY arms and crescent pillow change: hug pillow a little tighter, draw the two sleevecovered forearms inward about12px, squeeze pillow middle slightly, add 1-2 natural new sleeve compression folds. Keep the pillow top tips next to chin at EXACT same positions, keep same crescent shape/material/embroidered moon, compressed a little in its CENTER only, no new pillow. Chin still rests gently, face expression unchanged, ribbon unchanged. This is a modest squeeze, NOT a different pose or rescale. No hand skin visible. No text or symbols. True1254transparentcanvas. Keep original outline for hair, feet, and body geometry; changed arms must meet original shoulders smoothly.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-5754c8ba-001d-4dc1-b093-cd62ca488dc5.png",
+      "method": "imagegen local redraw + user-authorized exact Pillow mask composition",
+      "outside_mask_changed_pixels": 0,
+      "mask_bbox": [
+        437,
+        780,
+        974,
+        1108
+      ],
+      "delta_bbox": [
+        438,
+        781,
+        973,
+        1107
+      ],
+      "alpha_bbox": [
+        48,
+        87,
+        1202,
+        1219
+      ]
+    },
+    "night_idle_4": {
+      "name": "night_idle_4",
+      "parent": "night_idle_1",
+      "refs": [
+        "assets\\v2_3\\night_idle_1.png"
+      ],
+      "polygons": [
+        [
+          [
+            487,
+            857
+          ],
+          [
+            598,
+            839
+          ],
+          [
+            683,
+            840
+          ],
+          [
+            740,
+            849
+          ],
+          [
+            807,
+            876
+          ],
+          [
+            886,
+            935
+          ],
+          [
+            913,
+            1010
+          ],
+          [
+            864,
+            1068
+          ],
+          [
+            764,
+            1090
+          ],
+          [
+            664,
+            1088
+          ],
+          [
+            573,
+            1032
+          ],
+          [
+            487,
+            1006
+          ]
+        ]
+      ],
+      "prompt": "STRICT nearly-identical localized animation inbetween, not a redraw. COPY reference image1 EXACTLY: same silver-lavender chibi girl in lavender pajamas, same half-open sleepy violet eyes, moon clip, same plump crescent pillow, sitting CROSS-LEGGED. This is relaxed breathing frame4 very close to this reference frame1. BOTH LONG SLEEVE-COVERED FOREARMS MUST REMAIN CROSSED OVER EACH OTHER IN THE CENTER OF THE PILLOW EXACTLY LIKE THE REFERENCE. Do NOT separate her hands to either side of the pillow. Do NOT uncover the large central pillow area. Keep sleeve ends overlapped in the center. Change ONLY 2-3 interior fabric fold strokes on the lower-left sleeve and slightly relax its fold shading; pillow lower edge may gently expand2-3px. This is a TINY breath-release with SAME arm contours, same crossed hand positions, same pillow, same shape. Whole head, hair, face, clip, shoulders, knees, sockfeet, body scale and position EXACTLY UNCHANGED. Do not redesign anything. Transparent1254x1254, no text, no extra symbols, no ground or shadow. Prioritize identity to reference, especially overlapping crossed sleeves.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-1cfd4e15-aaac-45c6-91fc-ba77a2a92d56.png",
+      "method": "imagegen local redraw + user-authorized exact Pillow mask composition",
+      "outside_mask_changed_pixels": 0,
+      "mask_bbox": [
+        482,
+        834,
+        919,
+        1096
+      ],
+      "delta_bbox": [
+        482,
+        837,
+        919,
+        1095
+      ],
+      "alpha_bbox": [
+        52,
+        89,
+        1201,
+        1219
+      ]
+    },
+    "night_idle_blink": {
+      "name": "night_idle_blink",
+      "parent": "night_idle_1",
+      "refs": [
+        "assets\\v2_3\\night_idle_1.png"
+      ],
+      "polygons": [
+        [
+          [
+            519,
+            621
+          ],
+          [
+            577,
+            618
+          ],
+          [
+            615,
+            630
+          ],
+          [
+            666,
+            634
+          ],
+          [
+            713,
+            654
+          ],
+          [
+            711,
+            701
+          ],
+          [
+            655,
+            712
+          ],
+          [
+            578,
+            699
+          ],
+          [
+            540,
+            674
+          ]
+        ],
+        [
+          [
+            806,
+            652
+          ],
+          [
+            855,
+            660
+          ],
+          [
+            930,
+            667
+          ],
+          [
+            957,
+            686
+          ],
+          [
+            943,
+            730
+          ],
+          [
+            878,
+            753
+          ],
+          [
+            825,
+            720
+          ]
+        ]
+      ],
+      "prompt": "EXACT reference edit for a blinking sprite. CLOSE ONLY BOTH EYES of the sleepy lavender pajama chibi girl in image1. Replace the visible purple irises and half-open eyelids with gently shut eyes drawn as two clean downward relaxed dark-indigo curved eyelash lines. No irises visible. Upper eyelids become shut; do not draw extra double lines. Do NOT move eyes or head. Preserve the SAME eyebrows, cheek blush, dot mouth, face outline, bangs, every hair curl, crescent moon hairclip, collar ribbon, crossed sleevecovered arms around pillow, pillow embroidery, crossedlegs, fluffy socks, silhouette and ALL positions EXACTLY. No smile change or face movement. EYE REGION ONLY, no whole-image redraw, no design changes. True transparent1254x1254 with identical baseline. No text, no symbols, no ground, no shadow.",
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-e993554e-c9fb-4ed8-a23c-7e906ba3392d.png",
+      "method": "imagegen local redraw + user-authorized exact Pillow mask composition",
+      "outside_mask_changed_pixels": 0,
+      "mask_bbox": [
+        514,
+        613,
+        963,
+        759
+      ],
+      "delta_bbox": [
+        517,
+        615,
+        960,
+        755
+      ],
+      "alpha_bbox": [
+        52,
+        89,
+        1201,
+        1219
+      ]
+    }
+  },
+  "validation": {
+    "sprites": {
+      "night_change_3": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          85,
+          115,
+          1168,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 842942,
+            "bbox": [
+              85,
+              115,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 842942,
+            "bbox": [
+              85,
+              115,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "sha256": "73cac8faec3c5b748f506e101a75bd977a29c5884a019fbfb149314d19b1324b"
+      },
+      "night_change_2": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          85,
+          26,
+          1168,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 867889,
+            "bbox": [
+              85,
+              26,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 867903,
+            "bbox": [
+              85,
+              26,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "sha256": "7d34e2c8f91ff9b2c5c055cf115f4671dd2db2f0b7519695f9dfb83f98d4b960"
+      },
+      "night_change_1": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          85,
+          26,
+          1168,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 868314,
+            "bbox": [
+              85,
+              26,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 868370,
+            "bbox": [
+              85,
+              26,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "sha256": "fff6bf7734e0cc51108be663f18e61a187bcaa4856ffdce7457bb8802c60938b"
+      },
+      "night_change_0": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          85,
+          26,
+          1168,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 862915,
+            "bbox": [
+              85,
+              26,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 862974,
+            "bbox": [
+              85,
+              26,
+              1168,
+              1219
+            ]
+          }
+        ],
+        "sha256": "240fc26d236cf85f0016cd8762c8eab39b0edc22cf2c8c863d381a575ef4336f"
+      },
+      "night_idle_1": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          52,
+          89,
+          1201,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 941893,
+            "bbox": [
+              52,
+              89,
+              1201,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 941893,
+            "bbox": [
+              52,
+              89,
+              1201,
+              1219
+            ]
+          }
+        ],
+        "sha256": "b54a0f9ba99345b88c6a9dfed83b3a806f6210d12dd0033ce8ceb199f8ca480b"
+      },
+      "night_idle_2": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          48,
+          87,
+          1202,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 950299,
+            "bbox": [
+              48,
+              87,
+              1202,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 950299,
+            "bbox": [
+              48,
+              87,
+              1202,
+              1219
+            ]
+          }
+        ],
+        "sha256": "80bc9be587713b4f2f3d44b01ebf55ae417c8724029e231b6b6f7bda9fa547da"
+      },
+      "night_idle_3": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          48,
+          87,
+          1202,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 950299,
+            "bbox": [
+              48,
+              87,
+              1202,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 950299,
+            "bbox": [
+              48,
+              87,
+              1202,
+              1219
+            ]
+          }
+        ],
+        "sha256": "7e9ded99b7153d83dfe43c356486b50ff84ebf669cacd526bb212676469e5a85"
+      },
+      "night_idle_4": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          52,
+          89,
+          1201,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 941893,
+            "bbox": [
+              52,
+              89,
+              1201,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 941893,
+            "bbox": [
+              52,
+              89,
+              1201,
+              1219
+            ]
+          }
+        ],
+        "sha256": "0648594e5802e4bb77ed8bf273f6796b69b16240073c4fbcd3168c53bd18bbb2"
+      },
+      "night_idle_blink": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_bbox": [
+          52,
+          89,
+          1201,
+          1219
+        ],
+        "baseline": 1218,
+        "border_nonzero_sides": 0,
+        "alpha_components_gt8": [
+          {
+            "pixels": 941893,
+            "bbox": [
+              52,
+              89,
+              1201,
+              1219
+            ]
+          }
+        ],
+        "alpha_components_positive": [
+          {
+            "pixels": 941893,
+            "bbox": [
+              52,
+              89,
+              1201,
+              1219
+            ]
+          }
+        ],
+        "sha256": "20bfbe7b877dcf39fe8d808c9c484d1c1f7d66ef98890dbf563752d92b73f40a"
+      }
+    },
+    "composition": {
+      "night_change_2": {
+        "parent": "night_change_3",
+        "outside_mask_changed_pixels": 0,
+        "changed_pixels": 200841,
+        "delta_bbox": [
+          450,
+          26,
+          1113,
+          1022
+        ],
+        "mask_bbox": [
+          449,
+          5,
+          1134,
+          1022
+        ]
+      },
+      "night_change_1": {
+        "parent": "night_change_2",
+        "outside_mask_changed_pixels": 0,
+        "changed_pixels": 134132,
+        "delta_bbox": [
+          439,
+          753,
+          953,
+          1161
+        ],
+        "mask_bbox": [
+          437,
+          750,
+          953,
+          1162
+        ]
+      },
+      "night_change_0": {
+        "parent": "night_change_1",
+        "outside_mask_changed_pixels": 0,
+        "changed_pixels": 93441,
+        "delta_bbox": [
+          556,
+          887,
+          914,
+          1219
+        ],
+        "mask_bbox": [
+          554,
+          886,
+          917,
+          1246
+        ]
+      },
+      "night_idle_2": {
+        "parent": "night_idle_1",
+        "outside_mask_changed_pixels": 0,
+        "changed_pixels": 684610,
+        "delta_bbox": [
+          48,
+          87,
+          1202,
+          1189
+        ],
+        "mask_bbox": [
+          0,
+          0,
+          1254,
+          1254
+        ]
+      },
+      "night_idle_3": {
+        "parent": "night_idle_2",
+        "outside_mask_changed_pixels": 0,
+        "changed_pixels": 130784,
+        "delta_bbox": [
+          438,
+          781,
+          973,
+          1107
+        ],
+        "mask_bbox": [
+          437,
+          780,
+          974,
+          1108
+        ]
+      },
+      "night_idle_4": {
+        "parent": "night_idle_1",
+        "outside_mask_changed_pixels": 0,
+        "changed_pixels": 85826,
+        "delta_bbox": [
+          482,
+          837,
+          919,
+          1095
+        ],
+        "mask_bbox": [
+          482,
+          834,
+          919,
+          1096
+        ]
+      },
+      "night_idle_blink": {
+        "parent": "night_idle_1",
+        "outside_mask_changed_pixels": 0,
+        "changed_pixels": 25174,
+        "delta_bbox": [
+          517,
+          615,
+          960,
+          755
+        ],
+        "mask_bbox": [
+          514,
+          613,
+          963,
+          759
+        ]
+      }
+    },
+    "old_assets": {
+      "checked": 138,
+      "changed": []
+    },
+    "result": "PASS",
+    "idle_lower_feet_exact_roi": [
+      580,
+      1120,
+      884,
+      1220
+    ],
+    "idle_lower_feet_exact_frames": 5,
+    "visual_review": "Full lavender preview,128px dark tiles, enlarged knees and hugging arms. Initial knee fabric remnants repaired; frame4 oversized arm separation rejected and regenerated."
+  },
+  "rejected_outputs": [
+    {
+      "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a0d97f-5017-71c2-8ba4-181bc329b670\\exec-7cbb95cb-3c99-4e9b-aafa-44e83b263897.png",
+      "reason": "First frame4 separated arms substantially; rejected because frame4 must return close to frame1. Regenerated crossed sleeves."
+    }
+  ],
+  "remaining_after_approval": [
+    "night_yawn_1",
+    "night_yawn_2",
+    "night_sleep_1",
+    "night_sleep_2",
+    "night_sleep_3",
+    "night_milk_1",
+    "night_milk_2",
+    "night_read_1",
+    "night_read_2",
+    "night_read_blink",
+    "night_goodnight_1",
+    "night_goodnight_2",
+    "night_wake_1",
+    "night_wake_2"
+  ]
+}
