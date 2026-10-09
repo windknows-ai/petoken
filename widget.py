@@ -3737,7 +3737,7 @@ class TaskPanelManager(HaloScene):
         self.last_activated = None
 
 
-SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'game', 'about')
+SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'game', 'phone', 'about')
 
 
 # Which options each page shows, in order (row label attributes).
@@ -3753,6 +3753,8 @@ SETTINGS_LAYOUT = (
     ('game', ('game_auto_label', 'game_scale_label', 'game_ring_label', 'game_display_label',
               'game_rings_side_label', 'game_bar_label', 'game_bar_place_label', 'game_fast_label',
               'game_extra_label', 'game_excluded_label')),
+    ('phone', ('push_enabled_label', 'push_subscribe_label', 'push_when_label', 'push_kinds_label',
+               'push_project_label', 'push_server_label', 'push_test_label')),
 )
 
 # (page, row label attribute, description key): the line shown under each option.
@@ -3778,6 +3780,10 @@ SETTING_DESCRIPTIONS = (
     ('game', 'game_bar_label', 'game_bar'), ('game', 'game_fast_label', 'game_fast'),
     ('game', 'game_rings_side_label', 'game_rings_side'), ('game', 'game_bar_place_label', 'game_bar_place'),
     ('game', 'game_extra_label', 'game_extra'), ('game', 'game_excluded_label', 'game_excluded'),
+    ('phone', 'push_enabled_label', 'push_enabled'), ('phone', 'push_subscribe_label', 'push_subscribe'),
+    ('phone', 'push_when_label', 'push_when'), ('phone', 'push_kinds_label', 'push_kinds'),
+    ('phone', 'push_project_label', 'push_project'), ('phone', 'push_server_label', 'push_server'),
+    ('phone', 'push_test_label', 'push_test'),
 )
 
 
@@ -4041,6 +4047,69 @@ class Settings(QDialog):
         self.game_excluded = ProgramList(language, names(panel.prefs.get('game_excluded')))
         self.game_excluded_label = label()
         game.addRow(self.game_excluded_label, self.game_excluded)
+        # 2.2 phone notifications (ntfy).
+        from phone_push import KINDS, new_topic
+        phone = self.forms['phone']
+        self.push_topic = panel.prefs.get('push_topic') or new_topic()
+        self.push_enabled = QCheckBox()
+        self.push_enabled.setChecked(bool(panel.prefs.get('push_enabled')))
+        self.push_enabled_label = label()
+        phone.addRow(self.push_enabled_label, self.push_enabled)
+        subscribe = QVBoxLayout()
+        subscribe.setSpacing(6)
+        self.push_qr = QLabel()
+        self.push_qr.setAlignment(Qt.AlignCenter)
+        subscribe.addWidget(self.push_qr, 0, Qt.AlignLeft)
+        self.push_url = QLabel()
+        self.push_url.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.push_url.setWordWrap(True)
+        subscribe.addWidget(self.push_url)
+        url_row = QHBoxLayout()
+        self.push_copy = QPushButton()
+        self.push_copy.clicked.connect(lambda: QApplication.clipboard().setText(self._push_url()))
+        self.push_renew = QPushButton()
+        self.push_renew.clicked.connect(self._renew_topic)
+        url_row.addWidget(self.push_copy)
+        url_row.addWidget(self.push_renew)
+        url_row.addStretch(1)
+        subscribe.addLayout(url_row)
+        self.push_subscribe_label = label()
+        phone.addRow(self.push_subscribe_label, subscribe)
+        self.push_when = QComboBox()
+        for key in ('away', 'always'):
+            self.push_when.addItem('', key)
+        self.push_when.setCurrentIndex(max(0, self.push_when.findData(panel.prefs.get('push_when', 'away'))))
+        self.push_when_label = label()
+        phone.addRow(self.push_when_label, self.push_when)
+        chosen = panel.prefs.get('push_kinds') or []
+        self.push_kind_boxes = {}
+        kinds_grid = QGridLayout()
+        kinds_grid.setContentsMargins(0, 0, 0, 0)
+        for index, key in enumerate(KINDS):
+            box = QCheckBox()
+            box.setChecked(key in chosen)
+            self.push_kind_boxes[key] = box
+            kinds_grid.addWidget(box, index // 2, index % 2)
+        self.push_kinds_label = label()
+        phone.addRow(self.push_kinds_label, kinds_grid)
+        self.push_project = QCheckBox()
+        self.push_project.setChecked(bool(panel.prefs.get('push_project', True)))
+        self.push_project_label = label()
+        phone.addRow(self.push_project_label, self.push_project)
+        self.push_server = QLineEdit(panel.prefs.get('push_server') or 'https://ntfy.sh')
+        self.push_server.textChanged.connect(lambda _: self._show_push_url())
+        self.push_server_label = label()
+        phone.addRow(self.push_server_label, self.push_server)
+        test_row = QHBoxLayout()
+        self.push_test = QPushButton()
+        self.push_test.clicked.connect(self._send_push_test)
+        self.push_test_status = label('', 'muted')
+        self.push_test_status.setWordWrap(True)
+        test_row.addWidget(self.push_test)
+        test_row.addWidget(self.push_test_status, 1)
+        self.push_test_label = label()
+        phone.addRow(self.push_test_label, test_row)
+        self.push_enabled.toggled.connect(lambda _: self._sync_dependent_rows())
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -4135,6 +4204,7 @@ class Settings(QDialog):
         # left, the control on the right (details stay in tooltips).
         self.descriptions = []
         self._build_cards()
+        self.tabs.tabBar().setUsesScrollButtons(False)       # Every tab always visible.
         self.clinginess.currentIndexChanged.connect(lambda _: self._describe_clinginess())
         # Only the options that matter for what is chosen show (less to read).
         self.game_display.currentIndexChanged.connect(lambda _: self._sync_dependent_rows())
@@ -4380,6 +4450,17 @@ class Settings(QDialog):
         for index in range(self.game_rings_side.count()):
             self.game_rings_side.setItemText(index, t(f'game_side_{self.game_rings_side.itemData(index)}'))
         self.game_bar_reset.setText(t('game_bar_reset'))
+        for attr in ('push_enabled', 'push_subscribe', 'push_when', 'push_kinds', 'push_project', 'push_server',
+                     'push_test'):
+            getattr(self, attr + '_label').setText(t(attr))
+        for index in range(self.push_when.count()):
+            self.push_when.setItemText(index, t(f'push_when_{self.push_when.itemData(index)}'))
+        for key, box in self.push_kind_boxes.items():
+            box.setText(t(f'push_kind_{key}'))
+        self.push_copy.setText(t('push_copy'))
+        self.push_renew.setText(t('push_renew'))
+        self.push_test.setText(t('push_test_button'))
+        self._show_push_url()
         self.game_bar_reset.setEnabled(self.parentWidget().prefs.get('game_bar_pos') is not None)
         for index in range(self.game_ring.count()):
             self.game_ring.setItemText(index, t(f'game_ring_{self.game_ring.itemData(index)}'))
@@ -4410,6 +4491,8 @@ class Settings(QDialog):
         self.pet_scale_value.setText(f'{int(self.pet_scale.value())}%')
         for index, key in enumerate(SETTINGS_PAGES):
             self.tabs.setTabText(index, t(f'settings_page_{key}'))
+        need = self.tabs.tabBar().sizeHint().width() + 40
+        self.setMinimumWidth(max(540, need))
         self.about_heading.setText(t('about_data'))
         self.diagnostics_button.setText(t('diagnostics_export'))
         self.update_label.setText(t('update_setting'))
@@ -4460,6 +4543,53 @@ class Settings(QDialog):
         self.clinginess.setCurrentIndex(self.clinginess.findData('moderate'))
         self.apply_language()
 
+    def _push_url(self):
+        server = (self.push_server.text().strip() or 'https://ntfy.sh').rstrip('/')
+        return f'{server}/{self.push_topic}'
+
+    def _show_push_url(self):
+        url = self._push_url()
+        language = normalize_language(self.language.currentData())
+        self.push_url.setText(text('push_topic_line', language, topic=self.push_topic) + '\n' + url)
+        try:
+            import qr_code
+            image = qr_code.to_qimage(qr_code.encode(url), scale=3, border=2)
+            self.push_qr.setPixmap(QPixmap.fromImage(image))
+            self.push_qr.show()
+        except Exception:
+            self.push_qr.hide()             # No QR code: the address still shows.
+
+    def _renew_topic(self):
+        from phone_push import new_topic
+        self.push_topic = new_topic()
+        self._show_push_url()
+
+    def _push_prefs(self):
+        return dict(push_enabled=self.push_enabled.isChecked(), push_topic=self.push_topic,
+                    push_server=self.push_server.text().strip() or 'https://ntfy.sh',
+                    push_when=self.push_when.currentData(),
+                    push_kinds=[k for k, box in self.push_kind_boxes.items() if box.isChecked()],
+                    push_project=self.push_project.isChecked())
+
+    def _send_push_test(self):
+        """Send one message with what is on the page now (saved or not)."""
+        panel = self.parentWidget()
+        push = getattr(panel, 'phone_push', None)
+        if push is None:
+            return
+        language = normalize_language(self.language.currentData())
+        self.push_test_status.setText(text('push_test_sending', language))
+        saved = dict(panel.prefs)
+        panel.prefs.update(self._push_prefs())
+        status = self.push_test_status
+
+        def done(error):
+            message = text('push_test_failed', language, error=error) if error else text('push_test_sent', language)
+            QTimer.singleShot(0, status, lambda: status.setText(message))
+        push.test(done)
+        panel.prefs.clear()
+        panel.prefs.update(saved)
+
     def _card_of(self, row_label):
         frame = row_label
         while frame is not None and frame.objectName() != 'settingCard':
@@ -4478,6 +4608,12 @@ class Settings(QDialog):
                 card.setVisible(wanted)
         for edit in (self.dnd_start, self.dnd_end, self.dnd_to):
             edit.setEnabled(self.dnd_scheduled.isChecked())
+        on = self.push_enabled.isChecked()
+        for label_ in (self.push_subscribe_label, self.push_when_label, self.push_kinds_label,
+                       self.push_project_label, self.push_server_label, self.push_test_label):
+            card = self._card_of(label_)
+            if card is not None:
+                card.setVisible(on)
 
     def _reset_game_bar(self):
         """The info bar follows her again (after it was dragged away)."""
@@ -4512,6 +4648,7 @@ class Settings(QDialog):
                      pet_scale_percent=int(self.pet_scale.value()),
                      game_auto=self.game_auto.isChecked(),
                      game_scale_percent=int(self.game_scale.value()),
+                     **self._push_prefs(),
                      game_ring=self.game_ring.currentData(),
                      game_display=self.game_display.currentData(),
                      game_bar_items=[key for key, box in self.game_bar_boxes.items() if box.isChecked()]
@@ -5058,6 +5195,9 @@ class Panel(QWidget):
         self.stats_sampler = None
         self.game_mode = GameMode(self)
         self.game_mode.changed.connect(self._game_changed)
+        # 2.2 phone notifications (sends nothing until turned on in Settings).
+        from phone_push import PhonePush
+        self.phone_push = PhonePush(self)
         # Reports open instantly: count once in the background after start-up.
         import reports
         self.report_cache = (reports.ReportCache(lambda: reports.load(store_path=PREF_DIR / 'workbench.sqlite3'))
@@ -5954,6 +6094,13 @@ class Panel(QWidget):
 
     def announce(self, event):
         self._last_notice = dict(event)
+        push = getattr(self, 'phone_push', None)
+        if push is not None and (self.live or getattr(self, 'preview_toasts', False)):
+            try:
+                title, body = self.notification_text(event)
+                push.notify(event, title, body)     # Also while focusing or gaming: that's when it helps.
+            except Exception:
+                pass
         focus = getattr(self, 'focus_mode', None)
         if focus is not None and focus.quiet(event.get('kind')):
             return  # Focusing: recorded in Notifications, but no pop-up or reaction.
@@ -6598,6 +6745,7 @@ class Panel(QWidget):
         self.task_manager.shutdown()
         if getattr(self, 'provider_poller', None) is not None:
             self.provider_poller.close()
+        self.phone_push.close()
         self.game_mode.timer.stop()
         if self.stats_sampler is not None:
             self.stats_sampler.stop()

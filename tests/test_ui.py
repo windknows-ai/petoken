@@ -260,7 +260,9 @@ class UiTests(unittest.TestCase):
                                       settings.assistant_hints, settings.dnd,
                                       settings.dnd_scheduled, settings.continuation_card,
                                       settings.game_auto, settings.game_fast,
-                                      *settings.game_bar_boxes.values()})
+                                      *settings.game_bar_boxes.values(),
+                                      settings.push_enabled, settings.push_project,
+                                      *settings.push_kind_boxes.values()})
         self.assertEqual(settings.topmost_label.text(),'Always on Top')
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
         with patch('widget.write_preferences') as write:

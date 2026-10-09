@@ -37,6 +37,12 @@ DEFAULT_PREFERENCES = {
     "game_display": "rings",
     "game_bar_items": ["limits", "cpu", "gpu", "gpu_temp"],
     "game_scale_percent": PET_SCALE_DEFAULT,
+    "push_enabled": False,
+    "push_topic": "",
+    "push_server": "https://ntfy.sh",
+    "push_when": "away",
+    "push_kinds": ["finished", "failed", "needs_approval", "quota_low"],
+    "push_project": True,
     "game_fast": False,
     "game_rings_side": "right",
     "game_bar_pos": None,
@@ -103,6 +109,17 @@ def normalize_preferences(data):
     if not isinstance(preferences.get("usage_card_idle"), bool):
         preferences["usage_card_idle"] = True
     preferences["game_scale_percent"] = normalize_pet_scale(preferences.get("game_scale_percent"))
+    for key, fallback in (("push_enabled", False), ("push_project", True)):
+        if not isinstance(preferences.get(key), bool):
+            preferences[key] = fallback
+    for key, fallback in (("push_topic", ""), ("push_server", "https://ntfy.sh")):
+        if not isinstance(preferences.get(key), str):
+            preferences[key] = fallback
+    if preferences.get("push_when") not in ("away", "always"):
+        preferences["push_when"] = "away"
+    kinds = preferences.get("push_kinds")
+    preferences["push_kinds"] = ([k for k in kinds if k in ("finished", "failed", "needs_approval", "quota_low", "reminder")]
+                                 if isinstance(kinds, list) else list(DEFAULT_PREFERENCES["push_kinds"]))
     for key in ("game_auto", "game_fast"):
         if not isinstance(preferences.get(key), bool):
             preferences[key] = DEFAULT_PREFERENCES[key]
