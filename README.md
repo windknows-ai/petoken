@@ -31,9 +31,9 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v2.0.4
+## Latest stable release: v2.2.0
 
-Download the **one-click installer** [Petoken-Setup-v2.0.4.exe](https://github.com/windknows-ai/petoken/releases/download/v2.0.4/Petoken-Setup-v2.0.4.exe) from the [v2.0.4 release](https://github.com/windknows-ai/petoken/releases/tag/v2.0.4) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v2.2.0.exe](https://github.com/windknows-ai/petoken/releases/download/v2.2.0/Petoken-Setup-v2.2.0.exe) from the [v2.2.0 release](https://github.com/windknows-ai/petoken/releases/tag/v2.2.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -117,6 +117,25 @@ back when Petoken exits).
   reply), files changed, tokens, API-equivalent cost and the change against the
   previous period, followed by a searchable history of Claude sessions and Codex
   threads. Double-click a row to jump to its window.
+
+### New in v2.2: game mode and phone notifications
+
+- **Game mode.** Start a fullscreen game (or switch it on from the menu) and
+  she transforms into her second form: she rises, the star ring flies behind
+  her, armour forms piece by piece, a sword appears and a spotlight shows her
+  off (13 s, or 6 s at double speed). While you play, task notices stay
+  quiet (still kept under Notifications), the mouse goes to the game except
+  when it is over her, and a compact display shows your limits as small
+  rings or a bar with CPU, GPU, temperature and VRAM. Her size in game mode
+  has its own setting. Whitelist or blacklist games in Settings > Game mode.
+- **Notifications on your phone.** Settings > Phone sends finished, failed,
+  waiting-for-you and low-limit notices to the free ntfy app (iOS and
+  Android, no account) while you are away from the computer, focusing or
+  gaming. Notices name the task as Claude shows it.
+- **Also:** the usage card shows only the account limits (5 hours and the
+  week) as two larger gauges; focus breaks start when you press OK; the menus
+  and settings are reorganised (switches under Show, only the options that
+  apply).
 
 ### New in v2.0: she comes alive
 

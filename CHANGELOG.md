@@ -2,6 +2,16 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.2.0 — 2026-10-09
+
+### Added
+- **Game mode**: detected fullscreen games (whitelist / blacklist) or a menu switch; her second form with a transformation (rise, ring flies behind her, armour piece by piece, sword, spotlight; 2× option); quiet task notices; mouse passes to the game except over her; the star ring behind her (deep space, task stars fly between rings); compact display (small rings or a draggable bar with limits, CPU, GPU, temperature, VRAM, RAM); separate game-mode size changed smoothly; new game poses in the Guide.
+- **Phone notifications** through ntfy (Settings > Phone): when away, focusing or gaming; chosen kinds; optional project names; test send.
+
+### Changed
+- Notices name the task as Claude shows it, then the project.
+- Menus: everyday actions first, switches under Show; settings show only the options that apply; workbench and Settings widen to fit all their tabs.
+
 ## V2.0.4 — 2026-10-08
 
 ### Changed

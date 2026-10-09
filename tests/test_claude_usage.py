@@ -222,7 +222,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(data['working_context']['title'], 'Live name')
         self.assertEqual([t['task_key'] for t in data['active_tasks']], ['claude:s2'])
         task = data['active_tasks'][0]
-        self.assertEqual(task['display'], {'project': 'alpha'})
+        self.assertEqual(task['display'], {'project': 'alpha', 'title': 'Live name'})   # The name shown in Claude.
         self.assertEqual(task['presentation']['tokens']['total_tokens'], 1260)
         status = claude_provider_status(ClaudeProvider(self.store).read(), last_success_at=2.0)
         self.assertTrue(status['working'] and status['activity_valid'])

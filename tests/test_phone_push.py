@@ -112,6 +112,19 @@ class PhonePushTests(unittest.TestCase):
 
 
 class PhoneSettingsTests(unittest.TestCase):
+    def test_notices_name_the_task_as_the_user_sees_it(self):
+        from widget import Panel
+        panel = Panel(live=False)
+        self.addCleanup(lambda: (setattr(panel, 'closing', True), panel.phone_push.close(), panel.close()))
+        panel.task_manager._universe = {('claude', 's1'): dict(task_key='s1', provider_id='claude',
+                                                              display=dict(project='Web Project', title='回应问候'))}
+        title, body = panel.notification_text(dict(kind='finished', provider='claude', task_key='s1',
+                                                   project='Web Project'))
+        self.assertTrue(body.startswith('回应问候 · Web Project'))
+        title, body = panel.notification_text(dict(kind='finished', provider='claude', task_key='other',
+                                                   project='Web Project'))
+        self.assertTrue(body.startswith('Web Project'))                               # Unknown task: the project.
+
     def test_settings_page_round_trip(self):
         from unittest.mock import patch
         from widget import Panel, Settings

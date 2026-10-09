@@ -6050,10 +6050,23 @@ class Panel(QWidget):
             asks = (request or {}).get('tool') in ('AskUserQuestion', 'ExitPlanMode')
             pet.react('question' if asks else 'needs_approval')
 
+    def task_title(self, event):
+        """The name the user sees for this task (e.g. Claude's session title), or ''."""
+        manager = getattr(self, 'task_manager', None)
+        universe = getattr(manager, '_universe', None) or {}
+        key = event.get('task_key')
+        for identity, task in universe.items():
+            if (task or {}).get('task_key') == key or identity == (event.get('provider'), key):
+                return ((task or {}).get('display') or {}).get('title') or ''
+        return ''
+
     def notification_text(self, event):
         """Title and body of a notification, in the UI language."""
         provider = PROVIDER_NAMES.get(event.get('provider'), '')
         project = event.get('project') or ''
+        title = self.task_title(event)
+        if title and title != project:
+            project = f'{title} · {project}' if project else title   # The task's own name first.
         kind = event.get('kind')
         if kind == 'reminder':
             return self.tr_text('notify_reminder'), event.get('detail') or ''

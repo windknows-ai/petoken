@@ -407,7 +407,7 @@ class ClaudeStore:
         return active_task(
             PROVIDER_ID, scoped_session_id(entry['session_id']), working=True,
             activity_valid=True, activity_at=entry.get('activity_at'),
-            display=dict(project=project),
+            display=dict(project=project, title=self._title(session, entry)),
             presentation=dict(
                 tokens=summary['tokens'], model=(session or {}).get('model'),
                 effort=(session or {}).get('effort'),
