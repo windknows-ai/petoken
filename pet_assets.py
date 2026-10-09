@@ -56,16 +56,21 @@ def _v21(name, count):
     return tuple(f"assets/v2_1/{name}_{n}.png" for n in range(1, count + 1))
 
 
+def _v23(name, count):
+    return tuple(f"assets/v2_3/{name}_{n}.png" for n in range(1, count + 1))
+
+
 def _file(path):
-    """A registry path on disk. 2.1 art may live outside the repository until
-    its branch is merged (PETOKEN_V2_1_ART, as in transform.py)."""
+    """A registry path on disk. New art may live outside the repository until
+    its branch is merged (PETOKEN_V2_1_ART / PETOKEN_V2_3_ART, as in transform.py)."""
     p = Path(path)
     if p.is_absolute():
         return p
-    if path.startswith("assets/v2_1/") and not (ASSETS_DIR / "v2_1").is_dir():
-        other = os.environ.get("PETOKEN_V2_1_ART")
-        if other:
-            return Path(other) / path[len("assets/v2_1/"):]
+    for folder, env in (("v2_1", "PETOKEN_V2_1_ART"), ("v2_3", "PETOKEN_V2_3_ART")):
+        if path.startswith(f"assets/{folder}/") and not (ASSETS_DIR / folder).is_dir():
+            other = os.environ.get(env)
+            if other:
+                return Path(other) / path[len(f"assets/{folder}/"):]
     return ASSETS_DIR.parent / path
 
 
@@ -126,6 +131,15 @@ GAME_REGISTRY = tuple(
                blink=f"assets/v2_1/{name}_blink.png" if blink else "")
     for name, frames, blink in _GAME)
 
+# 2.3 late-night mode: her moon pajamas (docs/V2_3_ART_PROMPTS.md). Until the
+# art exists night_mode keeps her usual poses.
+_NIGHT = (("night_idle", 4, True), ("night_yawn", 2, False), ("night_sleep", 3, False), ("night_milk", 2, False),
+          ("night_read", 2, True), ("night_goodnight", 2, False), ("night_wake", 2, False))
+NIGHT_REGISTRY = tuple(
+    AssetEntry(name, f"assets/v2_3/{name}.png", "assets/v1_1/idle.png", frames=_v23(name, frames),
+               blink=f"assets/v2_3/{name}_blink.png" if blink else "")
+    for name, frames, blink in _NIGHT)
+
 # Activity-layer names that are not character poses.
 ALIASES = {"working": "codex_working", "usage": "idle"}
 
@@ -137,7 +151,7 @@ PREVIEW_STATES = ("idle", "typing", "microphone", "music", "working", "usage",
 def entry_for(state):
     """Return the registry entry for ``state``; unknown states map to idle."""
     key = ALIASES.get(state, state)
-    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY:
+    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY:
         if entry.state == key:
             return entry
     return REGISTRY[0]
@@ -299,7 +313,7 @@ def load_sprites():
         # Companion poses share the V1.1 pixmap they fall back to, so they
         # cost no extra memory until their own art exists.
         paths = {resolve_path(entry): table[entry.state] for entry in REGISTRY}
-        for entry in COMPANION_REGISTRY + GAME_REGISTRY:
+        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY:
             path = resolve_path(entry)
             table[entry.state] = paths.get(path) or (pose_source(path) if path else None)
         table['working'] = table['codex_working']

@@ -515,14 +515,17 @@ class DesktopPet(QWidget):
             task='guitar'   # Every other two minutes of music she plays along.
         # Game mode: her game pose (form 2 once its art exists); tasks and moods wait.
         game_pose=self._game_pose(now) if gaming else None
+        # Late at night her idle and mood poses are the pajama ones (game mode wins).
+        night=getattr(self.panel,'night_mode',None)
+        nightly=night.pose if night is not None and not gaming else (lambda pose:pose)
         # Being dragged > notification > preview > interaction > game > focus > task > mood.
         state=(('dragged' if self.dragging and 'dragged' in self.sprites else None)
                or self.reaction_state or self.preview_state or self.interaction_state
                or game_pose
                or (focus_pose if focus_pose in self.sprites else None)
                or (task if task!='idle' else None)
-               or (self.mood.pose if self.mood_enabled and self.mood.pose in self.sprites else None)
-               or 'idle')
+               or (nightly(self.mood.pose) if self.mood_enabled and self.mood.pose in self.sprites else None)
+               or nightly('idle'))
         if state!=self.current_state:
             self.current_state=state
             self.update()
@@ -1010,6 +1013,13 @@ class DesktopPet(QWidget):
             game.setChecked(game_mode.active)
             game.setToolTip(self.tr_text('game_mode_menu_tip'))
             game.triggered.connect(lambda _=False,gm=game_mode: gm.toggle())
+        night_mode=getattr(self.panel,'night_mode',None)
+        if night_mode is not None:
+            night=view.addAction(self.tr_text('night_menu'))
+            night.setCheckable(True)
+            night.setChecked(night_mode.active)
+            night.setToolTip(self.tr_text('night_menu_tip'))
+            night.triggered.connect(lambda _=False,nm=night_mode: nm.toggle())
         view.addSeparator()
         topmost=view.addAction(self.tr_text('always_on_top'));topmost.setCheckable(True)
         topmost.setChecked(bool(self.panel.prefs.get('always_on_top',True)))

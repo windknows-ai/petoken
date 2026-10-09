@@ -44,6 +44,12 @@ DEFAULT_PREFERENCES = {
     "push_kinds": ["finished", "failed", "needs_approval", "quota_low"],
     "push_project": True,
     "game_fast": False,
+    "night_enabled": True,
+    "night_start": "23:00",
+    "night_end": "07:00",
+    "night_with_dnd": True,
+    "sit_minutes": 60,
+    "app_time_enabled": False,
     "game_rings_side": "right",
     "game_bar_pos": None,
     "claude_probe_minutes": 0,
@@ -120,9 +126,16 @@ def normalize_preferences(data):
     kinds = preferences.get("push_kinds")
     preferences["push_kinds"] = ([k for k in kinds if k in ("finished", "failed", "needs_approval", "quota_low", "reminder")]
                                  if isinstance(kinds, list) else list(DEFAULT_PREFERENCES["push_kinds"]))
-    for key in ("game_auto", "game_fast"):
+    for key in ("game_auto", "game_fast", "night_enabled", "night_with_dnd", "app_time_enabled"):
         if not isinstance(preferences.get(key), bool):
             preferences[key] = DEFAULT_PREFERENCES[key]
+    for key in ("night_start", "night_end"):
+        value = preferences.get(key)
+        if not (isinstance(value, str) and len(value) == 5 and value[2] == ":"
+                and value[:2].isdigit() and value[3:].isdigit()):
+            preferences[key] = DEFAULT_PREFERENCES[key]
+    if preferences.get("sit_minutes") not in (0, 30, 45, 60, 90):
+        preferences["sit_minutes"] = 60
     for key in ("game_extra", "game_excluded"):
         value = preferences.get(key)
         if isinstance(value, str):                  # 2.1 test builds: "a.exe, b.exe".

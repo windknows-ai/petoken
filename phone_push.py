@@ -95,7 +95,7 @@ class PhonePush:
         if kind not in (kinds if isinstance(kinds, list) else DEFAULT_KINDS):
             return False
         try:
-            from widget import quiet_now
+            from notifications import quiet_now
             if quiet_now(self.prefs):
                 return False         # Do Not Disturb covers the phone too.
         except Exception:

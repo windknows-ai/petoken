@@ -3737,7 +3737,7 @@ class TaskPanelManager(HaloScene):
         self.last_activated = None
 
 
-SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'game', 'phone', 'about')
+SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'rest', 'game', 'phone', 'about')
 
 
 # Which options each page shows, in order (row label attributes).
@@ -3750,6 +3750,7 @@ SETTINGS_LAYOUT = (
                 'codex_hooks_label', 'mute_claude_toasts_label')),
     ('assistant', ('assistant_hints_label', 'continuation_card_label', 'dnd_label', 'dnd_scheduled_label',
                    'schedule_missed_label', 'quick_launch_hotkey_label')),
+    ('rest', ('night_label', 'night_dnd_label', 'sit_label', 'app_time_label')),
     ('game', ('game_auto_label', 'game_scale_label', 'game_ring_label', 'game_display_label',
               'game_rings_side_label', 'game_bar_label', 'game_bar_place_label', 'game_fast_label',
               'game_extra_label', 'game_excluded_label')),
@@ -3775,6 +3776,8 @@ SETTING_DESCRIPTIONS = (
     ('assistant', 'assistant_hints_label', 'assistant_hints'),
     ('assistant', 'continuation_card_label', 'continuation'), ('assistant', 'dnd_label', 'dnd'),
     ('assistant', 'dnd_scheduled_label', 'dnd_scheduled'),
+    ('rest', 'night_label', 'night'), ('rest', 'night_dnd_label', 'night_dnd'),
+    ('rest', 'sit_label', 'sit'), ('rest', 'app_time_label', 'app_time'),
     ('game', 'game_auto_label', 'game_auto'), ('game', 'game_scale_label', 'game_scale'),
     ('game', 'game_ring_label', 'game_ring'), ('game', 'game_display_label', 'game_display'),
     ('game', 'game_bar_label', 'game_bar'), ('game', 'game_fast_label', 'game_fast'),
@@ -4107,6 +4110,40 @@ class Settings(QDialog):
         self.push_test_label = label()
         phone.addRow(self.push_test_label, test_row)
         self.push_enabled.toggled.connect(lambda _: self._sync_dependent_rows())
+        # 2.3 rest: late-night mode, the sit-too-long reminder, app time.
+        rest = self.forms['rest']
+        self.night_enabled = QCheckBox()
+        self.night_enabled.setChecked(bool(panel.prefs.get('night_enabled', True)))
+        self.night_start = QTimeEdit(QTime.fromString(panel.prefs.get('night_start', '23:00'), 'HH:mm'))
+        self.night_end = QTimeEdit(QTime.fromString(panel.prefs.get('night_end', '07:00'), 'HH:mm'))
+        for edit in (self.night_start, self.night_end):
+            edit.setDisplayFormat('HH:mm')
+        night_row = QHBoxLayout()
+        night_row.setContentsMargins(0, 0, 0, 0)
+        night_row.addWidget(self.night_enabled)
+        night_row.addWidget(self.night_start)
+        self.night_to = QLabel('–')
+        night_row.addWidget(self.night_to)
+        night_row.addWidget(self.night_end)
+        night_row.addStretch()
+        self.night_label = label()
+        rest.addRow(self.night_label, night_row)
+        self.night_dnd = QCheckBox()
+        self.night_dnd.setChecked(bool(panel.prefs.get('night_with_dnd', True)))
+        self.night_dnd_label = label()
+        rest.addRow(self.night_dnd_label, self.night_dnd)
+        from night_mode import SIT_CHOICES
+        self.sit = QComboBox()
+        for minutes in (*SIT_CHOICES, 0):
+            self.sit.addItem('', minutes)
+        self.sit.setCurrentIndex(max(0, self.sit.findData(panel.prefs.get('sit_minutes', 60))))
+        self.sit_label = label()
+        rest.addRow(self.sit_label, self.sit)
+        self.app_time = QCheckBox()
+        self.app_time.setChecked(bool(panel.prefs.get('app_time_enabled')))
+        self.app_time_label = label()
+        rest.addRow(self.app_time_label, self.app_time)
+        self.night_enabled.toggled.connect(lambda _: self._sync_dependent_rows())
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -4448,8 +4485,11 @@ class Settings(QDialog):
             self.game_rings_side.setItemText(index, t(f'game_side_{self.game_rings_side.itemData(index)}'))
         self.game_bar_reset.setText(t('game_bar_reset'))
         for attr in ('push_enabled', 'push_subscribe', 'push_when', 'push_kinds', 'push_project', 'push_server',
-                     'push_test'):
+                     'push_test', 'night', 'night_dnd', 'sit', 'app_time'):
             getattr(self, attr + '_label').setText(t(attr))
+        for index in range(self.sit.count()):
+            minutes = self.sit.itemData(index)
+            self.sit.setItemText(index, t('sit_minutes', minutes=minutes) if minutes else t('sit_off'))
         for index in range(self.push_when.count()):
             self.push_when.setItemText(index, t(f'push_when_{self.push_when.itemData(index)}'))
         for key, box in self.push_kind_boxes.items():
@@ -4599,6 +4639,11 @@ class Settings(QDialog):
                 card.setVisible(wanted)
         for edit in (self.dnd_start, self.dnd_end, self.dnd_to):
             edit.setEnabled(self.dnd_scheduled.isChecked())
+        for edit in (self.night_start, self.night_end, self.night_to):
+            edit.setEnabled(self.night_enabled.isChecked())
+        card = self._card_of(self.night_dnd_label)
+        if card is not None:
+            card.setVisible(self.night_enabled.isChecked())
         on = self.push_enabled.isChecked()
         for label_ in (self.push_subscribe_label, self.push_when_label, self.push_kinds_label,
                        self.push_project_label, self.push_server_label, self.push_test_label):
@@ -4637,6 +4682,12 @@ class Settings(QDialog):
                      dnd_start=self.dnd_start.time().toString('HH:mm'),
                      dnd_end=self.dnd_end.time().toString('HH:mm'),
                      pet_scale_percent=int(self.pet_scale.value()),
+                     night_enabled=self.night_enabled.isChecked(),
+                     night_start=self.night_start.time().toString('HH:mm'),
+                     night_end=self.night_end.time().toString('HH:mm'),
+                     night_with_dnd=self.night_dnd.isChecked(),
+                     sit_minutes=self.sit.currentData(),
+                     app_time_enabled=self.app_time.isChecked(),
                      game_auto=self.game_auto.isChecked(),
                      game_scale_percent=int(self.game_scale.value()),
                      **self._push_prefs(),
@@ -4685,6 +4736,8 @@ class Settings(QDialog):
                 (codex_hooks.enable if wanted else codex_hooks.disable)()
             except (OSError, ValueError):
                 pass
+        panel.set_app_time(prefs['app_time_enabled'], save=False)
+        panel.night_mode.poll()
         panel.sync_approvals()
         panel.sync_hotkey()
         panel.sync_claude_toasts()
@@ -5189,6 +5242,19 @@ class Panel(QWidget):
         # 2.2 phone notifications (sends nothing until turned on in Settings).
         from phone_push import PhonePush
         self.phone_push = PhonePush(self)
+        # 2.3 rest: pajamas late at night, the sit-too-long reminder, app time.
+        from night_mode import NightMode, SitReminder
+        self.night_mode = NightMode(self)
+        self.night_mode.changed.connect(self._night_changed)
+        self.sit_reminder = SitReminder(self)
+        self.sit_reminder.remind.connect(self._sit_too_long)
+        import app_time
+        self.app_time_store = app_time.AppTimeStore(notify_dir / 'app_time.sqlite3')
+        self.app_time_tracker = None
+        self._app_time_clock = QTimer(self)
+        self._app_time_clock.setInterval(5000)
+        self._app_time_clock.timeout.connect(lambda: self.app_time_tracker and self.app_time_tracker.tick())
+        self.set_app_time(self.prefs.get('app_time_enabled'), save=False)
         # Reports open instantly: count once in the background after start-up.
         import reports
         self.report_cache = (reports.ReportCache(lambda: reports.load(store_path=PREF_DIR / 'workbench.sqlite3'))
@@ -6127,6 +6193,40 @@ class Panel(QWidget):
             detail = recap_text(event.get('detail'), self.language, self.currency, self.fx.get('rates'))
         return title, ' · '.join(part for part in (project, detail) if part)
 
+    def set_app_time(self, on, save=True):
+        """Start or stop recording how long each program is in front."""
+        on = bool(on)
+        if save and bool(self.prefs.get('app_time_enabled')) != on:
+            self.prefs['app_time_enabled'] = on
+            self.persist()
+        if on and self.live and self.app_time_tracker is None:
+            import app_time
+            from pet_mood import input_idle_seconds
+            self.app_time_tracker = app_time.AppTimeTracker(self.app_time_store, idle=input_idle_seconds)
+            self._app_time_clock.start()
+        elif not on and self.app_time_tracker is not None:
+            self._app_time_clock.stop()
+            self.app_time_tracker.flush()
+            self.app_time_tracker = None
+
+    def _night_changed(self, active):
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            pet.update_activity()
+
+    def _sit_too_long(self):
+        """She stretches; a notice suggests getting up (not during Do Not Disturb)."""
+        pet = getattr(self, 'pet', None)
+        if pet is not None and pet.isVisible():
+            pet.interact('stretch_break', 10)
+        from notifications import quiet_now
+        if quiet_now(self.prefs):
+            return
+        if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
+            minutes = self.sit_reminder.sitting_minutes()
+            self.tray.showMessage(self.tr_text('sit_title'), self.tr_text('sit_body', minutes=minutes),
+                                  self.windowIcon(), 8000)
+
     def announce(self, event):
         self._last_notice = dict(event)
         push = getattr(self, 'phone_push', None)
@@ -6781,6 +6881,9 @@ class Panel(QWidget):
         if getattr(self, 'provider_poller', None) is not None:
             self.provider_poller.close()
         self.phone_push.close()
+        self.night_mode.timer.stop()
+        self.sit_reminder.timer.stop()
+        self.set_app_time(False, save=False)          # Writes the last seconds.
         self.game_mode.timer.stop()
         if self.stats_sampler is not None:
             self.stats_sampler.stop()

@@ -60,11 +60,11 @@ class ReportPage(QWidget):
         self.intro.setObjectName('muted')
         self.intro.setWordWrap(True)
         layout.addWidget(self.intro)
-        # Two sub-pages: the data board (numbers for one period) and the
-        # analysis (how it changed over days or weeks).
+        # Three sub-pages: the data board (numbers for one period), the
+        # analysis (how it changed over days or weeks) and app time (2.3).
         switch = QHBoxLayout()
-        self.board_button, self.analysis_button = QPushButton(), QPushButton()
-        for index, button in enumerate((self.board_button, self.analysis_button)):
+        self.board_button, self.analysis_button, self.app_time_button = QPushButton(), QPushButton(), QPushButton()
+        for index, button in enumerate((self.board_button, self.analysis_button, self.app_time_button)):
             button.setCheckable(True)
             button.setCursor(Qt.PointingHandCursor)
             button.clicked.connect(lambda _=False, i=index: self.show_sub(i))
@@ -150,6 +150,9 @@ class ReportPage(QWidget):
         layout.addWidget(self.history, 1)
         self.analysis = AnalysisView(self)
         self.stack.addWidget(self.analysis)
+        from app_time_view import AppTimeView
+        self.app_time = AppTimeView(self)
+        self.stack.addWidget(self.app_time)
         self.show_sub(0)
         self.apply_language()
 
@@ -164,9 +167,11 @@ class ReportPage(QWidget):
         self.intro.setText(self.tr('report_intro'))
         self.board_button.setText(self.tr('report_board'))
         self.analysis_button.setText(self.tr('report_analysis'))
+        self.app_time_button.setText(self.tr('report_app_time'))
         for index, kind in enumerate(PERIODS):
             self.period_box.setItemText(index, self.period_text(kind))
         self.analysis.apply_language()
+        self.app_time.apply_language()
         self.reload_button.setText(self.tr('report_reload'))
         self.history_title.setText(self.tr('report_history'))
         self.query.setPlaceholderText(self.tr('report_search'))
@@ -216,8 +221,12 @@ class ReportPage(QWidget):
         self.stack.setCurrentIndex(index)
         self.board_button.setChecked(index == 0)
         self.analysis_button.setChecked(index == 1)
+        self.app_time_button.setChecked(index == 2)
+        self.intro.setVisible(index != 2)        # The intro is about AI; app time explains itself.
         if index == 1:
             self.analysis.render()
+        elif index == 2:
+            self.app_time.render()
 
     def set_kind(self, kind):
         if kind is None:
