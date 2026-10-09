@@ -250,6 +250,20 @@ class Preview(QWidget):
         form.addRow(row(QLabel('游戏中：鼠标在游戏上会穿过她；移到她或信息条上就能右键、拖动。'),
                         button('信息条回到她头顶', lambda: self.panel.prefs.update(game_bar_pos=None))))
 
+        # 2.3 rest: late-night mode, sitting reminder, app time.
+        form = group('作息 / Rest (2.3)')
+        why = QLabel('真实使用时，深夜模式按设置 › 作息里的时间自动开关（默认 23:00–07:00）。'
+                     '睡衣图只到了第一批（待机），其余姿势暂时还是平常的样子。')
+        why.setWordWrap(True)
+        form.addRow(why)
+        self.night_state = QLabel()
+        form.addRow(row(button('换上 / 换下睡衣', self.toggle_night), button('模拟 23:30', lambda: self.night_at(23, 30)),
+                        button('模拟 12:00', lambda: self.night_at(12, 0)), self.night_state))
+        form.addRow(row(button('立刻久坐提醒', self.panel._sit_too_long)))
+        form.addRow(row(button('填入示例使用时长', self.fill_app_time), button('真实记录前台程序', self.record_app_time),
+                        button('打开报告 › 使用时长', self.open_app_time)))
+        self._describe_night()
+
         # Projects and notes.
         form = group('项目、开工和「上次做到哪」 / Projects')
         self.project = QComboBox()
@@ -387,6 +401,47 @@ class Preview(QWidget):
                 self.pet.preview_state = None
                 self.pet.update_activity()
         QTimer.singleShot(int(seconds * 1000), restore)
+
+    def _describe_night(self):
+        self.night_state.setText('现在：睡衣' if self.panel.night_mode.active else '现在：平常')
+
+    def toggle_night(self):
+        self.panel.night_mode.toggle()
+        self._describe_night()
+
+    def night_at(self, hour, minute):
+        from datetime import datetime
+        stamp = datetime.now().replace(hour=hour, minute=minute, second=0).timestamp()
+        self.panel.night_mode.poll(stamp)
+        self._describe_night()
+
+    def fill_app_time(self):
+        import time as clock
+        now = clock.time()
+        for days_ago, rows in ((0, (('code.exe', 'Visual Studio Code', 3.2), ('chrome.exe', 'Google Chrome', 1.6),
+                                    ('weixin.exe', 'Weixin', 0.4), ('yuanshen.exe', 'Genshin Impact', 1.1))),
+                               (1, (('code.exe', 'Visual Studio Code', 4.5), ('chrome.exe', 'Google Chrome', 2.0),
+                                    ('explorer.exe', 'Windows Explorer', 0.3)))):
+            for exe, name, hours in rows:
+                self.panel.app_time_store.add(exe, name, hours * 3600, now - days_ago * 86400)
+        self.panel.prefs['app_time_enabled'] = True
+        self.open_app_time()
+
+    def record_app_time(self):
+        """The test panel never records on its own; this samples the real foreground program."""
+        import app_time
+        from pet_mood import input_idle_seconds
+        self.panel.prefs['app_time_enabled'] = True
+        if self.panel.app_time_tracker is None:
+            self.panel.app_time_tracker = app_time.AppTimeTracker(self.panel.app_time_store, idle=input_idle_seconds)
+            self.panel._app_time_clock.start()
+        self.panel.tray_notice('（测试版）开始记录', '每 5 秒记一次前台程序，存在临时目录，关掉测试版就没了。')
+
+    def open_app_time(self):
+        self.panel.open_reports()
+        window = self.panel.workbench_window
+        if window is not None:
+            window.report_page.show_sub(2)
 
     def toggle_game(self):
         self.panel.game_mode.toggle()
