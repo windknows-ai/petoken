@@ -4016,10 +4016,12 @@ class Settings(QDialog):
         self.game_fast.setChecked(bool(panel.prefs.get('game_fast', False)))
         self.game_fast_label = label()
         game.addRow(self.game_fast_label, self.game_fast)
-        self.game_extra = QLineEdit(panel.prefs.get('game_extra', ''))
+        from game_mode import ProgramList, names
+        language = panel.prefs.get('language')
+        self.game_extra = ProgramList(language, names(panel.prefs.get('game_extra')))
         self.game_extra_label = label()
         game.addRow(self.game_extra_label, self.game_extra)
-        self.game_excluded = QLineEdit(panel.prefs.get('game_excluded', ''))
+        self.game_excluded = ProgramList(language, names(panel.prefs.get('game_excluded')))
         self.game_excluded_label = label()
         game.addRow(self.game_excluded_label, self.game_excluded)
         self._initial_scale = pet_geometry.normalize_pet_scale(
@@ -4361,8 +4363,9 @@ class Settings(QDialog):
             self.game_display.setItemText(index, t(f'game_display_{self.game_display.itemData(index)}'))
         for key, box in self.game_bar_boxes.items():
             box.setText(t(f'game_item_{key}'))
-        self.game_extra.setPlaceholderText(t('game_extra_hint'))
-        self.game_excluded.setPlaceholderText(t('game_excluded_hint'))
+        language = normalize_language(self.language.currentData())
+        self.game_extra.apply_language(language)
+        self.game_excluded.apply_language(language)
         self.continuation_card_label.setText(t('continuation_setting'))
         self.continuation_card.setAccessibleName(t('continuation_setting'))
         self.continuation_card.setToolTip(t('continuation_setting_tip'))
@@ -4491,8 +4494,8 @@ class Settings(QDialog):
                      or ['limits'],
                      game_fast=self.game_fast.isChecked(),
                      game_rings_side=self.game_rings_side.currentData(),
-                     game_extra=self.game_extra.text().strip(),
-                     game_excluded=self.game_excluded.text().strip(),
+                     game_extra=self.game_extra.values(),
+                     game_excluded=self.game_excluded.values(),
                      clinginess=self.clinginess.currentData())
         # Legacy `manual_fx` / `prices` keys stay untouched in the file for
         # backward-compatible loading, but no longer drive pricing or FX.

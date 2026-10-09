@@ -31,8 +31,8 @@ DEFAULT_PREFERENCES = {
     "continuation_card": True,
     "usage_card_idle": True,
     "game_auto": True,
-    "game_extra": "",
-    "game_excluded": "",
+    "game_extra": [],
+    "game_excluded": [],
     "game_ring": "tasks",
     "game_display": "rings",
     "game_bar_items": ["limits", "cpu", "gpu", "gpu_temp"],
@@ -106,8 +106,11 @@ def normalize_preferences(data):
         if not isinstance(preferences.get(key), bool):
             preferences[key] = DEFAULT_PREFERENCES[key]
     for key in ("game_extra", "game_excluded"):
-        if not isinstance(preferences.get(key), str):
-            preferences[key] = ""
+        value = preferences.get(key)
+        if isinstance(value, str):                  # 2.1 test builds: "a.exe, b.exe".
+            value = [part.strip() for part in value.replace(";", ",").split(",") if part.strip()]
+        preferences[key] = ([item for item in value if isinstance(item, str) and item.strip()]
+                            if isinstance(value, list) else [])
     if preferences.get("game_rings_side") not in ("right", "left"):
         preferences["game_rings_side"] = "right"
     spot = preferences.get("game_bar_pos")

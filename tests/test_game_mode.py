@@ -302,6 +302,23 @@ class PanelGameModeTests(unittest.TestCase):
         self.assertFalse(self.panel.game_mode.active)
         menu.deleteLater()
 
+    def test_whitelist_and_blacklist_take_picked_programs(self):
+        from widget import Settings
+        self.panel.prefs['game_extra'] = 'old.exe, other'                 # A 2.1 test-build value.
+        settings = Settings(self.panel)
+        self.assertEqual(settings.game_extra.values(), ['old.exe', 'other.exe'])
+        settings.game_extra.pick([r'D:/Games/Elden Ring/eldenring.exe', r'D:/Games/old.exe'])   # Duplicate ignored.
+        self.assertEqual(settings.game_extra.values(), ['old.exe', 'other.exe', 'eldenring.exe'])
+        settings.game_extra.listing.setCurrentRow(0)
+        settings.game_extra.remove_selected()
+        settings.game_excluded.pick([r'C:\Program Files\VLC\vlc.exe'])
+        with __import__('unittest.mock', fromlist=['patch']).patch('widget.write_preferences'):
+            settings.save()
+        self.assertEqual(self.panel.prefs['game_extra'], ['other.exe', 'eldenring.exe'])
+        self.assertEqual(self.panel.prefs['game_excluded'], ['vlc.exe'])
+        self.assertEqual(game_mode.names(self.panel.prefs['game_extra']), ('other.exe', 'eldenring.exe'))
+        settings.close()
+
     def test_settings_show_only_what_matters_for_the_choice(self):
         from widget import Settings
         settings = Settings(self.panel)

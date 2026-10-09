@@ -61,6 +61,77 @@ def names(value):
     return tuple(dict.fromkeys(out))
 
 
+class ProgramList(QWidget):
+    """A whitelist or blacklist of programs: pick .exe files, remove selected ones."""
+
+    def __init__(self, language, values=(), parent=None):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QHBoxLayout, QListWidget, QPushButton, QVBoxLayout
+        self.language = language
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(4)
+        self.listing = QListWidget()
+        self.listing.setFixedHeight(64)
+        self.listing.setMinimumWidth(220)
+        column.addWidget(self.listing)
+        row = QHBoxLayout()
+        row.setSpacing(6)
+        self.add_button = QPushButton()
+        self.add_button.clicked.connect(self.pick)
+        self.remove_button = QPushButton()
+        self.remove_button.clicked.connect(self.remove_selected)
+        row.addWidget(self.add_button)
+        row.addWidget(self.remove_button)
+        row.addStretch(1)
+        column.addLayout(row)
+        self.listing.currentRowChanged.connect(lambda _: self._sync())
+        for value in values or ():
+            self.add(value)
+        self.apply_language(language)
+
+    def apply_language(self, language):
+        self.language = language
+        self.add_button.setText(text('game_list_add', language))
+        self.remove_button.setText(text('game_list_remove', language))
+        self.listing.setToolTip(text('game_list_tip', language))
+        self._sync()
+
+    def _sync(self):
+        self.remove_button.setEnabled(self.listing.currentRow() >= 0)
+
+    def add(self, value):
+        """Add a program (a full path or just its file name); duplicates are ignored."""
+        from PySide6.QtWidgets import QListWidgetItem
+        name = (names([value]) or ('',))[0]
+        if not name or name in self.values():
+            return False
+        item = QListWidgetItem(name)
+        item.setData(Qt.UserRole, name)
+        item.setToolTip(str(value))
+        self.listing.addItem(item)
+        self._sync()
+        return True
+
+    def pick(self, paths=None):
+        """The file dialog (``paths`` stands in for it in tests)."""
+        if paths is None:
+            from PySide6.QtWidgets import QFileDialog
+            paths, _ = QFileDialog.getOpenFileNames(self, text('game_list_pick', self.language), '',
+                                                    text('game_list_filter', self.language))
+        for path in paths or ():
+            self.add(path)
+
+    def remove_selected(self):
+        row = self.listing.currentRow()
+        if row >= 0:
+            self.listing.takeItem(row)
+        self._sync()
+
+    def values(self):
+        return [self.listing.item(i).data(Qt.UserRole) for i in range(self.listing.count())]
+
+
 class GameMode(QObject):
     """On while a game is played (detected or switched on by hand)."""
 
