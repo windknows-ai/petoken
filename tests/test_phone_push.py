@@ -124,6 +124,10 @@ class PhoneSettingsTests(unittest.TestCase):
         title, body = panel.notification_text(dict(kind='finished', provider='claude', task_key='other',
                                                    project='Web Project'))
         self.assertTrue(body.startswith('Web Project'))                               # Unknown task: the project.
+        panel._task_titles = {'claude:quick': 'reset'}                               # Seen, then retired.
+        title, body = panel.notification_text(dict(kind='finished', provider='claude', task_key='claude:quick',
+                                                   project='Documents'))
+        self.assertTrue(body.startswith('reset · Documents'))
 
     def test_settings_page_round_trip(self):
         from unittest.mock import patch

@@ -5632,6 +5632,18 @@ class Panel(QWidget):
             # Task orbs are additive presentation: they must never break
             # the legacy companion panel render.
             pass
+        # Task names, kept after a task ends: a short task is often gone by the time
+        # its "finished" notice is written.
+        titles = getattr(self, '_task_titles', None)
+        if titles is None:
+            titles = self._task_titles = {}
+        for task in tasks or []:
+            title = ((task or {}).get('display') or {}).get('title')
+            if title and task.get('task_key'):
+                titles[task['task_key']] = title
+        if len(titles) > 500:
+            for old in list(titles)[:250]:
+                titles.pop(old, None)
         if 'preference' in data and getattr(self, 'notifications', None) is not None:
             self.notifications.observe_tasks(
                 tasks or [], preference,
@@ -6052,12 +6064,31 @@ class Panel(QWidget):
 
     def task_title(self, event):
         """The name the user sees for this task (e.g. Claude's session title), or ''."""
+        key = event.get('task_key') or ''
         manager = getattr(self, 'task_manager', None)
         universe = getattr(manager, '_universe', None) or {}
-        key = event.get('task_key')
         for identity, task in universe.items():
             if (task or {}).get('task_key') == key or identity == (event.get('provider'), key):
-                return ((task or {}).get('display') or {}).get('title') or ''
+                title = ((task or {}).get('display') or {}).get('title')
+                if title:
+                    return title
+        titles = getattr(self, '_task_titles', None) or {}
+        session = key.split(':', 1)[1] if ':' in key else key
+        for candidate in (key, session, f"{event.get('provider')}:{session}"):
+            if titles.get(candidate):
+                return titles[candidate]
+        if event.get('provider') == 'claude' and session:
+            # Never seen as a task (it ran for a moment): ask Claude Code's records.
+            try:
+                from claude_usage import ClaudeStore
+                store = getattr(self, '_title_store', None) or ClaudeStore()
+                self._title_store = store
+                store.read(scope='global')
+                for found in store._sessions().values():
+                    if session in (found.get('id'), found.get('session_id')) or str(found.get('id', '')).endswith(session):
+                        return found.get('title') or ''
+            except Exception:
+                pass
         return ''
 
     def notification_text(self, event):
