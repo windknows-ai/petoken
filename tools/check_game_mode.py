@@ -77,9 +77,8 @@ with ExitStack() as stack:
         if transform.CACHE.get(pet._transform_side()) is not None:
             break
         pump(.05)
-    from game_mode import CORNER_SCALE
     for _ in range(300):
-        if transform.CACHE.get(pet._transform_side(max(50, round(pet.pet_scale * CORNER_SCALE / 100)))) is not None:
+        if transform.CACHE.get(pet._transform_side(pet.mode_scale(gaming=True))) is not None:
             break
         pump(.05)
 
@@ -195,17 +194,21 @@ with ExitStack() as stack:
         check(panel.task_manager._visible, 'fast: usual ring not back')
         sheet(shots, 'fast')
 
-    if SCENARIO in ('all', 'corner'):
+    if SCENARIO in ('all', 'size'):
         shots = []
-        g = pet.screen().geometry()
+        panel.prefs.update(pet_scale_percent=100, game_scale_percent=70)
+        pet.apply_pet_scale(100)
+        import pet_geometry
+        feet_now = lambda: pet.pos() + QPoint(*pet_geometry.scaled_anchor(pet.pet_scale))
+        feet = feet_now()
         mode.toggle()
-        mode.monitor = (g.left(), g.top(), g.right() + 1, g.bottom() + 1)
-        pet.leave_game(); pet.enter_game()        # As if the game ran full-screen on her screen.
-        pump(14, .5, shots, around, 'corner')
-        check(pet.frameGeometry().right() > g.right() - 200, 'corner: she is not in the corner')
+        pump(14, .5, shots, around, 'size')
+        check(pet.pet_scale == 70, f'size: game size not reached ({pet.pet_scale}%)')
+        check(feet_now() == feet, f'size: she moved ({feet_now() - feet})')
         mode.toggle()
-        pump(5, .5, shots, around, 'corner-out')
-        sheet(shots, 'corner')
+        pump(5, .5, shots, around, 'size-out')
+        check(pet.pet_scale == 100, f'size: usual size not restored ({pet.pet_scale}%)')
+        sheet(shots, 'size')
 
     if SCENARIO in ('all', 'pager'):
         base.count.setValue(15)

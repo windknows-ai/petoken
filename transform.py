@@ -188,13 +188,19 @@ class PieceCache(QObject):
         self._building = set()
         self._lock = threading.Lock()
 
-    def get(self, side):
+    def get(self, side, nearest=False):
+        """The pieces at ``side`` pixels, or None while they are being built.
+        With ``nearest``, a set built at another size is returned meanwhile
+        (it is drawn scaled), so a new size never skips the animation."""
         pieces = self.sizes.get(side)
         if pieces is not None:
             return pieces
+        fallback = None
+        if nearest and self.sizes:
+            fallback = min(self.sizes.values(), key=lambda p: abs(p.side - side))
         with self._lock:
             if side in self._building:
-                return None
+                return fallback
             self._building.add(side)
 
         def work():
@@ -210,7 +216,7 @@ class PieceCache(QObject):
                         self.sizes.pop(next(iter(self.sizes)))
             self.ready.emit()
         threading.Thread(target=work, daemon=True, name='petoken-transform-art').start()
-        return None
+        return fallback
 
     @property
     def pieces(self):          # The latest built set (tests and tools).

@@ -209,6 +209,30 @@ class PanelGameModeTests(unittest.TestCase):
         self.panel.prefs['game_bar_pos'] = None
         usage.deleteLater()
 
+    def test_each_mode_has_its_size_and_she_stays_put(self):
+        from PySide6.QtTest import QTest
+        pet = self.panel.pet
+        self.panel.prefs.update(pet_scale_percent=100, game_scale_percent=70)
+        pet.apply_pet_scale(100)
+        pet.show()
+        import pet_geometry
+        from PySide6.QtCore import QPoint
+
+        def feet_now():
+            return pet.pos() + QPoint(*pet_geometry.scaled_anchor(pet.pet_scale))
+        feet = feet_now()
+        self.panel.game_mode.toggle()
+        self.assertNotEqual(pet.pet_scale, 70)                     # Not at once: smoothly.
+        QTest.qWait(900)
+        self.assertEqual(pet.pet_scale, 70)
+        self.assertEqual(feet_now(), feet)                          # Same place: no corner, no drift.
+        self.panel.game_mode.toggle()
+        QTest.qWait(900)
+        self.assertEqual(pet.pet_scale, 100)
+        self.assertEqual(feet_now(), feet)
+        self.panel.prefs['game_scale_percent'] = 100
+        pet.hide()
+
     def test_stars_fly_between_the_rings(self):
         from PySide6.QtCore import QPointF
         done, frames = [], []

@@ -203,9 +203,7 @@ class DesktopPet(QWidget):
         import transform
         if transform.available():
             # Ready before the first game, at her size and her corner size.
-            from game_mode import CORNER_SCALE
-            transform.CACHE.get(self._transform_side())
-            transform.CACHE.get(self._transform_side(max(50,round(self.pet_scale*CORNER_SCALE/100))))
+            transform.CACHE.get(self._transform_side(self.mode_scale(gaming=True)))
         if self.motion:
             self._last_tick=None
             self.timer.start()
@@ -236,7 +234,7 @@ class DesktopPet(QWidget):
         from game_mode import GameHalo, GameUsage, Placement
         if self.game_place is None:
             self.game_place=Placement(self)
-        self.game_place.enter(getattr(self.panel.game_mode,'monitor',None))
+        self.game_place.enter()
         from game_mode import HoverInput
         if self.game_drag is None:
             self.game_drag=HoverInput(self)
@@ -280,6 +278,39 @@ class DesktopPet(QWidget):
             self._game_next=now+60
         return 'form2_idle' if 'form2_idle' in self.sprites else 'idle'
 
+    def mode_scale(self,gaming=None):
+        """Her size (percent) in game mode or normally; each has its own setting."""
+        gaming=self.game_active() if gaming is None else gaming
+        key='game_scale_percent' if gaming else 'pet_scale_percent'
+        return geometry.normalize_pet_scale(self.panel.prefs.get(key,geometry.PET_SCALE_DEFAULT))
+
+    def resize_smoothly(self,target,seconds=.7):
+        """Grow or shrink to ``target`` percent over ``seconds``, around her feet."""
+        target=geometry.normalize_pet_scale(target)
+        timer=getattr(self,'_resize_timer',None)
+        if timer is None:
+            timer=self._resize_timer=QTimer(self)
+            timer.setInterval(16)
+            timer.timeout.connect(self._resize_step)
+        start=self.pet_scale
+        if start==target or not self.isVisible():
+            timer.stop()
+            self.apply_pet_scale(target)
+            return
+        # Her feet, exactly: each step is placed from here (rounding never adds up).
+        feet=self.pos()+QPoint(*geometry.scaled_anchor(self.pet_scale))
+        self._resize=(start,target,time.monotonic(),max(.05,seconds),feet)
+        timer.start()
+
+    def _resize_step(self):
+        start,target,began,seconds,feet=self._resize
+        f=min(1.0,(time.monotonic()-began)/seconds)
+        e=f*f*(3-2*f)
+        if self.apply_pet_scale(round(start+(target-start)*e)):
+            self.move_clamped(feet-QPoint(*geometry.scaled_anchor(self.pet_scale)))
+        if f>=1.0:
+            self._resize_timer.stop()
+
     def _transform_side(self,scale=None):
         sx,sy,sw,sh=geometry.scaled_sprite_rect(scale or self.pet_scale)
         dpr=self.devicePixelRatioF() or 1.0
@@ -300,7 +331,7 @@ class DesktopPet(QWidget):
         import transform
         if not transform.available() or not self.isVisible():
             return False
-        pieces=transform.CACHE.get(self._transform_side())
+        pieces=transform.CACHE.get(self._transform_side(self.mode_scale(gaming=not leaving)),nearest=True)
         if pieces is None:
             return False        # Being prepared (first time): this switch is immediate.
         level=None

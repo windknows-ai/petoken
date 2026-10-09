@@ -3750,7 +3750,7 @@ SETTINGS_LAYOUT = (
                 'codex_hooks_label', 'mute_claude_toasts_label')),
     ('assistant', ('assistant_hints_label', 'continuation_card_label', 'dnd_label', 'dnd_scheduled_label',
                    'schedule_missed_label', 'quick_launch_hotkey_label')),
-    ('game', ('game_auto_label', 'game_corner_label', 'game_ring_label', 'game_display_label',
+    ('game', ('game_auto_label', 'game_scale_label', 'game_ring_label', 'game_display_label',
               'game_rings_side_label', 'game_bar_label', 'game_bar_place_label', 'game_fast_label',
               'game_extra_label', 'game_excluded_label')),
 )
@@ -3760,6 +3760,7 @@ SETTING_DESCRIPTIONS = (
     ('general', 'token_format_label', 'token_format'), ('general', 'currency_label', 'currency'),
     ('general', 'topmost_label', 'topmost'), ('general', 'star_ring_label', 'star_ring'),
     ('general', 'clinginess_label', 'clinginess'),
+    ('general', 'pet_scale_label', 'pet_scale'),
     ('general', 'update_label', 'update'),
     ('general', 'onboarding_label', 'onboarding'),
     ('tracking', 'task_label', 'task'), ('tracking', 'scope_label', 'scope'),
@@ -3772,7 +3773,7 @@ SETTING_DESCRIPTIONS = (
     ('assistant', 'assistant_hints_label', 'assistant_hints'),
     ('assistant', 'continuation_card_label', 'continuation'), ('assistant', 'dnd_label', 'dnd'),
     ('assistant', 'dnd_scheduled_label', 'dnd_scheduled'),
-    ('game', 'game_auto_label', 'game_auto'), ('game', 'game_corner_label', 'game_corner'),
+    ('game', 'game_auto_label', 'game_auto'), ('game', 'game_scale_label', 'game_scale'),
     ('game', 'game_ring_label', 'game_ring'), ('game', 'game_display_label', 'game_display'),
     ('game', 'game_bar_label', 'game_bar'), ('game', 'game_fast_label', 'game_fast'),
     ('game', 'game_rings_side_label', 'game_rings_side'), ('game', 'game_bar_place_label', 'game_bar_place'),
@@ -3971,10 +3972,26 @@ class Settings(QDialog):
         self.game_auto.setChecked(bool(panel.prefs.get('game_auto', True)))
         self.game_auto_label = label()
         game.addRow(self.game_auto_label, self.game_auto)
-        self.game_corner = QCheckBox()
-        self.game_corner.setChecked(bool(panel.prefs.get('game_corner', True)))
-        self.game_corner_label = label()
-        game.addRow(self.game_corner_label, self.game_corner)
+        self._initial_game_scale = pet_geometry.normalize_pet_scale(
+            panel.prefs.get('game_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
+        self.game_scale = QSlider(Qt.Horizontal)
+        self.game_scale.setRange(pet_geometry.PET_SCALE_MIN, pet_geometry.PET_SCALE_MAX)
+        self.game_scale.setSingleStep(5)
+        self.game_scale.setPageStep(25)
+        self.game_scale.setTickPosition(QSlider.TicksBelow)
+        self.game_scale.setTickInterval(25)
+        self.game_scale.setValue(self._initial_game_scale)
+        self.game_scale_value = label(f'{self._initial_game_scale}%')
+        self.game_scale_value.setFixedWidth(48)
+        self.game_scale_value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        game_scale_row = QHBoxLayout()
+        game_scale_row.addWidget(self.game_scale, 1)
+        game_scale_row.addWidget(self.game_scale_value)
+        game_scale_box = QWidget()
+        game_scale_box.setLayout(game_scale_row)
+        self.game_scale_label = label()
+        game.addRow(self.game_scale_label, game_scale_box)
+        self.game_scale.valueChanged.connect(self._preview_game_scale)
         self.game_ring = QComboBox()
         for key in RING_STYLES:
             self.game_ring.addItem('', key)
@@ -4255,15 +4272,22 @@ class Settings(QDialog):
     def _preview_pet_scale(self, value):
         # Live preview only: the pet resizes immediately, but nothing is
         # written to disk until Save. Cancel restores the saved value.
+        # Each size previews only in its own mode.
         self.pet_scale_value.setText(f'{int(value)}%')
         pet = getattr(self.parentWidget(), 'pet', None)
-        if pet is not None:
+        if pet is not None and not pet.game_active():
+            pet.apply_pet_scale(int(value))
+
+    def _preview_game_scale(self, value):
+        self.game_scale_value.setText(f'{int(value)}%')
+        pet = getattr(self.parentWidget(), 'pet', None)
+        if pet is not None and pet.game_active():
             pet.apply_pet_scale(int(value))
 
     def reject(self):
         pet = getattr(self.parentWidget(), 'pet', None)
         if pet is not None:
-            pet.apply_pet_scale(self._initial_scale)
+            pet.apply_pet_scale(self._initial_game_scale if pet.game_active() else self._initial_scale)
         super().reject()
 
     def apply_language(self):
@@ -4350,7 +4374,7 @@ class Settings(QDialog):
         self.assistant_hints.setToolTip(t('assistant_hints_tip'))
         self.assistant_hints_label.setToolTip(t('assistant_hints_tip'))
         self.dnd_label.setText(t('dnd'))
-        for attr in ('game_auto', 'game_corner', 'game_ring', 'game_display', 'game_bar', 'game_fast',
+        for attr in ('game_auto', 'game_scale', 'game_ring', 'game_display', 'game_bar', 'game_fast',
                      'game_extra', 'game_excluded', 'game_rings_side', 'game_bar_place'):
             getattr(self, attr + '_label').setText(t(attr))
         for index in range(self.game_rings_side.count()):
@@ -4487,7 +4511,7 @@ class Settings(QDialog):
                      dnd_end=self.dnd_end.time().toString('HH:mm'),
                      pet_scale_percent=int(self.pet_scale.value()),
                      game_auto=self.game_auto.isChecked(),
-                     game_corner=self.game_corner.isChecked(),
+                     game_scale_percent=int(self.game_scale.value()),
                      game_ring=self.game_ring.currentData(),
                      game_display=self.game_display.currentData(),
                      game_bar_items=[key for key, box in self.game_bar_boxes.items() if box.isChecked()]
@@ -4551,7 +4575,10 @@ class Settings(QDialog):
             panel.publish_snapshot(snapshot)
         pet = getattr(panel, 'pet', None)
         if pet is not None:
-            pet.apply_pet_scale(prefs['pet_scale_percent'])
+            pet.apply_pet_scale(pet.mode_scale())     # The size of the mode she is in.
+            import transform
+            if transform.available():                  # Ready for the next game at its new size.
+                transform.CACHE.get(pet._transform_side(pet.mode_scale(gaming=True)))
         panel.reset_store.set()
         panel.apply_language()
         panel.apply_topmost()

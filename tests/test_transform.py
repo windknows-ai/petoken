@@ -103,6 +103,16 @@ class TransformTests(unittest.TestCase):
         self.assertEqual(leave.at(leave.time_for(half_armed))[0], 'unarm')
         self.assertEqual(leave.time_for(1.0), 0.0)
 
+    def test_a_new_size_uses_a_ready_set_meanwhile(self):
+        cache = transform.PieceCache()
+        built = transform.Pieces.build(120)
+        cache.sizes[120] = built
+        with patch.object(transform.threading, 'Thread') as thread:
+            self.assertIsNone(cache.get(90))                       # Plain: not ready yet.
+            cache._building.clear()
+            self.assertIs(cache.get(90, nearest=True), built)     # Nearest: the ready one, drawn scaled.
+        self.assertTrue(thread.called)                             # The exact size is still being built.
+
     def test_no_art_means_no_animation(self):
         with patch.dict(os.environ, PETOKEN_V2_1_ART=str(self.folder / 'missing')):
             self.assertFalse(transform.available())

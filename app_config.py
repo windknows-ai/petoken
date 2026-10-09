@@ -36,7 +36,7 @@ DEFAULT_PREFERENCES = {
     "game_ring": "tasks",
     "game_display": "rings",
     "game_bar_items": ["limits", "cpu", "gpu", "gpu_temp"],
-    "game_corner": True,
+    "game_scale_percent": PET_SCALE_DEFAULT,
     "game_fast": False,
     "game_rings_side": "right",
     "game_bar_pos": None,
@@ -102,7 +102,8 @@ def normalize_preferences(data):
         preferences["continuation_card"] = True
     if not isinstance(preferences.get("usage_card_idle"), bool):
         preferences["usage_card_idle"] = True
-    for key in ("game_auto", "game_corner", "game_fast"):
+    preferences["game_scale_percent"] = normalize_pet_scale(preferences.get("game_scale_percent"))
+    for key in ("game_auto", "game_fast"):
         if not isinstance(preferences.get(key), bool):
             preferences[key] = DEFAULT_PREFERENCES[key]
     for key in ("game_extra", "game_excluded"):

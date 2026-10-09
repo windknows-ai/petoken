@@ -259,7 +259,7 @@ class UiTests(unittest.TestCase):
                                       settings.update_check, settings.update_auto,
                                       settings.assistant_hints, settings.dnd,
                                       settings.dnd_scheduled, settings.continuation_card,
-                                      settings.game_auto, settings.game_corner, settings.game_fast,
+                                      settings.game_auto, settings.game_fast,
                                       *settings.game_bar_boxes.values()})
         self.assertEqual(settings.topmost_label.text(),'Always on Top')
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))

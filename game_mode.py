@@ -9,7 +9,8 @@ While it is on:
 * every task reaction, pop-up, approval card and Where-I-Left-Off card is
   silent (all of it is still recorded under Notifications; approval requests
   go back to Claude Code's terminal);
-* on the game's screen she moves into the bottom-right corner; her windows
+* she stays where she is and smoothly takes her game-mode size (its own
+  setting, beside her usual size); her windows
   let the mouse through to the game, except while the cursor is over her or
   the info bar (HoverInput): then right-click, drag and long press work as
   usual. This needs only the cursor position, which Windows gives any
@@ -41,8 +42,6 @@ POLL_MS = 2000
 HOLD_S = .5                  # A press this long on her (or the bar) drags it.
 HOLD_SLOP = 10               # Moving further first means it was a drag in the game.
 SIDES = ('right', 'left')
-CORNER_SCALE = 85            # % of her usual size while sharing the game's screen.
-CORNER_MARGIN = 12
 DISPLAYS = ('rings', 'bar', 'hidden')
 RING_STYLES = ('tasks', 'space')            # Follow the tasks, or always deep space.
 BAR_ITEMS = ('limits', 'cpu', 'gpu', 'gpu_temp', 'vram', 'ram')
@@ -170,24 +169,15 @@ class GameMode(QObject):
         self.clock = clock
         if detector is None:
             from game_detect import GameDetector, foreground_info
-            detector = GameDetector(scan=self._scan_with(foreground_info))
+            detector = GameDetector(scan=foreground_info)
         self.detector = detector
         self.manual = None          # True / False by hand, None: follow detection.
         self.active = False
-        self.monitor = None         # (l, t, r, b) of the game's screen, when known.
         self.timer = QTimer(self)
         self.timer.setInterval(POLL_MS)
         self.timer.timeout.connect(self.poll)
         if getattr(panel, 'live', False):
             self.timer.start()
-
-    def _scan_with(self, scan):
-        def remembered():
-            info = scan()
-            if info and info.get('fullscreen'):
-                self.monitor = info.get('monitor')
-            return info
-        return remembered
 
     @property
     def auto(self):
@@ -208,8 +198,6 @@ class GameMode(QObject):
         self.manual = not self.active
         if self.manual is False and not self.detector.playing:
             self.manual = None
-        if self.manual:
-            self.monitor = None     # Switched on by hand: no game screen known.
         self._set(not self.active)
 
     def _set(self, active):
@@ -239,41 +227,20 @@ class GameMode(QObject):
 
 
 class Placement:
-    """Her place and size before game mode, to put her back afterwards."""
+    """Her size in game mode: the game-mode size on the way in, her usual size
+    on the way out, changed smoothly. She stays where she is."""
 
     def __init__(self, pet):
         self.pet = pet
-        self.saved = None
 
-    def enter(self, monitor):
-        pet = self.pet
-        screen = (pet.screen() or QApplication.primaryScreen())
-        area = screen.availableGeometry()
-        if monitor is not None:
-            l, t, r, b = monitor
-            shares = area.intersects(QRect(l, t, r - l, b - t))
-        else:
-            shares = False
-        corner = bool(pet.panel.prefs.get('game_corner', True)) and shares
-        self.saved = (pet.pos(), pet.pet_scale, corner)
-        if corner:
-            pet.apply_pet_scale(max(50, round(pet.pet_scale * CORNER_SCALE / 100)))
-            pet.move_clamped(QPoint(area.right() - pet.width() - CORNER_MARGIN,
-                                    area.bottom() - pet.height() - CORNER_MARGIN))
-        pet.show()
+    def enter(self):
+        self.pet.resize_smoothly(self.pet.mode_scale(gaming=True))
 
     def leave_place(self):
-        """Back to her own place and size (before the reverse transformation)."""
-        pet = self.pet
-        if self.saved is not None:
-            position, scale, corner = self.saved
-            if corner:
-                pet.apply_pet_scale(scale)
-                pet.move_clamped(position)
-            self.saved = None
+        self.pet.resize_smoothly(self.pet.mode_scale(gaming=False))
 
     def leave_input(self):
-        """Clicks reach her again (after it)."""
+        """Clicks reach her again (after the transformation)."""
         set_clickthrough(self.pet, False)
 
     def leave(self):

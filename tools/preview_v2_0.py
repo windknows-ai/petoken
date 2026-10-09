@@ -231,8 +231,7 @@ class Preview(QWidget):
                      '「1.x 窗口的任务数」决定身后星环有几颗星（0 = 深空星环）。')
         why.setWordWrap(True)
         form.addRow(why)
-        form.addRow(row(button('进入 / 退出游戏模式', self.toggle_game),
-                        button('模拟和游戏同屏（缩到角落）', lambda: self.toggle_game(corner=True))))
+        form.addRow(row(button('进入 / 退出游戏模式', self.toggle_game)))
         ring = QComboBox()
         for label, value in (('跟着任务（没任务是深空）', 'tasks'), ('始终深空', 'space')):
             ring.addItem(label, value)
@@ -248,7 +247,7 @@ class Preview(QWidget):
             side.addItem(label, value)
         side.currentIndexChanged.connect(lambda _: self.panel.prefs.update(game_rings_side=side.currentData()))
         form.addRow('小圆环在她哪边', side)
-        form.addRow(row(QLabel('游戏中：单击会穿过她；长按她或信息条半秒可以拖动。'),
+        form.addRow(row(QLabel('游戏中：鼠标在游戏上会穿过她；移到她或信息条上就能右键、拖动。'),
                         button('信息条回到她头顶', lambda: self.panel.prefs.update(game_bar_pos=None))))
 
         # Projects and notes.
@@ -389,18 +388,8 @@ class Preview(QWidget):
                 self.pet.update_activity()
         QTimer.singleShot(int(seconds * 1000), restore)
 
-    def toggle_game(self, corner=False):
-        mode = self.panel.game_mode
-        if corner and not mode.active:
-            # As if a fullscreen game ran on her screen.
-            geometry = (self.pet.screen() or QApplication.primaryScreen()).geometry()
-            mode.toggle()
-            if mode.active:
-                mode.monitor = (geometry.left(), geometry.top(), geometry.right() + 1, geometry.bottom() + 1)
-                self.pet.leave_game()
-                self.pet.enter_game()
-            return
-        mode.toggle()
+    def toggle_game(self):
+        self.panel.game_mode.toggle()
 
     def focus_now(self):
         mode = self.panel.focus_mode
