@@ -43,6 +43,14 @@ def transcript_files(home, session):
     return main, sorted(main.with_suffix('').glob('**/*.jsonl'))
 
 
+def active_seconds(times, start, end):
+    """Seconds from start to end, leaving out every stretch of more than
+    IDLE_GAP_S with nothing written (``times``: when anything was written,
+    by the main transcript or a subagent)."""
+    points = sorted({start, end, *(t for t in times if t is not None and start < t < end)})
+    return sum(b - a for a, b in zip(points, points[1:]) if b - a <= IDLE_GAP_S)
+
+
 def _entries(path, tail=TAIL_BYTES):
     """Complete JSON lines from the last ``tail`` bytes of ``path``."""
     try:
@@ -160,8 +168,13 @@ def recap(home, session, finished_at=None):
     known = [cost for cost in costs.values() if cost is not None]
     usd = sum(known) if costs and len(known) == len(costs) else None
     finished = finished_at if finished_at is not None else end
+    # Waiting (a background task, a used-up limit) is not working time; a
+    # subagent writing in its own transcript is.
+    times = [_iso_epoch(e.get('timestamp')) for e in entries]
+    for path in subagents:
+        times += [_iso_epoch(e.get('timestamp')) for e in _entries(path)]
     return dict(files=files, started_at=start, finished_at=finished,
-                duration_s=max(0.0, finished - start), usd=usd)
+                duration_s=active_seconds(times, start, max(start, finished)), usd=usd)
 
 
 def _all_entries(path):
@@ -190,14 +203,19 @@ def activity(home, since):
         return dict(turns=turns, edits=edits)
     for main in mains:
         entries = _all_entries(main)
+        subagents = [_all_entries(p) for p in main.with_suffix('').glob('**/*.jsonl')]
         stamped = sorted(((_iso_epoch(e.get('timestamp')), e) for e in entries),
                          key=lambda item: item[0] or 0)
+        # A subagent at work keeps the turn going while the main transcript is quiet.
+        ticks = sorted((_iso_epoch(e.get('timestamp')), None) for found in subagents for e in found
+                       if _iso_epoch(e.get('timestamp')) is not None)
+        timeline = sorted(stamped + ticks, key=lambda item: item[0] or 0)
         start = cwd = None
         last = previous = None
-        for at, entry in stamped:
+        for at, entry in timeline:
             if at is None:
                 continue
-            if _is_prompt(entry):
+            if entry is not None and _is_prompt(entry):
                 close(start, last, cwd)
                 start, cwd, last, previous = at, entry.get('cwd'), None, at
                 continue
@@ -207,7 +225,7 @@ def activity(home, since):
                 close(start, last, cwd)
                 start, last = at, None
             previous = at
-            if entry.get('type') == 'assistant':
+            if entry is not None and entry.get('type') == 'assistant':
                 last = at
         close(start, last, cwd)
         # Successful edits, main transcript and its subagents.
@@ -216,7 +234,7 @@ def activity(home, since):
             if at is not None and _is_prompt(entry):
                 folders[at] = entry.get('cwd')
         prompt_times = sorted(folders)
-        for path_entries in [entries] + [_all_entries(p) for p in main.with_suffix('').glob('**/*.jsonl')]:
+        for path_entries in [entries] + subagents:
             calls, results = {}, {}
             for entry in path_entries:
                 at = _iso_epoch(entry.get('timestamp'))

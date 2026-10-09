@@ -114,6 +114,21 @@ class RecapTests(unittest.TestCase):
         self.assertEqual(sorted((round(b - since), round(e - since)) for b, e, _p in found['turns']),
                          [(0, 120), (1620, 1700)])
 
+    def test_recap_time_leaves_out_waiting_but_not_subagents(self):
+        self.write([user(0, 'go'), assistant(60, 'm1'), user(1560, [result('t1')]), assistant(1620, 'm2')])
+        found = claude_recap.recap(self.home, SESSION)
+        self.assertEqual(round(found['duration_s']), 120)              # 24 silent minutes left out.
+        sub = self.folder / SESSION / 'subagents' / 'agent-a.jsonl'
+        self.write([assistant(at, f's{at}') for at in range(120, 1560, 300)], sub)   # A subagent working.
+        self.assertEqual(round(claude_recap.recap(self.home, SESSION)['duration_s']), 1620)
+        import os
+        from claude_usage import _iso_epoch
+        since = _iso_epoch(stamp(0))
+        for path in self.folder.rglob('*.jsonl'):
+            os.utime(path, (since + 2000, since + 2000))
+        turns = claude_recap.activity(self.home, since)['turns']
+        self.assertEqual([(round(b - since), round(e - since)) for b, e, _p in turns], [(0, 1620)])
+
     def test_interrupted_turn(self):
         self.write([user(0, 'do it'), assistant(5, 'm1'), user(6, [dict(type='text', text='[Request interrupted by user]')])])
         self.assertTrue(claude_recap.interrupted(self.home, SESSION))
