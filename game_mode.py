@@ -75,6 +75,43 @@ def raise_quietly(widget):
         pass
 
 
+def ours_in_front():
+    """One of Petoken's own windows (her, her menu, Settings) is the foreground window."""
+    try:
+        import ctypes
+        import os
+        user32 = ctypes.windll.user32
+        hwnd = user32.GetForegroundWindow()
+        if not hwnd:
+            return False
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        return pid.value == os.getpid()
+    except (AttributeError, OSError):
+        return False
+
+
+def set_no_activate(widget, on):
+    """Clicking ``widget`` never takes the foreground (WS_EX_NOACTIVATE), so a
+    game behind keeps it."""
+    try:
+        import sys
+        if widget is None or sys.platform != 'win32':
+            return
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        user32.GetWindowLongW.argtypes = (wintypes.HWND, ctypes.c_int)
+        user32.SetWindowLongW.argtypes = (wintypes.HWND, ctypes.c_int, ctypes.c_long)
+        hwnd = int(widget.winId())
+        style = user32.GetWindowLongW(hwnd, -20)
+        wanted = (style | 0x08000000) if on else (style & ~0x08000000)
+        if wanted != style:
+            user32.SetWindowLongW(hwnd, -20, wanted)
+    except (RuntimeError, OSError, AttributeError):
+        pass
+
+
 def names(value):
     """A user's list of program names ("a.exe, b.exe" or a list), lowercase."""
     if isinstance(value, str):
@@ -163,10 +200,11 @@ class GameMode(QObject):
 
     changed = Signal(bool)
 
-    def __init__(self, panel, detector=None, clock=time.monotonic):
+    def __init__(self, panel, detector=None, clock=time.monotonic, ours=ours_in_front):
         super().__init__(panel)
         self.panel = panel
         self.clock = clock
+        self.ours = ours
         if detector is None:
             from game_detect import GameDetector, foreground_info
             detector = GameDetector(scan=foreground_info)
@@ -185,6 +223,10 @@ class GameMode(QObject):
 
     def poll(self, now=None):
         now = self.clock() if now is None else now
+        if self.active and self.ours():
+            # Her own window or menu is in front (a click or hold on her, her menu,
+            # Settings): that is not leaving the game.
+            return
         playing = False
         if self.auto:
             prefs = self.panel.prefs
@@ -855,10 +897,12 @@ class HoverInput(QObject):
         self.taking = {}
         for widget in self._targets():
             self._set(widget, False)
+        set_no_activate(self.pet, True)     # Clicking her never takes the game's focus.
         self.timer.start()
 
     def stop(self):
         self.timer.stop()
+        set_no_activate(self.pet, False)
         for widget in list(self.taking):
             try:
                 set_clickthrough(widget, widget is not self.pet)    # She takes the mouse again; the rest never do.

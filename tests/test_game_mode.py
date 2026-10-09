@@ -39,7 +39,8 @@ class GameModeTests(unittest.TestCase):
         self.panel = QObject()
         self.panel.prefs = dict(game_extra='EldenRing, D:/games/my.exe', game_excluded='vlc')
         self.detector = FakeDetector()
-        self.mode = GameMode(self.panel, detector=self.detector, clock=lambda: 0)
+        self.in_front = [False]
+        self.mode = GameMode(self.panel, detector=self.detector, clock=lambda: 0, ours=lambda: self.in_front[0])
         self.seen = []
         self.mode.changed.connect(self.seen.append)
 
@@ -66,6 +67,18 @@ class GameModeTests(unittest.TestCase):
         self.detector.playing = True
         self.mode.poll()                         # ...and the next one turns it on again.
         self.assertTrue(self.mode.active)
+
+    def test_holding_her_or_her_menu_never_ends_the_game(self):
+        self.detector.playing = True
+        self.mode.poll()
+        self.in_front[0] = True             # Her window or menu took the foreground...
+        self.detector.playing = False       # ...so the detector sees no game in front.
+        for _ in range(10):
+            self.mode.poll()
+        self.assertTrue(self.mode.active)   # Still in game mode.
+        self.in_front[0] = False
+        self.mode.poll()                    # Another program in front: that counts again.
+        self.assertFalse(self.mode.active)
 
     def test_switching_on_by_hand_without_a_game(self):
         self.mode.toggle()
