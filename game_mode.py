@@ -78,7 +78,7 @@ class ProgramList(QWidget):
         row = QHBoxLayout()
         row.setSpacing(6)
         self.add_button = QPushButton()
-        self.add_button.clicked.connect(self.pick)
+        self.add_button.clicked.connect(lambda _=False: self.pick())   # Not the 'checked' flag as paths.
         self.remove_button = QPushButton()
         self.remove_button.clicked.connect(self.remove_selected)
         row.addWidget(self.add_button)

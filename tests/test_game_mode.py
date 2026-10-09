@@ -311,7 +311,11 @@ class PanelGameModeTests(unittest.TestCase):
         self.assertEqual(settings.game_extra.values(), ['old.exe', 'other.exe', 'eldenring.exe'])
         settings.game_extra.listing.setCurrentRow(0)
         settings.game_extra.remove_selected()
-        settings.game_excluded.pick([r'C:\Program Files\VLC\vlc.exe'])
+        from unittest.mock import patch
+        with patch('PySide6.QtWidgets.QFileDialog.getOpenFileNames',
+                   return_value=([r'C:\Program Files\VLC\vlc.exe'], '')) as dialog:
+            settings.game_excluded.add_button.click()            # The real button opens the picker.
+        dialog.assert_called_once()
         with __import__('unittest.mock', fromlist=['patch']).patch('widget.write_preferences'):
             settings.save()
         self.assertEqual(self.panel.prefs['game_extra'], ['other.exe', 'eldenring.exe'])
