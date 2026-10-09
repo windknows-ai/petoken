@@ -4057,16 +4057,13 @@ class Settings(QDialog):
         phone.addRow(self.push_enabled_label, self.push_enabled)
         subscribe = QVBoxLayout()
         subscribe.setSpacing(6)
-        self.push_qr = QLabel()
-        self.push_qr.setAlignment(Qt.AlignCenter)
-        subscribe.addWidget(self.push_qr, 0, Qt.AlignLeft)
         self.push_url = QLabel()
         self.push_url.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.push_url.setWordWrap(True)
         subscribe.addWidget(self.push_url)
         url_row = QHBoxLayout()
         self.push_copy = QPushButton()
-        self.push_copy.clicked.connect(lambda: QApplication.clipboard().setText(self._push_url()))
+        self.push_copy.clicked.connect(lambda: QApplication.clipboard().setText(self.push_topic))   # What the app asks for.
         self.push_renew = QPushButton()
         self.push_renew.clicked.connect(self._renew_topic)
         url_row.addWidget(self.push_copy)
@@ -4550,14 +4547,8 @@ class Settings(QDialog):
     def _show_push_url(self):
         url = self._push_url()
         language = normalize_language(self.language.currentData())
-        self.push_url.setText(text('push_topic_line', language, topic=self.push_topic) + '\n' + url)
-        try:
-            import qr_code
-            image = qr_code.to_qimage(qr_code.encode(url), scale=3, border=2)
-            self.push_qr.setPixmap(QPixmap.fromImage(image))
-            self.push_qr.show()
-        except Exception:
-            self.push_qr.hide()             # No QR code: the address still shows.
+        self.push_url.setText(text('push_topic_line', language, topic=self.push_topic) + '\n'
+                              + text('push_server_line', language, server=url.rsplit('/', 1)[0]))
 
     def _renew_topic(self):
         from phone_push import new_topic
