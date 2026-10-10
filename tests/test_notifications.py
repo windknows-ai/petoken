@@ -163,6 +163,29 @@ class ClaudeHooksTests(unittest.TestCase):
         self.assertEqual(claude_events.disable(self.home), 'off')
         self.assertEqual(self.settings()['hooks'], dict(Stop=[mine], PreToolUse=[mine]))
 
+    def test_waiting_tools_hook_and_upgrade_of_an_older_install(self):
+        # An install from before 2.4: every event except PreToolUse.
+        (self.home / 'settings.json').write_text('{}', encoding='utf-8')
+        claude_events.enable(self.home, self.script)
+        data = self.settings()
+        ours = data['hooks'].pop('PreToolUse')
+        self.assertIn('mcp__computer-use__request_access', ours[0]['matcher'])
+        (self.home / 'settings.json').write_text(json.dumps(data), encoding='utf-8')
+        self.assertEqual(claude_events.state(self.home), 'partial')
+        self.assertEqual(claude_events.upgrade(self.home, self.script), 'on')
+        self.assertEqual(len(self.settings()['hooks']['PreToolUse']), 1)
+        # Someone removed Stop on purpose: upgrade leaves it alone.
+        data = self.settings()
+        data['hooks'].pop('Stop')
+        (self.home / 'settings.json').write_text(json.dumps(data), encoding='utf-8')
+        self.assertEqual(claude_events.upgrade(self.home, self.script), 'partial')
+        self.assertNotIn('Stop', self.settings()['hooks'])
+        now = time.time()
+        waiting = claude_events.normalize(dict(at=now, session='s1', prompt='p1', event='PreToolUse',
+                                               tool='mcp__computer-use__request_access'))
+        self.assertEqual((waiting['kind'], waiting['detail']), ('needs_approval', 'asks_user'))
+        self.assertIsNone(claude_events.normalize(dict(at=now, session='s1', event='PreToolUse', tool='Bash')))
+
     def test_unreadable_settings_untouched(self):
         (self.home / 'settings.json').write_text('{oops', encoding='utf-8')
         self.assertEqual(claude_events.enable(self.home, self.script), 'unreadable')
@@ -191,7 +214,7 @@ class ClaudeHooksTests(unittest.TestCase):
     def test_hook_script_keeps_metadata_only(self):
         self.script.parent.mkdir(parents=True)
         self.script.write_text(claude_events._SCRIPT, encoding='utf-8-sig')
-        payload = dict(hook_event_name='Stop', session_id='abc-1', prompt_id='p-9',
+        payload = dict(hook_event_name='Stop', session_id='abc-1', prompt_id='p-9', tool_name='AskUserQuestion',
                        cwd='C:/secret/client/alpha', last_assistant_message='SECRET REPLY',
                        transcript_path='C:/secret/t.jsonl')
         result = subprocess.run(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
@@ -202,8 +225,8 @@ class ClaudeHooksTests(unittest.TestCase):
         self.assertNotIn('SECRET', written)
         self.assertNotIn('secret', written)
         record = json.loads(written.strip())
-        self.assertEqual((record['event'], record['session'], record['prompt'], record['project']),
-                         ('Stop', 'abc-1', 'p-9', 'alpha'))
+        self.assertEqual((record['event'], record['session'], record['prompt'], record['project'], record['tool']),
+                         ('Stop', 'abc-1', 'p-9', 'alpha', 'AskUserQuestion'))
 
 
 class PanelNotificationTests(unittest.TestCase):

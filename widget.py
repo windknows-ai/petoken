@@ -5269,6 +5269,11 @@ class Panel(QWidget):
         self._last_notice = None
         self.assistant = Assistant()
         self._slow_notify_at = 0.0
+        if live:
+            try:
+                claude_events.upgrade()      # 2.4: also hear steps that wait for you.
+            except Exception:
+                pass
         self._claude_hooks_on = claude_events.state() == 'on'
         self.claude_events = claude_events.ClaudeEventReader() if live else None
         self.codex_events = codex_hooks.CodexEventReader() if live else None
@@ -6430,7 +6435,8 @@ class Panel(QWidget):
         if pet is not None:
             pet.react(event.get('kind'), event)
         carded = (event.get('kind') == 'needs_approval' and self.approvals.active
-                  and ((event.get('provider') == 'claude' and event.get('detail') != 'permission_prompt')
+                  and ((event.get('provider') == 'claude'
+                        and event.get('detail') not in ('permission_prompt', 'asks_user'))
                        or (event.get('provider') == 'codex' and event.get('source') == 'hook'
                            and codex_hooks.state() == 'on')))
         if carded:

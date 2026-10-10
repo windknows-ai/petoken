@@ -29,7 +29,15 @@ import claude_statusline as bridge
 SCRIPT_NAME = 'claude-events.ps1'
 EVENTS_NAME = 'claude-events.jsonl'
 MARKER = 'petoken-claude-events'
-HOOK_EVENTS = ('UserPromptSubmit', 'Stop', 'StopFailure', 'Notification', 'PermissionRequest')
+HOOK_EVENTS = ('UserPromptSubmit', 'Stop', 'StopFailure', 'Notification', 'PermissionRequest', 'PreToolUse')
+# Steps that stop and wait for the person without a Claude Code permission
+# prompt: a tool's own access dialog, a question, a plan to approve. With
+# permissions bypassed (or for an MCP server's own dialog) neither
+# PermissionRequest nor a permission_prompt Notification arrives, so the
+# tool starting is the only signal (2.4).
+WAITING_TOOLS = ('AskUserQuestion', 'ExitPlanMode', 'mcp__computer-use__request_access',
+                 'mcp__computer-use__request_teach_access')
+MATCHERS = {'PreToolUse': '^(' + '|'.join(WAITING_TOOLS) + ')$'}
 # Petoken reads only new lines; an old file this large is simply reset.
 MAX_FILE_BYTES = 2 * 1024 * 1024
 _ID = re.compile(r'^[A-Za-z0-9._:-]{1,128}$')
@@ -49,6 +57,7 @@ $line = [ordered]@{
     kind = Clean $kind
     session = Clean $data.session_id
     prompt = Clean $data.prompt_id
+    tool = Clean $data.tool_name
     project = $project
 }
 $folder = Join-Path $env:LOCALAPPDATA 'CodexWisp'
@@ -116,10 +125,27 @@ def enable(home=None, script=None):
     handler = _handler(script)
     handler['async'] = handler.pop('async_')
     for event in HOOK_EVENTS:
-        hooks.setdefault(event, []).append(dict(hooks=[dict(handler)]))
+        group = dict(hooks=[dict(handler)])
+        if event in MATCHERS:
+            group = dict(matcher=MATCHERS[event], **group)
+        hooks.setdefault(event, []).append(group)
     data['hooks'] = hooks
     bridge._write_settings(path, data)
     return state(home)
+
+
+def upgrade(home=None, script=None):
+    """Add events a newer Petoken listens to when the older set is installed."""
+    if state(home) != 'partial':
+        return state(home)
+    try:
+        hooks = bridge._read_settings(bridge.settings_path(home)).get('hooks') or {}
+    except (OSError, ValueError):
+        return 'unreadable'
+    older = [event for event in HOOK_EVENTS if event not in MATCHERS]
+    if all(any(_ours(g) for g in hooks.get(event) or []) for event in older):
+        return enable(home, script)
+    return 'partial'         # Someone removed part of it: leave their choice alone.
 
 
 def refresh_script(script=None):
@@ -195,6 +221,8 @@ def normalize(record):
         name, key = 'failed', prompt
     elif event == 'PermissionRequest' or (event == 'Notification' and kind == 'permission_prompt'):
         name, key = 'needs_approval', f'{prompt}:{int(at // 15)}'
+    elif event == 'PreToolUse' and record.get('tool') in WAITING_TOOLS:
+        name, key, kind = 'needs_approval', f'{prompt}:{int(at // 15)}', 'asks_user'
     elif event == 'UserPromptSubmit':
         name, key = 'started', prompt
     else:
