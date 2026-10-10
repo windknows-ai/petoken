@@ -81,6 +81,26 @@ class CollectionPage(QWidget):
         self.points = QLabel()
         self.points.setObjectName('summary')
         layout.addWidget(self.points, 0, Qt.AlignLeft)
+        # 2.4 stardust: progress to the next unlock, and the star-ring skin.
+        from PySide6.QtWidgets import QProgressBar
+        star_row = QHBoxLayout()
+        self.stardust = QLabel()
+        self.stardust.setObjectName('summary')
+        star_row.addWidget(self.stardust)
+        self.stardust_bar = QProgressBar()
+        self.stardust_bar.setTextVisible(False)
+        self.stardust_bar.setFixedHeight(10)
+        star_row.addWidget(self.stardust_bar, 1)
+        self.skin_label = QLabel()
+        star_row.addWidget(self.skin_label)
+        self.skin = QComboBox()
+        self.skin.currentIndexChanged.connect(self._skin_chosen)
+        star_row.addWidget(self.skin)
+        layout.addLayout(star_row)
+        self.stardust_next = QLabel()
+        self.stardust_next.setObjectName('muted')
+        self.stardust_next.setWordWrap(True)
+        layout.addWidget(self.stardust_next)
         self.wall = QGridLayout()
         self.wall.setHorizontalSpacing(8)
         layout.addLayout(self.wall)
@@ -128,6 +148,7 @@ class CollectionPage(QWidget):
             total, earned, log = 0, {}, []
         language = self.language
         self.points.setText(text('collection_points', language, points=total))
+        self._refresh_stardust(language)
         while self.wall.count():
             item = self.wall.takeAt(0)
             if item.widget():
@@ -145,6 +166,42 @@ class CollectionPage(QWidget):
                                                   points=row['points'])))
         if not log:
             self.log.addItem(QListWidgetItem(text('collection_empty', language)))
+
+
+    def _refresh_stardust(self, language):
+        from stardust import SKINS, UNLOCKS, next_unlock, unlocked
+        panel = self.owner.panel
+        dust = getattr(panel, 'stardust', None)
+        total = dust.total() if dust is not None else 0
+        have = unlocked(total)
+        coming = next_unlock(total)
+        self.stardust.setText(text('stardust_total', language, points=total))
+        goal = coming and dict(UNLOCKS)[coming[0]] or UNLOCKS[-1][1]
+        self.stardust_bar.setRange(0, goal)
+        self.stardust_bar.setValue(min(total, goal))
+        self.stardust_next.setText(text('stardust_next', language, left=coming[1],
+                                        name=text(f'stardust_name_{coming[0]}', language))
+                                   if coming else text('stardust_all', language))
+        self.skin_label.setText(text('stardust_skin', language))
+        self._filling = True
+        self.skin.clear()
+        for skin in SKINS:
+            if skin == 'default' or f'skin_{skin}' in have:
+                self.skin.addItem(text(f'stardust_skin_{skin}', language), skin)
+        self.skin.setCurrentIndex(max(0, self.skin.findData(panel.prefs.get('ring_skin', 'default'))))
+        self.skin.setEnabled(self.skin.count() > 1)
+        self._filling = False
+
+    def _skin_chosen(self, _index):
+        if getattr(self, '_filling', False):
+            return
+        panel = self.owner.panel
+        panel.prefs['ring_skin'] = self.skin.currentData() or 'default'
+        try:
+            panel.persist()
+        except Exception:
+            pass
+        panel.apply_ring_skin()
 
 
 class GoalDialog(QDialog):

@@ -94,6 +94,10 @@ class Companion:
                 return []
         except Exception:
             return []
+        star = {'todo_accepted': 'star_review', 'focus_done': 'star_focus'}.get(reason)
+        dust = getattr(self.panel, 'stardust', None)
+        if star and dust is not None:
+            dust.gain(star, ref)                 # Stardust too (2.4).
         return self._check()
 
     def earn(self, sticker):

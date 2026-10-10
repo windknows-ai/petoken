@@ -585,8 +585,22 @@ class WorkbenchStore:
                             float(at), points)) == 1
 
     def points(self):
-        rows = self._read('SELECT COALESCE(SUM(points), 0) AS total FROM points_ledger')
+        """Companionship points (stardust, ``star_*`` reasons, is counted apart)."""
+        rows = self._read("SELECT COALESCE(SUM(points), 0) AS total FROM points_ledger "
+                          "WHERE substr(reason, 1, 5) != 'star_'")
         return rows[0]['total']
+
+    def stardust(self, reason=None, since=None):
+        """Stardust saved up (2.4), optionally of one reason and since a time."""
+        query = "SELECT COALESCE(SUM(points), 0) AS total FROM points_ledger WHERE substr(reason, 1, 5) = 'star_'"
+        args = []
+        if reason:
+            query += ' AND reason = ?'
+            args.append(reason)
+        if since is not None:
+            query += ' AND at >= ?'
+            args.append(float(since))
+        return self._read(query, tuple(args))[0]['total']
 
     def points_log(self, limit=50):
         return self._read('SELECT * FROM points_ledger ORDER BY at DESC LIMIT ?', (int(limit),))

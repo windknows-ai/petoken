@@ -5317,6 +5317,10 @@ class Panel(QWidget):
         # 2.0 points, stickers and weekly usage goals.
         from companion import Companion
         self.companion = Companion(self)
+        # 2.4 stardust: unlocks star-ring skins and, later, her third form.
+        from stardust import Stardust
+        self.stardust = Stardust(self)
+        QTimer.singleShot(0, self.apply_ring_skin)
         self.goal_clock = QTimer(self)
         self.goal_clock.timeout.connect(self.check_goals)
         if live:
@@ -6383,8 +6387,32 @@ class Panel(QWidget):
             self.tray.showMessage(self.tr_text('sit_title'), self.tr_text('sit_body', minutes=minutes),
                                   self.windowIcon(), 8000)
 
+    def apply_ring_skin(self):
+        """The star ring's look: the chosen skin once it is unlocked."""
+        import halo_scene
+        from stardust import unlocked
+        skin = self.prefs.get('ring_skin', 'default')
+        if skin != 'default' and f'skin_{skin}' not in unlocked(self.stardust.total()):
+            skin = 'default'
+        halo_scene.SKIN = skin
+
+    def stardust_unlocked(self, name):
+        """A new unlock: she is delighted, a notice says what it is."""
+        if name.startswith('skin_'):
+            self.prefs['ring_skin'] = name[5:]          # Put it on at once (Collection can switch back).
+            self.persist()
+            self.apply_ring_skin()
+        pet = getattr(self, 'pet', None)
+        if pet is not None and pet.isVisible():
+            pet.interact('heart', 4)
+        if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
+            self.tray.showMessage(self.tr_text(f'stardust_unlock_{name}'), self.tr_text(f'stardust_unlock_{name}_body'),
+                                  self.windowIcon(), 10000)
+
     def announce(self, event):
         self._last_notice = dict(event)
+        if event.get('kind') == 'finished' and getattr(self, 'stardust', None) is not None:
+            self.stardust.on_finished(event)
         push = getattr(self, 'phone_push', None)
         if push is not None and (self.live or getattr(self, 'preview_toasts', False)):
             try:

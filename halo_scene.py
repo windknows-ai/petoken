@@ -16,6 +16,19 @@ RING_LAYERS = ((13, (132, 112, 255), 22, 13), (7, (158, 144, 255), 42, 25),
                (3.4, (177, 177, 255), 165, 105), (1.15, (252, 250, 255), 255, 215))
 RING_SEGMENTS = 96
 RING_MEET = (196, 168, 250)
+# 2.4 star-ring skins (unlocked with stardust): 'meteor' gives the stars long
+# tails, 'aurora' turns the empty ring into slowly flowing aurora colours.
+SKIN = 'default'
+AURORA = ((92, 225, 200), (120, 160, 255), (190, 120, 255), (110, 235, 170))
+
+
+def aurora_tint(angle, now):
+    """The aurora colour at ``angle`` on the ring, drifting with time."""
+    t = (angle / math.tau + now * .04) % 1.0 * len(AURORA)
+    index = int(t)
+    f = t - index
+    f = f * f * (3 - 2 * f)
+    return _lerp(AURORA[index % len(AURORA)], AURORA[(index + 1) % len(AURORA)], f)
 
 
 def _lerp(a, b, t):
@@ -78,10 +91,14 @@ class HaloLayer(QWidget):
         self._trails.setdefault(identity, deque(maxlen=self.MAX_SAMPLES)).append(
             (x, y, stamp, depth))
 
+    @property
+    def age(self):
+        return self.AGE * 1.9 if SKIN == 'meteor' else self.AGE
+
     def prune(self, now):
         self.now = now
         for key, trail in list(self._trails.items()):
-            while trail and now - trail[0][2] > self.AGE:
+            while trail and now - trail[0][2] > self.age:
                 trail.popleft()
             if not trail:
                 del self._trails[key]
@@ -128,7 +145,18 @@ class HaloLayer(QWidget):
         for angle in angles:
             x, y, _ = geometry.project(self.pose, angle)
             points.append(QPointF(x - self.x(), y - self.y()))
-        if not self.tints:
+        if not self.tints and SKIN == 'aurora':
+            for layer, (width, _rgb, front_alpha, back_alpha) in enumerate(RING_LAYERS):
+                alpha = front_alpha if self.front else back_alpha
+                for index in range(len(points) - 1):
+                    tint = aurora_tint((angles[index] + angles[index + 1]) / 2, self.now)
+                    rgb = (tuple(round(c + (255 - c) * .6) for c in tint)
+                           if layer == len(RING_LAYERS) - 1 else tint)
+                    pen = QPen(QColor(*rgb, alpha), width)
+                    pen.setCapStyle(Qt.FlatCap)
+                    painter.setPen(pen)
+                    painter.drawLine(points[index], points[index + 1])
+        elif not self.tints:
             path = QPainterPath()
             for i, point in enumerate(points):
                 path.moveTo(point) if i == 0 else path.lineTo(point)
@@ -235,7 +263,7 @@ class HaloLayer(QWidget):
                 x, y, stamp, depth = last
                 if (depth >= 0) != self.front:
                     continue
-                fade = max(0.0, 1 - (self.now - stamp) / self.AGE) ** 1.5
+                fade = max(0.0, 1 - (self.now - stamp) / self.age) ** 1.5
                 if fade == 0:
                     continue
                 strength = fade * (.60 + .40 * (depth + 1) / 2)
@@ -250,8 +278,8 @@ class HaloLayer(QWidget):
             # A few pearl motes recede along the ribbon, never a particle cloud.
             for x, y, stamp, depth in list(trail)[::18]:
                 age = self.now - stamp
-                if .35 < age < self.AGE and (depth >= 0) == self.front:
-                    fade = (1 - age / self.AGE) ** 1.5
+                if .35 < age < self.age and (depth >= 0) == self.front:
+                    fade = (1 - age / self.age) ** 1.5
                     painter.setPen(Qt.NoPen)
                     painter.setBrush(QColor(*_toward(glow, (255, 255, 255), .55), int(160 * fade)))
                     radius = .8 + .5 * (depth + 1) / 2

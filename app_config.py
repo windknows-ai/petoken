@@ -54,6 +54,7 @@ DEFAULT_PREFERENCES = {
     "calendar_sources": [],
     "calendar_lead_minutes": 10,
     "calendar_dnd": True,
+    "ring_skin": "default",
     "game_rings_side": "right",
     "game_bar_pos": None,
     "claude_probe_minutes": 0,
@@ -146,6 +147,8 @@ def normalize_preferences(data):
     links = preferences.get("calendar_sources")
     preferences["calendar_sources"] = ([s.strip() for s in links if isinstance(s, str) and s.strip()][:10]
                                        if isinstance(links, list) else [])
+    if preferences.get("ring_skin") not in ("default", "meteor", "aurora"):
+        preferences["ring_skin"] = "default"
     if preferences.get("calendar_lead_minutes") not in (5, 10, 15, 30):
         preferences["calendar_lead_minutes"] = 10
     for key in ("game_extra", "game_excluded"):

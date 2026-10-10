@@ -265,6 +265,23 @@ class Preview(QWidget):
                         button('打开报告 › 使用时长', self.open_app_time)))
         self._describe_night()
 
+        # 2.4 stardust: unlocks the star-ring skins and (later) her third form.
+        form = group('星辉 / Stardust (2.4)')
+        why = QLabel('真实使用时：AI 完成任务 +3（不到 1 分钟 +1）、验收通过 +8、专注一轮 +5、AI 每工作 10 分钟 +1（每天最多 +40）。'
+                     '150 解锁流星星环，400 解锁极光星环（没任务时显示），1000 解锁星海觉醒。工作台 › 收藏页能看进度、换皮肤。')
+        why.setWordWrap(True)
+        form.addRow(why)
+        self.star_state = QLabel()
+        form.addRow(row(button('+50 星辉', lambda: self.add_stardust(50)), button('到 150（流星）', lambda: self.stardust_to(150)),
+                        button('到 400（极光）', lambda: self.stardust_to(400)), button('到 1000', lambda: self.stardust_to(1000)),
+                        button('清零', self.reset_stardust), self.star_state))
+        skins = QComboBox()
+        for label, value in (('原来的', 'default'), ('流星（尾巴更长）', 'meteor'), ('极光（没任务时）', 'aurora')):
+            skins.addItem(label, value)
+        skins.currentIndexChanged.connect(lambda _: self.wear_skin(skins.currentData()))
+        form.addRow('直接试星环皮肤', skins)
+        self._describe_stardust()
+
         # Projects and notes.
         form = group('项目、开工和「上次做到哪」 / Projects')
         self.project = QComboBox()
@@ -415,6 +432,30 @@ class Preview(QWidget):
         stamp = datetime.now().replace(hour=hour, minute=minute, second=0).timestamp()
         self.panel.night_mode.poll(stamp)
         self._describe_night()
+
+    def _describe_stardust(self):
+        self.star_state.setText(f'现在：{self.panel.stardust.total()} 星辉')
+
+    def add_stardust(self, amount):
+        import time as clock
+        self.panel.stardust.gain('star_review', f'test-{clock.time()}', amount)
+        self._describe_stardust()
+
+    def stardust_to(self, goal):
+        left = goal - self.panel.stardust.total()
+        if left > 0:
+            self.add_stardust(left)
+
+    def reset_stardust(self):
+        self.store._write("DELETE FROM points_ledger WHERE substr(reason, 1, 5) = 'star_'")
+        self.panel.prefs['ring_skin'] = 'default'
+        self.panel.apply_ring_skin()
+        self._describe_stardust()
+
+    def wear_skin(self, skin):
+        """Try a skin without unlocking it (the test build only)."""
+        import halo_scene
+        halo_scene.SKIN = skin
 
     def fake_meeting(self):
         """A meeting starting in a minute: the card, quiet while it runs, then the summary."""
