@@ -2,6 +2,17 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.3.0 — 2026-10-10
+
+### Added
+- **Late-night mode**: from 23:00 to 07:00 (your hours, optionally also during Do Not Disturb) she changes into her moon pajamas with a short change animation, and every pose has its pajama version (reading under a blanket while an AI works, a sleepy wave for good news, warm milk, asleep on her pillow). Switch it for now under Show; a Late night group in the Guide.
+- **Sitting reminder**: after 30–90 minutes at the computer without a 5-minute break she stretches and suggests getting up (not while focusing or gaming; no notice during Do Not Disturb).
+- **App time** (Reports): opt-in, how long each program was in front today or this week; only names and times, kept on this computer.
+- Settings › Rest for all of the above.
+
+### Changed
+- AI working time in Reports counts tasks running at the same time once and leaves out long waits (a background task, a used-up limit); a subagent's work still counts. Claude task notices use the same time.
+
 ## V2.2.1 — 2026-10-09
 
 ### Fixed

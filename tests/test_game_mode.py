@@ -233,6 +233,8 @@ class PanelGameModeTests(unittest.TestCase):
 
         def feet_now():
             return pet.pos() + QPoint(*pet_geometry.scaled_anchor(pet.pet_scale))
+        # Away from the screen edges: there her ring is kept on screen and may nudge her.
+        pet.move(pet.screen().availableGeometry().center() - pet.rect().center())
         feet = feet_now()
         self.panel.game_mode.toggle()
         self.assertNotEqual(pet.pet_scale, 70)                     # Not at once: smoothly.
