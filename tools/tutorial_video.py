@@ -4,6 +4,11 @@ Usage:
     python tools/tutorial_video.py OUT_DIR --ffmpeg PATH [--minutes 6.8] [--only N] [--stills]
 
 With --minutes there is no narration: subtitles only, scenes timed by text length.
+With --script (overview, game, night, phone, short; tools/video_scripts.py) one
+of the 2.3 videos is made instead: subtitles and music, scenes timed by how
+long their text takes to read; ``short`` is vertical (1080x1920). Scenes may
+show live recordings of the real windows (tools/live_capture.py), kept in
+OUT_DIR/live and reused unless --rerecord.
 
 Everything runs on synthetic data in a temporary folder (the same sandbox
 as the adjustable test build): no real Claude Code or Codex data is read and
@@ -42,6 +47,11 @@ FONT = 'Microsoft YaHei UI'
 CONTENT = QRectF(60, 118, 1230, 790)        # Where captures and her clips go.
 SIDE = QRectF(1330, 118, 530, 790)          # Chapter, scene title and steps.
 SUB = QRectF(60, 932, 1800, 118)            # Subtitle bar.
+BUBBLE = QRectF(178, 924, 1682, 132)        # Her speech bubble.
+FACE = QPointF(108, 990)                    # Her face beside it.
+SUB_SIZE = 30                               # Subtitle font size.
+VERTICAL = False
+FFMPEG = None
 FADE_S = .25
 PAD_S = .9                                  # Silence after each narration.
 LEAD_S = .25                                # Silence before it.
@@ -57,7 +67,8 @@ UI = {
         history=('给登录页加上表单校验', '修复首页布局', '写单元测试', '整理依赖', '优化图片加载'),
         give_prompt='把首页做成支持深色模式：跟随系统，也能手动切换。', last_task='给登录页加上表单校验',
         quick_prompt='给登录页加上表单校验，错误信息用中文。', efforts=(('high', '高'), ('medium', '中')),
-        na_note='在设置里打开「同步 Claude 用量」', review_title='给设置页加深色模式', rename=()),
+        na_note='在设置里打开「同步 Claude 用量」', review_title='给设置页加深色模式', rename=(),
+        phone_date='10月10日 星期五', phone_now='现在'),
     'en': dict(
         header='Petoken 2.0 Guide', chapter='Chapter {n} · {name}', splash='Chapter {n}',
         out='Petoken-2.0-Guide.mp4', font='Segoe UI',
@@ -70,7 +81,7 @@ UI = {
         give_prompt='Add dark mode to the home page: follow the system, with a manual switch too.',
         last_task='Validate the login form', quick_prompt='Validate the login form with clear error messages.',
         efforts=(('high', 'High'), ('medium', 'Medium')), na_note='Turn on Sync Claude usage in Settings',
-        review_title='Dark mode for the settings page',
+        review_title='Dark mode for the settings page', phone_date='Friday, October 10', phone_now='now',
         rename=(('：修登录按钮', ': fix the login button'), ('：写测试', ': write tests'))),
 }
 
@@ -125,6 +136,104 @@ def grab(widget):
         widget.hide()
         widget.setAttribute(Qt.WA_DontShowOnScreen, False)
     return dict(image=image, dpr=dpr, marks={})
+
+
+def render_at(widget, dpr=2.0):
+    image = QImage(widget.size() * dpr, QImage.Format_ARGB32_Premultiplied)
+    image.setDevicePixelRatio(dpr)
+    image.fill(Qt.transparent)
+    QWidget.render(widget, image)
+    return image
+
+
+def menu_with_submenu(menu, action, mark=None):
+    """Her menu with one submenu opened beside it, as one picture."""
+    dpr = 2.0
+    sub = action.menu()
+    left, right = render_at(menu, dpr), render_at(sub, dpr)
+    dy = menu.actionGeometry(action).top()
+    lw, lh = left.width() / dpr, left.height() / dpr
+    rw, rh = right.width() / dpr, right.height() / dpr
+    image = QImage(int((lw + rw - 6) * dpr), int(max(lh, dy + rh) * dpr), QImage.Format_ARGB32_Premultiplied)
+    image.setDevicePixelRatio(dpr)
+    image.fill(Qt.transparent)
+    p = QPainter(image)
+    p.drawImage(QPointF(0, 0), left)
+    p.drawImage(QPointF(lw - 6, dy), right)
+    p.end()
+    marks = {}
+    if mark is not None:
+        marks['game'] = sub.actionGeometry(mark).translated(int(lw - 6), dy)
+    return dict(image=image, dpr=dpr, marks=marks, underlay=False)
+
+
+def phone_mock(panel):
+    """A phone lock screen with three Petoken notices (the texts the phone really gets)."""
+    from notifications import recap_detail
+    events = [dict(kind='finished', provider='claude', project='website', title=U('history')[0],
+                   detail=recap_detail(dict(files=['src/login.ts', 'src/form.css'], duration_s=372, usd=.42))),
+              dict(kind='needs_approval', provider='codex', project='api-server', title=U('history')[2]),
+              dict(kind='quota_low', provider='claude', project='', detail='18')]
+    with patch.object(panel, 'task_title', side_effect=lambda event: event.get('title')):
+        notices = [panel.notification_text(event) for event in events]
+    dpr, w, h = 2.0, 760, 1080
+    image = QImage(int(w * dpr), int(h * dpr), QImage.Format_ARGB32_Premultiplied)
+    image.setDevicePixelRatio(dpr)
+    image.fill(Qt.transparent)
+    p = QPainter(image)
+    p.setRenderHint(QPainter.Antialiasing)
+    p.setRenderHint(QPainter.TextAntialiasing)
+    body = QRectF(110, 20, 540, 1040)
+    p.setPen(Qt.NoPen)
+    p.setBrush(QColor('#15142A'))
+    p.drawRoundedRect(body, 70, 70)
+    screen = body.adjusted(16, 16, -16, -16)
+    g = QLinearGradient(screen.topLeft(), screen.bottomLeft())
+    g.setColorAt(0, QColor('#3A3474'))
+    g.setColorAt(1, QColor('#7C6CC4'))
+    p.setBrush(g)
+    p.drawRoundedRect(screen, 56, 56)
+    p.setBrush(QColor('#15142A'))
+    p.drawRoundedRect(QRectF(screen.center().x() - 62, screen.top() + 14, 124, 30), 15, 15)
+    p.setPen(QColor(255, 255, 255))
+    p.setFont(font(92, True))
+    p.drawText(QRectF(screen.left(), screen.top() + 80, screen.width(), 120), Qt.AlignCenter, '23:41')
+    p.setFont(font(22))
+    p.drawText(QRectF(screen.left(), screen.top() + 196, screen.width(), 36), Qt.AlignCenter,
+               U('phone_date'))
+    face = _portrait()
+    y = screen.top() + 270
+    for title, text in notices:
+        card = QRectF(screen.left() + 18, y, screen.width() - 36, 168)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(255, 255, 255, 228))
+        p.drawRoundedRect(card, 26, 26)
+        icon = QRectF(card.left() + 18, card.top() + 18, 44, 44)
+        p.setBrush(QColor('#E9E3FA'))
+        p.drawEllipse(icon)
+        if face is not None:
+            clip = QPainterPath()
+            clip.addEllipse(icon)
+            p.save()
+            p.setClipPath(clip)
+            p.drawImage(icon, face)
+            p.restore()
+        p.setPen(MUTED)
+        p.setFont(font(17))
+        p.drawText(QRectF(icon.right() + 12, card.top() + 18, 260, 44), Qt.AlignLeft | Qt.AlignVCenter, 'ntfy · Petoken')
+        p.drawText(QRectF(card.right() - 120, card.top() + 18, 100, 44), Qt.AlignRight | Qt.AlignVCenter,
+                   U('phone_now'))
+        p.setPen(INK)
+        p.setFont(font(20, True))
+        p.drawText(QRectF(card.left() + 20, card.top() + 70, card.width() - 40, 34), Qt.AlignLeft | Qt.AlignVCenter,
+                   QFontMetrics(font(20, True)).elidedText(title, Qt.ElideRight, int(card.width() - 40)))
+        p.setPen(MUTED)
+        p.setFont(font(18))
+        p.drawText(QRectF(card.left() + 20, card.top() + 106, card.width() - 40, 52), Qt.AlignLeft | Qt.TextWordWrap,
+                   text or ' ')
+        y += 186
+    p.end()
+    return dict(image=image, dpr=dpr, marks={}, underlay=False, bare=True)
 
 
 def realistic_fixtures():
@@ -222,6 +331,12 @@ def capture_all(pv, base, size=(1120, 820)):
     menu.popup(QPoint(200, 200))
     pump(.3)
     out['menu'] = grab(menu)
+    view = next(a for a in menu.actions() if a.menu() is not None and a.text() == pet.tr_text('menu_view'))
+    view.menu().popup(menu.mapToGlobal(menu.actionGeometry(view).topRight()))
+    pump(.3)
+    game = next((a for a in view.menu().actions() if a.text() == pet.tr_text('game_mode_menu')), None)
+    out['menu_view'] = menu_with_submenu(menu, view, game)
+    view.menu().close()
     menu.close()
     # Workbench pages.
     tabs = window.tabs
@@ -257,6 +372,9 @@ def capture_all(pv, base, size=(1120, 820)):
     tab(5, 'report_analysis', lambda: (window.report_page.show_sub(1),
                                        window.report_page.analysis.range.setCurrentIndex(
                                            window.report_page.analysis.range.findData('30d'))))
+    pv.fill_app_time()                      # Sample programs (Reports > App time).
+    tab(5, 'report_app_time', lambda: window.report_page.show_sub(2))
+    window.report_page.show_sub(0)
     tab(window.collection_tab, 'collection')
     guide = window.guide_page
     tabs.setCurrentIndex(window.guide_tab)
@@ -271,6 +389,9 @@ def capture_all(pv, base, size=(1120, 820)):
     scroll.verticalScrollBar().setValue(int(scroll.verticalScrollBar().maximum() * .35))
     pump(.3)
     out['guide_poses'] = grab(window)
+    scroll.verticalScrollBar().setValue(scroll.verticalScrollBar().maximum())     # The late-night group.
+    pump(.3)
+    out['guide_night'] = grab(window)
     # Dialogs from the workbench.
     from todo_ai import GiveToAiDialog, ReviewDialog
     from project_start import HandoffHistory, ProjectPresetDialog
@@ -336,22 +457,24 @@ def capture_all(pv, base, size=(1120, 820)):
         out['quick_launch'] = grab(dialog)
         dialog.deleteLater()
     # Settings pages.
-    from widget import Settings
+    from widget import SETTINGS_PAGES, Settings
     settings = Settings(panel)
+    settings.push_enabled.setChecked(True)          # Its rows show only when it is on.
     settings.show()
-    names = ('settings_general', 'settings_tracking', 'settings_claude', 'settings_assistant', 'settings_about')
-    for index, name in enumerate(names):
-        settings.tabs.setCurrentIndex(index)
+    for page in SETTINGS_PAGES:
+        settings.tabs.setCurrentIndex(SETTINGS_PAGES.index(page))
         pump(.3)
         shot = grab(settings)
-        for key, widget in (('claude_probe', settings.claude_probe), ('dnd', settings.dnd)):
-            frame = widget
+        for key in ('claude_probe', 'dnd', 'game_auto', 'game_scale', 'push_enabled', 'push_subscribe', 'push_test',
+                    'push_when', 'night'):
+            frame = getattr(settings, key + '_label', None)
             while frame is not None and frame.objectName() != 'settingCard':
                 frame = frame.parentWidget()
             if frame is not None and frame.isVisible():
                 shot['marks'][key] = rect_in(frame, settings)
-        out[name] = shot
+        out['settings_' + page] = shot
     settings.close()
+    out['phone_mock'] = phone_mock(panel)
     # Approval cards.
     import claude_approval
     from tools.preview_v1_3 import PREVIEW_REQUESTS
@@ -407,7 +530,8 @@ def capture_all(pv, base, size=(1120, 820)):
         region = region.adjusted(-90, -60, 90, 60).intersected(stage_rect)
         image = QGuiApplication.primaryScreen().grabWindow(0, region.x(), region.y(),
                                                          region.width(), region.height()).toImage()
-        shot = dict(image=image, dpr=image.devicePixelRatio() or 1.0, marks={}, underlay=False)
+        shot = dict(image=image, dpr=image.devicePixelRatio() or 1.0, marks={}, underlay=False,
+                    crop=(base.pet.frameGeometry().center().x() - region.x()) / max(1, region.width()))
         for key, rect in marks.items():
             shot['marks'][key] = rect.translated(-region.x(), -region.y())
         out[name] = shot
@@ -437,6 +561,69 @@ def capture_all(pv, base, size=(1120, 820)):
     return out
 
 
+# Live recordings ----------------------------------------------------------
+
+LIVES = ('transform', 'game_rings', 'game_bar', 'game_leave')
+
+
+def record_lives(pv, base, wanted, folder, rerecord=False):
+    """{name: (recording, (w, h))}: game mode played for real and recorded off
+    the screen, in one run (each recording starts where the last one ended)."""
+    from tools.live_capture import Recorder, probe_size
+    folder.mkdir(parents=True, exist_ok=True)
+    paths = {name: folder / f'{LANG}_{name}.mp4' for name in LIVES}
+    if rerecord or not all(paths[name].exists() for name in wanted):
+        import pet_geometry
+        import transform
+        pet, panel = base.pet, base.panel
+        pet.apply_pet_scale(130)
+        panel.prefs.update(game_scale_percent=130, game_display='rings', game_ring='tasks', game_fast=False,
+                           game_bar_pos=None)
+        base.count.setValue(3)
+        screen = QGuiApplication.primaryScreen().availableGeometry()
+        stage_rect = QRect(screen.right() - 1300, screen.top() + 60, 1200, 1000)
+        stage = Stage(stage_rect)
+        stage.show()
+        for window in (panel, pv, base):
+            window.hide()
+        sx, sy, sw, sh = pet_geometry.scaled_sprite_rect(pet.pet_scale)
+        pet.move(int(stage_rect.center().x() - sx - sw / 2 - 60), int(stage_rect.center().y() - sy - sh / 2 + 40))
+        pet.show()
+        pet.raise_()
+        side = pet._transform_side(pet.mode_scale(gaming=True))
+        transform.CACHE.get(side)
+        for _ in range(300):                    # The transformation's pictures, built once.
+            pump(.1)
+            if transform.CACHE.sizes.get(side):
+                break
+        pump(5.0)                               # Comet trails from moving her fade out.
+        box = QRect(pet.x() + int(sx), pet.y() + int(sy), int(sw), int(sh))
+        region = QRect(box.center().x() - int(sw * 1.15), box.center().y() - int(sh * .95),
+                       int(sw * 2.5), int(sh * 1.75)).intersected(stage_rect)
+
+        def record(name, seconds, action=None):
+            recorder = Recorder(FFMPEG, region, paths[name], FPS)
+            pump(.4)
+            if action is not None:
+                action()
+            pump(seconds)
+            recorder.stop()
+            print('recorded', name, flush=True)
+
+        record('transform', 15.5, pv.toggle_game)
+        record('game_rings', 8)
+        panel.prefs['game_display'] = 'bar'
+        pump(1.5)
+        record('game_bar', 8)
+        panel.prefs['game_display'] = 'rings'
+        pump(1.5)
+        record('game_leave', 12, pv.toggle_game)
+        stage.close()
+        pet.hide()
+        pet.apply_pet_scale(100)
+    return {name: (paths[name], probe_size(FFMPEG, paths[name])) for name in wanted}
+
+
 # Her animation ------------------------------------------------------------
 
 CLIPS = {
@@ -448,6 +635,17 @@ CLIPS = {
     'notify': [('celebrate', 2.4), ('thumbs_up', 2.2), ('surprised', 1.8), ('sad', 2.2)],
     'cheer': [('cheer', 2.5), ('focus_read', 4)], 'break': [('stretch_break', 2.5), ('focus_tea', 4)],
     'proud': [('proud', 4)], 'heart': [('heart', 2.5), ('clap', 2.5)],
+    # 2.1 game mode and 2.3 late night.
+    'game_poses': [('form2_idle', 2.6), ('game_watch', 2.6), ('game_tense', 2.2), ('game_cheer', 2.4),
+                   ('game_drink', 2.4), ('game_victory', 2.6)],
+    'game_watch': [('game_watch', 3.2), ('game_tense', 2.6)],
+    'night_on': [('night_change_0', 1.2), ('night_change_1', 1.1), ('night_change_2', 1.1), ('night_change_3', 1.1),
+                 ('night_settle_1', 1.1), ('night_settle_2', 1.0), ('night_idle', 3.4)],
+    'night_idle': [('night_idle', 5)],
+    'night_poses': [('night_read', 3.2), ('night_goodnight', 2.8), ('night_yawn', 2.6), ('night_milk', 3.2)],
+    'night_sleep': [('night_sleep', 4.5), ('night_wake', 2.8), ('night_idle', 2.2)],
+    'night_goodnight': [('night_goodnight', 4)],
+    'sit': [('stretch_break', 3.4), ('idle', 1.6)],
 }
 
 
@@ -717,12 +915,31 @@ def _bold_wrap(text, width, size):
 TEXT_W = 1580                                   # Subtitle text width inside the bubble.
 
 
-def chunks(text, width=TEXT_W):
+def use_layout(vertical):
+    """1920x1080 with the side panel, or 1080x1920 for phones (no side panel)."""
+    global W, H, CONTENT, BUBBLE, FACE, SUB_SIZE, TEXT_W, VERTICAL
+    VERTICAL = vertical
+    if vertical:
+        W, H = 1080, 1920
+        CONTENT = QRectF(50, 400, 980, 1030)
+        BUBBLE = QRectF(170, 1490, 860, 260)
+        FACE = QPointF(100, 1620)
+        SUB_SIZE, TEXT_W = 44, 760
+    else:
+        W, H = 1920, 1080
+        CONTENT = QRectF(60, 118, 1230, 790)
+        BUBBLE = QRectF(178, 924, 1682, 132)
+        FACE = QPointF(108, 990)
+        SUB_SIZE, TEXT_W = 30, 1580
+
+
+def chunks(text, width=None):
     """The narration in pieces of at most two subtitle lines, split at sentence ends."""
     out = []
+    width = width or TEXT_W
 
     def fits(piece):
-        return len(rich_wrap(piece, width)) <= 2
+        return len(rich_wrap(piece, width, SUB_SIZE)) <= 2
 
     def add(piece):
         if out and fits(out[-1] + piece):
@@ -756,8 +973,10 @@ def _ease_out(x):
 
 
 class Renderer:
-    def __init__(self, stills, clips, speech):
+    def __init__(self, stills, clips, speech, lives=None):
         self.stills, self.clips = stills, clips
+        self.lives = lives or {}             # name: (recording, (width, height))
+        self._live = None                    # (scene number, Decoder)
         self.chapter_index = {key: n for n, (key, _) in enumerate(CHAPTERS)}
         self.face = _portrait()
         # Subtitle pieces, each shown for its share of the spoken length.
@@ -786,6 +1005,21 @@ class Renderer:
         p.fillRect(0, 0, W, H, g)
 
     def header(self, p, scene):
+        if VERTICAL:
+            # Phones: the name, then the scene title large, and where to get it at the bottom.
+            p.setPen(VIOLET)
+            p.setFont(font(34, True))
+            p.drawText(QRectF(0, 80, W, 56), Qt.AlignCenter, U('header'))
+            p.setPen(INK)
+            y = 170
+            for line in _bold_wrap(scene['title'], W - 120, 68):
+                p.setFont(font(68, True))
+                p.drawText(QRectF(0, y, W, 92), Qt.AlignCenter, line)
+                y += 92
+            p.setPen(MUTED)
+            p.setFont(font(28))
+            p.drawText(QRectF(0, H - 130, W, 50), Qt.AlignCenter, 'github.com/windknows-ai/petoken')
+            return
         p.setPen(VIOLET)
         p.setFont(font(26, True))
         p.drawText(QRectF(60, 34, 600, 50), Qt.AlignLeft | Qt.AlignVCenter, U('header'))
@@ -807,6 +1041,8 @@ class Renderer:
             p.drawText(rect, Qt.AlignCenter, label)
 
     def side(self, p, scene, n_scene):
+        if VERTICAL:
+            return
         r = SIDE
         p.setPen(Qt.NoPen)
         p.setBrush(QColor(255, 255, 255, 150))
@@ -844,8 +1080,8 @@ class Renderer:
 
     def subtitle(self, p, text, age):
         """A speech bubble from her: the words pop in, words in 「」 stand out."""
-        bubble = QRectF(178, 924, 1682, 132)
-        face = QPointF(108, 990)
+        bubble = QRectF(BUBBLE)
+        face = QPointF(FACE)
         bob = 9 * math.sin(math.pi * min(1.0, age / .32)) if age < .32 else 0.0
         # Bubble with a little tail towards her.
         path = QPainterPath()
@@ -880,28 +1116,28 @@ class Renderer:
             p.restore()
         # The words.
         appear = _ease_out(age / .28)
-        lines = rich_wrap(text, TEXT_W)
-        line_h = 46
+        lines = rich_wrap(text, TEXT_W, SUB_SIZE)
+        line_h = round(SUB_SIZE * 1.53)
         top = bubble.center().y() - len(lines) * line_h / 2 + (1 - appear) * 12
         for i, line in enumerate(lines):
-            x = bubble.left() + (bubble.width() - _width(line, 30)) / 2
+            x = bubble.left() + (bubble.width() - _width(line, SUB_SIZE)) / 2
             y = top + i * line_h
             run, style = '', None
             for ch, hl in line + [('', None)]:
                 if hl != style and run:
-                    p.setFont(font(30, style))
+                    p.setFont(font(SUB_SIZE, style))
                     color = QColor(ACCENT if style else INK)
                     color.setAlphaF(appear)
                     p.setPen(color)
                     p.drawText(QRectF(x, y, 2000, line_h), Qt.AlignLeft | Qt.AlignVCenter, run)
-                    x += _metrics(30, bool(style)).horizontalAdvance(run)
+                    x += _metrics(SUB_SIZE, bool(style)).horizontalAdvance(run)
                     run = ''
                 style = hl if ch else style
                 run += ch
 
     def splash(self, p, scene, t):
         """The chapter name, sliding in at the start of each chapter."""
-        if t > 1.9:
+        if t > 1.9 or VERTICAL:
             return
         index = self.chapter_index[scene['chapter']]
         alpha = min(_ease_out(t / .35), 1.0 if t < 1.4 else max(0.0, 1 - (t - 1.4) / .5))
@@ -936,15 +1172,23 @@ class Renderer:
     def still(self, p, name, marks, t, duration):
         shot = self.stills[name]
         image, dpr = shot['image'], shot['dpr']
+        if VERTICAL and shot.get('crop') and image.width() > image.height():
+            # Phones: the middle of a wide screen capture (her and her ring).
+            side = image.height()
+            centre = image.width() * (shot['crop'] if isinstance(shot['crop'], float) else .5)
+            left = int(max(0, min(image.width() - side, centre - side / 2)))
+            image = image.copy(left, 0, side, side)
+            image.setDevicePixelRatio(dpr)
+            shot = dict(shot, marks={})
         logical_w, logical_h = image.width() / dpr, image.height() / dpr
         scale = min(CONTENT.width() / logical_w, CONTENT.height() / logical_h, 2.3)
         w, h = logical_w * scale, logical_h * scale
         x = CONTENT.center().x() - w / 2
         y = CONTENT.center().y() - h / 2
         target = QRectF(x, y, w, h)
-        # Shadow and card.
+        # Shadow and card (none for a picture that is its own object, like the phone).
         p.setPen(Qt.NoPen)
-        for k in range(6):
+        for k in range(0 if shot.get('bare') else 6):
             p.setBrush(QColor(35, 30, 86, 10))
             p.drawRoundedRect(target.adjusted(-k * 2, -k * 2 + 6, k * 2, k * 2 + 6), 18, 18)
         path = QPainterPath()
@@ -972,7 +1216,8 @@ class Renderer:
         if not frames:
             return
         image = frames[min(len(frames) - 1, int(t * FPS))]
-        glow = QRectF(CONTENT.center().x() - 330, CONTENT.center().y() - 330, 660, 660)
+        radius = 460 if VERTICAL else 330
+        glow = QRectF(CONTENT.center().x() - radius, CONTENT.center().y() - radius, radius * 2, radius * 2)
         g = QLinearGradient(glow.topLeft(), glow.bottomLeft())
         g.setColorAt(0, QColor(255, 255, 255, 120))
         g.setColorAt(1, QColor(255, 255, 255, 30))
@@ -981,11 +1226,42 @@ class Renderer:
         p.drawEllipse(glow)
         logical_w = image.width() / image.devicePixelRatio()
         logical_h = image.height() / image.devicePixelRatio()
-        scale = 1.75
+        scale = min(CONTENT.width() / logical_w, CONTENT.height() / logical_h) * .98 if VERTICAL else 1.75
         target = QRectF(CONTENT.center().x() - logical_w * scale / 2, CONTENT.bottom() - logical_h * scale - 10,
                         logical_w * scale, logical_h * scale)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         p.drawImage(target, image)
+
+    def live(self, p, n_scene, name):
+        """The next frame of a live recording, as a card like the captures."""
+        if self._live is None or self._live[0] != n_scene:
+            if self._live is not None:
+                self._live[1].close()
+            from tools.live_capture import Decoder
+            path, (w, h) = self.lives[name]
+            crop = None
+            if VERTICAL:                     # Phones: the middle of it, as tall as the space.
+                crop = (min(w, int(h * CONTENT.width() / CONTENT.height())) // 2 * 2, h)
+                w = crop[0]
+            scale = min(CONTENT.width() / w, CONTENT.height() / h)
+            size = (int(w * scale) // 2 * 2, int(h * scale) // 2 * 2)
+            self._live = (n_scene, Decoder(FFMPEG, path, size, FPS, crop=crop))
+        decoder = self._live[1]
+        image = decoder.next()
+        if image is None:
+            return
+        w, h = decoder.size
+        target = QRectF(CONTENT.center().x() - w / 2, CONTENT.center().y() - h / 2, w, h)
+        p.setPen(Qt.NoPen)
+        for k in range(6):
+            p.setBrush(QColor(35, 30, 86, 10))
+            p.drawRoundedRect(target.adjusted(-k * 2, -k * 2 + 6, k * 2, k * 2 + 6), 18, 18)
+        path = QPainterPath()
+        path.addRoundedRect(target, 18, 18)
+        p.save()
+        p.setClipPath(path)
+        p.drawImage(target, image)
+        p.restore()
 
     def frame(self, n_scene, t, duration, image):
         scene = SCENES[n_scene]
@@ -997,6 +1273,8 @@ class Renderer:
         kind, name = scene['visual']
         if kind == 'still':
             self.still(p, name, scene['highlight'], t, duration)
+        elif kind == 'live':
+            self.live(p, n_scene, name)
         else:
             self.clip(p, self.clips[n_scene], t)
         self.side(p, scene, n_scene)
@@ -1023,12 +1301,20 @@ def make_review(pv):
                                                                 duration_s=420, usd=.35))))
 
 
-def use_language(language):
-    """Captured windows, sample data, labels and the scene script in ``language``."""
+def use_language(language, script=None):
+    """Captured windows, sample data, labels and the scene script in ``language``
+    (the 2.0 guide, or one of tools/video_scripts.py)."""
     global LANG, FONT, CHAPTERS, SCENES
     LANG = language
     FONT = U('font')
     _METRICS.clear()
+    if script:
+        from tools.video_scripts import SCRIPTS
+        chosen = SCRIPTS[script][language]
+        UI[language] = dict(UI[language], header=chosen['header'], out=chosen['out'])
+        CHAPTERS, SCENES = chosen['chapters'], chosen['scenes']
+        use_layout(bool(chosen.get('vertical')))
+        return
     if language == 'en':
         from tools import tutorial_script_en as script
     else:
@@ -1036,9 +1322,9 @@ def use_language(language):
     CHAPTERS, SCENES = script.CHAPTERS, script.SCENES
 
 
-def setup(stack, language='zh_CN'):
+def setup(stack, language='zh_CN', script=None):
     """The sandboxed test build with sample data: (v2 preview, base preview)."""
-    use_language(language)
+    use_language(language, script)
     directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-tutorial-'))
     stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
     stack.enter_context(patch('quick_launch.build_command', lambda *a, **k: ['tutorial']))
@@ -1064,18 +1350,31 @@ def main(argv=None):
     parser.add_argument('--language', choices=('zh_CN', 'en'), default='zh_CN')
     parser.add_argument('--minutes', type=float, default=None,
                         help='No narration: subtitles only, the whole video this many minutes long')
+    parser.add_argument('--script', choices=('overview', 'game', 'night', 'phone', 'short'), default=None,
+                        help='A 2.3 video (tools/video_scripts.py) instead of the 2.0 guide')
+    parser.add_argument('--rerecord', action='store_true', help='Record the live scenes again')
     args = parser.parse_args(argv)
+    global FFMPEG
+    FFMPEG = args.ffmpeg
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     app = QApplication.instance() or QApplication([])
-    use_language(args.language)
+    use_language(args.language, args.script)
     scenes = SCENES[:args.only] if args.only else SCENES
     with ExitStack() as stack:
-        pv, base = setup(stack, args.language)
+        pv, base = setup(stack, args.language, args.script)
         print('capturing…', flush=True)
         stills = capture_all(pv, base)
         print(f'{len(stills)} captures', flush=True)
-        if args.minutes:
+        wanted = [scene['visual'][1] for scene in scenes if scene['visual'][0] == 'live']
+        lives = record_lives(pv, base, wanted, out_dir / 'live', args.rerecord) if wanted else {}
+        if args.script:
+            # Subtitles only, each scene as long as its text takes to read.
+            rate = {'zh_CN': 7.5, 'en': 18.0}[args.language] * (.8 if VERTICAL else 1.0)
+            durations = [max(scene.get('min') or 0, len(scene['say']) / rate + 1.6) for scene in scenes]
+            speech = [d - LEAD_S - .6 for d in durations]
+            wavs = None
+        elif args.minutes:
             # Subtitles only: each scene gets time in proportion to its text.
             weights = [len(scene['say']) + 10 for scene in scenes]
             durations = [args.minutes * 60 * w / sum(weights) for w in weights]
@@ -1092,7 +1391,7 @@ def main(argv=None):
         for n, scene in enumerate(scenes):
             if scene['visual'][0] == 'pet':
                 clips[n] = clipper.frames(scene['visual'][1], durations[n])
-        renderer = Renderer(stills, clips, speech)
+        renderer = Renderer(stills, clips, speech, lives)
         if args.stills:
             for name, shot in stills.items():
                 shot['image'].save(str(out_dir / f'cap_{name}.png'))
