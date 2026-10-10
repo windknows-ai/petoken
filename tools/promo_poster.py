@@ -1,7 +1,7 @@
 """Landscape and portrait promo posters (Chinese) from her art and the real windows.
 
 Usage:
-    python tools/promo_poster.py OUT_DIR [zh_CN|en]
+    python tools/promo_poster.py OUT_DIR [zh_CN|en] [--covers23]
 
 Writes Petoken-海报-横版.png (1920x1080) and Petoken-海报-竖版.png (1080x1920),
 both drawn at 2x. The interface pieces are captured from the sandboxed test
@@ -53,6 +53,36 @@ TEXT = {
                'Petoken-cover-4x3-EN', 'Petoken-cover-3x4-EN')),
 }
 LANG = 'zh_CN'
+# 2.3 video covers: (file, pill, headline, sub, sub on tall covers, her picture, interface card, size).
+COVERS_23 = {
+    'zh_CN': (
+        ('Petoken-2.3-总览-封面', 'Petoken 2.3 总览', ('桌面上的', 'AI 编程搭子'), '盯额度 · 一键审批 · 游戏变身\n手机通知 · 深夜睡衣',
+         None, 'v2_0/greet_morning_1', 'card', (1920, 1080)),
+        ('Petoken-游戏模式-封面', 'Petoken · 游戏模式', ('打游戏？', '她会变身！'), '自动进入 · 第二形态\n小圆环看额度 · 不挡鼠标',
+         None, 'v2_1/form2_idle_1', None, (1920, 1080)),
+        ('Petoken-深夜与作息-封面', 'Petoken · 深夜与作息', ('熬夜写代码？', '她换上睡衣陪你'), '月夜睡衣 · 久坐提醒\n使用时长报告',
+         None, 'v2_3/night_idle_1', None, (1920, 1080)),
+        ('Petoken-手机通知-封面', 'Petoken · 手机通知', ('离开电脑', '也不错过 AI'), '完成 · 出错 · 等你审批\n直接推到手机',
+         None, 'v2_0/thumbs_up_1', 'phone_mock', (1920, 1080)),
+        ('Petoken-抖音竖屏-封面-3x4', 'Petoken', ('桌面上的', 'AI 编程搭子'), None, '盯额度 · 会变身 · 穿睡衣',
+         'v2_1/form2_idle_1', 'card', (1080, 1440)),
+    ),
+    'en': (
+        ('Petoken-2.3-Overview-cover', 'Petoken 2.3 Overview', ('Your desktop', 'AI coding buddy'),
+         'Usage · Approvals · Game mode\nPhone notices · Night pajamas', None, 'v2_0/greet_morning_1', 'card',
+         (1920, 1080)),
+        ('Petoken-Game-mode-cover', 'Petoken · Game mode', ('Gaming?', 'She transforms!'),
+         'Starts by itself · Second form\nSmall rings · Mouse goes through', None, 'v2_1/form2_idle_1', None,
+         (1920, 1080)),
+        ('Petoken-Late-night-cover', 'Petoken · Late night', ('Up late?', 'Pajamas on!'),
+         'Moon pajamas · Sitting reminder\nApp time report', None, 'v2_3/night_idle_1', None, (1920, 1080)),
+        ('Petoken-Phone-cover', 'Petoken · Phone', ('Away from your desk?', 'Never miss your AI'),
+         'Finished · Failed · Approvals\nStraight to your phone', None, 'v2_0/thumbs_up_1', 'phone_mock',
+         (1920, 1080)),
+        ('Petoken-Short-cover-3x4', 'Petoken', ('Your desktop', 'AI coding buddy'), None,
+         'Usage · Transforms · Pajamas', 'v2_1/form2_idle_1', 'card', (1080, 1440)),
+    ),
+}
 
 
 def T(key):
@@ -61,7 +91,9 @@ POSES = ('headpat_happy_1', 'focus_read_1', 'sleep_1', 'cheer_1', 'pout_1', 'foc
 
 
 def art(name):
-    image = QImage(str(ART / f'{name}.png'))
+    """A picture of her: ``name`` in assets/v2_0, or 'v2_1/form2_idle_1' style."""
+    path = (ROOT / 'assets' / f'{name}.png') if '/' in name else (ART / f'{name}.png')
+    image = QImage(str(path))
     return image if not image.isNull() else None
 
 
@@ -231,8 +263,13 @@ def portrait(stills):
     return image
 
 
-def cover(stills, w, h):
-    """A cover: big headline, her, the usage card. Landscape or portrait by shape."""
+def cover(stills, w, h, spec=None):
+    """A cover: big headline, her, the usage card. Landscape or portrait by shape.
+    ``spec`` (pill, headline, sub, sub_tall, picture, card) replaces the 2.0 texts."""
+    texts = dict(cover_pill=T('cover_pill'), cover=T('cover'), cover_sub=T('cover_sub'),
+                 cover_sub_tall=T('cover_sub_tall'), hero='greet_morning_1', card='card')
+    if spec is not None:
+        texts.update(zip(('cover_pill', 'cover', 'cover_sub', 'cover_sub_tall', 'hero', 'card'), spec))
     image = QImage(w * SCALE, h * SCALE, QImage.Format_ARGB32_Premultiplied)
     p = QPainter(image)
     p.scale(SCALE, SCALE)
@@ -241,28 +278,34 @@ def cover(stills, w, h):
     if w > h:
         wide = w / h > 1.5
         size = int(h * (.125 if wide else .105))
-        pill(p, QRectF(w * .06, h * .14, size * 2.9, size * .62), T('cover_pill'), int(size * .28))
-        headline(p, w * .055, h * .25, T('cover'), size, width=w * (.5 if wide else .44))
+        pill_w = max(size * 2.9, QFontMetrics(font(int(size * .28), True)).horizontalAdvance(texts['cover_pill'])
+                     + size * .8)
+        pill(p, QRectF(w * .06, h * .14, pill_w, size * .62), texts['cover_pill'], int(size * .28))
+        headline(p, w * .055, h * .25, texts['cover'], size, width=w * (.41 if wide else .4))
         p.setPen(SOFT)
         p.setFont(font(int(size * .36)))
         p.drawText(QRectF(w * .06, h * .25 + size * 2.6, w * .48, size * 1.4), Qt.AlignLeft | Qt.TextWordWrap,
-                   T('cover_sub'))
+                   texts['cover_sub'])
         side = h * (1.0 if wide else .8)
-        hero(p, art('greet_morning_1'), QRectF(w - side * (1.0 if wide else .96), h - side * .98, side, side))
-        card(p, stills['card'], (w * (.86 if wide else .8), h * .2), w * (.17 if wide else .2), 4)
+        hero(p, art(texts['hero']), QRectF(w - side * (1.0 if wide else .96), h - side * .98, side, side))
+        if texts['card'] == 'phone_mock':
+            card(p, stills['phone_mock'], (w * .9, h * .62), w * .15, 5)
+        elif texts['card']:
+            card(p, stills[texts['card']], (w * (.86 if wide else .8), h * .2), w * (.17 if wide else .2), 4)
         sparkle(p, (w * .55, h * .16), h * .012)
         sparkle(p, (w * .95, h * .62), h * .009)
     else:
         size = int(w * .125)
-        pill(p, QRectF(w / 2 - size * 1.5, h * .06, size * 3, size * .62), T('cover_pill'), int(size * .26))
-        headline(p, w * .04, h * .12, T('cover'), size, align=Qt.AlignHCenter, width=w * .92)
+        pill(p, QRectF(w / 2 - size * 1.5, h * .06, size * 3, size * .62), texts['cover_pill'], int(size * .26))
+        headline(p, w * .04, h * .12, texts['cover'], size, align=Qt.AlignHCenter, width=w * .92)
         p.setPen(SOFT)
         p.setFont(font(int(size * .34)))
         p.drawText(QRectF(0, h * .12 + size * 2.5, w, size * .6), Qt.AlignHCenter | Qt.AlignVCenter,
-                   T('cover_sub_tall'))
+                   texts['cover_sub_tall'])
         side = w * .8
-        hero(p, art('greet_morning_1'), QRectF((w - side) / 2, h - side * .97, side, side))
-        card(p, stills['card'], (w * .8, h * .86), w * .32, 5)
+        hero(p, art(texts['hero']), QRectF((w - side) / 2, h - side * .97, side, side))
+        if texts['card']:
+            card(p, stills[texts['card']], (w * .8, h * .86), w * .32, 5)
         sparkle(p, (w * .12, h * .5), w * .012)
     p.end()
     return image
@@ -272,12 +315,18 @@ def main(argv=None):
     global LANG
     argv = sys.argv[1:] if argv is None else argv
     out = Path(argv[0])
-    LANG = argv[1] if len(argv) > 1 else 'zh_CN'
+    LANG = next((a for a in argv[1:] if a in TEXT), 'zh_CN')
     out.mkdir(parents=True, exist_ok=True)
     QApplication.instance() or QApplication([])
     with ExitStack() as stack:
         pv, base = tv.setup(stack, LANG)
         stills = tv.capture_all(pv, base)
+        if '--covers23' in argv:
+            for name, *spec, (w, h) in COVERS_23[LANG]:
+                cover(stills, w, h, spec).save(str(out / f'{name}.png'))
+            tv.finish(pv, base)
+            print('done', out)
+            return
         names = T('files')
         landscape(stills).save(str(out / f'{names[0]}.png'))
         portrait(stills).save(str(out / f'{names[1]}.png'))
