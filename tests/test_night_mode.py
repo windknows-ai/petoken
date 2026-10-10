@@ -93,7 +93,10 @@ class NightModeTest(unittest.TestCase):
         with mock.patch('pet_assets.has_own_art', return_value=True):
             self.assertEqual(night.pose('idle'), 'night_idle')
             self.assertEqual(night.pose('sleep'), 'night_sleep')
-            self.assertEqual(night.pose('typing'), 'typing')   # Task poses stay.
+            self.assertEqual(night.pose('typing'), 'night_read')       # An AI at work: she reads along.
+            self.assertEqual(night.pose('celebrate'), 'night_goodnight')
+            self.assertEqual(night.pose('sad'), 'night_idle')           # No pajama version: the pillow.
+            self.assertEqual(night.pose('night_change_2'), 'night_change_2')
         night.poll(at(12))
         with mock.patch('pet_assets.has_own_art', return_value=True):
             self.assertEqual(night.pose('idle'), 'idle')
@@ -101,7 +104,7 @@ class NightModeTest(unittest.TestCase):
     def test_night_poses_are_registered(self):
         import pet_assets
         names = {entry.state for entry in pet_assets.NIGHT_REGISTRY}
-        self.assertEqual(names, set(night_mode.NIGHT_POSES.values()))
+        self.assertEqual(names, set(night_mode.NIGHT_POSES.values()) | {'night_idle'})
 
 
 class SitReminderTest(unittest.TestCase):
@@ -220,6 +223,14 @@ class PanelRestTest(PanelCase):
             self.assertEqual(self.pet.current_state, 'night_idle')
             night.toggle()
             self.assertEqual(self.pet.current_state, 'idle')
+
+    def test_pajamas_also_while_an_ai_works(self):
+        self.pet.mood_enabled = False
+        self.panel.night_mode.manual = True
+        self.panel.night_mode._set(True)
+        with mock.patch.object(type(self.panel.activity.state), 'state', return_value='typing'):
+            self.pet.update_activity()
+        self.assertEqual(self.pet.current_state, 'night_read')
 
     def test_sit_reminder_makes_her_stretch(self):
         self.pet.show()

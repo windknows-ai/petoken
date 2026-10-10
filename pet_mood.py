@@ -126,15 +126,16 @@ class Mood:
         self.pose = None
         self.until = 0.0
 
-    def update(self, now, wall, idle, busy=False, quiet=False, fullscreen=False):
+    def update(self, now, wall, idle, busy=False, quiet=False, fullscreen=False, night=None):
         """Advance the mood.
 
         ``now`` is monotonic seconds, ``wall`` a local datetime, ``idle`` the
         seconds since the last input anywhere, ``busy`` whether a task state
-        is showing, ``quiet`` Do Not Disturb. Returns :attr:`pose`.
+        is showing, ``quiet`` Do Not Disturb, ``night`` late-night mode (by the
+        clock when not given). Returns :attr:`pose`.
         """
         tuning = self.tuning
-        night = is_night(wall.hour)
+        night = is_night(wall.hour) if night is None else night
         self.longest_idle = max(self.longest_idle, idle)
         if self.calm_since is None or busy:
             self.calm_since = now

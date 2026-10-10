@@ -2,9 +2,9 @@
 
 Late-night mode: from the evening hour the user chose (23:00 by default)
 until morning (07:00), and optionally whenever Do Not Disturb is on, she
-wears her moon pajamas and her idle and mood poses become the sleepy night
-versions (hugging her moon pillow, yawning, asleep on it). Task poses stay as
-they are: she still works when an AI does. Game mode wins over it. Switching
+wears her moon pajamas: every pose becomes its nearest pajama pose (an AI
+at work: she reads under her blanket; good news: she waves good night;
+poked: she rubs her eyes). Game mode wins over it. Switching
 it by hand (her menu, under Show) lasts until the night window next changes.
 Until the night art exists she simply keeps her usual poses.
 
@@ -21,9 +21,19 @@ from datetime import datetime
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
-# Night versions of her poses: shown instead of these while it is night.
+# Night versions of her poses: shown instead of these while it is night;
+# any other pose becomes night_idle.
 NIGHT_POSES = {'idle': 'night_idle', 'sleep': 'night_sleep', 'yawn': 'night_yawn', 'greet_night': 'night_goodnight',
-               'wake_stretch': 'night_wake', 'bored': 'night_read', 'peek': 'night_milk'}
+               'wake_stretch': 'night_wake', 'bored': 'night_read', 'peek': 'night_milk', 'focus_tea': 'night_milk'}
+# An AI at work: she reads along under her blanket.
+NIGHT_POSES.update(dict.fromkeys(('typing', 'codex_working', 'working', 'thinking', 'curious', 'focus_read'),
+                                 'night_read'))
+# Good news and greetings: a sleepy wave.
+NIGHT_POSES.update(dict.fromkeys(('celebrate', 'thumbs_up', 'cheer', 'clap', 'proud', 'heart', 'wave', 'hug',
+                                  'greet_morning', 'coquettish', 'headpat_happy', 'ready_go', 'hold_card',
+                                  'focus_done'), 'night_goodnight'))
+# Disturbed or stretching: rubbing her eyes.
+NIGHT_POSES.update(dict.fromkeys(('poked', 'surprised', 'dragged', 'landing', 'stretch_break'), 'night_wake'))
 # The pajama change: (pose, seconds), played when the night begins and,
 # after she wakes, backwards when it ends.
 CHANGE_ON = (('night_change_0', .9), ('night_change_1', 1.0), ('night_change_2', 1.0), ('night_change_3', 1.0),
@@ -110,9 +120,11 @@ class NightMode(QObject):
         """The night version of ``pose`` while it is night and its art exists."""
         if not self.active:
             return pose
+        if pose.startswith('night_'):
+            return pose
         import pet_assets
-        night = NIGHT_POSES.get(pose)
-        return night if night and pet_assets.has_own_art(night) else pose
+        night = NIGHT_POSES.get(pose, 'night_idle')
+        return night if pet_assets.has_own_art(night) else pose
 
 
 class SitReminder(QObject):

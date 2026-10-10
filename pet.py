@@ -517,18 +517,21 @@ class DesktopPet(QWidget):
             task='guitar'   # Every other two minutes of music she plays along.
         # Game mode: her game pose (form 2 once its art exists); tasks and moods wait.
         game_pose=self._game_pose(now) if gaming else None
-        # Late at night her idle and mood poses are the pajama ones (game mode wins).
+        # Late at night every pose is a pajama one (game mode wins; the Guide's
+        # Show me and the change itself show exactly what they show).
         night=getattr(self.panel,'night_mode',None)
         nightly=night.pose if night is not None and not gaming else (lambda pose:pose)
         # Being dragged > notification > preview > interaction > game > focus > task > mood.
-        state=(('dragged' if self.dragging and 'dragged' in self.sprites else None)
-               or self.reaction_state or self.preview_state or self.interaction_state
-               or (self.change_state if not gaming else None)
-               or game_pose
-               or (focus_pose if focus_pose in self.sprites else None)
-               or (task if task!='idle' else None)
-               or (nightly(self.mood.pose) if self.mood_enabled and self.mood.pose in self.sprites else None)
-               or nightly('idle'))
+        if self.preview_state or (self.change_state and not gaming):
+            state=self.preview_state or self.change_state
+        else:
+            state=nightly(('dragged' if self.dragging and 'dragged' in self.sprites else None)
+                          or self.reaction_state or self.interaction_state
+                          or game_pose
+                          or (focus_pose if focus_pose in self.sprites else None)
+                          or (task if task!='idle' else None)
+                          or (self.mood.pose if self.mood_enabled and self.mood.pose in self.sprites else None)
+                          or 'idle')
         if state!=self.current_state:
             self.current_state=state
             self.update()
@@ -569,8 +572,10 @@ class DesktopPet(QWidget):
     def update_mood(self,now,task):
         from notifications import quiet_now
         focusing=getattr(getattr(self.panel,'focus_mode',None),'phase','idle')!='idle'
+        night=getattr(self.panel,'night_mode',None)
         self.mood.update(now,datetime.now(),input_idle_seconds(),busy=task!='idle' or focusing,
-                         quiet=quiet_now(self.panel.prefs),fullscreen=fullscreen_now())
+                         quiet=quiet_now(self.panel.prefs),fullscreen=fullscreen_now(),
+                         night=None if night is None else night.active)
         if self.mood.greeted_day and self.mood.greeted_day!=self.panel.prefs.get('mood_greeted_day'):
             self.panel.prefs['mood_greeted_day']=self.mood.greeted_day
             self.panel.persist()
