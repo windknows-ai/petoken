@@ -260,6 +260,7 @@ class Preview(QWidget):
         form.addRow(row(button('换上 / 换下睡衣', self.toggle_night), button('模拟 23:30', lambda: self.night_at(23, 30)),
                         button('模拟 12:00', lambda: self.night_at(12, 0)), self.night_state))
         form.addRow(row(button('立刻久坐提醒', self.panel._sit_too_long)))
+        form.addRow(row(button('模拟 1 分钟后开会（2 分钟）', self.fake_meeting)))
         form.addRow(row(button('填入示例使用时长', self.fill_app_time), button('真实记录前台程序', self.record_app_time),
                         button('打开报告 › 使用时长', self.open_app_time)))
         self._describe_night()
@@ -414,6 +415,21 @@ class Preview(QWidget):
         stamp = datetime.now().replace(hour=hour, minute=minute, second=0).timestamp()
         self.panel.night_mode.poll(stamp)
         self._describe_night()
+
+    def fake_meeting(self):
+        """A meeting starting in a minute: the card, quiet while it runs, then the summary."""
+        import time as clock
+        now = clock.time()
+        panel = self.panel
+        panel.prefs.update(calendar_enabled=True, calendar_sources=['(test build)'], calendar_lead_minutes=5)
+        panel.calendar.items = [dict(uid='demo', title='（测试版）周会', start=now + 60, end=now + 180,
+                                     all_day=False, location='会议室 3')]
+        panel.calendar.fetched_at = now + 10 ** 6        # Never fetch in the test build.
+        panel.calendar.reminded.clear()
+        panel._calendar_clock.setInterval(5000)
+        panel._calendar_clock.start()
+        panel.calendar_tick()
+        panel.tray_notice('（测试版）已安排会议', '马上提醒你；开会的 2 分钟里会免打扰，结束后汇总这段时间 AI 做的事。')
 
     def fill_app_time(self):
         import time as clock
