@@ -521,17 +521,20 @@ class DesktopPet(QWidget):
         # Show me and the change itself show exactly what they show).
         night=getattr(self.panel,'night_mode',None)
         nightly=night.pose if night is not None and not gaming else (lambda pose:pose)
+        # Her Starsea form (2.4) when you chose it; night and game poses stay as they are.
+        starsea=getattr(self.panel,'starsea',None)
+        starry=starsea.pose if starsea is not None and not gaming else (lambda pose:pose)
         # Being dragged > notification > preview > interaction > game > focus > task > mood.
         if self.preview_state or (self.change_state and not gaming):
             state=self.preview_state or self.change_state
         else:
-            state=nightly(('dragged' if self.dragging and 'dragged' in self.sprites else None)
+            state=starry(nightly(('dragged' if self.dragging and 'dragged' in self.sprites else None)
                           or self.reaction_state or self.interaction_state
                           or game_pose
                           or (focus_pose if focus_pose in self.sprites else None)
                           or (task if task!='idle' else None)
                           or (self.mood.pose if self.mood_enabled and self.mood.pose in self.sprites else None)
-                          or 'idle')
+                          or 'idle'))
         if state!=self.current_state:
             self.current_state=state
             self.update()
@@ -1047,6 +1050,13 @@ class DesktopPet(QWidget):
             night.setChecked(night_mode.active)
             night.setToolTip(self.tr_text('night_menu_tip'))
             night.triggered.connect(lambda _=False,nm=night_mode: nm.toggle())
+        starsea=getattr(self.panel,'starsea',None)
+        if starsea is not None and starsea.available():
+            star=view.addAction(self.tr_text('starsea_menu'))
+            star.setCheckable(True)
+            star.setChecked(starsea.active)
+            star.setToolTip(self.tr_text('starsea_menu_tip'))
+            star.triggered.connect(lambda _=False,sf=starsea: sf.toggle())
         view.addSeparator()
         topmost=view.addAction(self.tr_text('always_on_top'));topmost.setCheckable(True)
         topmost.setChecked(bool(self.panel.prefs.get('always_on_top',True)))

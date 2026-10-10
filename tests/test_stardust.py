@@ -122,6 +122,29 @@ class PanelStardustTests(unittest.TestCase):
         self.panel.stardust.gain('star_review', 'big', 150)
         self.assertEqual((self.panel.prefs['ring_skin'], halo_scene.SKIN), ('meteor', 'meteor'))
 
+    def test_starsea_form_after_unlock_and_only_when_chosen(self):
+        from pet import DesktopPet
+        import starsea
+        pet = DesktopPet(self.panel)
+        self.panel.pet = pet
+        pet.activity_timer.stop()
+        self.addCleanup(pet.close)
+        self.assertFalse(self.panel.starsea.available())          # Not unlocked yet.
+        self.panel.stardust.gain('star_review', 'big', 1000)
+        self.assertTrue(self.panel.starsea.available())
+        self.assertFalse(self.panel.starsea.active)               # Never put on by itself.
+        self.assertTrue(self.panel.starsea.toggle())
+        self.assertEqual(self.panel.prefs['pet_form'], 'starsea')
+        pet.update_activity()
+        self.assertEqual(pet.current_state, 'star_idle')
+        self.assertEqual(self.panel.starsea.pose('typing'), 'star_typing')
+        self.assertEqual(self.panel.starsea.pose('night_read'), 'night_read')   # Pajamas win.
+        self.assertEqual(self.panel.starsea.pose('form2_idle'), 'form2_idle')   # So does game mode.
+        self.assertEqual(starsea.awaken_steps(False)[0][0], 'awaken_4')
+        self.assertFalse(self.panel.starsea.toggle())
+        pet.update_activity()
+        self.assertEqual(pet.current_state, 'idle')
+
     def test_accepted_review_also_gives_stardust(self):
         self.panel.companion.award('todo_accepted', 'todo-1')
         self.assertEqual(self.panel.stardust.total(), stardust.GAINS['star_review'])

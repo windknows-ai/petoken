@@ -97,6 +97,10 @@ class CollectionPage(QWidget):
         self.skin.currentIndexChanged.connect(self._skin_chosen)
         star_row.addWidget(self.skin)
         layout.addLayout(star_row)
+        from PySide6.QtWidgets import QCheckBox
+        self.form = QCheckBox()
+        self.form.toggled.connect(self._form_chosen)
+        layout.addWidget(self.form)
         self.stardust_next = QLabel()
         self.stardust_next.setObjectName('muted')
         self.stardust_next.setWordWrap(True)
@@ -190,7 +194,17 @@ class CollectionPage(QWidget):
                 self.skin.addItem(text(f'stardust_skin_{skin}', language), skin)
         self.skin.setCurrentIndex(max(0, self.skin.findData(panel.prefs.get('ring_skin', 'default'))))
         self.skin.setEnabled(self.skin.count() > 1)
+        starsea = getattr(panel, 'starsea', None)
+        self.form.setText(text('starsea_wear', language))
+        self.form.setVisible(starsea is not None and starsea.available())
+        self.form.setChecked(bool(starsea is not None and starsea.active))
         self._filling = False
+
+    def _form_chosen(self, on):
+        starsea = getattr(self.owner.panel, 'starsea', None)
+        if getattr(self, '_filling', False) or starsea is None or on == starsea.active:
+            return
+        starsea.toggle()
 
     def _skin_chosen(self, _index):
         if getattr(self, '_filling', False):

@@ -5325,7 +5325,10 @@ class Panel(QWidget):
         # 2.4 stardust: unlocks star-ring skins and, later, her third form.
         from stardust import Stardust
         self.stardust = Stardust(self)
+        from starsea import StarseaForm
+        self.starsea = StarseaForm(self)
         QTimer.singleShot(0, self.apply_ring_skin)
+        QTimer.singleShot(0, self.starsea.apply)
         self.goal_clock = QTimer(self)
         self.goal_clock.timeout.connect(self.check_goals)
         if live:

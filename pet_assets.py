@@ -60,13 +60,17 @@ def _v23(name, count):
     return tuple(f"assets/v2_3/{name}_{n}.png" for n in range(1, count + 1))
 
 
+def _v24(name, count):
+    return tuple(f"assets/v2_4/{name}_{n}.png" for n in range(1, count + 1))
+
+
 def _file(path):
     """A registry path on disk. New art may live outside the repository until
     its branch is merged (PETOKEN_V2_1_ART / PETOKEN_V2_3_ART, as in transform.py)."""
     p = Path(path)
     if p.is_absolute():
         return p
-    for folder, env in (("v2_1", "PETOKEN_V2_1_ART"), ("v2_3", "PETOKEN_V2_3_ART")):
+    for folder, env in (("v2_1", "PETOKEN_V2_1_ART"), ("v2_3", "PETOKEN_V2_3_ART"), ("v2_4", "PETOKEN_V2_4_ART")):
         if path.startswith(f"assets/{folder}/") and not (ASSETS_DIR / folder).is_dir():
             other = os.environ.get(env)
             if other:
@@ -145,6 +149,17 @@ NIGHT_CHANGE_REGISTRY = tuple(
     for name in ("night_change_0", "night_change_1", "night_change_2", "night_change_3",
                  "night_settle_1", "night_settle_2"))
 
+# 2.4 her third form, Starsea (starsea.py, docs/V2_4_STARSEA_PLAN.md), and
+# the awakening into it, one picture per step.
+_STAR = (("star_idle", 4, True), ("star_typing", 3, False), ("star_celebrate", 2, False), ("star_sad", 1, True),
+         ("star_wave", 2, False), ("star_thinking", 2, False), ("star_sleep", 2, False), ("star_headpat", 2, False),
+         ("star_poked", 1, False), ("star_dragged", 1, False))
+STAR_REGISTRY = tuple(
+    AssetEntry(name, f"assets/v2_4/{name}.png", "assets/v1_1/idle.png", frames=_v24(name, frames),
+               blink=f"assets/v2_4/{name}_blink.png" if blink else "")
+    for name, frames, blink in _STAR) + tuple(
+    AssetEntry(f"awaken_{n}", f"assets/v2_4/awaken_{n}.png", "assets/v1_1/idle.png") for n in range(5))
+
 # Activity-layer names that are not character poses.
 ALIASES = {"working": "codex_working", "usage": "idle"}
 
@@ -156,7 +171,7 @@ PREVIEW_STATES = ("idle", "typing", "microphone", "music", "working", "usage",
 def entry_for(state):
     """Return the registry entry for ``state``; unknown states map to idle."""
     key = ALIASES.get(state, state)
-    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY:
+    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY + STAR_REGISTRY:
         if entry.state == key:
             return entry
     return REGISTRY[0]
@@ -318,7 +333,7 @@ def load_sprites():
         # Companion poses share the V1.1 pixmap they fall back to, so they
         # cost no extra memory until their own art exists.
         paths = {resolve_path(entry): table[entry.state] for entry in REGISTRY}
-        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY:
+        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY + STAR_REGISTRY:
             path = resolve_path(entry)
             table[entry.state] = paths.get(path) or (pose_source(path) if path else None)
         table['working'] = table['codex_working']

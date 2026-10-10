@@ -60,8 +60,10 @@ foreach ($runtime in 'vcruntime140.dll','vcruntime140_1.dll') {
 # package carries them at that size; the repository keeps the originals.
 & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" (Join-Path $internal 'assets\v2_0')
 & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" (Join-Path $internal 'assets\v2_1')
-if (Test-Path (Join-Path $internal 'assets\v2_3')) {
-    & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" (Join-Path $internal 'assets\v2_3')
+foreach ($folder in 'v2_3', 'v2_4') {
+    if (Test-Path (Join-Path $internal "assets\$folder")) {
+        & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" (Join-Path $internal "assets\$folder")
+    }
 }
 if ($LASTEXITCODE -ne 0) { throw 'Shrinking the 2.0 artwork failed.' }
 Copy-Item -LiteralPath (Join-Path $repo 'README.md') -Destination $app -Force

@@ -31,9 +31,12 @@ GROUPS = (
     # 2.3 late-night mode: the pajama change, then her night poses.
     ('night', ('night_change', 'night_idle', 'night_yawn', 'night_milk', 'night_read', 'night_goodnight',
                'night_sleep', 'night_wake')),
+    # 2.4 Starsea (1000 stardust): the awakening, then her third form.
+    ('starsea', ('awaken', 'star_idle', 'star_typing', 'star_thinking', 'star_celebrate', 'star_wave', 'star_sad',
+                 'star_headpat', 'star_poked', 'star_dragged', 'star_sleep')),
 )
 # Cards that are not a pose: their button does something else.
-SPECIAL = {'transform': 'xform_weapon_2', 'night_change': 'night_change_2'}
+SPECIAL = {'transform': 'xform_weapon_2', 'night_change': 'night_change_2', 'awaken': 'awaken_3'}
 
 
 def pose_count():
@@ -43,7 +46,7 @@ def pose_count():
 def thumbnail(state, side):
     """The pose's first picture, scaled for the guide."""
     pixmap = None
-    if state == 'night_change':
+    if state in ('night_change', 'awaken'):
         pixmap = assets.sprite_for(SPECIAL[state])
         return pixmap.scaled(QSize(side, side), Qt.KeepAspectRatio, Qt.SmoothTransformation) if pixmap else None
     if state in SPECIAL:
@@ -244,6 +247,12 @@ class GuidePage(QWidget):
                 mode.toggle()
             return
         pet = getattr(self.panel, 'pet', None)
+        if state == 'awaken':
+            # Into Starsea, a moment in it, and back (her chosen form returns after).
+            from starsea import awaken_steps
+            if pet is not None:
+                pet.play_change(awaken_steps(True) + (('star_idle', 2.0),) + awaken_steps(False))
+            return
         if state == 'night_change':
             # Into the pajamas, a moment in them, and back out.
             from night_mode import CHANGE_OFF, CHANGE_ON

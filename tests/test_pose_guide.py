@@ -41,7 +41,8 @@ class PoseGuideTests(unittest.TestCase):
 
     def test_guide_lists_every_pose_with_text_and_a_show_button(self):
         listed = [s for _group, states in pose_guide.GROUPS for s in states]
-        game = {entry.state for entry in assets.GAME_REGISTRY + assets.NIGHT_REGISTRY} | set(pose_guide.SPECIAL)
+        game = {entry.state for entry in assets.GAME_REGISTRY + assets.NIGHT_REGISTRY + assets.STAR_REGISTRY
+                if not entry.state.startswith("awaken_")} | set(pose_guide.SPECIAL)
         self.assertEqual(set(listed), set(assets.registered_states()) | set(assets.companion_states()) | game)
         for state in listed:
             for table in (ZH_CN, EN):

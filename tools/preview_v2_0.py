@@ -280,6 +280,7 @@ class Preview(QWidget):
             skins.addItem(label, value)
         skins.currentIndexChanged.connect(lambda _: self.wear_skin(skins.currentData()))
         form.addRow('直接试星环皮肤', skins)
+        form.addRow(row(button('换上 / 换下星海形态（会先补到 1000 星辉）', self.toggle_starsea)))
         self._describe_stardust()
 
         # Projects and notes.
@@ -451,6 +452,10 @@ class Preview(QWidget):
         self.panel.prefs['ring_skin'] = 'default'
         self.panel.apply_ring_skin()
         self._describe_stardust()
+
+    def toggle_starsea(self):
+        self.stardust_to(1000)
+        self.panel.starsea.toggle()
 
     def wear_skin(self, skin):
         """Try a skin without unlocking it (the test build only)."""
