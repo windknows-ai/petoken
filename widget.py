@@ -3737,7 +3737,7 @@ class TaskPanelManager(HaloScene):
         self.last_activated = None
 
 
-SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'rest', 'game', 'phone', 'about')
+SETTINGS_PAGES = ('general', 'tracking', 'claude', 'assistant', 'rest', 'calendar', 'game', 'phone', 'about')
 
 
 # Which options each page shows, in order (row label attributes).
@@ -3751,6 +3751,8 @@ SETTINGS_LAYOUT = (
     ('assistant', ('assistant_hints_label', 'continuation_card_label', 'dnd_label', 'dnd_scheduled_label',
                    'schedule_missed_label', 'quick_launch_hotkey_label')),
     ('rest', ('night_label', 'night_dnd_label', 'sit_label', 'app_time_label')),
+    ('calendar', ('calendar_enabled_label', 'calendar_sources_label', 'calendar_lead_label', 'calendar_dnd_label',
+                  'calendar_test_label')),
     ('game', ('game_auto_label', 'game_scale_label', 'game_ring_label', 'game_display_label',
               'game_rings_side_label', 'game_bar_label', 'game_bar_place_label', 'game_fast_label',
               'game_extra_label', 'game_excluded_label')),
@@ -3778,6 +3780,9 @@ SETTING_DESCRIPTIONS = (
     ('assistant', 'dnd_scheduled_label', 'dnd_scheduled'),
     ('rest', 'night_label', 'night'), ('rest', 'night_dnd_label', 'night_dnd'),
     ('rest', 'sit_label', 'sit'), ('rest', 'app_time_label', 'app_time'),
+    ('calendar', 'calendar_enabled_label', 'calendar_enabled'), ('calendar', 'calendar_sources_label', 'calendar_sources'),
+    ('calendar', 'calendar_lead_label', 'calendar_lead'), ('calendar', 'calendar_dnd_label', 'calendar_dnd'),
+    ('calendar', 'calendar_test_label', 'calendar_test'),
     ('game', 'game_auto_label', 'game_auto'), ('game', 'game_scale_label', 'game_scale'),
     ('game', 'game_ring_label', 'game_ring'), ('game', 'game_display_label', 'game_display'),
     ('game', 'game_bar_label', 'game_bar'), ('game', 'game_fast_label', 'game_fast'),
@@ -4144,6 +4149,40 @@ class Settings(QDialog):
         self.app_time_label = label()
         rest.addRow(self.app_time_label, self.app_time)
         self.night_enabled.toggled.connect(lambda _: self._sync_dependent_rows())
+        # 2.4 calendar reminders.
+        from PySide6.QtWidgets import QPlainTextEdit
+        from calendar_reminders import LEAD_CHOICES, sources
+        cal = self.forms['calendar']
+        self.calendar_enabled = QCheckBox()
+        self.calendar_enabled.setChecked(bool(panel.prefs.get('calendar_enabled')))
+        self.calendar_enabled_label = label()
+        cal.addRow(self.calendar_enabled_label, self.calendar_enabled)
+        self.calendar_sources = QPlainTextEdit('\n'.join(sources(panel.prefs)))
+        self.calendar_sources.setFixedHeight(76)
+        self.calendar_sources.setMinimumWidth(320)
+        self.calendar_sources_label = label()
+        cal.addRow(self.calendar_sources_label, self.calendar_sources)
+        self.calendar_lead = QComboBox()
+        for minutes in LEAD_CHOICES:
+            self.calendar_lead.addItem('', minutes)
+        self.calendar_lead.setCurrentIndex(max(0, self.calendar_lead.findData(
+            panel.prefs.get('calendar_lead_minutes', 10))))
+        self.calendar_lead_label = label()
+        cal.addRow(self.calendar_lead_label, self.calendar_lead)
+        self.calendar_dnd = QCheckBox()
+        self.calendar_dnd.setChecked(bool(panel.prefs.get('calendar_dnd', True)))
+        self.calendar_dnd_label = label()
+        cal.addRow(self.calendar_dnd_label, self.calendar_dnd)
+        test_row = QHBoxLayout()
+        self.calendar_test = QPushButton()
+        self.calendar_test.clicked.connect(self._test_calendar)
+        self.calendar_test_status = label('', 'muted')
+        self.calendar_test_status.setWordWrap(True)
+        test_row.addWidget(self.calendar_test)
+        test_row.addWidget(self.calendar_test_status, 1)
+        self.calendar_test_label = label()
+        cal.addRow(self.calendar_test_label, test_row)
+        self.calendar_enabled.toggled.connect(lambda _: self._sync_dependent_rows())
         self._initial_scale = pet_geometry.normalize_pet_scale(
             panel.prefs.get('pet_scale_percent', pet_geometry.PET_SCALE_DEFAULT))
         self.pet_scale = QSlider(Qt.Horizontal)
@@ -4485,8 +4524,13 @@ class Settings(QDialog):
             self.game_rings_side.setItemText(index, t(f'game_side_{self.game_rings_side.itemData(index)}'))
         self.game_bar_reset.setText(t('game_bar_reset'))
         for attr in ('push_enabled', 'push_subscribe', 'push_when', 'push_kinds', 'push_project', 'push_server',
-                     'push_test', 'night', 'night_dnd', 'sit', 'app_time'):
+                     'push_test', 'night', 'night_dnd', 'sit', 'app_time', 'calendar_enabled', 'calendar_sources',
+                     'calendar_lead', 'calendar_dnd', 'calendar_test'):
             getattr(self, attr + '_label').setText(t(attr))
+        for index in range(self.calendar_lead.count()):
+            self.calendar_lead.setItemText(index, t('calendar_lead_minutes', minutes=self.calendar_lead.itemData(index)))
+        self.calendar_test.setText(t('calendar_test_button'))
+        self.calendar_sources.setPlaceholderText(t('calendar_sources_placeholder'))
         for index in range(self.sit.count()):
             minutes = self.sit.itemData(index)
             self.sit.setItemText(index, t('sit_minutes', minutes=minutes) if minutes else t('sit_off'))
@@ -4644,12 +4688,52 @@ class Settings(QDialog):
         card = self._card_of(self.night_dnd_label)
         if card is not None:
             card.setVisible(self.night_enabled.isChecked())
+        for label_ in (self.calendar_sources_label, self.calendar_lead_label, self.calendar_dnd_label,
+                       self.calendar_test_label):
+            card = self._card_of(label_)
+            if card is not None:
+                card.setVisible(self.calendar_enabled.isChecked())
         on = self.push_enabled.isChecked()
         for label_ in (self.push_subscribe_label, self.push_when_label, self.push_kinds_label,
                        self.push_project_label, self.push_server_label, self.push_test_label):
             card = self._card_of(label_)
             if card is not None:
                 card.setVisible(on)
+
+    def _calendar_links(self):
+        return [line.strip() for line in self.calendar_sources.toPlainText().splitlines() if line.strip()]
+
+    def _test_calendar(self):
+        """Read the links in the box now (in a worker) and say what was found."""
+        from calendar_reminders import CalendarWatcher
+        panel = self.parentWidget()
+
+        class Probe:
+            prefs = dict(panel.prefs, calendar_enabled=True, calendar_sources=self._calendar_links())
+        watcher = CalendarWatcher(Probe())
+        self.calendar_test.setEnabled(False)
+        self.calendar_test_status.setText(self.tr_text('calendar_test_reading'))
+        watcher.refresh()
+
+        def check():
+            if watcher._busy:
+                QTimer.singleShot(300, check)
+                return
+            self.calendar_test.setEnabled(True)
+            if not Probe.prefs['calendar_sources']:
+                self.calendar_test_status.setText(self.tr_text('calendar_test_none'))
+            elif watcher.error and not watcher.items:
+                self.calendar_test_status.setText(self.tr_text('calendar_test_failed', error=watcher.error))
+            else:
+                coming = watcher.upcoming()
+                if coming:
+                    first = coming[0]
+                    when = time.strftime('%m-%d %H:%M', time.localtime(first['start']))
+                    self.calendar_test_status.setText(self.tr_text(
+                        'calendar_test_ok', count=len(coming), title=first['title'], when=when))
+                else:
+                    self.calendar_test_status.setText(self.tr_text('calendar_test_empty'))
+        QTimer.singleShot(300, check)
 
     def _reset_game_bar(self):
         """The info bar follows her again (after it was dragged away)."""
@@ -4687,6 +4771,10 @@ class Settings(QDialog):
                      night_end=self.night_end.time().toString('HH:mm'),
                      night_with_dnd=self.night_dnd.isChecked(),
                      sit_minutes=self.sit.currentData(),
+                     calendar_enabled=self.calendar_enabled.isChecked(),
+                     calendar_sources=self._calendar_links(),
+                     calendar_lead_minutes=self.calendar_lead.currentData(),
+                     calendar_dnd=self.calendar_dnd.isChecked(),
                      app_time_enabled=self.app_time.isChecked(),
                      game_auto=self.game_auto.isChecked(),
                      game_scale_percent=int(self.game_scale.value()),
@@ -4737,6 +4825,9 @@ class Settings(QDialog):
             except (OSError, ValueError):
                 pass
         panel.set_app_time(prefs['app_time_enabled'], save=False)
+        if prefs['calendar_enabled']:
+            panel.calendar.fetched_at = 0.0          # Read the (new) links on the next tick.
+            QTimer.singleShot(500, panel.calendar_tick)
         panel.night_mode.poll()
         panel.sync_approvals()
         panel.sync_hotkey()
@@ -5255,6 +5346,15 @@ class Panel(QWidget):
         self._app_time_clock.setInterval(5000)
         self._app_time_clock.timeout.connect(lambda: self.app_time_tracker and self.app_time_tracker.tick())
         self.set_app_time(self.prefs.get('app_time_enabled'), save=False)
+        # 2.4 calendar reminders (nothing is read until a calendar link is set).
+        from calendar_reminders import CalendarWatcher
+        self.calendar = CalendarWatcher(self)
+        self._calendar_clock = QTimer(self)
+        self._calendar_clock.setInterval(30 * 1000)
+        self._calendar_clock.timeout.connect(self.calendar_tick)
+        if live:
+            self._calendar_clock.start()
+            QTimer.singleShot(20_000, self.calendar_tick)
         # Reports open instantly: count once in the background after start-up.
         import reports
         self.report_cache = (reports.ReportCache(lambda: reports.load(store_path=PREF_DIR / 'workbench.sqlite3'))
@@ -6209,6 +6309,56 @@ class Panel(QWidget):
             self.app_time_tracker.flush()
             self.app_time_tracker = None
 
+    def calendar_tick(self, now=None):
+        """Meetings: a card shortly before, quiet during, a summary after."""
+        if self.closing:
+            return
+        now = time.time() if now is None else now
+        for kind, event in self.calendar.tick(now):
+            if kind == 'soon':
+                self._meeting_soon(event, now)
+            elif kind == 'end':
+                self._meeting_over(event)
+
+    def _meeting_soon(self, event, now):
+        minutes = max(1, round((event['start'] - now) / 60))
+        title = self.tr_text('meeting_soon', minutes=minutes)
+        when = time.strftime('%H:%M', time.localtime(event['start']))
+        body = ' · '.join(part for part in (event['title'], when, event.get('location')) if part)
+        pet = getattr(self, 'pet', None)
+        if pet is not None and pet.isVisible():
+            pet.interact('hold_card', 12)
+        push = getattr(self, 'phone_push', None)
+        if push is not None and self.live:
+            try:
+                push.notify(dict(kind='reminder', provider='', project=''), title, body)
+            except Exception:
+                pass
+        from notifications import quiet_now
+        if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible() and not quiet_now(
+                self.prefs, now, meetings=False):
+            self.tray.showMessage(title, body, self.windowIcon(), 10000)
+
+    def _meeting_over(self, event):
+        """One notice with what the AIs did while you were in the meeting."""
+        try:
+            rows = self.notifications.store.list_events(limit=500)
+        except Exception:
+            rows = []
+        inside = [r for r in rows if event['start'] <= (r.get('at') or 0) <= event['end']]
+        done = sum(r.get('kind') == 'finished' for r in inside)
+        waiting = sum(r.get('kind') == 'needs_approval' for r in inside)
+        failed = sum(r.get('kind') == 'failed' for r in inside)
+        if not (done or waiting or failed):
+            return
+        body = self.tr_text('meeting_over_body', done=done, waiting=waiting, failed=failed)
+        title = self.tr_text('meeting_over', title=event['title'])
+        pet = getattr(self, 'pet', None)
+        if pet is not None and pet.isVisible():
+            pet.interact('wave', 6)
+        if (self.live or getattr(self, 'preview_toasts', False)) and self.tray.isVisible():
+            self.tray.showMessage(title, body, self.windowIcon(), 10000)
+
     def _night_changed(self, active):
         """She changes into (or out of) her pajamas where you can see it."""
         pet = getattr(self, 'pet', None)
@@ -6889,6 +7039,7 @@ class Panel(QWidget):
         self.phone_push.close()
         self.night_mode.timer.stop()
         self.sit_reminder.timer.stop()
+        self._calendar_clock.stop()
         self.set_app_time(False, save=False)          # Writes the last seconds.
         self.game_mode.timer.stop()
         if self.stats_sampler is not None:

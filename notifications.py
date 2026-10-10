@@ -136,10 +136,15 @@ def _minutes(value, fallback):
     return hours * 60 + mins if 0 <= hours < 24 and 0 <= mins < 60 else fallback
 
 
-def quiet_now(prefs, now=None):
-    """Do Not Disturb: the manual switch, or inside the scheduled hours."""
+def quiet_now(prefs, now=None, meetings=True):
+    """Do Not Disturb: the manual switch, inside the scheduled hours, or (with
+    ``meetings``) during a calendar meeting when that option is on."""
     if prefs.get('dnd_enabled'):
         return True
+    if meetings:
+        from calendar_reminders import in_meeting
+        if in_meeting() is not None:
+            return True
     if not prefs.get('dnd_scheduled'):
         return False
     start = _minutes(prefs.get('dnd_start'), 22 * 60)

@@ -90,7 +90,7 @@ class NightMode(QObject):
             return True
         if prefs.get('night_with_dnd', True):
             from notifications import quiet_now
-            return quiet_now(prefs, now)
+            return quiet_now(prefs, now, meetings=False)      # No pajamas in a meeting.
         return False
 
     def poll(self, now=None):

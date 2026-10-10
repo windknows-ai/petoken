@@ -50,6 +50,10 @@ DEFAULT_PREFERENCES = {
     "night_with_dnd": True,
     "sit_minutes": 60,
     "app_time_enabled": False,
+    "calendar_enabled": False,
+    "calendar_sources": [],
+    "calendar_lead_minutes": 10,
+    "calendar_dnd": True,
     "game_rings_side": "right",
     "game_bar_pos": None,
     "claude_probe_minutes": 0,
@@ -136,6 +140,14 @@ def normalize_preferences(data):
             preferences[key] = DEFAULT_PREFERENCES[key]
     if preferences.get("sit_minutes") not in (0, 30, 45, 60, 90):
         preferences["sit_minutes"] = 60
+    for key in ("calendar_enabled", "calendar_dnd"):
+        if not isinstance(preferences.get(key), bool):
+            preferences[key] = DEFAULT_PREFERENCES[key]
+    links = preferences.get("calendar_sources")
+    preferences["calendar_sources"] = ([s.strip() for s in links if isinstance(s, str) and s.strip()][:10]
+                                       if isinstance(links, list) else [])
+    if preferences.get("calendar_lead_minutes") not in (5, 10, 15, 30):
+        preferences["calendar_lead_minutes"] = 10
     for key in ("game_extra", "game_excluded"):
         value = preferences.get(key)
         if isinstance(value, str):                  # 2.1 test builds: "a.exe, b.exe".

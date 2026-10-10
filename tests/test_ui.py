@@ -263,6 +263,7 @@ class UiTests(unittest.TestCase):
                                       *settings.game_bar_boxes.values(),
                                       settings.push_enabled, settings.push_project,
                                       settings.night_enabled, settings.night_dnd, settings.app_time,
+                                      settings.calendar_enabled, settings.calendar_dnd,
                                       *settings.push_kind_boxes.values()})
         self.assertEqual(settings.topmost_label.text(),'Always on Top')
         settings.currency.setCurrentIndex(settings.currency.findData('EUR'))
