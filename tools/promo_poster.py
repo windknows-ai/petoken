@@ -56,21 +56,20 @@ LANG = 'zh_CN'
 # 2.3 video covers: (file, pill, headline, sub, sub on tall covers, her picture, interface card, size).
 COVERS_23 = {
     'zh_CN': (
-        ('Petoken-2.3-总览-封面', 'Petoken 2.3 总览', ('桌面上的', 'AI 编程搭子'), '盯额度 · 一键审批 · 游戏变身\n手机通知 · 深夜睡衣',
-         None, 'v2_0/greet_morning_1', 'card', (1920, 1080)),
+        ('Petoken-2.3-新功能总览-封面', 'Petoken 2.3 新功能', ('2.0 之后', '她又学会了这些！'), '游戏变身 · 手机通知\n深夜睡衣 · 作息助手',
+         None, 'v2_0/heart_1', None, (1920, 1080)),
         ('Petoken-游戏模式-封面', 'Petoken · 游戏模式', ('打游戏？', '她会变身！'), '自动进入 · 第二形态\n小圆环看额度 · 不挡鼠标',
          None, 'v2_1/form2_idle_1', None, (1920, 1080)),
         ('Petoken-深夜与作息-封面', 'Petoken · 深夜与作息', ('熬夜写代码？', '她换上睡衣陪你'), '月夜睡衣 · 久坐提醒\n使用时长报告',
          None, 'v2_3/night_idle_1', None, (1920, 1080)),
         ('Petoken-手机通知-封面', 'Petoken · 手机通知', ('离开电脑', '也不错过 AI'), '完成 · 出错 · 等你审批\n直接推到手机',
          None, 'v2_0/thumbs_up_1', 'phone_mock', (1920, 1080)),
-        ('Petoken-抖音竖屏-封面-3x4', 'Petoken', ('桌面上的', 'AI 编程搭子'), None, '盯额度 · 会变身 · 穿睡衣',
+        ('Petoken-抖音竖屏-封面-3x4', 'Petoken', ('我的桌宠', '会变身！'), None, '打游戏变身 · 深夜穿睡衣',
          'v2_1/form2_idle_1', 'card', (1080, 1440)),
     ),
     'en': (
-        ('Petoken-2.3-Overview-cover', 'Petoken 2.3 Overview', ('Your desktop', 'AI coding buddy'),
-         'Usage · Approvals · Game mode\nPhone notices · Night pajamas', None, 'v2_0/greet_morning_1', 'card',
-         (1920, 1080)),
+        ('Petoken-2.3-Whats-new-cover', "What's new in 2.3", ('New tricks', 'since 2.0!'),
+         'Game mode · Phone notices\nNight pajamas · Rest helper', None, 'v2_0/heart_1', None, (1920, 1080)),
         ('Petoken-Game-mode-cover', 'Petoken · Game mode', ('Gaming?', 'She transforms!'),
          'Starts by itself · Second form\nSmall rings · Mouse goes through', None, 'v2_1/form2_idle_1', None,
          (1920, 1080)),
@@ -79,8 +78,8 @@ COVERS_23 = {
         ('Petoken-Phone-cover', 'Petoken · Phone', ('Away from your desk?', 'Never miss your AI'),
          'Finished · Failed · Approvals\nStraight to your phone', None, 'v2_0/thumbs_up_1', 'phone_mock',
          (1920, 1080)),
-        ('Petoken-Short-cover-3x4', 'Petoken', ('Your desktop', 'AI coding buddy'), None,
-         'Usage · Transforms · Pajamas', 'v2_1/form2_idle_1', 'card', (1080, 1440)),
+        ('Petoken-Short-cover-3x4', 'Petoken', ('My desktop pet', 'transforms!'), None,
+         'Game mode · Night pajamas', 'v2_1/form2_idle_1', 'card', (1080, 1440)),
     ),
 }
 

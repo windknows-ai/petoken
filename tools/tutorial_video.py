@@ -373,7 +373,7 @@ def capture_all(pv, base, size=(1120, 820)):
                                        window.report_page.analysis.range.setCurrentIndex(
                                            window.report_page.analysis.range.findData('30d'))))
     pv.fill_app_time()                      # Sample programs (Reports > App time).
-    tab(5, 'report_app_time', lambda: window.report_page.show_sub(2))
+    tab(5, 'report_app_time', lambda: window.report_page.show_sub(2), dict(list=window.report_page.app_time.list))
     window.report_page.show_sub(0)
     tab(window.collection_tab, 'collection')
     guide = window.guide_page
