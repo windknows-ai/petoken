@@ -6402,11 +6402,13 @@ class Panel(QWidget):
         skin = self.prefs.get('ring_skin', 'default')
         if skin != 'default' and f'skin_{skin}' not in unlocked(self.stardust.total()):
             skin = 'default'
-        halo_scene.set_skin(skin)
+        # Room for every skin once one is unlocked, so switching never flashes.
+        halo_scene.set_skin(skin, reserve=skin != 'default' or bool(self.prefs.get('ring_skins_unlocked')))
 
     def stardust_unlocked(self, name):
         """A new unlock: she is delighted, a notice says what it is."""
         if name.startswith('skin_'):
+            self.prefs['ring_skins_unlocked'] = True
             self.prefs['ring_skin'] = name[5:]          # Put it on at once (Collection can switch back).
             self.persist()
             self.apply_ring_skin()

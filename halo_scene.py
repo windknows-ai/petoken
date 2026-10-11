@@ -28,16 +28,20 @@ SKIN = 'default'
 # Room each skin needs around the ring, as a share of its radius:
 # (above on the back layer, above on the front layer, to each side).
 SKIN_ROOM = {'meteor': (1.15, .2, .45), 'aurora': (1.25, .45, .1)}
+RESERVE_ROOM = False
 _LAYERS = weakref.WeakSet()
 SKIN_TICK_MS = 40
 _SKIN_CLOCK = None
 
 
-def set_skin(skin):
+def set_skin(skin, reserve=None):
     """Wear ``skin`` and repaint the ring now. One shared clock keeps a skin
-    moving even when no task stars tick the ring; it stops for 'default'."""
-    global SKIN
+    moving even when no task stars tick the ring; it stops for 'default'.
+    ``reserve``: keep room for every skin (someone who can switch between them)."""
+    global SKIN, RESERVE_ROOM
     SKIN = skin
+    if reserve is not None:
+        RESERVE_ROOM = bool(reserve)
     for layer in list(_LAYERS):
         layer.update()
     _wake_skin_clock()
@@ -65,7 +69,11 @@ def _skin_tick():
         layer.update()
 
 
-AURORA = ((92, 225, 200), (120, 160, 255), (190, 120, 255), (110, 235, 170))
+# Aurora in the stars' own colours: ice blue, lavender, violet, pearl pink and
+# a touch of teal, so it belongs with the Codex and Claude stars.
+AURORA = ((120, 200, 255), (160, 146, 255), (206, 140, 255), (255, 172, 226), (112, 222, 214))
+# Shooting-star colours: Codex ice blue, Claude champagne, the ring's lavender, pearl.
+METEOR_COLOURS = ((150, 205, 255), (255, 222, 160), (184, 172, 255), (240, 234, 255))
 
 
 def aurora_tint(angle, now):
@@ -189,16 +197,28 @@ class HaloLayer(QWidget):
                 bounds[1] = min(bounds[1], y - 12)
                 bounds[2] = max(bounds[2], x + 12)
                 bounds[3] = max(bounds[3], y + 12)
-        room = SKIN_ROOM.get(SKIN)
-        if room is not None:
+        # Once a skin is unlocked the layer keeps the same room whatever the skin,
+        # so changing skins never resizes it (a resize makes a translucent
+        # window flash); without skins it stays as compact as ever.
+        room = (tuple(max(values) for values in zip(*SKIN_ROOM.values())) if RESERVE_ROOM
+                else SKIN_ROOM.get(SKIN))
+        if room:
             above, above_front, side = room
             bounds[1] -= pose.rx * (above_front if self.front else above)
             bounds[0] -= pose.rx * side
             bounds[2] += pose.rx * side
         left, top = math.floor(bounds[0]), math.floor(bounds[1])
         width, height = math.ceil(bounds[2]) - left + 1, math.ceil(bounds[3]) - top + 1
-        if (self.x(), self.y(), self.width(), self.height()) != (left, top, width, height):
-            self.setGeometry(left, top, width, height)
+        # Resizing a translucent window makes it flash, so the layer keeps a
+        # little spare room and only moves while what it shows still fits.
+        w, h = self.width(), self.height()
+        if width <= w <= width * 1.3 + 40 and height <= h <= height * 1.3 + 40:
+            spot = (left - (w - width) // 2, top - (h - height) // 2)
+            if (self.x(), self.y()) != spot:
+                self.move(*spot)
+        else:
+            pad_w, pad_h = int(width * .1) + 12, int(height * .1) + 12
+            self.setGeometry(left - pad_w, top - pad_h, width + 2 * pad_w, height + 2 * pad_h)
         self.update()
 
     METEORS = 4
@@ -219,74 +239,102 @@ class HaloLayer(QWidget):
                 if (a1 % math.tau < math.pi) != self.front:
                     break
                 fade = 1 - k / steps
-                for width, color in ((5, QColor(255, 214, 150, int(40 * fade))),
-                                     (1.6, QColor(255, 246, 225, int(210 * fade)))):
+                for width, color in ((5, QColor(184, 172, 255, int(50 * fade))),
+                                     (1.6, QColor(244, 240, 255, int(220 * fade)))):
                     pen = QPen(color, width * fade + .4)
                     pen.setCapStyle(Qt.RoundCap)
                     painter.setPen(pen)
                     painter.drawLine(QPointF(*self._xy(a0)), QPointF(*self._xy(a1)))
             point = QPointF(*self._xy(head))
             glow = QRadialGradient(point, 6)
-            glow.setColorAt(0, QColor(255, 252, 240, 220))
-            glow.setColorAt(1, QColor(255, 210, 140, 0))
+            glow.setColorAt(0, QColor(250, 248, 255, 220))
+            glow.setColorAt(1, QColor(170, 160, 255, 0))
             painter.setPen(Qt.NoPen)
             painter.setBrush(glow)
             painter.drawEllipse(point, 6, 6)
 
-    SHOOT_PERIOD = .3
+    SHOOT_PERIOD = .34
+
+    def _star_shape(self, painter, point, size, color, alpha):
+        """A small four-point crystal star, like the task stars."""
+        glow = QRadialGradient(point, size * 2.6)
+        glow.setColorAt(0, QColor(*color, int(150 * alpha)))
+        glow.setColorAt(1, QColor(*color, 0))
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(glow)
+        painter.drawEllipse(point, size * 2.6, size * 2.6)
+        painter.setBrush(QColor(255, 255, 255, int(245 * alpha)))
+        painter.drawPolygon(QPolygonF([point + QPointF(0, -size * 1.6), point + QPointF(size * .42, -size * .42),
+                                       point + QPointF(size * 1.6, 0), point + QPointF(size * .42, size * .42),
+                                       point + QPointF(0, size * 1.6), point + QPointF(-size * .42, size * .42),
+                                       point + QPointF(-size * 1.6, 0), point + QPointF(-size * .42, -size * .42)]))
+
+    def _paint_sky(self, painter, count, colours):
+        """Small stars twinkling in the sky above the ring."""
+        rnd = random.Random(29)
+        w, h = self.width(), self.height()
+        top = max(8.0, self._xy(math.pi * 1.5)[1] - self.pose.rx * .9)
+        for j in range(count):
+            x = 10 + rnd.random() * (w - 20)
+            y = top + rnd.random() * max(10.0, self._xy(math.pi * 1.5)[1] - top - 6)
+            twinkle = max(0.0, math.sin(self.now * (1.1 + rnd.random() * 1.6) + rnd.random() * 6.3))
+            if twinkle > .05:
+                self._star_shape(painter, QPointF(x, y), 1.4 + rnd.random() * 1.6, rnd.choice(colours),
+                                 twinkle ** 1.6 * .9)
 
     def _paint_shooting_stars(self, painter):
-        """Shooting stars streaking down through the sky behind her."""
+        """Shooting stars streaking down through the sky behind her. Each one stays
+        inside the layer and fades in and out on its own; now and then a little
+        shower of them comes at once."""
         pose, now = self.pose, self.now
         rx = pose.rx
+        w, h = self.width(), self.height()
+        margin = 16.0
+        ring_top = self._xy(math.pi * 1.5)[1]
+        self._paint_sky(painter, 12, METEOR_COLOURS)
         slot = int(now / self.SHOOT_PERIOD)
-        for k in range(slot - 5, slot + 1):
+        for k in range(slot - 7, slot + 1):
             rnd = random.Random(k * 7919 + 17)
-            if rnd.random() < .2:
-                continue                                  # Not every moment has one.
+            shower = (k // 18) % 3 == 0 and k % 18 < 3           # Every so often, a few at once.
+            if rnd.random() < (.0 if shower else .35):
+                continue
             born = k * self.SHOOT_PERIOD + rnd.random() * self.SHOOT_PERIOD
-            life = .8 + rnd.random() * .6
+            heading = math.radians(146 + rnd.random() * 20)          # Down and to the left.
+            dx, dy = math.cos(heading), math.sin(heading)
+            sx = margin + w * (.35 + rnd.random() * .62)
+            sy = margin + rnd.random() * max(10.0, (ring_top - margin) * .7)
+            # The farthest it can go before leaving the layer.
+            room = min((sx - margin) / -dx if dx < 0 else 1e9, (h - margin - sy) / dy if dy > 0 else 1e9)
+            travel = min(rx * (.9 + rnd.random() * .7), room)
+            if travel < rx * .35:
+                continue
+            speed = rx * (1.5 + rnd.random() * .8)
+            life = travel / speed
             age = now - born
             if not 0 <= age <= life:
                 continue
-            fade = math.sin(math.pi * age / life) ** .8
-            sx = pose.cx + (rnd.random() * 2.1 - .75) * rx
-            sy = pose.cy - rx * (.5 + rnd.random() * .55)
-            heading = math.radians(148 + rnd.random() * 22)          # Down and to the left.
-            speed = rx * (1.5 + rnd.random() * .9)
-            dx, dy = math.cos(heading), math.sin(heading)
-            hx, hy = sx + dx * speed * age - self.x(), sy + dy * speed * age - self.y()
-            tail = rx * (.65 + rnd.random() * .45) * min(1.0, age / .2)
+            fade = math.sin(math.pi * age / life) ** .9
+            hx, hy = sx + dx * speed * age, sy + dy * speed * age
+            back = min((w - margin - hx) / -dx if dx < 0 else 1e9, (hy - margin) / dy if dy > 0 else 1e9)
+            tail = min(rx * (.6 + rnd.random() * .4) * min(1.0, age / .25), max(0.0, back))
             tx, ty = hx - dx * tail, hy - dy * tail
-            core = QColor(*rnd.choice(((255, 226, 170), (190, 220, 255), (236, 196, 255))))
-            for width, alpha in ((11, 60), (4.5, 110), (2.2, 255)):
+            colour = rnd.choice(METEOR_COLOURS)
+            for width, alpha in ((10, 55), (4, 105), (1.9, 255)):
                 gradient = QLinearGradient(tx, ty, hx, hy)
-                gradient.setColorAt(0, QColor(core.red(), core.green(), core.blue(), 0))
-                gradient.setColorAt(.75, QColor(core.red(), core.green(), core.blue(), int(alpha * .55 * fade)))
-                gradient.setColorAt(1, QColor(255, 255, 255, int(alpha * fade)))
+                gradient.setColorAt(0, QColor(*colour, 0))
+                gradient.setColorAt(.7, QColor(*colour, int(alpha * .5 * fade)))
+                gradient.setColorAt(1, QColor(*_lerp(colour, (255, 255, 255), .7), int(alpha * fade)))
                 pen = QPen(QBrush(gradient), width)
                 pen.setCapStyle(Qt.RoundCap)
                 painter.setPen(pen)
                 painter.drawLine(QPointF(tx, ty), QPointF(hx, hy))
-            head = QPointF(hx, hy)
-            glow = QRadialGradient(head, 12)
-            glow.setColorAt(0, QColor(255, 255, 255, int(240 * fade)))
-            glow.setColorAt(.4, QColor(core.red(), core.green(), core.blue(), int(120 * fade)))
-            glow.setColorAt(1, QColor(core.red(), core.green(), core.blue(), 0))
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(glow)
-            painter.drawEllipse(head, 12, 12)
-            spark = 7 + 4 * math.sin(now * 9 + k)            # A twinkling four-point flare.
-            painter.setPen(QPen(QColor(255, 255, 255, int(200 * fade)), 1.1))
-            painter.drawLine(QPointF(hx - spark, hy), QPointF(hx + spark, hy))
-            painter.drawLine(QPointF(hx, hy - spark), QPointF(hx, hy + spark))
-            painter.setPen(Qt.NoPen)
-            for d in range(7):                            # Stardust left behind.
-                f = (d + 1) / 8
-                px = hx - dx * tail * f + (rnd.random() - .5) * 6
-                py = hy - dy * tail * f + (rnd.random() - .5) * 6
-                painter.setBrush(QColor(255, 250, 235, int(170 * fade * (1 - f))))
-                painter.drawEllipse(QPointF(px, py), 1.4, 1.4)
+            self._star_shape(painter, QPointF(hx, hy), 2.6 + .8 * math.sin(now * 10 + k), colour, fade)
+            for d in range(6):                            # Stardust left behind.
+                f = (d + 1) / 7
+                px = hx - dx * tail * f + (rnd.random() - .5) * 7
+                py = hy - dy * tail * f + (rnd.random() - .5) * 7
+                painter.setBrush(QColor(*_lerp(colour, (255, 255, 255), .5), int(180 * fade * (1 - f))))
+                painter.drawEllipse(QPointF(px, py), 1.3, 1.3)
 
     CURTAIN_STRIPS = 84
 
@@ -301,11 +349,12 @@ class HaloLayer(QWidget):
             angle = start + math.pi * (i + .5) / strips
             x, y = self._xy(angle)
             wave = (.5 + .5 * math.sin(angle * 3.1 + now * .9)) * (.55 + .45 * math.cos(angle * 1.7 - now * .55))
-            height = rx * (.28 + .78 * wave) * tall
+            taper = math.sin(math.pi * (i + .5) / strips) ** .7      # Softly lower towards both ends.
+            height = rx * (.28 + .78 * wave) * tall * taper
             lean = math.sin(now * .6 + angle * 2.2) * height * .1
             tint = aurora_tint(angle, now)
-            top = _lerp(tint, (200, 140, 255), .55)
-            base_alpha = 175 if not self.front else 60
+            top = _lerp(tint, (184, 160, 255), .55)
+            base_alpha = int((175 if not self.front else 60) * (.35 + .65 * taper))
             gradient = QLinearGradient(x, y, x + lean, y - height)
             gradient.setColorAt(0, QColor(*tint, base_alpha))
             gradient.setColorAt(.3, QColor(*tint, int(base_alpha * .62)))
@@ -322,8 +371,10 @@ class HaloLayer(QWidget):
                 pen = QPen(QBrush(ray), 1.2)
                 painter.setPen(pen)
                 painter.drawLine(QPointF(x, y), QPointF(x + lean, y - height * .9))
+        if not self.front:
+            self._paint_sky(painter, 9, AURORA)
         painter.setPen(Qt.NoPen)
-        for j in range(14 if not self.front else 5):      # Motes of light drifting up.
+        for j in range(18 if not self.front else 6):      # Motes of light drifting up.
             phase = (now * .22 + j / 14) % 1.0
             angle = start + math.pi * ((j * .618) % 1.0)
             x, y = self._xy(angle)
@@ -593,6 +644,14 @@ class HaloScene:
             self._clear_interaction_holds()
             self._last_motion_enabled = enabled
         held = bool(self._hover_holds or self._press_holds)
+        if self._halo_pose is not None:
+            # The ring goes wherever she goes at once (dragged, moved, resized):
+            # only its shape eases below, so it never floats in from elsewhere.
+            dx, dy = target.cx - self._halo_pose.cx, target.cy - self._halo_pose.cy
+            if dx or dy:
+                self._halo_pose = self._halo_pose._replace(cx=target.cx, cy=target.cy)
+                for layer in (self.back_overlay, self.trail_overlay):
+                    layer.shift(dx, dy)
         if dt and not held:
             # Convex interpolation between fitted poses preserves screen bounds.
             # Budget translation and angular recomposition before adding orbit.
@@ -600,8 +659,6 @@ class HaloScene:
             cost = abs(delta[0]) + abs(delta[1]) + abs(delta[2]) + abs(delta[3])
             fraction = min(1.0, (6 * dt / .04) / cost) if cost else 1.0
             self._halo_pose = geometry.HaloPose(*(a + fraction * d for a, d in zip(self._halo_pose, delta)))
-            for layer in (self.back_overlay, self.trail_overlay):
-                layer.shift(fraction * delta[0], fraction * delta[1])
             largest = max((abs(self._halo_targets[k] - v) for k, v in self._halo_offsets.items()), default=0)
             angular = min(1.0, .018 * dt / .04 / largest) if largest else 1.0
             for key in self._halo_offsets:

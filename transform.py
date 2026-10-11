@@ -424,12 +424,18 @@ class TransformStage(QWidget):
         lift = self._lift(name, f) * box.height()
         zoom = self._zoom(name, f)
         centre = QPointF(box.center().x(), box.center().y() - lift)
+        target = box.translated(0, -lift)
+        if name in ('mvp', 'settle'):
+            # Where she appears once zoomed, so the beam starts inside the window
+            # and fades in there instead of being cut off by its edge.
+            zoomed = QTransform()
+            zoomed.translate(centre.x(), centre.y())
+            zoomed.scale(zoom, zoom)
+            zoomed.translate(-centre.x(), -centre.y())
+            self._paint_spotlight(p, zoomed.mapRect(target), name, f)
         p.translate(centre)
         p.scale(zoom, zoom)
         p.translate(-centre)
-        target = box.translated(0, -lift)
-        if name in ('mvp', 'settle'):
-            self._paint_spotlight(p, target, name, f)
         self._paint_body(p, target, name, f)
         p.resetTransform()
         self._paint_particles(p)
@@ -637,9 +643,9 @@ class TransformStage(QWidget):
             return
         texture = self._beam_texture()
         floor_y = target.bottom() - target.height() * .02
-        top_y = min(target.top() - target.height() * .6, 0.0)
+        top_y = max(0.0, target.top() - target.height() * .6)
         height = (floor_y - top_y) / .86
-        width = target.width() * 1.5
+        width = min(target.width() * 1.5, self.width() * .98)
         area = QRectF(target.center().x() - width / 2, top_y, width, height)
         layer = QImage(texture.size(), QImage.Format_ARGB32_Premultiplied)
         layer.fill(Qt.transparent)

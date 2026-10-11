@@ -55,6 +55,7 @@ DEFAULT_PREFERENCES = {
     "calendar_lead_minutes": 10,
     "calendar_dnd": True,
     "ring_skin": "default",
+    "ring_skins_unlocked": False,
     "pet_form": "default",
     "game_rings_side": "right",
     "game_bar_pos": None,

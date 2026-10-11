@@ -425,9 +425,40 @@ class Motion:
         tr.scale(push, push)
         return tr
 
+    def draw_clean(self, p, image, t, rect, logical=None):
+        """Her and her ring straight on the video's background: no card, a soft
+        glow behind, a gentle float."""
+        lw, lh = logical or (image.width(), image.height())
+        scale = min(rect.width() / lw, rect.height() / lh) * .98
+        w, h = lw * scale, lh * scale
+        c = rect.center()
+        glow = QRadialGradient(c.x(), c.y() + h * .05, max(w, h) * .55)
+        col = QColor(self.accent)
+        col.setAlpha(95)
+        glow.setColorAt(0, col)
+        col.setAlpha(0)
+        glow.setColorAt(1, col)
+        p.setPen(Qt.NoPen)
+        p.setBrush(glow)
+        p.drawEllipse(QPointF(c.x(), c.y() + h * .05), max(w, h) * .55, max(w, h) * .55)
+        a = ease_back(t / .55, 1.3)
+        p.save()
+        p.translate(c.x(), c.y() + math.sin(t * 1.8) * 5)
+        p.scale(.7 + .3 * a, .7 + .3 * a)
+        p.setOpacity(clamp(a * 1.6))
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        p.drawImage(QRectF(-w / 2, -h / 2, w, h), image)
+        p.restore()
+
     def draw_live(self, p, s, t, rect):
         image = self.decoder.next() if self.decoder else None
         if image is None:
+            return
+        if self.decoder.alpha:
+            self.draw_clean(p, image, t, rect)
+            anchors = ((rect.left() + 40, rect.top() + 90), (rect.right() - 40, rect.top() + 160),
+                       (rect.right() - 60, rect.bottom() - 120), (rect.left() + 60, rect.bottom() - 90))
+            self.labels(p, s, t, anchors)
             return
         w, h = self.decoder.size
         tr = self.card_transform(rect.center(), t, s['duration'])
@@ -449,6 +480,9 @@ class Motion:
     def draw_still(self, p, s, t, rect):
         shot = self.stills[s['name']]
         image, dpr = shot['image'], shot['dpr']
+        if shot.get('clean'):
+            self.draw_clean(p, image, t, rect, (image.width() / dpr, image.height() / dpr))
+            return
         lw, lh = image.width() / dpr, image.height() / dpr
         fit = min(rect.width() / lw, rect.height() / lh) * .96
         view = QRectF(0, 0, lw * fit, lh * fit)
@@ -812,7 +846,8 @@ class Motion:
             w, h = crop
             scale = min(rect.width() / w, rect.height() / h) * .94
             size = (int(w * scale) // 2 * 2, int(h * scale) // 2 * 2)
-            self.decoder = Decoder(self.ffmpeg, path, size, FPS, start=s.get('offset', 0.0), crop=crop)
+            self.decoder = Decoder(self.ffmpeg, path, size, FPS, start=s.get('offset', 0.0), crop=crop,
+                                   alpha=str(path).endswith('.mov'))
 
     # Sound --------------------------------------------------------------------------------
     def sounds(self):

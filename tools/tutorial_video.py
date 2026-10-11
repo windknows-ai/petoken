@@ -99,20 +99,19 @@ def pump(seconds):
 
 # Capturing ------------------------------------------------------------------
 
-class Stage(QWidget):
-    """A plain backdrop behind on-screen captures, so no desktop shows."""
+class Stage:
+    """Where on screen a scene is set up. Nothing is shown there any more: the
+    windows are composited off screen (live_capture.composite) and stay fully
+    transparent (live_capture.Ghost), so no backdrop pops up for the person."""
 
     def __init__(self, rect):
-        super().__init__(None, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setGeometry(rect)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.rect = rect
 
-    def paintEvent(self, event):
-        p = QPainter(self)
-        g = QLinearGradient(0, 0, 0, self.height())
-        g.setColorAt(0, QColor('#3B3F58'))
-        g.setColorAt(1, QColor('#23263A'))
-        p.fillRect(self.rect(), g)
+    def show(self):
+        pass
+
+    def close(self):
+        pass
 
 
 def settle_ring(panel, seconds=1.0):
@@ -572,9 +571,9 @@ def capture_all(pv, base, size=(1120, 820)):
                     and box.width() < 900 and box.height() < 700):
                 region = region.united(box)
         region = region.adjusted(-90, -60, 90, 60).intersected(stage_rect)
-        image = QGuiApplication.primaryScreen().grabWindow(0, region.x(), region.y(),
-                                                         region.width(), region.height()).toImage()
-        shot = dict(image=image, dpr=image.devicePixelRatio() or 1.0, marks={}, underlay=False,
+        from tools.live_capture import composite
+        image = composite(region)
+        shot = dict(image=image, dpr=image.devicePixelRatio() or 1.0, marks={}, underlay=False, clean=True,
                     crop=(base.pet.frameGeometry().center().x() - region.x()) / max(1, region.width()))
         for key, rect in marks.items():
             shot['marks'][key] = rect.translated(-region.x(), -region.y())
@@ -622,9 +621,9 @@ LIVES = ('transform', 'game_rings', 'game_bar', 'game_leave')
 def record_lives(pv, base, wanted, folder, rerecord=False):
     """{name: (recording, (w, h))}: game mode played for real and recorded off
     the screen, in one run (each recording starts where the last one ended)."""
-    from tools.live_capture import Recorder, probe_size
+    from tools.live_capture import CompositeRecorder, probe_size
     folder.mkdir(parents=True, exist_ok=True)
-    paths = {name: folder / f'{LANG}_{name}.mp4' for name in LIVES}
+    paths = {name: folder / f'{LANG}_{name}.mov' for name in LIVES}
     if rerecord or not all(paths[name].exists() for name in wanted):
         import pet_geometry
         import transform
@@ -655,7 +654,7 @@ def record_lives(pv, base, wanted, folder, rerecord=False):
                        int(sw * 2.5), int(sh * 1.75)).intersected(stage_rect)
 
         def record(name, seconds, action=None):
-            recorder = Recorder(FFMPEG, region, paths[name], FPS)
+            recorder = CompositeRecorder(FFMPEG, region, paths[name], FPS)
             pump(.4)
             if action is not None:
                 action()
@@ -683,11 +682,11 @@ RING_LIVES = ('ring_live', 'ring_meteor', 'ring_aurora')
 def record_ring_lives(pv, base, wanted, folder, rerecord=False):
     """The star ring recorded off the screen: with tasks, the Meteor skin, and
     the Aurora skin with no tasks (2.4)."""
-    from tools.live_capture import Recorder, probe_size
+    from tools.live_capture import CompositeRecorder, probe_size
     import halo_scene
     import pet_geometry
     folder.mkdir(parents=True, exist_ok=True)
-    paths = {name: folder / f'{LANG}_{name}.mp4' for name in RING_LIVES}
+    paths = {name: folder / f'{LANG}_{name}.mov' for name in RING_LIVES}
     if rerecord or not all(paths[name].exists() for name in wanted):
         pet, panel = base.pet, base.panel
         pet.apply_pet_scale(130)
@@ -709,7 +708,7 @@ def record_ring_lives(pv, base, wanted, folder, rerecord=False):
                        int(sw * 2.6), int(sh * 1.9)).intersected(stage_rect)
 
         def record(name, seconds):
-            recorder = Recorder(FFMPEG, region, paths[name], FPS)
+            recorder = CompositeRecorder(FFMPEG, region, paths[name], FPS)
             pump(seconds)
             recorder.stop()
             print('recorded', name, flush=True)
@@ -1445,6 +1444,9 @@ def use_language(language, script=None):
 def setup(stack, language='zh_CN', script=None):
     """The sandboxed test build with sample data: (v2 preview, base preview)."""
     use_language(language, script)
+    from tools.live_capture import Ghost
+    ghost = Ghost(QApplication.instance())          # Nothing pops up on the person's screen.
+    stack.callback(ghost.stop)
     directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-tutorial-'))
     stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
     stack.enter_context(patch('quick_launch.build_command', lambda *a, **k: ['tutorial']))

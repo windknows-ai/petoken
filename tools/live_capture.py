@@ -47,6 +47,99 @@ class Recorder:
         self.proc.wait(timeout=30)
 
 
+def composite(region, skip=()):
+    """The app's own windows inside ``region`` (logical, global), drawn into one
+    transparent image in their real stacking order. Nothing is read off the
+    screen, so the windows can be fully transparent (ghost()) while recording."""
+    import ctypes
+    from PySide6.QtCore import QPoint
+    from PySide6.QtGui import QPainter
+    from PySide6.QtWidgets import QApplication
+    dpr = QGuiApplication.primaryScreen().devicePixelRatio()
+    image = QImage(round(region.width() * dpr), round(region.height() * dpr), QImage.Format_ARGB32_Premultiplied)
+    image.setDevicePixelRatio(dpr)
+    image.fill(0)
+    windows = {}
+    for widget in QApplication.topLevelWidgets():
+        if widget in skip or not widget.isVisible() or not widget.frameGeometry().intersects(region):
+            continue
+        windows[int(widget.winId())] = widget
+    order = []
+    user32 = ctypes.windll.user32
+    user32.GetTopWindow.restype = user32.GetWindow.restype = ctypes.c_void_p
+    handle = user32.GetTopWindow(None)
+    while handle:
+        if handle in windows:
+            order.append(windows[handle])
+        handle = user32.GetWindow(ctypes.c_void_p(handle), 2)          # GW_HWNDNEXT: the next one down.
+    painter = QPainter(image)
+    for widget in reversed(order):                                     # Bottom first.
+        spot = widget.mapToGlobal(QPoint(0, 0)) - region.topLeft()
+        painter.drawPixmap(spot, widget.grab())
+    painter.end()
+    return image
+
+
+class Ghost:
+    """While on, every window the app shows is fully transparent on screen:
+    nothing pops up in front of the person, yet grab() still draws it."""
+
+    def __init__(self, app):
+        from PySide6.QtCore import QEvent, QObject
+
+        class Filter(QObject):
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.Show and getattr(obj, 'isWindow', lambda: False)():
+                    obj.setWindowOpacity(0.0)
+                return False
+        self.app = app
+        self.filter = Filter()
+        app.installEventFilter(self.filter)
+        from PySide6.QtWidgets import QApplication
+        for widget in QApplication.topLevelWidgets():
+            widget.setWindowOpacity(0.0)
+
+    def stop(self):
+        self.app.removeEventFilter(self.filter)
+
+
+class CompositeRecorder:
+    """Records composite() frames of ``region`` to a video with transparency
+    (QuickTime Animation), at ``fps`` in real time, until stop()."""
+
+    def __init__(self, ffmpeg, region, out, fps=30):
+        import time
+        from PySide6.QtCore import QTimer
+        self.region, self.fps = region, fps
+        dpr = QGuiApplication.primaryScreen().devicePixelRatio()
+        self.size = (round(region.width() * dpr) // 2 * 2, round(region.height() * dpr) // 2 * 2)
+        self.proc = subprocess.Popen(
+            [ffmpeg, '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'bgra',
+             '-s', f'{self.size[0]}x{self.size[1]}', '-r', str(fps), '-i', '-', '-c:v', 'qtrle',
+             '-pix_fmt', 'argb', str(out)], stdin=subprocess.PIPE)
+        self.start = time.monotonic()
+        self.written = 0
+        self.clock = time.monotonic
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.frame)
+        self.timer.start(int(1000 / fps))
+
+    def frame(self):
+        image = composite(self.region).convertToFormat(QImage.Format_ARGB32)
+        if (image.width(), image.height()) != self.size:
+            image = image.copy(0, 0, *self.size)
+        data = bytes(image.constBits())[:self.size[0] * self.size[1] * 4]
+        due = int((self.clock() - self.start) * self.fps) + 1      # Catch up if a frame took long.
+        while self.written < due:
+            self.proc.stdin.write(data)
+            self.written += 1
+
+    def stop(self):
+        self.timer.stop()
+        self.proc.stdin.close()
+        self.proc.wait(timeout=60)
+
+
 def probe_size(ffmpeg, path):
     """(width, height) of a recording, read from ffmpeg's banner."""
     import re
@@ -59,13 +152,15 @@ def probe_size(ffmpeg, path):
 class Decoder:
     """Frames of a recording as QImages, in order, scaled to ``size`` (w, h)."""
 
-    def __init__(self, ffmpeg, path, size, fps=30, start=0.0, crop=None):
+    def __init__(self, ffmpeg, path, size, fps=30, start=0.0, crop=None, alpha=False):
         self.size = size
-        self.frame_bytes = size[0] * size[1] * 3
+        self.alpha = alpha
+        self.frame_bytes = size[0] * size[1] * (4 if alpha else 3)
         cut = f'crop={crop[0]}:{crop[1]},' if crop else ''     # Centred.
         self.proc = subprocess.Popen(
             [ffmpeg, '-loglevel', 'error', '-ss', f'{start:.2f}', '-i', str(path), '-vf',
-             f'fps={fps},{cut}scale={size[0]}:{size[1]}:flags=lanczos', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
+             f'fps={fps},{cut}scale={size[0]}:{size[1]}:flags=lanczos', '-f', 'rawvideo',
+             '-pix_fmt', 'rgba' if alpha else 'rgb24',
              '-'], stdout=subprocess.PIPE)
         self.last = None
 
@@ -73,7 +168,11 @@ class Decoder:
         """The next frame; the last one again once the recording has ended."""
         data = self.proc.stdout.read(self.frame_bytes) if self.proc else b''
         if len(data) == self.frame_bytes:
-            self.last = QImage(data, self.size[0], self.size[1], self.size[0] * 3, QImage.Format_RGB888).copy()
+            if self.alpha:
+                self.last = QImage(data, self.size[0], self.size[1], self.size[0] * 4,
+                                   QImage.Format_RGBA8888).copy()
+            else:
+                self.last = QImage(data, self.size[0], self.size[1], self.size[0] * 3, QImage.Format_RGB888).copy()
         elif self.proc is not None:
             self.close()
         return self.last

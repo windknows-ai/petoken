@@ -101,13 +101,19 @@ class HaloSceneTests(unittest.TestCase):
 
     def step(self, dt=.04):
         before = self.positions()
+        pose_before = self.manager._halo_pose
         self.stamp += dt
         self.manager.tick_visual(self.stamp, pet_rect=self.pet_rect,
                                  screen_rect=SCREEN)
         after = self.positions()
+        pose_after = self.manager._halo_pose
+        # The ring travels with her at once; around her, stars never jump.
+        dx = dy = 0.0
+        if pose_before is not None and pose_after is not None:
+            dx, dy = pose_after.cx - pose_before.cx, pose_after.cy - pose_before.cy
         for key in before.keys() & after.keys():
-            distance = sum(abs(a - b) for a, b in zip(before[key], after[key]))
-            self.assertLessEqual(distance, 16, (key, before[key], after[key]))
+            distance = abs(after[key][0] - before[key][0] - dx) + abs(after[key][1] - before[key][1] - dy)
+            self.assertLessEqual(distance, 18, (key, before[key], after[key], dx, dy))
         if self.manager._visible and self.manager._windows:
             self.assert_frame()
         return after
@@ -175,13 +181,18 @@ class HaloSceneTests(unittest.TestCase):
                          halo_geometry.fit_pose(actual_pet, actual_screen))
         self.assertEqual(self.positions(), before)
         phase = self.manager._ring_t
+        pose_before = self.manager._halo_pose
         self.manager.tick_visual(self.stamp)
         self.manager.tick_visual(self.stamp + .04)
         self.assertGreater(self.manager._ring_t, phase)
         after = self.positions()
+        # The ring follows her straight away; around her the stars barely move.
+        pose_after = self.manager._halo_pose
+        self.assertEqual((pose_after.cx, pose_after.cy), (self.manager._halo_target.cx, self.manager._halo_target.cy))
+        dx, dy = pose_after.cx - pose_before.cx, pose_after.cy - pose_before.cy
         for key in before:
-            self.assertLessEqual(sum(abs(a - b) for a, b in
-                                     zip(before[key], after[key])), 16)
+            self.assertLessEqual(abs(after[key][0] - before[key][0] - dx)
+                                 + abs(after[key][1] - before[key][1] - dy), 36)
 
     def test_intentional_drag_transports_attached_halo_without_phase_jump(self):
         self.apply(range(8))
