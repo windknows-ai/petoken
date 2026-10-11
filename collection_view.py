@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
                                QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
@@ -65,13 +65,123 @@ class StickerBadge(QWidget):
         p.drawText(QRectF(0, 104, self.width(), 18), Qt.AlignCenter, self.caption)
 
 
+class SkinCard(QWidget):
+    """A preview of a star-ring skin (or her Starsea form): her with the ring
+    around her, greyed with its price until unlocked; a click puts it on."""
+
+    W, H = 148, 150
+
+    def __init__(self, choice, on_click):
+        super().__init__()
+        self.choice, self.on_click = choice, on_click
+        self.setFixedSize(self.W, self.H)
+        self.unlocked = self.current = False
+        self.name = self.caption = ''
+        self._sprite = None
+        self.setCursor(Qt.PointingHandCursor)
+
+    def set_state(self, name, caption, unlocked, current, tip=''):
+        self.name, self.caption, self.unlocked, self.current = name, caption, unlocked, current
+        self.setCursor(Qt.PointingHandCursor if unlocked and not current else Qt.ArrowCursor)
+        self.setToolTip(tip)
+        self.update()
+
+    def sprite(self):
+        if self._sprite is None:
+            import pet_assets
+            pose = 'star_idle' if self.choice == 'starsea' and pet_assets.has_own_art('star_idle') else 'idle'
+            pixmap = pet_assets.frame_for(pose, 0) if pet_assets.frame_count(pose) else pet_assets.sprite_for(pose)
+            self._sprite = pixmap.scaledToHeight(92, Qt.SmoothTransformation) if pixmap else False
+        return self._sprite or None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self.unlocked and not self.current:
+            self.on_click(self.choice)
+
+    def _ring(self, p, front):
+        import math
+        import halo_scene
+        cx, cy, rx, ry, tilt = self.W / 2, 72, 60, 15, math.radians(-7)
+
+        def point(t):
+            x, y = rx * math.cos(t), ry * math.sin(t)
+            return (cx + x * math.cos(tilt) - y * math.sin(tilt), cy + x * math.sin(tilt) + y * math.cos(tilt))
+        steps = 48
+        span = [(math.pi * i / steps) if front else (math.pi + math.pi * i / steps) for i in range(steps + 1)]
+        aurora = self.choice == 'aurora'
+        for width, alpha, core in ((7, 45, False), (3, 120, False), (1.3, 230, True)):
+            for a, b in zip(span, span[1:]):
+                rgb = halo_scene.aurora_tint((a + b) / 2, 0) if aurora else (150, 132, 255)
+                if core:
+                    rgb = tuple(round(c + (255 - c) * .6) for c in rgb)
+                pen = QPen(QColor(*rgb, alpha), width)
+                pen.setCapStyle(Qt.FlatCap)
+                p.setPen(pen)
+                (x1, y1), (x2, y2) = point(a), point(b)
+                p.drawLine(QPointF(x1, y1), QPointF(x2, y2))
+        if aurora:
+            return            # The aurora ring shows with no tasks: no stars.
+        meteor = self.choice == 'meteor'
+        tail = 2.6 if meteor else .35
+        heads = ((.5, 1.7, 2.9) if front else (3.9, 5.4)) if meteor else ((.9, 2.4) if front else (4.0, 5.3))
+        for head in heads:
+            for k in range(20):
+                t0, t1 = head - tail * k / 20, head - tail * (k + 1) / 20
+                fade = 1 - k / 20
+                color = QColor(255, 236, 190, int(235 * fade)) if meteor else QColor(220, 210, 255, int(200 * fade))
+                pen = QPen(color, (3.4 if meteor else 2.6) * fade + .4)
+                pen.setCapStyle(Qt.RoundCap)
+                p.setPen(pen)
+                p.drawLine(QPointF(*point(t0)), QPointF(*point(t1)))
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(255, 255, 255))
+            x, y = point(head)
+            p.drawEllipse(QPointF(x, y), 3.2, 3.2)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        p.setPen(QPen(QColor(theme.VIOLET if self.current else theme.BORDER_SOFT), 2.5 if self.current else 1))
+        p.setBrush(QColor(36, 30, 78) if self.unlocked else QColor(70, 66, 96))
+        p.drawRoundedRect(QRectF(2, 2, self.W - 4, 104), 10, 10)
+        if not self.unlocked:
+            p.setOpacity(.45)
+        self._ring(p, False)
+        sprite = self.sprite()
+        if sprite is not None:
+            p.drawPixmap(int((self.W - sprite.width()) / 2), 100 - sprite.height(), sprite)
+        self._ring(p, True)
+        p.setOpacity(1)
+        p.setPen(QColor(theme.INK))
+        p.setFont(QFont('Microsoft YaHei UI', 9, QFont.DemiBold))
+        p.drawText(QRectF(0, 110, self.W, 18), Qt.AlignCenter, self.name)
+        p.setPen(QColor(theme.VIOLET if self.current else theme.MUTED))
+        p.setFont(QFont('Microsoft YaHei UI', 8))
+        p.drawText(QRectF(0, 128, self.W, 18), Qt.AlignCenter, self.caption)
+
+
 class CollectionPage(QWidget):
     """Points, what they came from, and the sticker wall."""
 
     def __init__(self, owner):
         super().__init__()
         self.owner = owner
-        layout = QVBoxLayout(self)
+        # Everything scrolls together, so nothing overlaps in a short window.
+        from PySide6.QtWidgets import QFrame, QScrollArea
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        inner = QWidget()
+        inner.setObjectName('collectionInner')
+        scroll.viewport().setObjectName('collectionViewport')
+        scroll.setStyleSheet('QScrollArea, QWidget#collectionViewport, QWidget#collectionInner '
+                             '{ background: transparent; }')
+        scroll.setWidget(inner)
+        outer.addWidget(scroll)
+        layout = QVBoxLayout(inner)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(10)
         self.intro = QLabel()
@@ -81,8 +191,11 @@ class CollectionPage(QWidget):
         self.points = QLabel()
         self.points.setObjectName('summary')
         layout.addWidget(self.points, 0, Qt.AlignLeft)
-        # 2.4 stardust: progress to the next unlock, and the star-ring skin.
+        # 2.4 stardust: how much, how to earn it, and what it unlocks (a preview each).
         from PySide6.QtWidgets import QProgressBar
+        self.stardust_title = QLabel()
+        self.stardust_title.setObjectName('section')
+        layout.addWidget(self.stardust_title)
         star_row = QHBoxLayout()
         self.stardust = QLabel()
         self.stardust.setObjectName('summary')
@@ -91,20 +204,22 @@ class CollectionPage(QWidget):
         self.stardust_bar.setTextVisible(False)
         self.stardust_bar.setFixedHeight(10)
         star_row.addWidget(self.stardust_bar, 1)
-        self.skin_label = QLabel()
-        star_row.addWidget(self.skin_label)
-        self.skin = QComboBox()
-        self.skin.currentIndexChanged.connect(self._skin_chosen)
-        star_row.addWidget(self.skin)
-        layout.addLayout(star_row)
-        from PySide6.QtWidgets import QCheckBox
-        self.form = QCheckBox()
-        self.form.toggled.connect(self._form_chosen)
-        layout.addWidget(self.form)
         self.stardust_next = QLabel()
         self.stardust_next.setObjectName('muted')
-        self.stardust_next.setWordWrap(True)
-        layout.addWidget(self.stardust_next)
+        star_row.addWidget(self.stardust_next)
+        layout.addLayout(star_row)
+        self.stardust_earn = QLabel()
+        self.stardust_earn.setObjectName('muted')
+        self.stardust_earn.setWordWrap(True)
+        layout.addWidget(self.stardust_earn)
+        cards = QHBoxLayout()
+        cards.setSpacing(10)
+        self.skin_cards = {choice: SkinCard(choice, self._card_chosen)
+                           for choice in ('default', 'meteor', 'aurora', 'starsea')}
+        for card in self.skin_cards.values():
+            cards.addWidget(card)
+        cards.addStretch(1)
+        layout.addLayout(cards)
         self.wall = QGridLayout()
         self.wall.setHorizontalSpacing(8)
         layout.addLayout(self.wall)
@@ -112,6 +227,7 @@ class CollectionPage(QWidget):
         self.log_title.setObjectName('section')
         layout.addWidget(self.log_title)
         self.log = QListWidget()
+        self.log.setMinimumHeight(180)
         layout.addWidget(self.log, 1)
 
     @property
@@ -179,6 +295,7 @@ class CollectionPage(QWidget):
         total = dust.total() if dust is not None else 0
         have = unlocked(total)
         coming = next_unlock(total)
+        self.stardust_title.setText(text('stardust_section', language))
         self.stardust.setText(text('stardust_total', language, points=total))
         goal = coming and dict(UNLOCKS)[coming[0]] or UNLOCKS[-1][1]
         self.stardust_bar.setRange(0, goal)
@@ -186,36 +303,38 @@ class CollectionPage(QWidget):
         self.stardust_next.setText(text('stardust_next', language, left=coming[1],
                                         name=text(f'stardust_name_{coming[0]}', language))
                                    if coming else text('stardust_all', language))
-        self.skin_label.setText(text('stardust_skin', language))
-        self._filling = True
-        self.skin.clear()
-        for skin in SKINS:
-            if skin == 'default' or f'skin_{skin}' in have:
-                self.skin.addItem(text(f'stardust_skin_{skin}', language), skin)
-        self.skin.setCurrentIndex(max(0, self.skin.findData(panel.prefs.get('ring_skin', 'default'))))
-        self.skin.setEnabled(self.skin.count() > 1)
+        self.stardust_earn.setText(text('stardust_earn', language))
+        need = dict(UNLOCKS)
+        skin = panel.prefs.get('ring_skin', 'default')
         starsea = getattr(panel, 'starsea', None)
-        self.form.setText(text('starsea_wear', language))
-        self.form.setVisible(starsea is not None and starsea.available())
-        self.form.setChecked(bool(starsea is not None and starsea.active))
-        self._filling = False
+        for choice, card in self.skin_cards.items():
+            key = 'starsea' if choice == 'starsea' else f'skin_{choice}'
+            unlocked = choice == 'default' or key in have
+            if choice == 'starsea':
+                unlocked = unlocked and starsea is not None and starsea.art_ready()
+                current = bool(starsea is not None and starsea.active)
+            else:
+                current = skin == choice
+            caption = (text('stardust_card_on', language) if current else
+                       text('stardust_card_wear', language) if unlocked else
+                       text('stardust_card_locked', language, need=need.get(key, 0)))
+            card.set_state(text(f'stardust_card_{choice}', language), caption, unlocked, current,
+                           text(f'stardust_card_{choice}_tip', language))
 
-    def _form_chosen(self, on):
-        starsea = getattr(self.owner.panel, 'starsea', None)
-        if getattr(self, '_filling', False) or starsea is None or on == starsea.active:
-            return
-        starsea.toggle()
-
-    def _skin_chosen(self, _index):
-        if getattr(self, '_filling', False):
-            return
+    def _card_chosen(self, choice):
         panel = self.owner.panel
-        panel.prefs['ring_skin'] = self.skin.currentData() or 'default'
-        try:
-            panel.persist()
-        except Exception:
-            pass
-        panel.apply_ring_skin()
+        if choice == 'starsea':
+            starsea = getattr(panel, 'starsea', None)
+            if starsea is not None:
+                starsea.toggle()
+        else:
+            panel.prefs['ring_skin'] = choice
+            try:
+                panel.persist()
+            except Exception:
+                pass
+            panel.apply_ring_skin()
+        self._refresh_stardust(self.language)
 
 
 class GoalDialog(QDialog):

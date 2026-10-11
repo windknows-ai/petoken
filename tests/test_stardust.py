@@ -84,10 +84,16 @@ class StardustTests(unittest.TestCase):
         self.assertEqual(page.stardust.text(), 'Stardust 200')
         self.assertEqual((page.stardust_bar.value(), page.stardust_bar.maximum()), (200, 400))
         self.assertIn('200 more', page.stardust_next.text())
-        self.assertEqual([page.skin.itemData(i) for i in range(page.skin.count())], ['default', 'meteor'])
-        page.skin.setCurrentIndex(1)
+        self.assertIn('+8', page.stardust_earn.text())
+        cards = page.skin_cards
+        self.assertEqual([c for c, card in cards.items() if card.unlocked], ['default', 'meteor'])
+        self.assertEqual(cards['aurora'].caption, 'Unlocks at 400')
+        self.assertTrue(cards['default'].current)
+        cards['meteor'].on_click('meteor')
         self.assertEqual(self.panel.prefs['ring_skin'], 'meteor')
         self.panel.apply_ring_skin.assert_called()
+        self.assertTrue(cards['meteor'].current)
+        self.assertFalse(cards['meteor'].grab().isNull())
         page.deleteLater()
 
 
