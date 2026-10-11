@@ -107,8 +107,8 @@ class ShopTests(unittest.TestCase):
 
     def test_wardrobe_set_bonus_and_collection(self):
         self.give(100000)
-        theme = shop._THEMES['frost']
-        ids = [f'{shop.BY_ID_KIND[m]}.{m}' for m in theme]
+        ids = [next(i['id'] for i in shop.CATALOG if i['set'] == kind and i.get('theme') == 'frost')
+               for kind in shop.SETS]
         self.shop.state['owned'] = list(ids)
         for item_id in ids:
             self.assertTrue(self.shop.equip(item_id))
@@ -176,11 +176,10 @@ class ShopTests(unittest.TestCase):
         w.close()
 
     def test_limited_items_only_in_their_window(self):
-        kimono = shop.BY_ID['outfit.sakura_kimono']
-        self.assertTrue(shop.in_window(kimono, datetime(2026, 4, 1).date()))
-        self.assertFalse(shop.in_window(kimono, datetime(2026, 10, 11).date()))
-        frost = shop.BY_ID['outfit.frost_coat']
-        self.assertTrue(shop.in_window(frost, datetime(2027, 1, 5).date()))      # Wraps the new year.
+        lantern = shop.BY_ID['weapon.moon_lantern']
+        self.assertTrue(shop.in_window(lantern, datetime(2026, 2, 1).date()))
+        self.assertFalse(shop.in_window(lantern, datetime(2026, 10, 11).date()))
+        self.assertTrue(shop.in_window(dict(window=((12, 1), (2, 28))), datetime(2027, 1, 5).date()))  # New year.
 
     def test_page_and_wish_show_build(self):
         from shop_view import ShopPage, WishShow

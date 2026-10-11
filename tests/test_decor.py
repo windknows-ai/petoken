@@ -42,6 +42,40 @@ class DecorTests(unittest.TestCase):
         from shop_view import item_name
         self.assertEqual(item_name(shop.BY_ID['decor.head_star_bow'], 'en'), 'Starlight Bow')
 
+    def test_outfits_cover_every_pose_with_the_nearest_drawn_one(self):
+        import outfits
+        drawn = [i for i in shop.CATALOG if i['set'] == 'outfit']
+        self.assertEqual(Counter(i['series'] for i in drawn), Counter(starsea_gown=5, frost_coat=3))
+        coat = shop.BY_ID['outfit.frost_coat_haori']
+        self.assertTrue(outfits.frame_path(coat, 'cheer').endswith('frost_coat/haori/celebrate_1.png'))
+        self.assertTrue(outfits.frame_path(coat, 'greet_morning', 1).endswith('wave_2.png'))
+        self.assertTrue(outfits.frame_path(coat, 'idle', 0, blink=True).endswith('idle_blink.png'))
+        self.assertTrue(outfits.frame_path(coat, 'some_new_pose').endswith('idle_1.png'))
+        for own in ('star_idle', 'night_idle', 'game_cheer', 'form2_idle'):
+            self.assertIsNone(outfits.frame_path(coat, own))       # Her other forms keep their art.
+        self.assertIsNotNone(outfits.pixmap(coat, 'typing', 2))
+
+    def test_weapon_keeps_one_hand_through_a_pose(self):
+        import time
+
+        class Pet:
+            pet_scale = 100
+
+            def pos(self):
+                from PySide6.QtCore import QPoint
+                return QPoint(0, 0)
+
+            def devicePixelRatioF(self):
+                return 1.0
+        d = decor.Decor(Pet())
+        xs = []
+        for k in range(8):                                          # dragged_4 holds with the other hand.
+            d.source = f'assets/v2_0/dragged_{k % 4 + 1}.png'
+            d._step_weapon()
+            xs.append(d._wpose[0])
+            time.sleep(.02)
+        self.assertLess(max(xs) - min(xs), .05)
+
     def test_head_top_skips_thin_tips_and_finds_the_head(self):
         image = QImage(200, 200, QImage.Format_ARGB32)
         image.fill(QColor(0, 0, 0, 0))

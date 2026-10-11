@@ -109,7 +109,7 @@ def item_art(item, frame=0):
         return None
     name = frames[frame % len(frames)]
     if name not in _ART:
-        folder = shop.WEAPONS if item.get('art_dir') == 'weapons' else shop.ASSETS
+        folder = shop.ASSETS.parent / item['art_dir'] if item.get('art_dir') else shop.ASSETS
         pixmap = QPixmap(str(folder / name))
         _ART[name] = pixmap if not pixmap.isNull() else None
     return _ART[name]

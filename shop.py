@@ -48,12 +48,6 @@ WEEK_GOAL_BONUS = 30
 # Per set, out of 20: Starsea 1, Galaxy 1, Sun 3, Moon 6, Stars 9.
 SPREAD = dict(xinghai=1, yinhe=1, haori=3, mingyue=6, fanxing=9)
 
-_NAMES = {
-    'outfit': ('starsea_gown', 'galaxy_robe', 'sun_dress', 'moon_dress', 'aurora_coat', 'sakura_kimono',
-               'frost_coat', 'cloud_cape', 'mint_hoodie', 'night_sailor', 'lavender_dress', 'cocoa_sweater',
-               'ocean_dress', 'peach_dress', 'ink_hanfu', 'candy_dress', 'forest_cloak', 'ruby_dress',
-               'pearl_dress', 'twilight_dress'),
-}
 # Matching themes make a set (one outfit, one weapon, one decoration).
 _THEMES = dict(sakura=('sakura_kimono', 'sakura_fan', 'head_pearl_flower'),
                frost=('frost_coat', 'frost_sword', 'star_snowflake'),
@@ -101,17 +95,9 @@ def _weapons():
 
 
 def _catalog():
-    items = []
-    for kind in ('outfit',):
-        names = list(_NAMES[kind])
-        for rarity in reversed(RARITIES):                     # The first names are the rarest.
-            for _ in range(SPREAD[rarity]):
-                name = names.pop(0)
-                theme = next((t for t, members in _THEMES.items() if name in members), None)
-                items.append(dict(id=f'{kind}.{name}', set=kind, name=name, rarity=rarity,
-                                  slot=kind,
-                                  price=PRICES.get(rarity), theme=theme, window=_LIMITED.get(name)))
-    return items + _weapons() + _decorations()
+    """Outfits (outfits.py), weapons and decorations: all drawn by Codex."""
+    import outfits
+    return outfits.catalog(PRICES) + _weapons() + _decorations()
 
 
 CATALOG = _catalog()
@@ -225,8 +211,9 @@ class Shop:
 
     def set_bonuses(self):
         """Themes whose outfit, weapon and decoration are all worn right now."""
-        worn = set(self.equipped().values())
-        return [theme for theme, members in _THEMES.items() if all(f'{BY_ID_KIND[m]}.{m}' in worn for m in members)]
+        worn = [BY_ID[i] for i in self.equipped().values() if i in BY_ID]
+        return [theme for theme in _THEMES
+                if all(any(w['set'] == kind and w.get('theme') == theme for w in worn) for kind in SETS)]
 
     # Buying ------------------------------------------------------------------------------
     def on_sale(self):

@@ -65,11 +65,19 @@ foreach ($folder in 'v2_3', 'v2_4') {
         & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" (Join-Path $internal "assets\$folder")
     }
 }
+# Outfit frames are her poses too: carried at the same 768 px.
+foreach ($folder in Get-ChildItem -Directory -Path (Join-Path $internal 'assets\v2_5\outfits') -ErrorAction SilentlyContinue) {
+    foreach ($tier in Get-ChildItem -Directory -Path $folder.FullName) {
+        & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" $tier.FullName
+    }
+}
 if ($LASTEXITCODE -ne 0) { throw 'Shrinking the 2.0 artwork failed.' }
 # The shop decorations keep their drawn size (their anchors are in those pixels);
 # only Codex's contact sheet of all 60 stays out of the package.
 $shopSheet = Join-Path $internal 'assets\v2_5\shop\SHOP_PREVIEW.png'
 if (Test-Path -LiteralPath $shopSheet) { Remove-Item -LiteralPath $shopSheet -Force }
+$outfitSheet = Join-Path $internal 'assets\v2_5\outfits\OUTFITS_PREVIEW.png'
+if (Test-Path -LiteralPath $outfitSheet) { Remove-Item -LiteralPath $outfitSheet -Force }
 foreach ($sheet in 'EQUIPPED_PREVIEW.png', 'WEAPONS_PREVIEW.png') {
     $path = Join-Path $internal (Join-Path 'assets' (Join-Path 'v2_5' (Join-Path 'weapons' $sheet)))
     if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Force }

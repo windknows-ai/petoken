@@ -335,7 +335,8 @@ class WishShow(QWidget):
                 continue
             centre, (cw, ch) = self.slot(k)
             side = int(min(cw * .86, ch * .36) * ratio)
-            folder = shop.WEAPONS if self.results[index]['item'].get('art_dir') == 'weapons' else shop.ASSETS
+            art_dir = self.results[index]['item'].get('art_dir')
+            folder = shop.ASSETS.parent / art_dir if art_dir else shop.ASSETS
             self._art[index] = _POOL.submit(_fitted_art, str(folder / frames[0]), side, ratio)
         self._frames = {}                                   # The card frames, scaled to the cards.
         for k, index in enumerate(self.order if self.ten else [0]):

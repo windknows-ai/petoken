@@ -698,6 +698,9 @@ class DesktopPet(QWidget):
             px,py=geometry.scaled_reaction_pivot(self.pet_scale)
             p.translate(px,py);p.rotate(math.sin(self.phase*3)*self.reaction*4);p.translate(-px,-py)
         sprite=self.sprites.get(self.current_state,self.sprite)
+        if self.outfit_item() is not None:
+            import outfits
+            sprite=outfits.pixmap(self.outfit_item(),self.current_state) or sprite
         # Every state shares one logical sprite box around one feet anchor;
         # only approved-asset pixels change between states, never the geometry.
         tap_shift=0
@@ -722,9 +725,8 @@ class DesktopPet(QWidget):
             x=round((sx+(sw-size.width())/2+tap_shift)*dpr)/dpr
             y=round((sy+sh-size.height())*dpr)/dpr
             p.drawPixmap(QPointF(x,y),rendered)
-            from decor import frame_file
             self.decor.pet_painted(self.current_state,rendered,p.transform(),
-                                   QRectF(x,y,size.width(),size.height()),frame_file(self.current_state))
+                                   QRectF(x,y,size.width(),size.height()),self.picture_file(self.current_state))
         p.restore()
 
     def sync_focus_tag(self):
@@ -736,8 +738,25 @@ class DesktopPet(QWidget):
             self.focus_tag=FocusTag(self)
         self.focus_tag.sync()
 
+    def picture_file(self,state,index=0,blink=False):
+        """The file she shows now (an outfit's own frame when one is worn): the weapon's hand
+        records belong to her own frames only."""
+        import outfits
+        from decor import frame_file
+        return outfits.frame_path(self.outfit_item(),state,index,blink) or frame_file(state,index,blink)
+
+    def outfit_item(self):
+        return self.decor.items.get('outfit') if hasattr(self,'decor') else None
+
     def pose_pixmap(self,state,index=0,blink=False):
-        """The image for one pose frame: blink, frame, then the still pose."""
+        """The image for one pose frame: blink, frame, then the still pose (or the worn
+        outfit's picture of it, outfits.py)."""
+        worn=self.outfit_item()
+        if worn is not None:
+            import outfits
+            dressed=outfits.pixmap(worn,state,self.typing_count() if state=='typing' else index,blink)
+            if dressed is not None:
+                return dressed
         if blink:
             closed=assets.blink_for(state)
             if closed is not None:
@@ -779,9 +798,8 @@ class DesktopPet(QWidget):
             layer(self.pose_pixmap(f.previous,f.previous_index),1-f.fade)
         drawn=layer(self.pose_pixmap(f.state,f.index,f.blink),1.)
         if drawn:
-            from decor import frame_file
             index=self.typing_count() if f.state=='typing' else f.index
-            self.decor.pet_painted(f.state,drawn[0],p.transform(),drawn[1],frame_file(f.state,index,f.blink))
+            self.decor.pet_painted(f.state,drawn[0],p.transform(),drawn[1],self.picture_file(f.state,index,f.blink))
         if f.next_index is not None and f.state!='typing':
             layer(self.pose_pixmap(f.state,f.next_index),f.next_alpha)
         p.setOpacity(1.)

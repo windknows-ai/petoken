@@ -197,6 +197,7 @@ class Decor:
         self.items = worn_items(self.pet.panel)
         STAR = self.items.get('star')
         wanted = {'back': any(s in self.items for s in BEHIND), 'front': any(s in self.items for s in FRONT)}
+        self.pet.update()                                   # A new outfit shows at once.
         shown = self.pet.isVisible() and not getattr(self.pet, 'veiled', False)
         for name, front in (('back', False), ('front', True)):
             layer = getattr(self, name)

@@ -73,6 +73,20 @@ QScrollBar::add-line, QScrollBar::sub-line {{ height: 0px; }}
 '''
 
 
+WARDROBE_DIR = pet_assets.ASSETS_DIR / 'v2_5' / 'wardrobe'
+_ART = {}
+
+
+def art(name):
+    """A drawn wardrobe picture (assets/v2_5/wardrobe/<name>.png), or None: then it is painted here."""
+    if name not in _ART:
+        from PySide6.QtGui import QPixmap
+        path = WARDROBE_DIR / f'{name}.png'
+        pixmap = QPixmap(str(path)) if path.is_file() else None
+        _ART[name] = pixmap if pixmap is not None and not pixmap.isNull() else None
+    return _ART[name]
+
+
 def tr(key, language, **values):
     return text(key, language, **values)
 
@@ -91,14 +105,19 @@ def _metal(rarity, a, b):
 
 # A piece of the wardrobe: its frame in its rarity's metal, its picture, its state ---------------
 class Tile(QWidget):
-    W, H = 118, 150
+    W, H = 118, 156
 
-    def __init__(self, wardrobe, item):
+    def __init__(self, wardrobe, item, order=0):
         super().__init__()
         self.wardrobe, self.item = wardrobe, item
         self.setFixedSize(self.W, self.H)
         self.setCursor(Qt.PointingHandCursor)
         self.hover = False
+        self.born = wardrobe.t + order * .03                 # They rise in one after another.
+        self.lift = 0.0
+
+    def animating(self):
+        return self.wardrobe.t - self.born < .4 or (self.hover and self.lift < 1) or (not self.hover and self.lift > 0)
 
     def enterEvent(self, event):
         self.hover = True
@@ -122,9 +141,20 @@ class Tile(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
-        box = QRectF(3, 3, self.W - 6, self.H - 6)
+        self.lift = max(0.0, min(1.0, self.lift + (.25 if self.hover else -.25)))
+        rise = 1 - _ease_out((w.t - self.born) / .35)
+        p.setOpacity(1 - rise)
+        p.translate(0, 6 - 5 * _ease_out(self.lift) + rise * 18)
+        box = QRectF(3, 3, self.W - 6, self.H - 12)
         path = QPainterPath()
         path.addRoundedRect(box, 12, 12)
+        if self.hover or chosen:                             # A soft glow under it.
+            halo = QRadialGradient(QPointF(box.center().x(), box.bottom() + 2), box.width() * .6)
+            halo.setColorAt(0, QColor(243, 201, 107, 90 if chosen else 60))
+            halo.setColorAt(1, QColor(243, 201, 107, 0))
+            p.setPen(Qt.NoPen)
+            p.setBrush(halo)
+            p.drawEllipse(QPointF(box.center().x(), box.bottom() + 2), box.width() * .6, 10)
         colour = rarity_colour(item['rarity'], w.t, hash(item['id']) % 100 / 100)
         face = QLinearGradient(box.topLeft(), box.bottomLeft())
         face.setColorAt(0, QColor(22, 18, 52))
@@ -137,10 +167,18 @@ class Tile(QWidget):
         if not owned:
             p.setOpacity(.5)
         draw_item(p, item, QRectF(box.center().x() - 42, 12, 84, 84), colour)
-        p.setOpacity(1)
-        p.setPen(QPen(_metal(item['rarity'], box.topLeft(), box.bottomRight()), 3 if (chosen or self.hover) else 2))
-        p.setBrush(Qt.NoBrush)
-        p.drawPath(path)
+        p.setOpacity(1 - rise)
+        case = art(f'tile_{item["rarity"]}')
+        if case is not None:                                 # Codex's glass display case.
+            p.drawPixmap(box, case, QRectF(case.rect()))
+        else:
+            p.setPen(QPen(_metal(item['rarity'], box.topLeft(), box.bottomRight()), 3 if (chosen or self.hover) else 2))
+            p.setBrush(Qt.NoBrush)
+            p.drawPath(path)
+            sheen = QLinearGradient(box.topLeft(), QPointF(box.left() + box.width() * .6, box.bottom()))
+            sheen.setColorAt(0, QColor(255, 255, 255, 34))
+            sheen.setColorAt(.35, QColor(255, 255, 255, 0))
+            p.fillPath(path, sheen)
         if chosen:
             p.setPen(QPen(QColor(255, 236, 170, 200), 1.4))
             p.drawRoundedRect(box.adjusted(4, 4, -4, -4), 9, 9)
@@ -187,6 +225,136 @@ class Tile(QWidget):
 
 
 # The mirror: her on a starlit stage, wearing what is worn and what is being tried ------------------
+def _ease_out(x):
+    x = max(0.0, min(1.0, x))
+    return 1 - (1 - x) ** 3
+
+
+class Shelves(QWidget):
+    """The closet's inside: a velvet back and a glowing shelf under every row of pieces."""
+
+    def __init__(self, wardrobe):
+        super().__init__()
+        self.wardrobe = wardrobe
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        w, h = self.width(), self.height()
+        back = art('backdrop_closet')
+        box = QRectF(0, 0, w, h)
+        if back is not None:
+            p.drawPixmap(box, back, QRectF(back.rect()))
+        else:
+            velvet = QLinearGradient(0, 0, w, h)
+            velvet.setColorAt(0, QColor(34, 22, 70, 200))
+            velvet.setColorAt(1, QColor(20, 14, 46, 200))
+            path = QPainterPath()
+            path.addRoundedRect(box, 14, 14)
+            p.fillPath(path, velvet)
+            row_h = Tile.H + 10
+            for k in range(1, max(1, h // row_h) + 1):     # A shelf under each row.
+                y = 8 + k * row_h - 12
+                shelf = QLinearGradient(0, y - 4, 0, y + 6)
+                shelf.setColorAt(0, QColor(220, 200, 255, 0))
+                shelf.setColorAt(.5, QColor(220, 200, 255, 90))
+                shelf.setColorAt(1, QColor(120, 90, 200, 0))
+                p.fillRect(QRectF(8, y - 4, w - 16, 10), shelf)
+                p.setPen(QPen(QColor(243, 201, 107, 120), 1))
+                p.drawLine(QPointF(14, y), QPointF(w - 14, y))
+        p.end()
+
+
+class Doors(QWidget):
+    """Opening the wardrobe: two lacquered night-blue doors swing open, light through the gap."""
+
+    def __init__(self, wardrobe):
+        super().__init__(wardrobe)
+        self.wardrobe = wardrobe
+        self.start = None
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+
+    def open(self):
+        self.start = self.wardrobe.t
+        self.setGeometry(self.wardrobe.rect())
+        self.show()
+        self.raise_()
+
+    def progress(self):
+        return 1.0 if self.start is None else (self.wardrobe.t - self.start) / 1.05
+
+    def paintEvent(self, event):
+        f = self.progress()
+        if f >= 1:
+            self.hide()
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        w, h = self.width(), self.height()
+        swing = _ease_out(max(0.0, f - .12) / .88)
+        light = QRadialGradient(QPointF(w / 2, h / 2), w * .5)   # Light from inside.
+        light.setColorAt(0, QColor(255, 236, 190, int(200 * (1 - swing) * min(1, f * 6))))
+        light.setColorAt(1, QColor(255, 236, 190, 0))
+        p.fillRect(self.rect(), light)
+        for side in (0, 1):
+            angle = swing * math.pi * .48
+            width = w / 2 * math.cos(angle)
+            shrink = h * .06 * math.sin(angle)
+            if side == 0:
+                quad = [QPointF(0, 0), QPointF(width, shrink), QPointF(width, h - shrink), QPointF(0, h)]
+            else:
+                quad = [QPointF(w - width, shrink), QPointF(w, 0), QPointF(w, h), QPointF(w - width, h - shrink)]
+            from PySide6.QtGui import QPolygonF
+            source = QPolygonF([QPointF(0, 0), QPointF(w / 2, 0), QPointF(w / 2, h), QPointF(0, h)])
+            transform = QTransform()
+            if not QTransform.quadToQuad(source, QPolygonF(quad), transform):
+                continue
+            p.save()
+            p.setTransform(transform)
+            self._door(p, w / 2, h, side, swing)
+            p.restore()
+        p.end()
+
+    def _door(self, p, w, h, side, swing):
+        drawn = art('door_right' if side else 'door_left')
+        box = QRectF(0, 0, w, h)
+        if drawn is not None:
+            p.drawPixmap(box, drawn, QRectF(drawn.rect()))
+        else:
+            wood = QLinearGradient(0, 0, w, h)
+            wood.setColorAt(0, QColor(28, 24, 70))
+            wood.setColorAt(1, QColor(14, 12, 40))
+            p.fillRect(box, wood)
+            for inset, alpha in ((18, 200), (34, 120)):     # Gold mouldings.
+                p.setPen(QPen(QColor(232, 196, 110, alpha), 2 if inset == 18 else 1))
+                p.setBrush(Qt.NoBrush)
+                p.drawRoundedRect(box.adjusted(inset, inset, -inset, -inset), 10, 10)
+            cx, cy = w / 2, h * .42
+            p.setPen(QPen(QColor(232, 196, 110, 210), 2))
+            p.drawEllipse(QPointF(cx, cy), w * .2, w * .2)
+            moon = QPainterPath()                            # A crescent inlay.
+            moon.addEllipse(QPointF(cx, cy), w * .13, w * .13)
+            cut = QPainterPath()
+            cut.addEllipse(QPointF(cx + w * .06, cy - w * .03), w * .11, w * .11)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(240, 214, 140))
+            p.drawPath(moon.subtracted(cut))
+            for k in range(8):
+                a = k * math.pi / 4
+                Tile._star(p, cx + math.cos(a) * w * .3, cy + math.sin(a) * w * .3, 5, QColor(220, 200, 255))
+            handle_x = w - 26 if side == 0 else 26           # Crystal handle on the inner edge.
+            gem = QRadialGradient(QPointF(handle_x - 3, h * .52 - 4), 14)
+            gem.setColorAt(0, QColor(255, 255, 255))
+            gem.setColorAt(1, QColor(150, 130, 255))
+            p.setBrush(gem)
+            p.drawEllipse(QPointF(handle_x, h * .52), 10, 10)
+        shade = QLinearGradient(0, 0, w, 0)                  # Turning away from the light.
+        shade.setColorAt(0 if side else 1, QColor(0, 0, 0, int(160 * swing)))
+        shade.setColorAt(1 if side else 0, QColor(0, 0, 0, int(40 * swing)))
+        p.fillRect(box, shade)
+
+
 class _MirrorPet:
     pet_scale = 100
 
@@ -216,17 +384,22 @@ class Mirror(QWidget):
         self._sprites = {}
 
     def sprite(self, pose):
-        if pose not in self._sprites:
+        outfit = self.wardrobe.preview_items().get('outfit')
+        key = (pose, outfit['id'] if outfit else None)
+        if key not in self._sprites:
+            import outfits
             starsea = getattr(self.wardrobe.panel, 'starsea', None)
             state = pose
             if starsea is not None and starsea.active and f'star_{pose}' in pet_assets.STAR_REGISTRY:
                 state = f'star_{pose}'
-            pm = pet_assets.frame_for(state, 0) if pet_assets.frame_count(state) else pet_assets.sprite_for(state)
+            pm = outfits.pixmap(outfit, state) if outfit is not None else None
+            if pm is None:
+                pm = pet_assets.frame_for(state, 0) if pet_assets.frame_count(state) else pet_assets.sprite_for(state)
             if pm is None or pm.isNull():
                 pm = pet_assets.sprite_for('idle')
             sx, sy, sw, sh = geometry.scaled_sprite_rect(100)
-            self._sprites[pose] = (state, pm.scaled(sw * 2, sh * 2, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        return self._sprites[pose]
+            self._sprites[key] = (state, pm.scaled(sw * 2, sh * 2, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        return self._sprites[key]
 
     def paintEvent(self, event):
         w, h = self.width(), self.height()
@@ -234,8 +407,16 @@ class Mirror(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         box = QRectF(0, 0, w, h)
-        clip = QPainterPath()
-        clip.addRoundedRect(box, 18, 18)
+        glass = box.adjusted(16, 16, -16, -16)
+        clip = QPainterPath()                                # An arched mirror.
+        radius = glass.width() / 2
+        clip.moveTo(glass.left(), glass.bottom())
+        clip.lineTo(glass.left(), glass.top() + radius * .55)
+        clip.cubicTo(glass.left(), glass.top() - radius * .1, glass.right(), glass.top() - radius * .1,
+                     glass.right(), glass.top() + radius * .55)
+        clip.lineTo(glass.right(), glass.bottom())
+        clip.closeSubpath()
+        self._glass = clip
         p.setClipPath(clip)
         self._paint_stage(p, w, h)
         state, sprite = self.sprite(self.pose)
@@ -248,17 +429,26 @@ class Mirror(QWidget):
         rect = QRectF(sx + (sw - size_w) / 2, sy + sh - size_h, size_w, size_h)
         self.decor.items = self.wardrobe.preview_items()
         self.decor.pose = (state, sprite, QTransform(), rect)
-        self.decor.source = decor.frame_file(state, 0)
+        import outfits
+        self.decor.source = outfits.frame_path(self.wardrobe.preview_items().get('outfit'), state) or decor.frame_file(state, 0)
         self.decor.paint(p, _Layer(False))
         p.setTransform(QTransform().translate(w / 2 - (sx + sw / 2) * k,
                                               h * .86 - (sy + sh) * k + math.sin(self.wardrobe.t * 1.6) * 3).scale(k, k))
         p.drawPixmap(rect, sprite, QRectF(sprite.rect()))
         self.decor.paint(p, _Layer(True))
         p.restore()
+        self._paint_burst(p, w, h)
+        t = self.wardrobe.t                                  # A sheen sweeps the glass now and then.
+        sweep = (t % 6.0) / 1.2
+        if sweep < 1:
+            x = -w * .4 + w * 1.8 * sweep
+            g = QLinearGradient(QPointF(x - 80, 0), QPointF(x + 80, h * .6))
+            g.setColorAt(0, QColor(255, 255, 255, 0))
+            g.setColorAt(.5, QColor(255, 255, 255, 38))
+            g.setColorAt(1, QColor(255, 255, 255, 0))
+            p.fillRect(box, g)
         p.setClipping(False)
-        p.setPen(QPen(QColor(210, 190, 255, 90), 1.4))
-        p.setBrush(Qt.NoBrush)
-        p.drawRoundedRect(box.adjusted(.7, .7, -.7, -.7), 18, 18)
+        self._paint_frame(p, box, clip)
         chosen = self.wardrobe.chosen
         if chosen is not None and chosen['id'] not in self.wardrobe.shop.owned():
             pill = QRectF(14, 14, 88, 24)
@@ -269,6 +459,44 @@ class Mirror(QWidget):
             p.setFont(QFont('Microsoft YaHei UI', 9, QFont.Bold))
             p.drawText(pill, Qt.AlignCenter, tr('wardrobe_trying', self.wardrobe.language))
         p.end()
+
+    def burst(self, name):
+        self._burst = (self.wardrobe.t, name)
+
+    def _paint_burst(self, p, w, h):
+        burst = getattr(self, '_burst', None)
+        if burst is None:
+            return
+        from wish_show import play
+        p.setCompositionMode(QPainter.CompositionMode_Plus)
+        if not play(p, burst[1], QPointF(w / 2, h * .6), min(w, h) * .62, self.wardrobe.t - burst[0], .55):
+            self._burst = None
+        p.setCompositionMode(QPainter.CompositionMode_SourceOver)
+
+    def _paint_frame(self, p, box, clip):
+        frame = art('frame_mirror')
+        if frame is not None:                                # Codex's ornate frame.
+            p.drawPixmap(box, frame, QRectF(frame.rect()))
+            return
+        metal = _metal('haori', box.topLeft(), box.bottomRight())
+        p.setBrush(Qt.NoBrush)
+        p.setPen(QPen(QColor(8, 6, 20, 200), 14))
+        p.drawPath(clip)
+        p.setPen(QPen(metal, 9))
+        p.drawPath(clip)
+        p.setPen(QPen(QColor(255, 245, 220, 150), 1.4))
+        p.drawPath(clip)
+        cx, top = box.center().x(), box.top() + 6            # A crescent crest with a gem.
+        p.setPen(QPen(QColor(8, 6, 20, 220), 3))
+        p.setBrush(metal)
+        p.drawEllipse(QPointF(cx, top + 6), 20, 20)
+        gem = QRadialGradient(QPointF(cx - 4, top + 2), 16)
+        gem.setColorAt(0, QColor(255, 255, 255))
+        gem.setColorAt(1, QColor(150, 120, 255))
+        p.setBrush(gem)
+        p.drawEllipse(QPointF(cx, top + 6), 12, 12)
+        for k, (x, y) in enumerate(((box.left() + 16, box.bottom() - 16), (box.right() - 16, box.bottom() - 16))):
+            Tile._star(p, x, y, 9, QColor(243, 201, 107))
 
     def _paint_stage(self, p, w, h):
         if self._sky is None or self._sky[0] != (w, h):
@@ -327,6 +555,8 @@ class Wardrobe(QWidget):
         self.kind = 'head'
         self.chosen = None
         self._drag = None
+        from wish_sound import Sounds
+        self.sounds = Sounds(bool(panel.prefs.get('wish_sound', True)))
         outer = QVBoxLayout(self)
         outer.setContentsMargins(10, 10, 10, 10)
         outer.setSpacing(12)
@@ -393,6 +623,21 @@ class Wardrobe(QWidget):
         grip_row.addWidget(grip, 0, Qt.AlignRight | Qt.AlignBottom)
         outer.addLayout(grip_row)
         self.tab_buttons[0][0].setChecked(True)
+        from PySide6.QtWidgets import QGraphicsDropShadowEffect, QGraphicsOpacityEffect
+        from PySide6.QtCore import QPropertyAnimation
+        self._fade = QGraphicsOpacityEffect(self.pages)
+        self.pages.setGraphicsEffect(self._fade)
+        self._fade_anim = QPropertyAnimation(self._fade, b'opacity', self)
+        self._fade_anim.setDuration(260)
+        self.pages.currentChanged.connect(self._page_fade)
+        for button in self.findChildren(QPushButton):        # Gem buttons glow.
+            if button.objectName() in ('primary', 'gold'):
+                glow = QGraphicsDropShadowEffect(button)
+                glow.setBlurRadius(22)
+                glow.setOffset(0, 0)
+                glow.setColor(QColor(243, 201, 107, 150) if button.objectName() == 'gold' else QColor(150, 120, 255, 160))
+                button.setGraphicsEffect(glow)
+        self.doors = Doors(self)
         self.clock = QTimer(self)
         self.clock.setInterval(33)
         self.clock.timeout.connect(self._tick)
@@ -468,6 +713,17 @@ class Wardrobe(QWidget):
         super().showEvent(event)
         self.clock.start()
         self.refresh()
+        self.doors.open()                                    # The doors swing open every time.
+        self.sounds.play('open')
+
+    def _page_fade(self, index):
+        self._fade_anim.stop()
+        self._fade_anim.setStartValue(0.0)
+        self._fade_anim.setEndValue(1.0)
+        self._fade_anim.start()
+        for tile in self.tiles:
+            tile.born = self.t
+        self.sounds.play('flip')
 
     def hideEvent(self, event):
         super().hideEvent(event)
@@ -476,6 +732,17 @@ class Wardrobe(QWidget):
     def _tick(self):
         self.t += .033
         self.mirror.update()
+        if self.doors.isVisible():
+            self.doors.update()
+        for tile in self.tiles:
+            if tile.animating():
+                tile.update()
+
+    def closeEvent(self, event):
+        self.sounds.close()
+        from wish_sound import Sounds
+        self.sounds = Sounds(bool(self.panel.prefs.get('wish_sound', True)))   # Ready for the next opening.
+        super().closeEvent(event)
 
     def apply_language(self):
         lang = self.language
@@ -506,6 +773,9 @@ class Wardrobe(QWidget):
             b = QPushButton()
             b.setObjectName('kind')
             b.setCheckable(True)
+            b.setIcon(self._kind_icon(kind))
+            from PySide6.QtCore import QSize
+            b.setIconSize(QSize(22, 22))
             b.clicked.connect(lambda _=False, kind=kind: self.set_kind(kind))
             self.kind_group.addButton(b)
             self.kind_buttons[kind] = b
@@ -515,9 +785,10 @@ class Wardrobe(QWidget):
         column = QVBoxLayout()
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        holder = QWidget()
+        holder = Shelves(self)
         self.grid = QGridLayout(holder)
         self.grid.setSpacing(10)
+        self.grid.setContentsMargins(8, 8, 8, 8)
         self.grid.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         scroll.setWidget(holder)
         self.grid_scroll = scroll
@@ -539,6 +810,21 @@ class Wardrobe(QWidget):
         self.tiles = []
         return page
 
+    def _kind_icon(self, kind):
+        """Codex's icon for the kind, or the shop's drawn symbol of it."""
+        from PySide6.QtGui import QIcon, QPixmap
+        drawn = art(f'icon_{kind}')
+        if drawn is not None:
+            return QIcon(drawn)
+        from shop_view import glyph
+        pixmap = QPixmap(44, 44)
+        pixmap.fill(Qt.transparent)
+        p = QPainter(pixmap)
+        p.setRenderHint(QPainter.Antialiasing)
+        glyph(p, kind, QRectF(4, 4, 36, 36), QColor(180, 160, 255))
+        p.end()
+        return QIcon(pixmap)
+
     def set_kind(self, kind):
         self.kind = kind
         self.kind_buttons[kind].setChecked(True)
@@ -558,6 +844,8 @@ class Wardrobe(QWidget):
 
     def choose(self, item):
         self.chosen = item
+        self.mirror.burst('reveal_mingyue')                  # A shimmer as it is tried on.
+        self.sounds.play('catch')
         if item['slot'] == 'weapon' and decor.hands().get(decor.frame_file(self.mirror.pose, 0)) is None:
             pass                                             # It floats at her side in this pose.
         self._update_detail()
@@ -569,12 +857,13 @@ class Wardrobe(QWidget):
         while self.grid.count():
             widget = self.grid.takeAt(0).widget()
             if widget is not None:
+                widget.hide()                                # Gone at once, not a frame later.
                 widget.deleteLater()
         items = [i for i in shop.CATALOG if i['slot'] == self.kind and shop.in_window(i, self.shop.today())]
         columns = max(2, (self.grid_scroll.viewport().width() - 10) // (Tile.W + 10))
         self.tiles = []
         for n, item in enumerate(items):
-            tile = Tile(self, item)
+            tile = Tile(self, item, n)
             self.tiles.append(tile)
             self.grid.addWidget(tile, n // columns, n % columns)
         rows = (len(items) + columns - 1) // columns          # Room for every row: they never overlap.
@@ -620,10 +909,15 @@ class Wardrobe(QWidget):
             return
         if store.equipped().get(item['slot']) == item['id']:
             store.unequip(item['slot'])
+            self.sounds.play('flip')
         elif item['id'] in store.owned():
             store.equip(item['id'])
+            self.mirror.burst('reveal_haori')                # Put on: a gold burst.
+            self.sounds.play('flip_fine')
         elif store.buy(item['id']):
             store.equip(item['id'])                          # Bought: put it on.
+            self.mirror.burst('reveal_haori')
+            self.sounds.play('discount')
         self.refresh()
 
     def _act_second(self):
