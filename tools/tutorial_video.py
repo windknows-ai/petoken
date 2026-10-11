@@ -715,6 +715,9 @@ def record_ring_lives(pv, base, wanted, folder, rerecord=False):
             print('recorded', name, flush=True)
 
         record('ring_live', 8)
+        wanted_card = pet.usage_overlay_wanted
+        pet.usage_overlay_wanted = lambda: False       # The skins need the sky above her clear.
+        pet.sync_usage_overlay()
         halo_scene.set_skin('meteor')
         pump(2.0)
         record('ring_meteor', 8)
@@ -723,6 +726,7 @@ def record_ring_lives(pv, base, wanted, folder, rerecord=False):
         pump(3.0)
         record('ring_aurora', 8)
         halo_scene.set_skin('default')
+        pet.usage_overlay_wanted = wanted_card
         base.count.setValue(3)
         stage.close()
         pet.hide()
