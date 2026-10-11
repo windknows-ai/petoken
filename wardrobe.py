@@ -516,6 +516,11 @@ class Mirror(QWidget):
         shade.setColorAt(0, QColor(6, 5, 20, 40))
         shade.setColorAt(1, QColor(6, 5, 20, 150))
         p.fillRect(QRectF(0, 0, w, h), shade)
+        platform = art('stage_platform')
+        if platform is not None:                             # Codex's star dais.
+            pw = w * .84
+            ph = pw * platform.height() / platform.width()
+            p.drawPixmap(QRectF(w / 2 - pw / 2, h * .87 - ph / 2, pw, ph), platform, QRectF(platform.rect()))
         stage = QRadialGradient(QPointF(w / 2, h * .87), w * .42)    # A pool of light where she stands.
         stage.setColorAt(0, QColor(190, 170, 255, 120))
         stage.setColorAt(.5, QColor(140, 120, 255, 40))
@@ -690,6 +695,12 @@ class Wardrobe(QWidget):
         p.setPen(QPen(QColor(200, 180, 255, 80), 1.2))
         p.setBrush(g)
         p.drawRoundedRect(box, 16, 16)
+        plaque = art('header_plaque')
+        if plaque is not None:                               # The title's plaque.
+            title = self.title.geometry()
+            ph = 56
+            pw = ph * plaque.width() / plaque.height()
+            p.drawPixmap(QRectF(title.left() - 22, title.center().y() - ph / 2, pw, ph), plaque, QRectF(plaque.rect()))
         glow = QRadialGradient(QPointF(box.width() * .75, 0), box.width() * .6)
         glow.setColorAt(0, QColor(150, 120, 255, 40))
         glow.setColorAt(1, QColor(150, 120, 255, 0))
