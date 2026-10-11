@@ -1019,6 +1019,8 @@ class DesktopPet(QWidget):
             leave.setToolTip(self.tr_text('game_mode_menu_tip'))
             menu.addSeparator()
         menu.addAction(self.tr_text('launch_menu'),self.panel.open_quick_launch).setToolTip(self.tr_text('menu_tip_launch'))
+        if hasattr(self.panel,'open_wardrobe'):
+            menu.addAction(self.tr_text('wardrobe_open'),self.panel.open_wardrobe)
         focus_mode=getattr(self.panel,'focus_mode',None)
         if focus_mode is not None:
             from focus_mode import CHOICES, clock_text

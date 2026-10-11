@@ -57,7 +57,7 @@ class StickerBadge(QWidget):
             p.setFont(font)
             p.drawText(box, Qt.AlignCenter, GLYPHS.get(self.sticker, '★'))
         p.setOpacity(1)
-        p.setPen(QColor(theme.INK))
+        p.setPen(QColor('#ECE8FF') if getattr(self, 'dark', False) else QColor(theme.INK))
         p.setFont(QFont('Microsoft YaHei UI', 9, QFont.DemiBold))
         p.drawText(QRectF(0, 84, self.width(), 20), Qt.AlignCenter, self.name)
         p.setPen(QColor(theme.MUTED))
@@ -206,7 +206,8 @@ class SkinCard(QWidget):
         p.setPen(QColor(theme.INK))
         p.setFont(QFont('Microsoft YaHei UI', 9, QFont.DemiBold))
         p.drawText(QRectF(0, 110, self.W, 18), Qt.AlignCenter, self.name)
-        p.setPen(QColor(theme.VIOLET if self.current else theme.MUTED))
+        p.setPen(QColor('#F3C96B' if self.current else '#A9A2D6') if getattr(self, 'dark', False)
+                 else QColor(theme.VIOLET if self.current else theme.MUTED))
         p.setFont(QFont('Microsoft YaHei UI', 8))
         p.drawText(QRectF(0, 128, self.W, 18), Qt.AlignCenter, self.caption)
 
@@ -241,35 +242,7 @@ class CollectionPage(QWidget):
         self.points = QLabel()
         self.points.setObjectName('summary')
         layout.addWidget(self.points, 0, Qt.AlignLeft)
-        # 2.4 stardust: how much, how to earn it, and what it unlocks (a preview each).
-        from PySide6.QtWidgets import QProgressBar
-        self.stardust_title = QLabel()
-        self.stardust_title.setObjectName('section')
-        layout.addWidget(self.stardust_title)
-        star_row = QHBoxLayout()
-        self.stardust = QLabel()
-        self.stardust.setObjectName('summary')
-        star_row.addWidget(self.stardust)
-        self.stardust_bar = QProgressBar()
-        self.stardust_bar.setTextVisible(False)
-        self.stardust_bar.setFixedHeight(10)
-        star_row.addWidget(self.stardust_bar, 1)
-        self.stardust_next = QLabel()
-        self.stardust_next.setObjectName('muted')
-        star_row.addWidget(self.stardust_next)
-        layout.addLayout(star_row)
-        self.stardust_earn = QLabel()
-        self.stardust_earn.setObjectName('muted')
-        self.stardust_earn.setWordWrap(True)
-        layout.addWidget(self.stardust_earn)
-        cards = QHBoxLayout()
-        cards.setSpacing(10)
-        self.skin_cards = {choice: SkinCard(choice, self._card_chosen)
-                           for choice in ('default', 'meteor', 'aurora', 'starsea')}
-        for card in self.skin_cards.values():
-            cards.addWidget(card)
-        cards.addStretch(1)
-        layout.addLayout(cards)
+        # Stardust (ring skins, the Starsea form) lives in the Stardust Wardrobe (wardrobe.py).
         self.wall = QGridLayout()
         self.wall.setHorizontalSpacing(8)
         layout.addLayout(self.wall)
@@ -318,7 +291,6 @@ class CollectionPage(QWidget):
             total, earned, log = 0, {}, []
         language = self.language
         self.points.setText(text('collection_points', language, points=total))
-        self._refresh_stardust(language)
         while self.wall.count():
             item = self.wall.takeAt(0)
             if item.widget():
@@ -337,54 +309,6 @@ class CollectionPage(QWidget):
         if not log:
             self.log.addItem(QListWidgetItem(text('collection_empty', language)))
 
-
-    def _refresh_stardust(self, language):
-        from stardust import SKINS, UNLOCKS, next_unlock, unlocked
-        panel = self.owner.panel
-        dust = getattr(panel, 'stardust', None)
-        total = dust.total() if dust is not None else 0
-        have = unlocked(total)
-        coming = next_unlock(total)
-        self.stardust_title.setText(text('stardust_section', language))
-        self.stardust.setText(text('stardust_total', language, points=total))
-        goal = coming and dict(UNLOCKS)[coming[0]] or UNLOCKS[-1][1]
-        self.stardust_bar.setRange(0, goal)
-        self.stardust_bar.setValue(min(total, goal))
-        self.stardust_next.setText(text('stardust_next', language, left=coming[1],
-                                        name=text(f'stardust_name_{coming[0]}', language))
-                                   if coming else text('stardust_all', language))
-        self.stardust_earn.setText(text('stardust_earn', language))
-        need = dict(UNLOCKS)
-        skin = panel.prefs.get('ring_skin', 'default')
-        starsea = getattr(panel, 'starsea', None)
-        for choice, card in self.skin_cards.items():
-            key = 'starsea' if choice == 'starsea' else f'skin_{choice}'
-            unlocked = choice == 'default' or key in have
-            if choice == 'starsea':
-                unlocked = unlocked and starsea is not None and starsea.art_ready()
-                current = bool(starsea is not None and starsea.active)
-            else:
-                current = skin == choice
-            caption = (text('stardust_card_on', language) if current else
-                       text('stardust_card_wear', language) if unlocked else
-                       text('stardust_card_locked', language, need=need.get(key, 0)))
-            card.set_state(text(f'stardust_card_{choice}', language), caption, unlocked, current,
-                           text(f'stardust_card_{choice}_tip', language))
-
-    def _card_chosen(self, choice):
-        panel = self.owner.panel
-        if choice == 'starsea':
-            starsea = getattr(panel, 'starsea', None)
-            if starsea is not None:
-                starsea.toggle()
-        else:
-            panel.prefs['ring_skin'] = choice
-            try:
-                panel.persist()
-            except Exception:
-                pass
-            panel.apply_ring_skin()
-        self._refresh_stardust(self.language)
 
 
 class GoalDialog(QDialog):

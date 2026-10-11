@@ -268,7 +268,7 @@ class Preview(QWidget):
         # 2.4 stardust: unlocks the star-ring skins and (later) her third form.
         form = group('星辉 / Stardust (2.4)')
         why = QLabel('真实使用时：AI 完成任务 +3（不到 1 分钟 +1）、验收通过 +8、专注一轮 +5、AI 每工作 10 分钟 +1（每天最多 +40）。'
-                     '150 解锁流星星环，400 解锁极光星环（没任务时显示），1000 解锁星海觉醒。工作台 › 收藏页能看进度、换皮肤。')
+                     '150 解锁流星星环，400 解锁极光星环（没任务时显示），1000 解锁星海觉醒。右键 › 星辉衣柜 › 里程碑能看进度、换皮肤。')
         why.setWordWrap(True)
         form.addRow(why)
         self.star_state = QLabel()
@@ -276,7 +276,7 @@ class Preview(QWidget):
                         button('到 400（极光）', lambda: self.stardust_to(400)), button('到 1000', lambda: self.stardust_to(1000)),
                         button('清零', self.reset_stardust), self.star_state))
         form.addRow(row(button('商店：+1000 星辉', lambda: self.add_stardust(1000)), button('商店：到第二天', self.shop_next_day),
-                        button('商店：清空', self.shop_reset), button('商店：打开', self.open_shop)))
+                        button('商店：清空', self.shop_reset), button('打开星辉衣柜', self.open_shop)))
         wish = QComboBox()
         for label, value in (('单抽 · 繁星', 'fanxing'), ('单抽 · 明月', 'mingyue'), ('单抽 · 皓日', 'haori'),
                              ('单抽 · 银河', 'yinhe'), ('单抽 · 星海', 'xinghai'), ('十连（含星海）', 'ten')):
@@ -489,10 +489,8 @@ class Preview(QWidget):
                                           'yinhe', 'mingyue', 'xinghai')]
         else:
             results = [found(kind)]
-        self.panel.open_workbench()
-        window = self.panel.workbench_window
-        if window is not None:
-            window.tabs.setCurrentIndex(window.shop_tab)
+        self.panel.open_wardrobe()
+        window = self.panel.wardrobe_window
         starsea = getattr(self.panel, 'starsea', None)
         self._wish = WishShow(window, results, self.panel.prefs.get('language', 'zh_CN'),
                               bool(starsea is not None and starsea.active),
@@ -514,10 +512,7 @@ class Preview(QWidget):
         self.panel.tray_notice('（测试版）商店', '60 件装饰都已拥有：在商店的“装饰”里点“穿戴”，她马上戴上。')
 
     def open_shop(self):
-        self.panel.open_workbench()
-        window = self.panel.workbench_window
-        if window is not None:
-            window.tabs.setCurrentIndex(window.shop_tab)
+        self.panel.open_wardrobe()
 
     def fake_music(self):
         """A made-up rhythm for the Aurora ring, without playing anything."""

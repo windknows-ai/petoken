@@ -85,22 +85,54 @@ STAR = None                   # The worn task-star style (an item), read by the 
 _HEADS = {}
 
 
-def head_top(pixmap):
-    """(x, y) fractions of ``pixmap`` where the top of her head is."""
+def head_box(pixmap):
+    """(centre x, top y, width) of her head as fractions of ``pixmap``: the top is the first row wide
+    enough to be her head (not the feather); the centre and width are the medians of the hair's left
+    and right edges over the head's top band, so the thin feather on one side never pulls them."""
     key = pixmap.cacheKey()
     if key not in _HEADS:
-        image = pixmap.toImage().convertToFormat(QImage.Format_ARGB32).scaledToWidth(96, Qt.FastTransformation)
+        image = pixmap.toImage().convertToFormat(QImage.Format_ARGB32).scaledToWidth(128, Qt.FastTransformation)
         w, h = image.width(), image.height()
-        found = (.5, .12)
+        found = (.5, .12, .5)
+        top = None
+        lefts, rights = [], []
         for y in range(h):
-            xs = [x for x in range(int(w * .22), int(w * .78)) if (image.pixel(x, y) >> 24) > 140]
-            if len(xs) >= w * .12:                          # Wide enough to be her head, not the feather.
-                found = (sum(xs) / len(xs) / w, y / h)
+            xs = [x for x in range(int(w * .15), int(w * .85)) if (image.pixel(x, y) >> 24) > 140]
+            if top is None:
+                if len(xs) >= w * .12:
+                    top = y
+                else:
+                    continue
+            if y > top + h * .1:
                 break
+            runs, start = [], None                          # The widest unbroken run is her head;
+            for x in xs + [None]:                           # the feather is a thin run of its own.
+                if start is None:
+                    start = prev = x
+                elif x is None or x != prev + 1:
+                    runs.append((start, prev))
+                    start = prev = x
+                else:
+                    prev = x
+            if runs:
+                left, right = max(runs, key=lambda r: r[1] - r[0])
+                lefts.append(left)
+                rights.append(right)
+        if top is not None and lefts:
+            lefts.sort()
+            rights.sort()
+            left, right = lefts[len(lefts) // 2], rights[len(rights) // 2]
+            found = ((left + right) / 2 / w, top / h, (right - left) / w)
         if len(_HEADS) > 256:
             _HEADS.clear()
         _HEADS[key] = found
     return _HEADS[key]
+
+
+def head_top(pixmap):
+    """(x, y) fractions of ``pixmap`` where the top of her head is."""
+    x, y, _ = head_box(pixmap)
+    return x, y
 
 
 def worn_items(panel):
@@ -252,18 +284,27 @@ class Decor:
             turn = fit.get('angle', 0)
             if slot == 'weapon':                            # In her hand, as Codex measured it per frame.
                 hand = hands().get(getattr(self, 'source', None) or '')
-                if hand is None or bool(hand.get('front', True)) != layer.front:
+                if hand is None:                            # No free hand: it floats at her side, summoned.
+                    if layer.front:
+                        continue
+                    bob = math.sin(now * 1.8) * side * .025
+                    point = QPointF(rect.right() - rect.width() * .1, rect.y() + rect.height() * .62 + bob)
+                    self._draw(p, art, point, (ax, ay), rect.width() / 1254 * .62 * WEAPON_SCALE.get(item['name'], 1.0),
+                               22 + math.sin(now * 1.2) * 4)
+                    continue
+                if bool(hand.get('front', True)) != layer.front:
                     continue
                 point = QPointF(rect.x() + hand['x'] / 1254 * rect.width(), rect.y() + hand['y'] / 1254 * rect.height())
                 self._draw(p, art, point, (ax, ay), rect.width() / 1254 * WEAPON_SCALE.get(item['name'], 1.0),
                            hand.get('angle', 0))
                 continue
             if slot == 'head':
-                fx, fy = head_top(pixmap)
+                fx, fy, fw = head_box(pixmap)
+                size *= max(.85, min(1.2, fw / .5))         # As wide as her head is in this pose.
                 if fit.get('side'):                         # Pinned at the side of her head, away from her feather.
-                    point = QPointF(rect.x() + (fx - .2) * rect.width(), rect.y() + (fy + .13) * rect.height())
+                    point = QPointF(rect.x() + (fx - fw * .38) * rect.width(), rect.y() + (fy + .13) * rect.height())
                 else:
-                    point = QPointF(rect.x() + (fx - .03) * rect.width(), rect.y() + (fy + .07) * rect.height())
+                    point = QPointF(rect.x() + fx * rect.width(), rect.y() + (fy + .07) * rect.height())
             elif slot == 'back':
                 point = QPointF(rect.center().x(), rect.y() + rect.height() * .5)
             elif slot == 'ground':

@@ -5232,6 +5232,7 @@ class Panel(QWidget):
             # In game mode she lets the mouse through: the switch lives here too.
             'game_mode_menu': menu.addAction('', lambda: self.game_mode.toggle()),
             'workbench_open': menu.addAction('', self.open_workbench),
+            'wardrobe_open': menu.addAction('', self.open_wardrobe),
             'wb_reports': menu.addAction('', self.open_reports),
             'settings_help': menu.addAction('', self.open_settings),
         }
@@ -6433,6 +6434,9 @@ class Panel(QWidget):
         pet = getattr(self, 'pet', None)
         if pet is not None:
             pet.decor.refresh()
+        window = getattr(self, 'wardrobe_window', None)
+        if window is not None and window.isVisible():
+            window.mirror.update()
 
     def stardust_unlocked(self, name):
         """A new unlock: she is delighted, a notice says what it is."""
@@ -6552,6 +6556,16 @@ class Panel(QWidget):
         self.workbench_window.show()
         self.workbench_window.raise_()
         self.workbench_window.activateWindow()
+
+    def open_wardrobe(self):
+        """The Stardust Wardrobe: everything stardust, in its own window (wardrobe.py)."""
+        from wardrobe import Wardrobe
+        if getattr(self, 'wardrobe_window', None) is None:
+            self.wardrobe_window = Wardrobe(self)
+        self.wardrobe_window.refresh()
+        self.wardrobe_window.show()
+        self.wardrobe_window.raise_()
+        self.wardrobe_window.activateWindow()
 
     def workbench_store(self):
         """The running app's workbench database (None in tests and previews)."""

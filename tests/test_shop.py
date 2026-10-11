@@ -147,6 +147,34 @@ class ShopTests(unittest.TestCase):
         self.assertEqual(discount_text(.75), '7.5')
         self.assertEqual(discount_text(.7), '7')
 
+    def test_wardrobe_tries_on_buys_and_wears(self):
+        from wardrobe import Wardrobe
+        self.give(3000)
+        self.panel.apply_ring_skin = lambda: None
+        self.panel.persist = lambda: None
+        w = Wardrobe(self.panel)
+        w.resize(1220, 800)
+        w.set_kind('head')
+        crown = shop.BY_ID['decor.head_prism_crown']
+        w.choose(crown)
+        self.assertIs(w.preview_items()['head'], crown)          # Tried on before it is owned.
+        self.assertNotIn(crown['id'], self.shop.owned())
+        w._act()                                                  # Buy and wear.
+        self.assertIn(crown['id'], self.shop.owned())
+        self.assertEqual(self.shop.equipped()['head'], crown['id'])
+        w._act()                                                  # Take it off again.
+        self.assertNotIn('head', self.shop.equipped())
+        for kind in ('weapon', 'back', 'star'):
+            w.set_kind(kind)
+            self.assertTrue(all(t.item['slot'] == kind for t in w.tiles))
+        for pose in ('cheer', 'idle'):
+            w.set_pose(pose)
+            self.assertFalse(w.mirror.grab().isNull())
+        for page in range(3):
+            w.pages.setCurrentIndex(page)
+            self.assertFalse(w.grab().isNull())
+        w.close()
+
     def test_limited_items_only_in_their_window(self):
         kimono = shop.BY_ID['outfit.sakura_kimono']
         self.assertTrue(shop.in_window(kimono, datetime(2026, 4, 1).date()))

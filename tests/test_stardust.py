@@ -39,7 +39,8 @@ class StardustTests(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
-        self.store = WorkbenchStore(Path(temp.name) / 'workbench.sqlite3')
+        self.store_path = Path(temp.name) / 'workbench.sqlite3'
+        self.store = WorkbenchStore(self.store_path)
         self.addCleanup(self.store.close)
         self.panel = FakePanel(self.store)
         self.dust = Stardust(self.panel, clock=lambda: NOW)
@@ -68,19 +69,16 @@ class StardustTests(unittest.TestCase):
         self.assertEqual(unlocked(1000), ['skin_meteor', 'skin_aurora', 'starsea'])
         self.assertIsNone(next_unlock(1000))
 
-    def test_collection_page_shows_progress_and_unlocked_skins(self):
-        from collection_view import CollectionPage
+    def test_wardrobe_milestones_show_progress_and_unlocked_skins(self):
+        import random
+        from shop import Shop
+        from wardrobe import Wardrobe
         self.dust.gain('star_review', 'x', 200)
         self.panel.stardust = self.dust
         self.panel.apply_ring_skin = mock.Mock()
         self.panel.persist = mock.Mock()
-
-        class Owner:
-            pass
-        owner = Owner()
-        owner.store, owner.panel = self.store, self.panel
-        page = CollectionPage(owner)
-        page.apply_language()
+        self.panel.shop = Shop(self.panel, self.store_path.parent / 'shop.json', rng=random.Random(1))
+        page = Wardrobe(self.panel)
         self.assertEqual(page.stardust.text(), 'Stardust 200')
         self.assertEqual((page.stardust_bar.value(), page.stardust_bar.maximum()), (200, 400))
         self.assertIn('200 more', page.stardust_next.text())
