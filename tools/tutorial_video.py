@@ -115,6 +115,17 @@ class Stage(QWidget):
         p.fillRect(self.rect(), g)
 
 
+def settle_ring(panel, seconds=1.0):
+    """Wait until the star ring has caught up with her, then start its trails afresh."""
+    manager = panel.task_manager
+    for _ in range(150):
+        if getattr(manager, '_halo_pose', None) == getattr(manager, '_halo_target', None):
+            break
+        pump(.1)
+    manager._clear_trails()
+    pump(seconds)
+
+
 def rect_in(widget, top):
     return QRect(widget.mapTo(top, QPoint(0, 0)), widget.size())
 
@@ -571,7 +582,8 @@ def capture_all(pv, base, size=(1120, 820)):
 
     overlay = base.pet.usage_overlay
     base.panel.hide()
-    pump(4.0)                      # Let the comet trails from moving her fade out.
+    pump(1.0)
+    settle_ring(base.panel, 1.5)   # No trails left over from moving her.
     pet_rect = base.pet.frameGeometry()
     shoot('ring', {})
     manager = base.panel.task_manager
@@ -690,7 +702,8 @@ def record_ring_lives(pv, base, wanted, folder, rerecord=False):
         pet.move(int(stage_rect.center().x() - sx - sw / 2), int(stage_rect.center().y() - sy - sh / 2 + 40))
         pet.show()
         pet.raise_()
-        pump(5.0)
+        pump(2.0)
+        settle_ring(panel, 2.0)
         box = QRect(pet.x() + int(sx), pet.y() + int(sy), int(sw), int(sh))
         region = QRect(box.center().x() - int(sw * 1.2), box.center().y() - int(sh * .85),
                        int(sw * 2.4), int(sh * 1.6)).intersected(stage_rect)

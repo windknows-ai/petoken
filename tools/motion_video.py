@@ -184,7 +184,9 @@ def pill(p, center, text, size, accent, angle=0.0, scale=1.0, alpha=1.0, fill='#
 def units(text):
     """Pieces that pop in one by one: characters (Chinese) or words."""
     if LANG == 'zh_CN':
-        return list(text)
+        import re
+        # Chinese characters one by one; Latin words and numbers stay whole.
+        return [piece for piece in re.findall(r"[A-Za-z0-9.+#'-]+ ?|\s|.", text) if piece]
     out = []
     for word in text.split(' '):
         out.append(word + ' ')
@@ -211,7 +213,7 @@ def headline(p, text, x, y, size, t, width, accent, align=Qt.AlignLeft, start=.1
     f = font(size)
     lines = wrap(units(text), f, width)
     floor = size * .66                       # A slightly long title shrinks onto one line first.
-    while len(lines) == 2 and size > floor and len(text) <= 12:
+    while len(lines) == 2 and size > floor:
         size -= 4
         f = font(size)
         lines = wrap(units(text), f, width)

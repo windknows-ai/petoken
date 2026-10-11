@@ -151,6 +151,16 @@ class HaloLayer(QWidget):
     def drop(self, key):
         return self._trails.pop(key, None) is not None
 
+    def shift(self, dx, dy):
+        """Carry every trail along with the ring when the whole ring moves, so a
+        trail only ever shows a star's way round the ring, never a straight
+        streak from the ring gliding after her."""
+        if not (dx or dy):
+            return
+        for key, trail in self._trails.items():
+            self._trails[key] = deque(((x + dx, y + dy, stamp, depth) for x, y, stamp, depth in trail),
+                                      maxlen=self.MAX_SAMPLES)
+
     def clear_all(self):
         had = bool(self._trails)
         self._trails.clear()
@@ -483,6 +493,8 @@ class HaloScene:
             cost = abs(delta[0]) + abs(delta[1]) + abs(delta[2]) + abs(delta[3])
             fraction = min(1.0, (6 * dt / .04) / cost) if cost else 1.0
             self._halo_pose = geometry.HaloPose(*(a + fraction * d for a, d in zip(self._halo_pose, delta)))
+            for layer in (self.back_overlay, self.trail_overlay):
+                layer.shift(fraction * delta[0], fraction * delta[1])
             largest = max((abs(self._halo_targets[k] - v) for k, v in self._halo_offsets.items()), default=0)
             angular = min(1.0, .018 * dt / .04 / largest) if largest else 1.0
             for key in self._halo_offsets:
