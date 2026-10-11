@@ -2,6 +2,19 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.4.0 — 2026-10-10
+
+### Added
+- **Meeting reminders** from calendar .ics links (Settings › Calendar): a card and a phone push a few minutes before, Do Not Disturb during, a summary of what the AIs did afterwards.
+- **Stardust** from finished AI tasks, accepted reviews, focus rounds and AI working time (capped daily), counted apart from companionship points; progress on the Collection page.
+- **Star-ring skins**: Meteor (150 stardust) and Aurora (400); switch on the Collection page.
+- **Starsea Awakening** (1000 stardust): her third form with its own poses and a short awakening, worn only when chosen (Show › Starsea form or Collection); a Starsea group in the Guide.
+
+### Fixed
+- Claude waiting for you without a permission prompt (a tool's access dialog, a question or plan with permissions bypassed) now notifies on the pet and the phone.
+
+See [release notes](docs/RELEASE_NOTES_v2.4.0.md).
+
 ## V2.3.0 — 2026-10-10
 
 ### Added
