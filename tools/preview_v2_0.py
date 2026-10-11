@@ -495,9 +495,12 @@ class Preview(QWidget):
             window.tabs.setCurrentIndex(window.shop_tab)
         starsea = getattr(self.panel, 'starsea', None)
         self._wish = WishShow(window, results, self.panel.prefs.get('language', 'zh_CN'),
-                              bool(starsea is not None and starsea.active))
+                              bool(starsea is not None and starsea.active),
+                              sound=self.panel.prefs.get('wish_sound', True),
+                              on_sound=lambda on: self.panel.prefs.__setitem__('wish_sound', on))
         self._wish.show()
         self._wish.raise_()
+        self._wish.setFocus()
 
     def own_all_decor(self):
         """Own every decoration so each can be tried on (Workbench › Shop › wardrobe)."""

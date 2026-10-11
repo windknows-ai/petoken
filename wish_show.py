@@ -18,10 +18,11 @@ from __future__ import annotations
 
 import math
 import random
-from collections import OrderedDict
+from concurrent.futures import Future, ThreadPoolExecutor
 
-from PySide6.QtCore import QPointF, QRectF, Qt, QTimer
-from PySide6.QtGui import QColor, QConicalGradient, QFont, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap
+from PySide6.QtCore import QEvent, QPointF, QRectF, Qt, QTimer
+from PySide6.QtGui import (QColor, QConicalGradient, QFont, QImage, QLinearGradient, QPainter, QPainterPath, QPen,
+                           QPixmap)
 from PySide6.QtWidgets import QWidget
 
 import pet_assets
@@ -36,7 +37,9 @@ _FX = {}
 SEQ_DIR = FX_DIR / 'seq'            # After Effects frame sequences (tools/ae), 30 fps.
 SEQ_FPS = 30
 _SEQ = {}
-_FRAMES = OrderedDict()
+_FRAMES = {}                        # (name, index) -> QImage, or the Future decoding it.
+# Decoding happens off the main thread, ahead of need, so a burst never waits on a file.
+_POOL = ThreadPoolExecutor(max_workers=3, thread_name_prefix='wish')
 
 
 def fx(name):
@@ -81,17 +84,35 @@ def seq_length(name):
     return len(_SEQ[name])
 
 
+def _decode(path):
+    image = QImage(path)
+    return image.convertToFormat(QImage.Format_RGB32) if not image.isNull() else image
+
+
+def preload(name):
+    """Start decoding every frame of ``name`` in the background."""
+    for index in range(seq_length(name)):
+        key = (name, index)
+        if key not in _FRAMES:
+            _FRAMES[key] = _POOL.submit(_decode, str(_SEQ[name][index]))
+
+
+def release(name):
+    """Let a finished sequence's frames go (they are big)."""
+    for key in [k for k in _FRAMES if k[0] == name]:
+        del _FRAMES[key]
+
+
 def seq_frame(name, index):
-    """One frame of a sequence, decoded on first use (a small cache keeps recent ones)."""
+    """One frame of a sequence: preloaded if it was asked for in time, else decoded now."""
     key = (name, index)
-    if key in _FRAMES:
-        _FRAMES.move_to_end(key)
-        return _FRAMES[key]
-    pixmap = QPixmap(str(_SEQ[name][index]))
-    _FRAMES[key] = pixmap
-    while len(_FRAMES) > 320:
-        _FRAMES.popitem(last=False)
-    return pixmap
+    item = _FRAMES.get(key)
+    if item is None:
+        item = _decode(str(_SEQ[name][index]))
+    elif isinstance(item, Future):
+        item = item.result()
+    _FRAMES[key] = item
+    return item
 
 
 def play(p, name, centre, width, t, alpha=1.0, loop=False, angle=0.0, height=None):
@@ -104,14 +125,14 @@ def play(p, name, centre, width, t, alpha=1.0, loop=False, angle=0.0, height=Non
         index %= count
     elif index >= count:
         return False
-    pixmap = seq_frame(name, index)
+    image = seq_frame(name, index)
     p.save()
     p.translate(centre)
     if angle:
         p.rotate(angle)
     p.setOpacity(min(1.0, alpha))
     height = width if height is None else height
-    p.drawPixmap(QRectF(-width / 2, -height / 2, width, height), pixmap, QRectF(pixmap.rect()))
+    p.drawImage(QRectF(-width / 2, -height / 2, width, height), image, QRectF(image.rect()))
     p.restore()
     return True
 
@@ -127,6 +148,35 @@ def play_loop(p, name, centre, width, t, alpha=1.0, angle=0.0, height=None):
         v = (u + shift) % 1.0
         weight = math.sin(math.pi * v) ** 2
         play(p, name, centre, width, v * period, alpha * weight, angle=angle, height=height)
+
+
+def _scaled_layer(path, w, h, cover, ratio):
+    image = QImage(path)
+    if image.isNull():
+        return None
+    scale = max(w / image.width(), h / image.height()) * cover
+    scaled = image.scaled(int(image.width() * scale * ratio), int(image.height() * scale * ratio),
+                          Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+    scaled.setDevicePixelRatio(ratio)
+    return scaled
+
+
+def _scaled_card(path, w, h, ratio):
+    image = QImage(path)
+    if image.isNull():
+        return None
+    image = image.scaled(w, h, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+    image.setDevicePixelRatio(ratio)
+    return image
+
+
+def _fitted_art(path, side, ratio):
+    image = QImage(path)
+    if image.isNull():
+        return None
+    image = image.scaled(side, side, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    image.setDevicePixelRatio(ratio)
+    return image
 
 
 def light(p, name, centre, width, alpha=1.0, angle=0.0, squash=1.0, tilt=0.0):
@@ -183,8 +233,14 @@ class WishShow(QWidget):
     FLASH = (0, .04, .14, .18, .22)
     EXCLUSIVE = 1.85              # Galaxy and Starsea play their own opening first (its flash is the burst).
 
-    def __init__(self, parent, results, language, starsea=False):
-        super().__init__(parent, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+    def __init__(self, parent, results, language, starsea=False, sound=False, on_sound=None):
+        # Inside the window it was opened from (it moves and resizes with it), or its own
+        # window when there is none (tests, previews).
+        self.host = parent.window() if parent is not None else None
+        if self.host is not None:
+            super().__init__(self.host)
+        else:
+            super().__init__(None, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
         self.setMouseTracking(True)
@@ -192,8 +248,9 @@ class WishShow(QWidget):
         self.results, self.language, self.starsea = results, language, starsea
         self.ten = len(results) > 1
         self.t = 0.0
-        if parent is not None:
-            self.setGeometry(parent.geometry())
+        if self.host is not None:
+            self.setGeometry(self.host.rect())
+            self.host.installEventFilter(self)
         else:
             self.resize(1000, 640)
         self.rng = random.Random(len(results) * 31 + sum(map(ord, results[0]['item']['id'])))
@@ -226,6 +283,17 @@ class WishShow(QWidget):
         self.burst_at = {}            # Per catch: where its burst stays (it does not follow her).
         self.exclusive = {}           # index -> when its own opening starts (Galaxy, Starsea).
         self._layers = {}
+        self._used = set()
+        for name in ['wishstar', 'charge'] + [f'{kind}_{r}' for r in {res['item']['rarity'] for res in results}
+                                              for kind in ('emblem', 'cardbeam')]:
+            self._preload(name)
+        self._prepare_poses()
+        self._prepare_layers()
+        self._prepare_art()
+        from wish_sound import Sounds
+        self.sounds = Sounds(sound)
+        self.on_sound = on_sound
+        self._cues = [(0.0, 'open')]                        # (show time, sound): played as time passes.
         self._poses = {}
         self._sky = None
         self.timer = QTimer(self)
@@ -235,36 +303,94 @@ class WishShow(QWidget):
         self.timer.start()
 
     # Setup ------------------------------------------------------------------------------
+    def _preload(self, name):
+        self._used.add(name)
+        preload(name)
+
+    def _prepare_poses(self):
+        """Scale every pose of the show once, in the background, before she needs it."""
+        self._pose_jobs = {}
+        size = self.height() * (.34 if self.ten else .40) * self.devicePixelRatioF()
+        for name in POSES:
+            source = self._pose_source(name)
+            if source is not None:
+                image = source.toImage()
+                self._pose_jobs[name] = _POOL.submit(image.scaledToHeight, int(size), Qt.SmoothTransformation)
+
+    def _prepare_art(self):
+        """Each find's picture, decoded and scaled to its card in the background."""
+        self._art = {}
+        ratio = self.devicePixelRatioF()
+        for k, index in enumerate(self.order if self.ten else [0]):
+            frames = self.results[index]['item'].get('art')
+            if not frames:
+                continue
+            centre, (cw, ch) = self.slot(k)
+            side = int(min(cw * .86, ch * .36) * ratio)
+            self._art[index] = _POOL.submit(_fitted_art, str(shop.ASSETS / frames[0]), side, ratio)
+        self._frames = {}                                   # The card frames, scaled to the cards.
+        for k, index in enumerate(self.order if self.ten else [0]):
+            rarity = self.rarity(index)
+            centre, (cw, ch) = self.slot(k)
+            key = (rarity, int(cw * ratio), int(ch * ratio))
+            path = FX_DIR / f'card_{rarity}.webp'
+            if key not in self._frames and path.is_file():
+                self._frames[key] = _POOL.submit(_scaled_card, str(path), key[1], key[2], ratio)
+
+    def _prepare_layers(self):
+        w, h, ratio = self.width(), self.height(), self.devicePixelRatioF()
+        for name, cover in (('sky_far', 1.10), ('sky_stars', 1.16), ('sky_dust', 1.24)):
+            path = FX_DIR / f'{name}.jpg'
+            if path.is_file() and (name, w, h) not in self._layers:
+                self._layers[(name, w, h)] = _POOL.submit(_scaled_layer, str(path), w, h, cover, ratio)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, '_art'):
+            self._prepare_art()                             # Cards and pictures at the new size.
+
+    def eventFilter(self, obj, event):
+        if obj is self.host and event.type() == QEvent.Resize:
+            self.setGeometry(self.host.rect())              # Always the whole window it lives in.
+        return False
+
+    def closeEvent(self, event):
+        self.sounds.close()
+        if self.host is not None:
+            self.host.removeEventFilter(self)
+        for name in self._used:                             # The frames are big; let them go.
+            release(name)
+        super().closeEvent(event)
+
     def _shower(self):
         """Background meteors for the whole show: (start, life, x, y, depth, colour key)."""
         rng = self.rng
         out, t = [], .15
         while t < 90:
-            rate = 3 + 8 * _ease((t - .2) / 1.2)
-            t += rng.expovariate(rate)
+            rate = 5 + 7 * _ease((t - .1) / .8)                    # Never a gap: evenly jittered.
+            t += rng.uniform(.35, 1.65) / rate
             out.append((t, rng.uniform(1.0, 1.7), rng.uniform(-.15, 1.05), rng.uniform(-.25, .75), rng.random() ** 1.4,
                         rng.choice(SHOWER)))
         return out
 
-    def pose(self, name, size):
-        """Her picture for a moment of the show, scaled once to ``size`` pixels tall."""
+    def _pose_source(self, name):
         state = POSES[name][1 if self.starsea else 0]
-        key = (state, int(size))
-        if key not in self._poses:
-            source = None
-            for candidate in (state, POSES[name][0], 'idle'):
-                source = (pet_assets.frame_for(candidate, 0) if pet_assets.frame_count(candidate)
-                          else pet_assets.sprite_for(candidate))
-                if source is not None and not source.isNull():
-                    break
-            if source is None or source.isNull():
-                self._poses[key] = None
-            else:
-                ratio = self.devicePixelRatioF()
-                scaled = source.scaledToHeight(int(size * ratio), Qt.SmoothTransformation)
-                scaled.setDevicePixelRatio(ratio)
-                self._poses[key] = scaled
-        return self._poses[key]
+        for candidate in (state, POSES[name][0], 'idle'):
+            source = (pet_assets.frame_for(candidate, 0) if pet_assets.frame_count(candidate)
+                      else pet_assets.sprite_for(candidate))
+            if source is not None and not source.isNull():
+                return source
+        return None
+
+    def pose(self, name, size=None):
+        """Her picture for a moment of the show (scaled in the background at the start)."""
+        if name not in self._poses:
+            job = self._pose_jobs.get(name)
+            image = job.result() if job is not None else None
+            if image is not None:
+                image.setDevicePixelRatio(self.devicePixelRatioF())
+            self._poses[name] = image
+        return self._poses[name]
 
     def colour(self, index, t=None):
         from shop_view import rarity_colour
@@ -291,14 +417,20 @@ class WishShow(QWidget):
         scale = 1.0
         for index, burst in self.catch.items():
             hold = self.SLOW[self.rank(index)]
-            if hold and burst - .06 <= self.t <= burst + hold:
-                scale = min(scale, .36)
+            if hold and burst - .12 <= self.t <= burst + hold + .35:
+                env = _ease((self.t - burst + .12) / .12) * (1 - _ease((self.t - burst - hold) / .35))
+                scale = min(scale, 1 - .62 * env)
         return scale
 
     def advance(self, dt):
         """Move the show on by ``dt`` seconds: her, the wishing stars, the catches."""
         dt *= self.time_scale()
         self.t += dt
+        if self._cues and self._cues[0][0] <= self.t:
+            due = [cue for cue in self._cues if cue[0] <= self.t]
+            self._cues = [cue for cue in self._cues if cue[0] > self.t]
+            for _, name in due[-4:]:                        # Never a pile-up after a skip.
+                self.sounds.play(name)
         t, w, h = self.t, self.width(), self.height()
         self._move_her(dt)
         self.wake.append((t, QPointF(self.her)))
@@ -343,19 +475,44 @@ class WishShow(QWidget):
 
     def _caught(self, where):
         index = self.queue.pop(0)
+        rarity = self.rarity(index)
+        for name in (f'reveal_{rarity}', f'pillar_{rarity}') + ((f'exclusive_{rarity}',) if self.rank(index) >= 3 else ()):
+            self._preload(name)
         self.touch[index] = (self.t, QPointF(where))
         if self.rank(index) >= 3:                           # Its own opening, then the burst on its flash.
             self.exclusive[index] = self.t + .35
             self.catch[index] = self.exclusive[index] + self.EXCLUSIVE
+            self._cue(self.t, 'catch')
+            self._cue(self.exclusive[index], 'rise')
         else:
             self.catch[index] = self.t + self.CHARGE
+            self._cue(self.t, 'catch')
+            self._cue(self.t + .02, 'charge')
+        self._cue(self.catch[index], f'burst_{rarity}')
         self.progress = self.catch[index]
         if not self.queue:
             self.flip0 = self.catch[index] + (1.25 if not self.ten else 1.3)
-            self.length = self.flip0 + (1.4 if not self.ten else 10 * .16 + 1.4)
+            for k, card in enumerate(self.order if self.ten else [0]):
+                self._cue(self._flip_time(k), 'flip_fine' if self.rank(card) >= 2 else 'flip')
+            self.length = self.flip0 + (1.0 if not self.ten else 9 * self.STAGGER + 1.0)
+
+    def _cue(self, at, name):
+        self._cues.append((at, name))
+        self._cues.sort(key=lambda cue: cue[0])
+
+    def sound_rect(self):
+        return QRectF(self.width() - 160, 16, 32, 32)
+
+    def toggle_sound(self):
+        enabled = not self.sounds.enabled
+        self.sounds.set_enabled(enabled)
+        if self.on_sound is not None:
+            self.on_sound(enabled)
 
     def skip(self):
         """Every star still to find comes to her at once, then the cards."""
+        if self.flip0 < self.NEVER and self.t > self.flip0 - .8:
+            return                                          # The cards are coming: no skipping now.
         hand = self.hand()
         if self.t < self.INTRO:
             self.t = self.INTRO
@@ -463,10 +620,11 @@ class WishShow(QWidget):
         """Where card ``k`` sits: tall cards side by side (ten) or one tall card (one)."""
         w, h = self.width(), self.height()
         if not self.ten:
-            ch = h * .72
-            return QPointF(w * .64, h * .5), (ch * .5, ch)
+            ch = h * .74
+            return QPointF(w * .64, h * .5), (ch / 2.4, ch)
         cw = min(w * .9 / (10 + 9 * .14), h * .2)          # All ten fit, side by side.
-        ch = min(cw * 2.55, h * .6)
+        ch = min(cw * 2.4, h * .62)
+        cw = ch / 2.4
         gap = cw * .14
         x0 = w * .5 - 4.5 * (cw + gap)
         return QPointF(x0 + k * (cw + gap), h * .43), (cw, ch)
@@ -482,10 +640,14 @@ class WishShow(QWidget):
         self.pointer = event.position()
 
     def mousePressEvent(self, event):
-        if self.flip0 < self.NEVER and self.t > self.flip0 + .4:
-            self.close()                                    # The cards are out: a click closes.
-            return
         point = event.position() if event is not None else None
+        if point is not None and self.sound_rect().contains(point):
+            self.toggle_sound()                             # Sound on or off, any time.
+            return
+        if self.flip0 < self.NEVER:                          # Cards: wait until all have turned.
+            if self.cards_done():
+                self.close()
+            return
         if point is None or self.skip_rect().contains(point):
             self.skip()
             return
@@ -499,8 +661,9 @@ class WishShow(QWidget):
         if key in self.KEYS:
             self.keys.add(self.KEYS[key])
         elif key in (Qt.Key_Escape, Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter):
-            if self.flip0 < self.NEVER and self.t > self.flip0 + .4:
-                self.close()
+            if self.flip0 < self.NEVER:
+                if self.cards_done():
+                    self.close()
             else:
                 self.skip()
 
@@ -574,11 +737,37 @@ class WishShow(QWidget):
 
     def _paint_hud(self, p):
         w, h, t = self.width(), self.height(), self.t
+        box = self.sound_rect()                             # Sound on / off.
+        p.setPen(QPen(QColor(220, 215, 255, 150), 1))
+        p.setBrush(QColor(20, 16, 50, 120))
+        p.drawEllipse(box)
+        p.setPen(QPen(QColor(235, 232, 255, 230), 1.6))
+        c = box.center()
+        cone = QPainterPath()
+        cone.moveTo(c.x() - 8, c.y() - 3)
+        cone.lineTo(c.x() - 4, c.y() - 3)
+        cone.lineTo(c.x() + 1, c.y() - 8)
+        cone.lineTo(c.x() + 1, c.y() + 8)
+        cone.lineTo(c.x() - 4, c.y() + 3)
+        cone.lineTo(c.x() - 8, c.y() + 3)
+        cone.closeSubpath()
+        p.setBrush(QColor(235, 232, 255, 230))
+        p.drawPath(cone)
+        p.setBrush(Qt.NoBrush)
+        if self.sounds.enabled:
+            p.drawArc(QRectF(c.x() - 3, c.y() - 5, 10, 10), -50 * 16, 100 * 16)
+            p.drawArc(QRectF(c.x() - 5, c.y() - 9, 18, 18), -50 * 16, 100 * 16)
+        else:
+            p.drawLine(QPointF(c.x() + 4, c.y() - 4), QPointF(c.x() + 10, c.y() + 4))
+            p.drawLine(QPointF(c.x() + 10, c.y() - 4), QPointF(c.x() + 4, c.y() + 4))
         p.setFont(QFont('Microsoft YaHei UI', 10))
-        if self.flip0 < self.NEVER and t > self.flip0 + .4:
-            p.setPen(QColor(220, 220, 255, int(200 * _ease((t - self.flip0 - .4) / .4))))
+        if self.cards_done():
+            done = self._flip_time(9 if self.ten else 0) + self.FLIP + .15
+            p.setPen(QColor(220, 220, 255, int(200 * _ease((t - done) / .3))))
             p.drawText(QRectF(0, h - 44, w, 26), Qt.AlignCenter, text('shop_wish_close', self.language))
             return
+        if self.flip0 < self.NEVER and t > self.flip0 - .8:
+            return                                          # No skipping once the cards are coming.
         fade = _ease((t - self.INTRO + .2) / .5) * (1 - _ease((t - self.flip0 + 1.2) / .4))
         if fade <= .01:
             return
@@ -630,21 +819,18 @@ class WishShow(QWidget):
         light(p, 'flare_gold' if shown == 'haori' else 'flare', point, h * (.5 + .6 * f), .3 + .4 * f)
 
     def _layer(self, name, cover):
-        """A sky layer scaled once to cover the window (with room to drift)."""
+        """A sky layer scaled to cover the window (scaled in the background)."""
         w, h = self.width(), self.height()
         key = (name, w, h)
         if key not in self._layers:
-            source = fx(name)
-            if source.isNull():
-                self._layers[key] = None
-            else:
-                ratio = self.devicePixelRatioF()
-                scale = max(w / source.width(), h / source.height()) * cover
-                scaled = source.scaled(int(source.width() * scale * ratio), int(source.height() * scale * ratio),
-                                       Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-                scaled.setDevicePixelRatio(ratio)
-                self._layers[key] = scaled
-        return self._layers[key]
+            self._prepare_layers()
+        item = self._layers.get(key)
+        if isinstance(item, Future):
+            if not item.done():
+                return None                                 # Still being scaled: the sky fades in anyway.
+            item = item.result()
+            self._layers[key] = item
+        return item
 
     def _paint_sky(self, p):
         """Three layers drifting at different speeds (and a little with her): depth."""
@@ -656,7 +842,7 @@ class WishShow(QWidget):
         for name, cover, speed, parallax, mode in (('sky_far', 1.10, .6, .010, None),
                                                     ('sky_stars', 1.16, .9, .022, QPainter.CompositionMode_Plus),
                                                     ('sky_dust', 1.24, 1.3, .045, QPainter.CompositionMode_Plus)):
-            layer = self._layer(name, cover) if not fx(name).isNull() else self._layer('sky', 1.10)
+            layer = self._layer(name, cover)
             if layer is None:
                 continue
             sw, sh = layer.width() / layer.devicePixelRatio(), layer.height() / layer.devicePixelRatio()
@@ -664,10 +850,8 @@ class WishShow(QWidget):
             y = -(sh - h) * (.55 - .25 * drift * speed / 1.3)
             if mode is not None:
                 p.setCompositionMode(mode)
-            p.drawPixmap(QPointF(round(x), round(y)), layer)
+            p.drawImage(QPointF(round(x), round(y)), layer)
             p.setCompositionMode(QPainter.CompositionMode_SourceOver)
-            if fx(name).isNull():
-                break
         p.setOpacity(1)
 
     def _paint_twinkles(self, p):
@@ -702,9 +886,24 @@ class WishShow(QWidget):
             thin = depth < .5
             length = h * (.14 + .36 * depth)
             streak(p, f'meteor_{key}{"_thin" if thin else ""}', head, angle, length, alpha, grow=f / .3)
+            if depth > .62:                                 # The near ones shed sparkles behind them.
+                seed = int(at * 1000)
+                for j in range(1, 7):
+                    back = j * .055
+                    if age - back < 0:
+                        break
+                    was = centre + QPointF(ux, uy) * (speed * (age - back - life * .4))
+                    drift = ((seed * (j + 3)) % 17 - 8) / 8 * h * .02 * back * 4
+                    q = was + QPointF(-uy * drift, ux * drift)
+                    light(p, f'sparkle_{SHOWER[(seed + j) % 4]}', q, h * .026 * depth * (1 - j / 8),
+                          alpha * (1 - j / 7) * .8)
             if depth > .72:                                 # The near ones flare at the head.
                 flicker = .75 + .25 * math.sin(t * 31 + at * 17)
                 light(p, f'sparkle_{key}', head, h * .05 * depth * flicker, alpha * .8, angle=angle * .2)
+            if depth > .93 and f > .82:                     # A fireball bursts as it burns out.
+                pop = math.sin(math.pi * (f - .82) / .18)
+                light(p, f'sparkle_{key}', head, h * .14 * pop, pop * env * focus)
+                light(p, 'flare', head, h * .5 * pop, pop * .5 * focus)
 
     def _paint_burst(self, p, index):
         """The catch: its rarity's burst (After Effects), with a lens streak across the sky."""
@@ -774,11 +973,8 @@ class WishShow(QWidget):
         hand = self.hand()
         above = hand + QPointF(self.width() * .13, -h * .17) * rise
         width = h * (.06 + (.36 + .04 * rank) * rise)
-        fly = _ease((t - (self.flip0 - .55)) / .55)
-        centre, (cw, ch) = self.slot(0)
-        point = above + (centre - above) * fly
-        width = _lerp(width, cw * .9, fly)
-        self._emblem(p, rarity, point, width, _ease((t - at - .1) / .35) * (1 - _ease((t - self.flip0) / .3)), t)
+        point = above
+        self._emblem(p, rarity, point, width, _ease((t - at - .1) / .35) * (1 - _ease((t - self.flip0 + .5) / .4)), t)
 
     def _orbit_point(self, k, t):
         pos, size, lean, left = self.her_place()
@@ -796,17 +992,13 @@ class WishShow(QWidget):
             point, depth = self._orbit_point(k, t)
             settle = _out((t - at) / .4)
             point = self.hand() + (point - self.hand()) * settle
-            fly = _ease((t - (self.flip0 - .6)) / .6)
-            if fly > 0:                                     # To its card.
-                centre, (cw, ch) = self.slot(k)
-                point = point + (centre - point) * fly
-                depth = 1.0
+            fly = 0.0
             if (depth < 0) != behind:
                 continue
             rarity, rank = self.rarity(index), self.rank(index)
             width = h * (.09 + .02 * rank)
             dim = .55 if depth < 0 else 1.0
-            fade = 1 - _ease((t - self._flip_time(k)) / .3)
+            fade = 1 - _ease((t - self.flip0 + .7) / .5)     # Gone before the cards turn.
             if fade > 0:
                 self._emblem(p, rarity, point, width, dim * fade, t + k)
 
@@ -826,18 +1018,26 @@ class WishShow(QWidget):
             light(p, f'sparkle_{SHOWER[k % 4]}', was + QPointF(0, size * .18), size * (.16 - k * .009),
                   .5 * (1 - k / 14))
         p.setCompositionMode(QPainter.CompositionMode_SourceOver)
-        sw = sprite.width() / sprite.devicePixelRatio() * size / (sprite.height() / sprite.devicePixelRatio())
+        sw = sprite.width() * size / sprite.height()
         p.save()
         p.translate(pos)
         p.rotate(lean)
         if facing_left:
             p.scale(-1, 1)
         p.setOpacity(_ease((self.t - .7) / .3))
-        p.drawPixmap(QRectF(-sw / 2, -size / 2, sw, size), sprite, QRectF(sprite.rect()))
+        p.drawImage(QRectF(-sw / 2, -size / 2, sw, size), sprite, QRectF(sprite.rect()))
         p.restore()
 
+    FLIP = .26                    # How long one card takes to turn.
+    STAGGER = .07                 # Between one card and the next.
+
     def _flip_time(self, k):
-        return self.flip0 + (k * .16 if self.ten else 0)
+        return self.flip0 + (k * self.STAGGER if self.ten else 0)
+
+    def cards_done(self):
+        """Every card has turned (only then does a click close)."""
+        last = self._flip_time(9 if self.ten else 0)
+        return self.flip0 < self.NEVER and self.t > last + self.FLIP + .15
 
     def _paint_results_backdrop(self, p):
         """When the cards come, the sky steps back so they stand out."""
@@ -864,93 +1064,86 @@ class WishShow(QWidget):
 
     def _paint_cards(self, p):
         for k, index in enumerate(self.order if self.ten else [0]):
-            f = (self.t - self._flip_time(k)) / .45
+            f = (self.t - self._flip_time(k)) / self.FLIP
             if f <= 0:
                 continue
             centre, (cw, ch) = self.slot(k)
             self._card(p, index, centre, cw, ch, f)
 
     def _card(self, p, index, centre, cw, ch, f):
+        """A result card: its frame (rendered, tools/render_card_frames.py), the find's picture on
+        the face, its name on the plate and its rarity under the plate's line."""
         from shop_view import draw_item, item_name
         result = self.results[index]
         item = result['item']
         colour = self.colour(index)
         rank = self.rank(index)
         rarity = self.rarity(index)
-        rise = (1 - _out(min(1.0, f))) * ch * .08            # It rises a little as it turns.
+        rise = (1 - _out(min(1.0, f))) * ch * .06            # It rises a little as it turns.
         flipped = max(.02, abs(math.cos(math.pi * (1 - _back(min(1.0, f))) / 2))) if f < 1 else 1.0
         p.save()
         p.translate(centre + QPointF(0, rise))
         p.scale(flipped, 1.0)
         box = QRectF(-cw / 2, -ch / 2, cw, ch)
-        radius = cw * .1
-        path = QPainterPath()
-        path.addRoundedRect(box, radius, radius)
-        face = QLinearGradient(box.topLeft(), box.bottomLeft())
-        face.setColorAt(0, QColor(14, 12, 36, 240))
-        face.setColorAt(.62, QColor(20, 16, 46, 240))
-        face.setColorAt(1, QColor(colour.red() // 3 + 10, colour.green() // 3 + 8, colour.blue() // 3 + 26, 245))
-        p.setPen(Qt.NoPen)
-        p.setBrush(face)
-        p.drawPath(path)
-        p.setClipPath(path)
-        glow_low = QLinearGradient(QPointF(0, ch / 2), QPointF(0, ch * .05))   # Its colour rising from the foot.
-        glow_low.setColorAt(0, _rgba(colour, 110 + 25 * rank))
-        glow_low.setColorAt(1, _rgba(colour, 0))
-        p.fillRect(box, glow_low)
+        ratio = self.devicePixelRatioF()
+        job = self._frames.get((rarity, int(cw * ratio), int(ch * ratio)))
+        frame = job.result() if job is not None else None
+        if frame is not None:
+            p.drawImage(box, frame, QRectF(frame.rect()))
+        else:
+            p.setPen(QPen(colour, 2))
+            p.setBrush(QColor(14, 12, 36, 240))
+            p.drawRoundedRect(box, cw * .1, cw * .1)
         p.setCompositionMode(QPainter.CompositionMode_Plus)
-        self._emblem(p, rarity, QPointF(0, -ch * .2), cw * 1.15, .55, self.t + index)   # Its star behind the art.
+        face = QPainterPath()
+        face.addRoundedRect(box.adjusted(cw * .05, ch * .04, -cw * .05, -ch * .02), cw * .06, cw * .06)
+        p.setClipPath(face)
+        self._emblem(p, rarity, QPointF(0, -ch * .13), cw * 1.05, .5, self.t + index)   # Its star behind the art.
+        p.setClipping(False)
+        if rank >= 3:                                       # Fine cards keep a light running over them.
+            y = -ch / 2 + ch * ((self.t * .45 + index * .13) % 1.3 - .15)
+            g = QLinearGradient(QPointF(0, y - ch * .08), QPointF(0, y + ch * .08))
+            g.setColorAt(0, QColor(255, 255, 255, 0))
+            g.setColorAt(.5, _rgba(colour, 40))
+            g.setColorAt(1, QColor(255, 255, 255, 0))
+            path = QPainterPath()
+            path.addRoundedRect(box.adjusted(cw * .05, ch * .04, -cw * .05, -ch * .02), cw * .06, cw * .06)
+            p.setClipPath(path)
+            p.fillRect(box, g)
+            p.setClipping(False)
         p.setCompositionMode(QPainter.CompositionMode_SourceOver)
-        art = min(cw * .92, ch * .44)
-        draw_item(p, item, QRectF(-art / 2, -ch * .2 - art / 2, art, art), colour)
-        shine = (f - 1) / .6                                 # A gleam sweeps down once.
+        art = min(cw * .86, ch * .36)
+        job = self._art.get(index)
+        picture = job.result() if job is not None else None
+        if picture is not None:
+            aw, ah = picture.width() / picture.devicePixelRatio(), picture.height() / picture.devicePixelRatio()
+            p.drawImage(QRectF(-aw / 2, -ch * .13 - ah / 2, aw, ah), picture, QRectF(picture.rect()))
+        else:
+            draw_item(p, item, QRectF(-art / 2, -ch * .13 - art / 2, art, art), colour)
+        shine = (f - 1) / .5                                 # A gleam sweeps down once.
         if 0 < shine < 1:
             y = -ch * .6 + ch * 1.2 * shine
-            g = QLinearGradient(QPointF(0, y - ch * .12), QPointF(0, y + ch * .12))
+            g = QLinearGradient(QPointF(0, y - ch * .1), QPointF(0, y + ch * .1))
             g.setColorAt(0, QColor(255, 255, 255, 0))
-            g.setColorAt(.5, QColor(255, 255, 255, 80 + 20 * rank))
+            g.setColorAt(.5, QColor(255, 255, 255, 70 + 20 * rank))
             g.setColorAt(1, QColor(255, 255, 255, 0))
+            path = QPainterPath()
+            path.addRoundedRect(box.adjusted(cw * .05, ch * .04, -cw * .05, -ch * .02), cw * .06, cw * .06)
+            p.setClipPath(path)
             p.fillRect(box, g)
-        p.setClipping(False)
-        if rank == 4:                                       # Starsea: an iridescent frame that turns.
-            frame = QConicalGradient(QPointF(0, 0), self.t * 80)
-            for k in range(7):
-                frame.setColorAt(k / 6, QColor.fromHsvF((k / 6 + self.t * .2) % 1, .55, 1))
-            pen = QPen(frame, 2.6)
-        elif rank == 3:                                     # Galaxy: silver flowing along the frame.
-            shift = (self.t * .6) % 2 - .5
-            frame = QLinearGradient(box.topLeft(), box.bottomRight())
-            for stop, value in ((0, .45), (max(0, min(1, shift - .18)), .55), (max(0, min(1, shift)), 1.0),
-                                (max(0, min(1, shift + .18)), .55), (1, .45)):
-                frame.setColorAt(stop, QColor.fromRgbF(.62 + .38 * value, .68 + .32 * value, .82 + .18 * value))
-            pen = QPen(frame, 2.4)
-        elif rank == 1:                                     # Moon: white that flashes.
-            flash = .8 + .2 * max(0.0, math.sin(self.t * 3.2)) ** 6
-            pen = QPen(QColor.fromRgbF(flash, flash, 1.0), 1.6 + 1.2 * flash)
-        else:
-            pen = QPen(colour, 2.2)
-        p.setPen(pen)
-        p.setBrush(Qt.NoBrush)
-        p.drawRoundedRect(box, radius, radius)
-        p.setPen(QPen(QColor(255, 255, 255, 40), 1))           # A fine inner line.
-        inner = box.adjusted(cw * .05, cw * .05, -cw * .05, -cw * .05)
-        p.drawRoundedRect(inner, radius * .7, radius * .7)
-        name_box = QRectF(-cw / 2 + cw * .06, ch * .12, cw * .88, ch * .2)
+            p.setClipping(False)
+        size = max(8, int(min(cw * .12, ch * .046)))
         p.setPen(QColor('#FFFFFF'))
-        size = max(8, int(min(cw * .13, ch * .052)))
         p.setFont(QFont('Microsoft YaHei UI', size, QFont.Bold))
-        p.drawText(name_box, Qt.AlignHCenter | Qt.AlignTop | Qt.TextWordWrap, item_name(item, self.language))
-        label = text(f'shop_rarity_{item["rarity"]}', self.language)
-        pill = QRectF(-cw * .36, ch * .34, cw * .72, max(14.0, ch * .06))
-        p.setPen(Qt.NoPen)
-        p.setBrush(_rgba(colour, 110))
-        p.drawRoundedRect(pill, pill.height() / 2, pill.height() / 2)
-        p.setPen(QColor('#FFFFFF'))
-        p.setFont(QFont('Microsoft YaHei UI', max(7, int(size * .8)), QFont.DemiBold))
-        p.drawText(pill, Qt.AlignCenter, label)
+        p.drawText(QRectF(-cw * .4, ch * .205, cw * .8, ch * .12), Qt.AlignCenter | Qt.TextWordWrap,
+                   item_name(item, self.language))
+        p.setPen(_rgba(colour.lighter(130), 255))
+        p.setFont(QFont('Microsoft YaHei UI', max(7, int(size * .78)), QFont.DemiBold))
+        p.drawText(QRectF(-cw * .4, ch * .335, cw * .8, ch * .06), Qt.AlignCenter,
+                   text(f'shop_rarity_{item["rarity"]}', self.language))
         if result['refund']:
             p.setPen(QColor(220, 215, 255))
-            p.setFont(QFont('Microsoft YaHei UI', max(7, int(size * .72))))
-            p.drawText(QRectF(-cw / 2, ch * .41, cw, ch * .08), Qt.AlignCenter,
+            p.setFont(QFont('Microsoft YaHei UI', max(7, int(size * .7))))
+            p.drawText(QRectF(-cw / 2, ch * .41, cw, ch * .06), Qt.AlignCenter,
                        text('shop_refund', self.language, points=result['refund']))
         p.restore()

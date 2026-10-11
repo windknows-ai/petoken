@@ -377,6 +377,55 @@ def meteor(name, colour, w=1024, h=96, tail=260.0, seed=0, rainbow=False, sparkl
     save_png(name, tonemap(energy, 1.25), window='box')
 
 
+def shower_meteor(name, colour, w=1536, h=96, tail=420.0, seed=0):
+    """A background shower meteor, finer (round 6): a crisp hot line, the head white-blue, the
+    tail cooling through its colour into violet, a faint patchy ionised glow, tiny sparkling bits
+    and a small cross flare on the head."""
+    rng = np.random.default_rng(seed)
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    hx, cy = w - 60, h / 2
+    u = hx - x
+    v = y - cy
+    behind = np.clip(u, 0, None)
+    flicker = (.6 + .25 * np.interp(behind, np.linspace(0, w, 400), rng.random(400))
+               + .25 * np.interp(behind, np.linspace(0, w, 70), rng.random(70)))
+    sway = np.interp(behind, np.linspace(0, w, 7), rng.normal(size=7)) * behind * .0025
+    fade = np.exp(-behind / tail) * (u > -1)
+    sigma = .55 + behind * .0045
+    line = fade * flicker * np.exp(-((v - sway) / sigma) ** 2) * (1.3 / sigma ** .4)
+    hot_line = np.exp(-behind / 60) * np.exp(-((v - sway) / .5) ** 2) * 1.6 * (u > -1)
+    patch = np.clip(np.interp(behind, np.linspace(0, w, 34), rng.random(34)) * 1.6 - .4, 0, 1)
+    glow_ion = fade * patch * np.exp(-((v - sway) / (3 + behind * .02)) ** 2) * .12
+    t = np.clip(behind / (tail * 1.8), 0, 1)[..., None]
+    c = np.array(colour, np.float32)
+    violet = np.array([.62, .5, 1.0], np.float32)
+    tint = c * (1 - t) + violet * t
+    hot = np.exp(-behind / 46)[..., None]
+    tint = tint * (1 - hot) + np.array([.92, .96, 1.0], np.float32) * hot
+    energy = (line + glow_ion)[..., None] * tint + hot_line[..., None] * np.array([.95, .97, 1.0], np.float32)
+    r2 = (x - hx) ** 2 + v ** 2
+    energy += (np.exp(-r2 / 2.0) * 10)[..., None] * (c * .25 + .75)
+    for angle in (45, 135):                                            # A small cross flare on the head.
+        a = math.radians(angle)
+        along = (x - hx) * math.cos(a) + v * math.sin(a)
+        across = -(x - hx) * math.sin(a) + v * math.cos(a)
+        arm = np.exp(-np.abs(along) / 7) * np.exp(-(across / .6) ** 2) * (np.abs(along) < 22) * 1.4
+        energy += arm[..., None] * (c * .4 + .6)
+    for k in range(40):                                                # Bits breaking off, twinkling.
+        d = rng.exponential(tail * .45) + 10
+        if d > w - 100:
+            continue
+        px, py = hx - d, cy + rng.normal() * (1.0 + d * .012)
+        s = rng.uniform(.5, 1.3) * math.exp(-d / (tail * 1.2)) * 1.6
+        dot = np.exp(-((x - px) ** 2 + (y - py) ** 2) / .5) * s
+        if s > .7:
+            dot += (np.exp(-np.abs(x - px) / 2.5) * np.exp(-((y - py) / .45) ** 2)
+                    + np.exp(-np.abs(y - py) / 2.5) * np.exp(-((x - px) / .45) ** 2)) * s * .35
+        energy += dot[..., None] * (c * .5 + .5)
+    energy = bloom(energy, ((.8, .5), (2.5, .35), (8, .18), (22, .08)))
+    save_png(name, tonemap(energy, 1.2), window='box')
+
+
 # Sparkles and glows --------------------------------------------------------------------------
 def sparkle(name, colour, size=96, six=False):
     x, y, r, th = grid(size)
@@ -548,8 +597,8 @@ def main():
         sky_layers()
     if want('meteors'):
         for k, (name, colour) in enumerate(PALETTE.items()):
-            meteor(f'meteor_{name}', colour, seed=k)
-            meteor(f'meteor_{name}_thin', colour, w=768, h=64, tail=170, seed=k + 10)
+            shower_meteor(f'meteor_{name}', colour, seed=k)
+            shower_meteor(f'meteor_{name}_thin', colour, w=1024, h=64, tail=260, seed=k + 10)
         for name, colour in RARITY.items():
             meteor(f'meteor_{name}', colour or (1, 1, 1), w=1280, h=128, tail=360, seed=40 + len(name),
                    rainbow=colour is None, sparkly=name in ('yinhe', 'xinghai'), hero=True)

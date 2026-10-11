@@ -164,6 +164,31 @@ class ShopTests(unittest.TestCase):
                 show.advance(.2)
                 self.assertFalse(show.grab().isNull())
             show.close()
+        import wish_sound
+        heard = []
+
+        class Ears(wish_sound.Sounds):                              # Records what would be played.
+            def __init__(self, enabled=True, volume=0):
+                super().__init__(False)
+                self.enabled = True
+                self._thread = None
+
+            def play(self, name):
+                heard.append(name)
+                return True
+        original = wish_sound.Sounds
+        wish_sound.Sounds = Ears
+        try:
+            listened = WishShow(None, [dict(item=shop.BY_ID['decor.back_starsea_seraph'], refund=0)], 'zh_CN')
+            listened.timer.stop()
+            listened.skip()
+            while listened.t < listened.length:
+                listened.advance(1 / 30)
+            listened.close()
+        finally:
+            wish_sound.Sounds = original
+        for name in ('open', 'catch', 'rise', 'burst_xinghai', 'flip_fine'):
+            self.assertIn(name, heard)
         idle = WishShow(None, self.shop.wish(1), 'zh_CN')            # Nobody steers: it still ends.
         idle.timer.stop()
         for _ in range(900):

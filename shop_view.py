@@ -494,9 +494,18 @@ class ShopPage(QWidget):
 
     def show_wish(self, results):
         starsea = getattr(self.owner.panel, 'starsea', None)
-        show = WishShow(self.owner, results, self.language, bool(starsea is not None and starsea.active))
+        panel = self.owner.panel
+
+        def remember(enabled):
+            panel.prefs['wish_sound'] = enabled
+            persist = getattr(panel, 'persist', None)
+            if persist is not None:
+                persist()
+        show = WishShow(self.owner, results, self.language, bool(starsea is not None and starsea.active),
+                        sound=panel.prefs.get('wish_sound', True), on_sound=remember)
         show.show()
         show.raise_()
+        show.setFocus()
         self._show = show
 
 
