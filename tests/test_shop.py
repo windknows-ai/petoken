@@ -145,11 +145,15 @@ class ShopTests(unittest.TestCase):
         page.apply_language()
         self.assertEqual(len([c for c in page.cards if c.parent() is not None]) >= shop.FEATURED, True)
         self.assertIn('3000', page.balance.text())
-        show = WishShow(None, self.shop.wish(10), 'zh_CN')
-        for _ in range(5):
-            show.t += 1.5
-            self.assertFalse(show.grab().isNull())
-        show.close()
+        for results in (self.shop.wish(10), self.shop.wish(1)):
+            show = WishShow(None, results, 'zh_CN')
+            show.timer.stop()
+            while show.t < show.length + .5:                       # Every moment paints.
+                show.t += .35
+                self.assertFalse(show.grab().isNull())
+            show.mousePressEvent(None)                             # Skip, then close.
+            self.assertGreaterEqual(show.t, show.length - .6)
+            show.close()
         page.deleteLater()
 
 

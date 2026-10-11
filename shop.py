@@ -24,6 +24,8 @@ import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+ASSETS = Path(__file__).resolve().parent / 'assets' / 'v2_5' / 'shop'
+
 RARITIES = ('fanxing', 'mingyue', 'haori', 'yinhe', 'xinghai')      # Low .. high.
 SETS = ('outfit', 'weapon', 'decor')
 SLOTS = ('outfit', 'weapon', 'head', 'back', 'ground', 'buddy', 'star')
@@ -52,37 +54,47 @@ _NAMES = {
     'weapon': ('starsea_staff', 'galaxy_blade', 'sun_spear', 'moon_bow', 'comet_wand', 'frost_sword',
                'sakura_fan', 'star_lance', 'crystal_orb', 'lantern', 'umbrella', 'quill', 'mallet',
                'ribbon_wand', 'katana', 'harp', 'shield', 'kite', 'whip', 'feather_dart'),
-    'decor': ('starsea_wings', 'galaxy_halo', 'sun_crown', 'moon_circle', 'cat_ears', 'bunny_ears',
-              'flower_crown', 'witch_hat', 'cloud_seat', 'star_buddy', 'jelly_lamp', 'kitten',
-              'heart_star', 'moon_star', 'snow_star', 'paw_star', 'magic_circle', 'flower_bed', 'bow',
-              'beret'),
 }
-_DECOR_SLOT = dict(starsea_wings='back', galaxy_halo='head', sun_crown='head', moon_circle='ground',
-                   cat_ears='head', bunny_ears='head', flower_crown='head', witch_hat='head',
-                   cloud_seat='ground', star_buddy='buddy', jelly_lamp='buddy', kitten='buddy',
-                   heart_star='star', moon_star='star', snow_star='star', paw_star='star',
-                   magic_circle='ground', flower_bed='ground', bow='head', beret='head')
 # Matching themes make a set (one outfit, one weapon, one decoration).
-_THEMES = dict(sakura=('sakura_kimono', 'sakura_fan', 'flower_crown'),
-               frost=('frost_coat', 'frost_sword', 'snow_star'),
-               moon=('moon_dress', 'moon_bow', 'moon_circle'),
-               starsea=('starsea_gown', 'starsea_staff', 'starsea_wings'))
+_THEMES = dict(sakura=('sakura_kimono', 'sakura_fan', 'head_pearl_flower'),
+               frost=('frost_coat', 'frost_sword', 'star_snowflake'),
+               moon=('moon_dress', 'moon_bow', 'ground_moon_ripple'),
+               starsea=('starsea_gown', 'starsea_staff', 'back_starsea_seraph'))
 # Only on sale at certain times of year: (month, day) from .. to.
 _LIMITED = dict(sakura_kimono=((3, 15), (4, 30)), lantern=((1, 20), (2, 20)), frost_coat=((12, 1), (2, 28)))
 
 
+def _decorations():
+    """Codex's 60 drawn decorations (assets/v2_5/shop/manifest.json): five kinds
+    (head, back, ground, buddy, task star), with their own rarity spread."""
+    try:
+        manifest = json.loads((ASSETS / 'manifest.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return []
+    items = []
+    for entry in manifest:
+        name, rarity = entry['id'], entry['rarity']
+        theme = next((t for t, members in _THEMES.items() if name in members), None)
+        items.append(dict(id=f'decor.{name}', set='decor', name=name, rarity=rarity, slot=entry['category'],
+                          price=PRICES.get(rarity), theme=theme, window=_LIMITED.get(name),
+                          names=dict(zh_CN=entry['name_zh'], en=entry['name_en']), art=list(entry['frames']),
+                          anchor=(entry['anchor']['x'], entry['anchor']['y'])))
+    order = {r: k for k, r in enumerate(reversed(RARITIES))}       # Rarest first, like the other sets.
+    return sorted(items, key=lambda i: order[i['rarity']])
+
+
 def _catalog():
     items = []
-    for kind in SETS:
+    for kind in ('outfit', 'weapon'):
         names = list(_NAMES[kind])
         for rarity in reversed(RARITIES):                     # The first names are the rarest.
             for _ in range(SPREAD[rarity]):
                 name = names.pop(0)
                 theme = next((t for t, members in _THEMES.items() if name in members), None)
                 items.append(dict(id=f'{kind}.{name}', set=kind, name=name, rarity=rarity,
-                                  slot=kind if kind != 'decor' else _DECOR_SLOT[name],
+                                  slot=kind,
                                   price=PRICES.get(rarity), theme=theme, window=_LIMITED.get(name)))
-    return items
+    return items + _decorations()
 
 
 CATALOG = _catalog()
@@ -166,11 +178,18 @@ class Shop:
             return False
         self.state.setdefault('equipped', {})[item['slot']] = item_id
         self._save()
+        self._worn_changed()
         return True
+
+    def _worn_changed(self):
+        hook = getattr(self.panel, 'shop_worn_changed', None)       # She puts it on at once.
+        if hook is not None:
+            hook()
 
     def unequip(self, slot):
         self.state.setdefault('equipped', {}).pop(slot, None)
         self._save()
+        self._worn_changed()
 
     def save_outfit(self, name):
         presets = [p for p in self.state.get('wardrobe', []) if p['name'] != name]
@@ -184,6 +203,7 @@ class Shop:
             return False
         self.state['equipped'] = {slot: i for slot, i in preset['items'].items() if i in self.owned()}
         self._save()
+        self._worn_changed()
         return True
 
     def set_bonuses(self):

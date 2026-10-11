@@ -120,6 +120,8 @@ class DesktopPet(QWidget):
         self.game_place=None
         self.game_drag=None
         self.veiled=False           # True while the transformation draws her instead.
+        from decor import Decor
+        self.decor=Decor(self)      # The shop decorations she wears (two layers that follow her).
         self.transform_stage=None
         self.apply_language()
 
@@ -209,9 +211,11 @@ class DesktopPet(QWidget):
         if self.motion:
             self._last_tick=None
             self.timer.start()
+        self.decor.refresh()
 
     def hideEvent(self,event):
         self.timer.stop()
+        self.decor.refresh()
         if self.focus_tag is not None:
             self.focus_tag.hide()
         if self.usage_overlay is not None:
@@ -355,12 +359,14 @@ class DesktopPet(QWidget):
             stage.t=stage.timeline.time_for(level)
         self.transform_stage=stage
         self.veiled=True
+        self.decor.refresh()
         self.update()
 
         def done():
             if self.transform_stage is not stage:
                 return          # Replaced by a newer switch.
             self.veiled=False
+            self.decor.refresh()
             self.transform_stage=None
             # She is drawn first and the transformation's window closes a moment
             # later: never a frame with neither (the ring then seemed to flash).
@@ -475,6 +481,7 @@ class DesktopPet(QWidget):
 
     def closeEvent(self, event):
         self.presence.stop()
+        self.decor.close()
         if self.usage_overlay is not None:
             self.usage_overlay.close()
             self.usage_overlay.deleteLater()
@@ -715,6 +722,8 @@ class DesktopPet(QWidget):
             x=round((sx+(sw-size.width())/2+tap_shift)*dpr)/dpr
             y=round((sy+sh-size.height())*dpr)/dpr
             p.drawPixmap(QPointF(x,y),rendered)
+            self.decor.pet_painted(self.current_state,rendered,p.transform(),
+                                   QRectF(x,y,size.width(),size.height()))
         p.restore()
 
     def sync_focus_tag(self):
@@ -761,12 +770,15 @@ class DesktopPet(QWidget):
             size=rendered.deviceIndependentSize()
             p.setOpacity(min(1.,opacity))
             p.drawPixmap(QPointF(sx+(sw-size.width())/2,sy+sh-size.height()),rendered)
+            return rendered,QRectF(sx+(sw-size.width())/2,sy+sh-size.height(),size.width(),size.height())
 
         if f.previous:
             # The new pose is solid at once; only the old pose's edges that
             # stick out fade away, so there is never a see-through double.
             layer(self.pose_pixmap(f.previous,f.previous_index),1-f.fade)
-        layer(self.pose_pixmap(f.state,f.index,f.blink),1.)
+        drawn=layer(self.pose_pixmap(f.state,f.index,f.blink),1.)
+        if drawn:
+            self.decor.pet_painted(f.state,drawn[0],p.transform(),drawn[1])
         if f.next_index is not None and f.state!='typing':
             layer(self.pose_pixmap(f.state,f.next_index),f.next_alpha)
         p.setOpacity(1.)
@@ -847,6 +859,7 @@ class DesktopPet(QWidget):
 
     def moveEvent(self,event):
         super().moveEvent(event)
+        self.decor.sync()
         if self.usage_overlay_visible():
             self.usage_overlay.follow()
         if self.focus_tag is not None and self.focus_tag.isVisible():

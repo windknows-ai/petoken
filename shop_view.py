@@ -6,7 +6,7 @@ import random
 
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer
 from PySide6.QtGui import (QColor, QConicalGradient, QFont, QLinearGradient, QPainter, QPainterPath, QPen,
-                           QPolygonF, QRadialGradient)
+                           QPixmap, QPolygonF, QRadialGradient)
 from PySide6.QtWidgets import (QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QProgressBar,
                                QPushButton, QScrollArea, QVBoxLayout, QWidget)
 
@@ -15,17 +15,17 @@ import theme
 from localization import text
 
 # Rarity colours, low to high: deep blue, flashing white, warm gold, flowing silver, iridescent.
-RARITY_COLOURS = dict(fanxing=(52, 82, 196), mingyue=(242, 246, 255), haori=(246, 190, 72),
-                      yinhe=(200, 210, 232), xinghai=(196, 150, 255))
+RARITY_COLOURS = dict(fanxing=(52, 82, 196), mingyue=(246, 248, 255), haori=(246, 190, 72),
+                      yinhe=(160, 178, 222), xinghai=(196, 150, 255))
 
 
 def rarity_colour(rarity, t=0.0, at=0.0):
     """The rarity's colour at time ``t``; Galaxy shimmers, Starsea cycles hues, Moon flashes."""
     if rarity == 'xinghai':
         return QColor.fromHsvF(((t * .25 + at) % 1.0), .55, 1.0)
-    if rarity == 'yinhe':
-        v = .78 + .22 * math.sin(t * 3 + at * 6)
-        return QColor.fromRgbF(.72 * v + .2, .76 * v + .2, .86 * v + .14)
+    if rarity == 'yinhe':                                    # Steel blue silver with light running through.
+        v = .5 + .5 * math.sin(t * 2.2 + at * 6)
+        return QColor.fromRgbF(.56 + .36 * v, .62 + .32 * v, .82 + .18 * v)
     if rarity == 'mingyue':
         flash = .85 + .15 * max(0.0, math.sin(t * 5 + at * 4))
         return QColor.fromRgbF(flash, flash, 1.0)
@@ -90,7 +90,45 @@ def _star(p, c, r, colour):
 
 
 def item_name(item, language):
+    names = item.get('names')
+    if names:                                               # Drawn decorations carry their own names.
+        return names['en'] if str(language).startswith('en') else names['zh_CN']
     return text(f'shop_item_{item["name"]}', language)
+
+
+_ART = {}
+
+
+def item_art(item, frame=0):
+    """The drawn picture of an item (Codex's art), or None while it has none yet."""
+    frames = item.get('art')
+    if not frames:
+        return None
+    name = frames[frame % len(frames)]
+    if name not in _ART:
+        pixmap = QPixmap(str(shop.ASSETS / name))
+        _ART[name] = pixmap if not pixmap.isNull() else None
+    return _ART[name]
+
+
+_FITTED = {}
+
+
+def draw_item(p, item, rect, colour):
+    """The item's picture fitted into ``rect``; a drawn symbol when it has no art yet."""
+    art = item_art(item)
+    if art is None:
+        glyph(p, item['slot'], rect, colour)
+        return
+    ratio = p.device().devicePixelRatioF() if p.device() is not None else 1.0
+    key = (item['id'], int(rect.width() * ratio), int(rect.height() * ratio))
+    if key not in _FITTED:                                  # Scaled once, not every frame.
+        fitted = art.scaled(key[1], key[2], Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        fitted.setDevicePixelRatio(ratio)
+        _FITTED[key] = fitted
+    fitted = _FITTED[key]
+    w, h = fitted.width() / ratio, fitted.height() / ratio
+    p.drawPixmap(QRectF(rect.center().x() - w / 2, rect.center().y() - h / 2, w, h), fitted, QRectF(fitted.rect()))
 
 
 class ItemCard(QWidget):
@@ -131,7 +169,7 @@ class ItemCard(QWidget):
         p.setPen(QPen(colour, 2.4))
         p.setBrush(g)
         p.drawRoundedRect(box, 10, 10)
-        glyph(p, self.item['slot'], QRectF(box.center().x() - 34, 18, 68, 68), colour)
+        draw_item(p, self.item, QRectF(box.center().x() - 40, 12, 80, 80), colour)
         p.setPen(QColor(theme.INK))
         p.setFont(QFont('Microsoft YaHei UI', 9, QFont.DemiBold))
         p.drawText(QRectF(0, 108, self.W, 18), Qt.AlignCenter, item_name(self.item, self.page.language))

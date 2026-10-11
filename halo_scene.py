@@ -737,7 +737,10 @@ class HaloScene:
         pet = getattr(self.panel, 'pet', None)
         back = [w for k, w in self._windows.items() if self._halo_depths.get(k, 0) < 0]
         front = [w for k, w in self._windows.items() if self._halo_depths.get(k, 0) >= 0]
-        result = [self.back_overlay, *back, pet, self.trail_overlay, *front]
+        decor = getattr(pet, 'decor', None)
+        behind = [decor.back] if decor is not None and decor.back is not None else []
+        over = [decor.front] if decor is not None and decor.front is not None else []
+        result = [self.back_overlay, *back, *behind, pet, *over, self.trail_overlay, *front]
         if self.page_controls is not None:
             result.append(self.page_controls)
         if self.detail_window is not None:

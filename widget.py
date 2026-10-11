@@ -698,6 +698,8 @@ class TaskOrbWindow(QWidget):
         center = self._star_center()
         cx, cy = center.x(), center.y()
         halo_r = 34.0 * self.halo_radius
+        if self._paint_worn_star(painter, center, 56 * self.star_scale, halo_r):
+            return
         # Static halo: soft blue/violet glow, no box behind the star.
         palette = star_palette(self.provider_id)
         halo = QRadialGradient(cx, cy, halo_r)
@@ -768,11 +770,29 @@ class TaskOrbWindow(QWidget):
                                                  self.facet_intensity)))
             painter.drawPolygon(diamond)
 
+    def _paint_worn_star(self, painter, center, size, glow_r):
+        """The task star in the style she wears from the shop (decor.STAR), in its
+        provider's glow so Codex and Claude stars still read apart."""
+        import decor
+        if decor.STAR is None:
+            return False
+        palette = star_palette(self.provider_id)
+        glow = QRadialGradient(center, glow_r)
+        glow.setColorAt(0.0, QColor(*palette['halo'][0], self._alpha(70, self.halo_alpha)))
+        glow.setColorAt(1.0, QColor(*palette['halo'][1], 0))
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(glow)
+        painter.drawEllipse(center, glow_r, glow_r)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        return decor.paint_star(painter, center, size)
+
     def _paint_compact_star(self):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setOpacity(.72 + .28 * (self.depth + 1) / 2)
         cx, cy = pet_geometry.TASK_STAR_CENTER
+        if self._paint_worn_star(painter, QPointF(cx, cy), 40 * self.star_scale / .7, 22):
+            return
         palette = star_palette(self.provider_id)
         glow = QRadialGradient(cx, cy, 22)
         for stop, color in zip((0, .35, 1), palette['glow']):
@@ -6407,6 +6427,12 @@ class Panel(QWidget):
             skin = 'default'
         # Room for every skin once one is unlocked, so switching never flashes.
         halo_scene.set_skin(skin, reserve=skin != 'default' or bool(self.prefs.get('ring_skins_unlocked')))
+
+    def shop_worn_changed(self):
+        """Something from the shop was put on or taken off: she wears it at once."""
+        pet = getattr(self, 'pet', None)
+        if pet is not None:
+            pet.decor.refresh()
 
     def stardust_unlocked(self, name):
         """A new unlock: she is delighted, a notice says what it is."""

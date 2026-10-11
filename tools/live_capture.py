@@ -48,7 +48,7 @@ class Recorder:
 
 
 # The windows that make up her scene.
-SCENE = {'DesktopPet', 'HaloLayer', 'TaskOrbWindow', 'TaskPageControls', 'UsageOverlay', 'FocusTag',
+SCENE = {'DesktopPet', 'DecorLayer', 'HaloLayer', 'TaskOrbWindow', 'TaskPageControls', 'UsageOverlay', 'FocusTag',
          'TransformStage', 'GameHalo', 'StarFlight', 'GameUsage'}
 
 
