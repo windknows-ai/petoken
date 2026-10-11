@@ -63,9 +63,7 @@ def _skin_tick():
     if SKIN == 'default' or not visible:
         _SKIN_CLOCK.stop()
         return
-    now = time.monotonic()
     for layer in visible:
-        layer.now = now
         layer.update()
 
 
@@ -74,6 +72,13 @@ def _skin_tick():
 AURORA = ((120, 200, 255), (160, 146, 255), (206, 140, 255), (255, 172, 226), (112, 222, 214))
 # Shooting-star colours: Codex ice blue, Claude champagne, the ring's lavender, pearl.
 METEOR_COLOURS = ((150, 205, 255), (255, 222, 160), (184, 172, 255), (240, 234, 255))
+
+
+def fx_now():
+    """The skins' own steady clock. The ring's time can be set back (a task
+    update or a paused drag repaints it with an older time); effects that
+    followed it jumped between two moments, which looked like flashing."""
+    return time.monotonic()
 
 
 def aurora_tint(angle, now):
@@ -237,7 +242,7 @@ class HaloLayer(QWidget):
     def _paint_meteors(self, painter, start):
         """A few fine stars circling the ring with short white-gold tails."""
         for index in range(self.METEORS):
-            head = (math.tau * index / self.METEORS + self.now * (.38 + .05 * index)) % math.tau
+            head = (math.tau * index / self.METEORS + fx_now() * (.38 + .05 * index)) % math.tau
             if (head < math.pi) != self.front:
                 continue
             steps = 14
@@ -284,7 +289,7 @@ class HaloLayer(QWidget):
         for j in range(count):
             x = cx + (rnd.random() * 2 - 1) * rx * 1.25
             y = cy - rx * (.32 + rnd.random() * .8)
-            twinkle = max(0.0, math.sin(self.now * (1.1 + rnd.random() * 1.6) + rnd.random() * 6.3))
+            twinkle = max(0.0, math.sin(fx_now() * (1.1 + rnd.random() * 1.6) + rnd.random() * 6.3))
             if twinkle > .05:
                 self._star_shape(painter, QPointF(x, y), 1.4 + rnd.random() * 1.6, rnd.choice(colours),
                                  twinkle ** 1.6 * .9)
@@ -293,7 +298,7 @@ class HaloLayer(QWidget):
         """Shooting stars streaking down through the sky behind her. Each one stays
         inside the layer and fades in and out on its own; now and then a little
         shower of them comes at once."""
-        pose, now = self.pose, self.now
+        pose, now = self.pose, fx_now()
         rx = pose.rx
         w, h = self.width(), self.height()
         margin = 16.0
@@ -349,7 +354,7 @@ class HaloLayer(QWidget):
 
     def _paint_curtains(self, painter, start):
         """Aurora curtains rising from the ring, folding and drifting."""
-        pose, now = self.pose, self.now
+        pose, now = self.pose, fx_now()
         rx = pose.rx
         tall = 1.0 if not self.front else .32
         strips = self.CURTAIN_STRIPS
@@ -413,7 +418,7 @@ class HaloLayer(QWidget):
             for layer, (width, _rgb, front_alpha, back_alpha) in enumerate(RING_LAYERS):
                 alpha = front_alpha if self.front else back_alpha
                 for index in range(len(points) - 1):
-                    tint = aurora_tint((angles[index] + angles[index + 1]) / 2, self.now)
+                    tint = aurora_tint((angles[index] + angles[index + 1]) / 2, fx_now())
                     rgb = (tuple(round(c + (255 - c) * .6) for c in tint)
                            if layer == len(RING_LAYERS) - 1 else tint)
                     pen = QPen(QColor(*rgb, alpha), width)

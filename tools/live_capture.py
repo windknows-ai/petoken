@@ -80,15 +80,33 @@ def composite(region, skip=()):
         handle = user32.GetWindow(ctypes.c_void_p(handle), 2)          # GW_HWNDNEXT: the next one down.
     painter = QPainter(image)
     for widget in reversed(order):                                     # Bottom first.
+        opacity = widget.windowOpacity()
+        if opacity <= .001:
+            continue
         spot = widget.mapToGlobal(QPoint(0, 0)) - region.topLeft()
+        painter.setOpacity(opacity)
         painter.drawPixmap(spot, widget.grab())
+    painter.setOpacity(1.0)
     painter.end()
     return image
 
 
+def cloak(widget, on=True):
+    """Hide a window from the screen (DWM cloak) while it stays shown for Qt:
+    grab() still draws it and its own opacity is left as the app set it."""
+    import ctypes
+    value = ctypes.c_int(1 if on else 0)
+    try:
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(ctypes.c_void_p(int(widget.winId())), 13,
+                                                   ctypes.byref(value), ctypes.sizeof(value))
+    except Exception:
+        pass
+
+
 class Ghost:
-    """While on, every window the app shows is fully transparent on screen:
-    nothing pops up in front of the person, yet grab() still draws it."""
+    """While on, every window the app shows is cloaked: nothing pops up in front
+    of the person, yet grab() still draws it (composite() honours each window's
+    own opacity, so what it shows is what the person would have seen)."""
 
     def __init__(self, app):
         from PySide6.QtCore import QEvent, QObject
@@ -96,14 +114,15 @@ class Ghost:
         class Filter(QObject):
             def eventFilter(self, obj, event):
                 if event.type() == QEvent.Show and getattr(obj, 'isWindow', lambda: False)():
-                    obj.setWindowOpacity(0.0)
+                    cloak(obj)
                 return False
         self.app = app
         self.filter = Filter()
         app.installEventFilter(self.filter)
         from PySide6.QtWidgets import QApplication
         for widget in QApplication.topLevelWidgets():
-            widget.setWindowOpacity(0.0)
+            if widget.isVisible():
+                cloak(widget)
 
     def stop(self):
         self.app.removeEventFilter(self.filter)

@@ -362,8 +362,10 @@ class DesktopPet(QWidget):
                 return          # Replaced by a newer switch.
             self.veiled=False
             self.transform_stage=None
-            stage.close()
-            stage.deleteLater()
+            # She is drawn first and the transformation's window closes a moment
+            # later: never a frame with neither (the ring then seemed to flash).
+            QTimer.singleShot(80,stage.close)
+            QTimer.singleShot(80,stage.deleteLater)
             if self.game_halo is not None:
                 self.game_halo.intro=1.0
                 self.game_halo.flare=0.0
@@ -373,7 +375,7 @@ class DesktopPet(QWidget):
             # Straight to the pose she ends in: no cross-fade from the pose
             # she had before the transformation (it flashed for a moment).
             self.animator.cut(self.current_state,time.monotonic())
-            self.update()
+            self.repaint()
         stage.finished.connect(done)
         stage.start()
         return True

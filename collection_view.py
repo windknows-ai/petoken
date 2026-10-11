@@ -91,7 +91,7 @@ class SkinCard(QWidget):
             import pet_assets
             pose = 'star_idle' if self.choice == 'starsea' and pet_assets.has_own_art('star_idle') else 'idle'
             pixmap = pet_assets.frame_for(pose, 0) if pet_assets.frame_count(pose) else pet_assets.sprite_for(pose)
-            self._sprite = pixmap.scaledToHeight(92, Qt.SmoothTransformation) if pixmap else False
+            self._sprite = pixmap.scaledToHeight(80, Qt.SmoothTransformation) if pixmap else False
         return self._sprite or None
 
     def mousePressEvent(self, event):
@@ -101,7 +101,7 @@ class SkinCard(QWidget):
     def _ring(self, p, front):
         import math
         import halo_scene
-        cx, cy, rx, ry, tilt = self.W / 2, 72, 60, 15, math.radians(-7)
+        cx, cy, rx, ry, tilt = self.W / 2, 88, 58, 11, math.radians(-5)
 
         def point(t):
             x, y = rx * math.cos(t), ry * math.sin(t)
@@ -140,7 +140,7 @@ class SkinCard(QWidget):
 
     def _shooting_stars(self, p):
         from PySide6.QtGui import QLinearGradient
-        for (hx, hy), length, rgb in (((40, 34), 70, (255, 226, 170)), ((112, 18), 52, (190, 220, 255))):
+        for (hx, hy), length, rgb in (((18, 40), 38, (255, 226, 170)), ((122, 30), 30, (190, 220, 255))):
             tx, ty = hx + length * .86, hy - length * .5
             gradient = QLinearGradient(tx, ty, hx, hy)
             gradient.setColorAt(0, QColor(*rgb, 0))
@@ -157,8 +157,8 @@ class SkinCard(QWidget):
         import halo_scene
         for i in range(40):
             angle = math.pi + math.pi * (i + .5) / 40
-            x = self.W / 2 + 60 * math.cos(angle)
-            y = 72 + 15 * math.sin(angle)
+            x = self.W / 2 + 58 * math.cos(angle)
+            y = 88 + 11 * math.sin(angle)
             height = 30 + 34 * (.5 + .5 * math.sin(angle * 3.1)) * (.6 + .4 * math.cos(angle * 1.7))
             tint = halo_scene.aurora_tint(angle, 0)
             gradient = QLinearGradient(x, y, x, y - height)
@@ -185,7 +185,7 @@ class SkinCard(QWidget):
         self._ring(p, False)
         sprite = self.sprite()
         if sprite is not None:
-            p.drawPixmap(int((self.W - sprite.width()) / 2), 100 - sprite.height(), sprite)
+            p.drawPixmap(int((self.W - sprite.width()) / 2), 97 - sprite.height(), sprite)
         self._ring(p, True)
         p.setOpacity(1)
         p.setPen(QColor(theme.INK))
