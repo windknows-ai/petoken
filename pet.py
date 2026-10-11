@@ -225,10 +225,10 @@ class DesktopPet(QWidget):
                 widget.hide()
 
     def usage_overlay_wanted(self):
-        """Always while an AI works; when idle too if the user keeps it on (the default).
+        """Shown or hidden, as the user chose under 显示 › 用量卡片 (shown by default).
         Never in game mode: the compact display replaces it."""
         return (self.isVisible() and not self.game_active() and self.transform_stage is None
-                and (self.token_bubble_visible() or self.usage_card_idle()))
+                and self.usage_card_idle())
 
     def game_active(self):
         mode=getattr(self.panel,'game_mode',None)
@@ -1052,11 +1052,17 @@ class DesktopPet(QWidget):
         usage.setChecked(self.panel.is_pinned())
         usage.setToolTip(self.tr_text('panel_pinned_help'))
         usage.toggled.connect(self.panel.set_panel_pinned)
-        card=view.addAction(self.tr_text('usage_card_menu'))
-        card.setCheckable(True)
-        card.setChecked(self.usage_card_idle())
-        card.setToolTip(self.tr_text('usage_card_help'))
-        card.toggled.connect(self.toggle_usage_card_idle)
+        card=view.addMenu(self.tr_text('usage_card_menu'))      # Show or hide: a plain choice.
+        card.setToolTipsVisible(True)
+        card.menuAction().setToolTip(self.tr_text('usage_card_help'))
+        from PySide6.QtGui import QActionGroup
+        choice=QActionGroup(card)
+        for key,on in (('usage_card_show',True),('usage_card_hide',False)):
+            option=card.addAction(self.tr_text(key))
+            option.setCheckable(True)
+            option.setChecked(self.usage_card_idle()==on)
+            option.triggered.connect(lambda _=False,on=on:self.toggle_usage_card_idle(on))
+            choice.addAction(option)
         if game_mode is not None:
             game=view.addAction(self.tr_text('game_mode_menu'))
             game.setCheckable(True)

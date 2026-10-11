@@ -311,9 +311,10 @@ class PanelOverlayTests(unittest.TestCase):
         self.assertTrue(pet.usage_overlay_visible())                 # Idle, default on.
         menu = pet.context_menu()
         from tests.test_game_mode import all_actions
-        card = next(a for a in all_actions(menu) if a.text() == pet.tr_text('usage_card_menu'))
-        self.assertTrue(card.isChecked())
-        card.setChecked(False)
+        card = next(a for a in all_actions(menu) if a.text() == pet.tr_text('usage_card_menu')).menu()
+        show, hide = card.actions()
+        self.assertTrue(show.isChecked())
+        hide.trigger()
         self.assertFalse(self.panel.prefs['usage_card_idle'])
         self.assertFalse(pet.usage_overlay_visible())
         menu.deleteLater()
@@ -332,7 +333,7 @@ class PanelOverlayTests(unittest.TestCase):
 
     def test_overlay_shows_only_in_token_mode_and_paints(self):
         pet = self.panel.pet
-        self.panel.prefs['usage_card_idle'] = False
+        self.panel.prefs['usage_card_idle'] = False                 # Hidden means hidden, working or not.
         pet.presence = _Presence(frozenset({'codex'}))
         pet.show()
         pet.sync_usage_overlay()
@@ -340,6 +341,9 @@ class PanelOverlayTests(unittest.TestCase):
         mode = self.panel.app_mode
         mode.update(True, True, now=1)
         mode.update(True, True, now=2)
+        pet.sync_usage_overlay()
+        self.assertFalse(pet.usage_overlay_visible())
+        self.panel.prefs['usage_card_idle'] = True
         pet.sync_usage_overlay()
         self.assertTrue(pet.usage_overlay.isVisible())
         self.assertTrue(pet.usage_overlay.testAttribute(

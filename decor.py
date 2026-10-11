@@ -69,6 +69,21 @@ def hands():
     return _HANDS
 
 
+_DOMINANT = {}
+
+
+def dominant_hand(prefix):
+    """The hand most frames of a pose hold with ('dragged' holds left in three frames of four):
+    a stray frame using the other hand must not throw the weapon across her."""
+    if prefix not in _DOMINANT:
+        counts = {}
+        for path, hand in hands().items():
+            if hand and path.rsplit('/', 1)[-1].rsplit('_', 1)[0] == prefix:
+                counts[hand['hand']] = counts.get(hand['hand'], 0) + 1
+        _DOMINANT[prefix] = max(counts, key=counts.get) if counts else None
+    return _DOMINANT[prefix]
+
+
 @functools.lru_cache(maxsize=512)
 def frame_file(state, index=0, blink=False):
     """The picture file she shows for ``state`` (its ``index`` frame, or its blink)."""
@@ -252,11 +267,52 @@ class Decor:
         if not self.layers():
             return
         self.source = source
+        moving = self._step_weapon() if 'weapon' in self.items else False
         pose = (state, pixmap.cacheKey(), transform, QRectF(rect))
-        if self.pose is None or pose[1:] != self.pose[1:] or pose[0] != self.pose[0] or 'buddy' in self.items:
+        if (self.pose is None or pose[1:] != self.pose[1:] or pose[0] != self.pose[0] or 'buddy' in self.items
+                or moving):
             self.pose = (state, pixmap, transform, QRectF(rect))
             for layer in self.layers():
                 layer.update()
+
+    def _weapon_target(self, now):
+        """Where the weapon wants to be: (x, y as fractions of her picture, angle, scale, in front)."""
+        source = getattr(self, 'source', None) or ''
+        hand = hands().get(source)
+        prefix = source.rsplit('/', 1)[-1].rsplit('_', 1)[0]
+        if hand is not None and hand['hand'] != dominant_hand(prefix):
+            hand = None                                     # A stray frame: keep the hand it had.
+            held = getattr(self, '_held', None)
+            if held is not None and held[0] == prefix:
+                hand = held[1]
+        if hand is not None:
+            self._held = (prefix, hand)
+            angle = hand.get('angle', 0)
+            return hand['x'] / 1254, hand['y'] / 1254, angle - 360 if angle > 180 else angle, 1.0, \
+                bool(hand.get('front', True))
+        self._held = None
+        return .9, .62 + math.sin(now * 1.8) * .025, 22 + math.sin(now * 1.2) * 4, .62, False
+
+    def _step_weapon(self):
+        """Ease the weapon towards where it wants to be (no jumps between frames). True while moving."""
+        now = time.monotonic()
+        last = getattr(self, '_wtime', None)
+        if last is not None and now - last < .004:
+            return getattr(self, '_wmoving', False)
+        self._wtime = now
+        target = self._weapon_target(now)
+        state = getattr(self, '_wpose', None)
+        if state is None or last is None or now - last > .5:
+            self._wpose = list(target)
+            self._wmoving = False
+            return False
+        blend = 1 - math.exp(-(now - last) / .07)
+        turn = (target[2] - state[2] + 180) % 360 - 180
+        new = [state[0] + (target[0] - state[0]) * blend, state[1] + (target[1] - state[1]) * blend,
+               state[2] + turn * blend, state[3] + (target[3] - state[3]) * blend, target[4]]
+        self._wmoving = abs(new[0] - state[0]) + abs(new[1] - state[1]) > .0005 or abs(turn) > .3
+        self._wpose = new
+        return self._wmoving
 
     def paint(self, p, layer):
         if self.pose is None:
@@ -282,21 +338,14 @@ class Decor:
             size = scale * fit.get('scale', 1.0)
             nudge = QPointF(fit.get('dx', 0) * rect.width(), fit.get('dy', 0) * rect.height())
             turn = fit.get('angle', 0)
-            if slot == 'weapon':                            # In her hand, as Codex measured it per frame.
-                hand = hands().get(getattr(self, 'source', None) or '')
-                if hand is None:                            # No free hand: it floats at her side, summoned.
-                    if layer.front:
-                        continue
-                    bob = math.sin(now * 1.8) * side * .025
-                    point = QPointF(rect.right() - rect.width() * .1, rect.y() + rect.height() * .62 + bob)
-                    self._draw(p, art, point, (ax, ay), rect.width() / 1254 * .62 * WEAPON_SCALE.get(item['name'], 1.0),
-                               22 + math.sin(now * 1.2) * 4)
-                    continue
-                if bool(hand.get('front', True)) != layer.front:
-                    continue
-                point = QPointF(rect.x() + hand['x'] / 1254 * rect.width(), rect.y() + hand['y'] / 1254 * rect.height())
-                self._draw(p, art, point, (ax, ay), rect.width() / 1254 * WEAPON_SCALE.get(item['name'], 1.0),
-                           hand.get('angle', 0))
+            if slot == 'weapon':                            # In her hand (Codex measured it per frame), eased.
+                self._step_weapon()
+                fx, fy, turn_to, grow, front = self._wpose
+                if front != layer.front:
+                    continue                                # Held in front, or floating behind her.
+                point = QPointF(rect.x() + fx * rect.width(), rect.y() + fy * rect.height())
+                self._draw(p, art, point, (ax, ay), rect.width() / 1254 * grow * WEAPON_SCALE.get(item['name'], 1.0),
+                           turn_to)
                 continue
             if slot == 'head':
                 fx, fy, fw = head_box(pixmap)
