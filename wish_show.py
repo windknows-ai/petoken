@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import math
 import random
+from collections import OrderedDict
 
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QConicalGradient, QFont, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap
@@ -32,6 +33,10 @@ SHOWER = ('ice', 'champagne', 'lavender', 'pearl')                 # The task-st
 POSES = dict(fly=('dragged', 'star_dragged'), look=('curious', 'star_thinking'), spot=('surprised', 'star_poked'),
              reach=('wave', 'star_wave'), cheer=('cheer', 'star_celebrate'))
 _FX = {}
+SEQ_DIR = FX_DIR / 'seq'            # After Effects frame sequences (tools/ae), 30 fps.
+SEQ_FPS = 30
+_SEQ = {}
+_FRAMES = OrderedDict()
 
 
 def fx(name):
@@ -61,8 +66,66 @@ def _lerp(a, b, f):
     return a + (b - a) * f
 
 
+def _distance(a, b):
+    return math.hypot(a.x() - b.x(), a.y() - b.y())
+
+
 def _rgba(colour, alpha):
     return QColor(colour.red(), colour.green(), colour.blue(), max(0, min(255, int(alpha))))
+
+
+def seq_length(name):
+    if name not in _SEQ:
+        folder = SEQ_DIR / name
+        _SEQ[name] = sorted(folder.glob('*.jpg')) if folder.is_dir() else []
+    return len(_SEQ[name])
+
+
+def seq_frame(name, index):
+    """One frame of a sequence, decoded on first use (a small cache keeps recent ones)."""
+    key = (name, index)
+    if key in _FRAMES:
+        _FRAMES.move_to_end(key)
+        return _FRAMES[key]
+    pixmap = QPixmap(str(_SEQ[name][index]))
+    _FRAMES[key] = pixmap
+    while len(_FRAMES) > 320:
+        _FRAMES.popitem(last=False)
+    return pixmap
+
+
+def play(p, name, centre, width, t, alpha=1.0, loop=False, angle=0.0):
+    """Draw sequence ``name`` at ``t`` seconds into it; False once a one-shot is over."""
+    count = seq_length(name)
+    if not count or t < 0 or alpha <= .01:
+        return False
+    index = int(t * SEQ_FPS)
+    if loop:
+        index %= count
+    elif index >= count:
+        return False
+    pixmap = seq_frame(name, index)
+    p.save()
+    p.translate(centre)
+    if angle:
+        p.rotate(angle)
+    p.setOpacity(min(1.0, alpha))
+    p.drawPixmap(QRectF(-width / 2, -width / 2, width, width), pixmap, QRectF(pixmap.rect()))
+    p.restore()
+    return True
+
+
+def play_loop(p, name, centre, width, t, alpha=1.0, angle=0.0):
+    """A seamless loop: two copies half a loop apart, each fading in and out."""
+    count = seq_length(name)
+    if not count:
+        return
+    period = count / SEQ_FPS
+    u = (t / period) % 1.0
+    for shift in (0.0, .5):
+        v = (u + shift) % 1.0
+        weight = math.sin(math.pi * v) ** 2
+        play(p, name, centre, width, v * period, alpha * weight, angle=angle)
 
 
 def light(p, name, centre, width, alpha=1.0, angle=0.0, squash=1.0, tilt=0.0):
@@ -107,12 +170,17 @@ def streak(p, name, head, angle, length, alpha=1.0, grow=1.0):
 
 
 class WishShow(QWidget):
-    FPS_MS = 25
+    FPS_MS = 16
+    INTRO = 1.4                   # She flies in by herself, then she is yours to steer.
+    CHARGE = .65                  # A caught star gathers light (and climbs the rarities) before it bursts.
+    NEVER = 1e9
 
     def __init__(self, parent, results, language, starsea=False):
         super().__init__(parent, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
+        self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.results, self.language, self.starsea = results, language, starsea
         self.ten = len(results) > 1
         self.t = 0.0
@@ -124,23 +192,30 @@ class WishShow(QWidget):
         best = max(range(len(results)), key=lambda i: shop.RARITIES.index(results[i]['item']['rarity']))
         others = sorted((i for i in range(len(results)) if i != best),
                         key=lambda i: shop.RARITIES.index(results[i]['item']['rarity']))
-        self.order = others + [best]                        # The best one comes last.
+        # What each star holds was decided when the wish was made (shop.Shop.wish): catching
+        # only chooses when it is shown, never what it is. The best one is always shown last.
+        self.order = others + [best]
         self.best = best
-        if self.ten:
-            self.catch = {i: 2.9 + k * .26 + (.45 if i == best else 0) for k, i in enumerate(self.order)}
-            self.flip0 = max(self.catch.values()) + 1.2
-            self.length = self.flip0 + 10 * .12 + 1.4
-        else:
-            self.catch = {0: 3.75}
-            self.flip0 = 5.0
-            self.length = 6.4
-        self.travel = .75 if self.ten else 1.05
-        self.spot = min(self.catch.values()) - self.travel - .1     # She sees the first one coming.
+        self.queue = list(self.order)
+        self.catch = {}               # index -> when its light bursts
+        self.touch = {}               # index -> (when she touched it, where)
+        self.flip0 = self.length = self.NEVER
+        self.progress = self.INTRO    # Last moment something was caught (for the helping hand).
+        w, h = self.width(), self.height()
+        self.her = QPointF(-.14 * w, 1.0 * h)
+        self.velocity = QPointF()
+        self.facing_left = False
+        self.wake = []                # Her recent positions: the stardust she leaves.
+        self.pointer = None           # Where the mouse is (window coordinates), once it moved.
+        self.keys = set()
+        self.stars = []               # Wishing stars still in the sky.
+        self._next_star = .6
+        self._star_ids = 0
         self.shower = self._shower()
         self.twinkles = [(self.rng.random(), self.rng.random() * .92, self.rng.uniform(.010, .028),
                           self.rng.random() * 6.3, self.rng.uniform(.7, 1.8), self.rng.choice(SHOWER))
                          for _ in range(70)]
-        self.sparks = {}                                    # Per catch: the sparks it throws out.
+        self.burst_at = {}            # Per catch: where its burst stays (it does not follow her).
         self._poses = {}
         self._sky = None
         self.timer = QTimer(self)
@@ -151,18 +226,13 @@ class WishShow(QWidget):
 
     # Setup ------------------------------------------------------------------------------
     def _shower(self):
-        """Meteors: (start time, life, x, y, depth, colour key). The rate swells, peaks
-        while she searches and fades out after the catch."""
+        """Background meteors for the whole show: (start, life, x, y, depth, colour key)."""
         rng = self.rng
-        peak_end = (max(self.catch.values()) if self.ten else self.catch[0]) + .2
-        end = peak_end + 1.4
         out, t = [], .15
-        while t < end:
-            ramp = _ease((t - .1) / 1.0) * (1 - _ease((t - peak_end) / 1.2))
-            rate = 2.5 + (16 if self.ten else 12) * ramp
+        while t < 90:
+            rate = 3 + 8 * _ease((t - .2) / 1.2)
             t += rng.expovariate(rate)
-            depth = rng.random() ** 1.4
-            out.append((t, rng.uniform(1.0, 1.7), rng.uniform(-.15, 1.05), rng.uniform(-.25, .75), depth,
+            out.append((t, rng.uniform(1.0, 1.7), rng.uniform(-.15, 1.05), rng.uniform(-.25, .75), rng.random() ** 1.4,
                         rng.choice(SHOWER)))
         return out
 
@@ -196,74 +266,161 @@ class WishShow(QWidget):
     def rank(self, index):
         return shop.RARITIES.index(self.rarity(index))
 
+    # Time and play ----------------------------------------------------------------------
+    def playing(self):
+        return self.INTRO <= self.t and bool(self.queue)
+
     def _step(self):
-        self.t += self.FPS_MS / 1000
+        self.advance(self.FPS_MS / 1000)
         if self.t > self.length + 30:
             self.timer.stop()
         self.update()
 
-    def mousePressEvent(self, event):
-        if self.t < self.length - .6:
-            self.t = self.length - .6                       # Straight to the cards.
+    def advance(self, dt):
+        """Move the show on by ``dt`` seconds: her, the wishing stars, the catches."""
+        self.t += dt
+        t, w, h = self.t, self.width(), self.height()
+        self._move_her(dt)
+        self.wake.append((t, QPointF(self.her)))
+        self.wake = [(at, point) for at, point in self.wake if t - at < .7]
+        if self.playing():
+            self._spawn_stars()
+        reach = self.her_size() * .42
+        centre = self.her + QPointF(0, -self.her_size() * .08)
+        helper = None
+        if self.queue and t - self.progress > (4.0 if self.ten else 5.5):
+            # Nothing caught for a while: the nearest star comes to her by itself.
+            helper = min(self.stars, key=lambda s: _distance(s['pos'], centre), default=None)
+        for star in list(self.stars):
+            if star is helper:
+                to = centre - star['pos']
+                n = max(1.0, math.hypot(to.x(), to.y()))
+                star['vel'] = star['vel'] * .9 + QPointF(to.x() / n, to.y() / n) * (h * .7) * .1
+            sway = math.sin(t * 1.7 + star['phase']) * h * .02
+            star['pos'] += star['vel'] * dt + QPointF(sway * dt, 0)
+            if t - star.get('marked', 0) > .045:            # A dot of its trail every few frames.
+                star['marked'] = t
+                star['trail'] = (star['trail'] + [QPointF(star['pos'])])[-14:]
+            if self.playing() and self.in_play(star['pos']) and _distance(star['pos'], centre) < reach:
+                self.stars.remove(star)
+                self._caught(star['pos'])
+            elif star['pos'].x() < -w * .15 or star['pos'].y() > h * 1.15:
+                self.stars.remove(star)
+
+    def _spawn_stars(self):
+        w, h, rng = self.width(), self.height(), self.rng
+        wanted = 5 if self.ten else 3
+        if self.t < self._next_star or len(self.stars) >= wanted:
+            return
+        self._next_star = self.t + rng.uniform(.35, .8)
+        if rng.random() < .65:
+            start = QPointF(w * rng.uniform(.25, 1.05), -h * .06)
         else:
-            self.close()
+            start = QPointF(w * 1.06, h * rng.uniform(.0, .55))
+        speed = h * rng.uniform(.10, .17)
+        heading = math.radians(rng.uniform(130, 155))             # Down and to the left, like the shower.
+        self._star_ids += 1
+        self.stars.append(dict(id=self._star_ids, pos=start, born=self.t, phase=rng.random() * 6.3,
+                               vel=QPointF(math.cos(heading), math.sin(heading)) * speed,
+                               key=rng.choice(SHOWER), trail=[]))
 
-    def keyPressEvent(self, event):
-        self.mousePressEvent(event)
+    def _caught(self, where):
+        index = self.queue.pop(0)
+        self.touch[index] = (self.t, QPointF(where))
+        self.catch[index] = self.t + self.CHARGE
+        self.progress = self.catch[index]
+        if not self.queue:
+            self.flip0 = self.catch[index] + (1.25 if not self.ten else 1.3)
+            self.length = self.flip0 + (1.4 if not self.ten else 10 * .12 + 1.4)
 
-    # Her --------------------------------------------------------------------------------
+    def skip(self):
+        """Every star still to find comes to her at once, then the cards."""
+        hand = self.hand()
+        if self.t < self.INTRO:
+            self.t = self.INTRO
+        while self.queue:
+            self._caught(hand)
+            self.t += .02
+        self.t = max(self.t, self.flip0 - .3)
+
     def her_size(self):
         h = self.height()
         size = h * (.40 if not self.ten else .34)
-        if self.ten:
+        if self.ten and self.flip0 < self.NEVER:
             size *= 1 - .4 * _ease((self.t - (self.flip0 - .8)) / .8)
         return size
 
+    def _move_her(self, dt):
+        w, h, t = self.width(), self.height(), self.t
+        if t < self.INTRO:                                  # Flying in on a curve.
+            f = _out((t - .1) / (self.INTRO - .1))
+            start, bend, rest = QPointF(-.14 * w, h * 1.0), QPointF(w * .06, h * .32), QPointF(w * .36, h * .60)
+            a, b = (1 - f) ** 2, 2 * (1 - f) * f
+            new = start * a + bend * b + rest * (f * f)
+            self.velocity = (new - self.her) / max(dt, 1e-3)
+            self.her = new
+            return
+        if self.flip0 < self.NEVER:                         # Cards: she steps aside.
+            aim = QPointF(w * (.88 if self.ten else .26), h * (.80 if self.ten else .62))
+            target = aim if t > self.flip0 - .9 else self.her
+        elif self.keys:
+            dx = (('right' in self.keys) - ('left' in self.keys))
+            dy = (('down' in self.keys) - ('up' in self.keys))
+            target = self.her + QPointF(dx, dy) * h * .35
+        elif self.pointer is not None:
+            target = self.pointer + QPointF(0, self.her_size() * .1)
+        else:
+            target = self.her
+        if self.flip0 == self.NEVER:
+            area = self.play_area()                         # She stays where her light fits on screen.
+            target = QPointF(min(max(target.x(), area.left()), area.right()),
+                             min(max(target.y(), area.top()), area.bottom()))
+        want = (target - self.her) * 4.2
+        top = h * 1.8
+        n = math.hypot(want.x(), want.y())
+        if n > top:
+            want *= top / n
+        blend = 1 - math.exp(-7 * dt)
+        self.velocity = self.velocity + (want - self.velocity) * blend
+        self.her += self.velocity * dt
+        if self.velocity.x() < -h * .12:
+            self.facing_left = True
+        elif self.velocity.x() > h * .12:
+            self.facing_left = False
+
+    def play_area(self):
+        """Where she may fly and stars may be caught: inside, so every burst is seen whole."""
+        w, h = self.width(), self.height()
+        return QRectF(w * .16, h * .28, w * .62, h * .52)
+
+    def in_play(self, point):
+        return self.play_area().adjusted(-self.width() * .06, -self.height() * .14,
+                                         self.width() * .06, self.height() * .08).contains(point)
+
     def her_place(self):
         """Her centre, size, lean (degrees) and whether she faces left."""
-        w, h, t = self.width(), self.height(), self.t
-        size = self.her_size()
-        rest = QPointF(w * .30, h * .60) if not self.ten else QPointF(w * .50, h * .62)
-        start = QPointF(-.18 * w, h * 1.05)
-        bend = QPointF(w * .05, h * .30) if not self.ten else QPointF(w * .12, h * .25)
-        f = _out((t - .7) / 1.4)                              # Flying in on a curve.
-        a, b = (1 - f) ** 2, 2 * (1 - f) * f
-        pos = start * a + bend * b + rest * (f * f)
-        lean = -16 * (1 - f)
-        facing_left = False
-        if f >= 1:
-            pos = QPointF(rest)
-            look = t - 2.1
-            if 0 < look < self.spot - 2.1:                   # Searching: she drifts and looks back once.
-                pos += QPointF(math.sin(look * 1.7) * w * .02, -math.sin(look * 1.1) * h * .015)
-                facing_left = .35 < look < .85
-        if self.ten:
-            first, last = min(self.catch.values()), max(self.catch.values())
-            sweep = _ease((t - first + .4) / (last - first + .4))
-            pos += QPointF(math.sin(sweep * math.pi * 2) * w * .1, -math.sin(sweep * math.pi) * h * .05)
-            aside = _ease((t - (self.flip0 - .8)) / .8)
-            pos = pos + (QPointF(w * .88, h * .80) - pos) * aside
-        else:
-            towards = math.exp(-((t - self.catch[0]) / .45) ** 2)   # A little dash up to meet it.
-            pos += QPointF(w * .03, -h * .04) * towards
-        pos += QPointF(0, math.sin(t * 2.1) * h * .008)
-        return pos, size, lean, facing_left
+        h = self.height()
+        lean = max(-16.0, min(16.0, self.velocity.x() / h * 9))
+        bob = math.sin(self.t * 2.1) * h * .008
+        return self.her + QPointF(0, bob), self.her_size(), lean, self.facing_left
 
     def pose_name(self):
         t = self.t
-        if t < 2.1:
+        if t < self.INTRO:
             return 'fly'
-        if t < self.spot:
-            return 'look'
-        if self.ten:
-            if t > self.flip0 - .8:
+        if self.flip0 < self.NEVER and t > self.flip0 - .9:
+            return 'cheer'
+        for index, (at, where) in self.touch.items():
+            if at <= t < self.catch[index]:
+                return 'spot'                               # Holding her star while it lights up.
+            if self.catch[index] <= t < self.catch[index] + 1.0:
                 return 'cheer'
-            near = min(abs(t - at) for at in self.catch.values())
-            return 'reach' if near < .3 or t < min(self.catch.values()) else 'cheer'
-        at = self.catch[0]
-        if t < at - .55:
-            return 'spot'
-        return 'reach' if t < at + .15 else 'cheer'
+        speed = math.hypot(self.velocity.x(), self.velocity.y())
+        centre = self.her
+        near = min((_distance(s['pos'], centre) for s in self.stars), default=self.NEVER)
+        if near < self.her_size() * 1.1:
+            return 'reach'
+        return 'fly' if speed > self.height() * .45 else 'look'
 
     def hand(self):
         pos, size, lean, facing_left = self.her_place()
@@ -281,6 +438,42 @@ class WishShow(QWidget):
         x0 = w * .44 - 2 * (cw + gap)
         return QPointF(x0 + col * (cw + gap), h * .3 + row * (ch + gap)), (cw, ch)
 
+    def skip_rect(self):
+        return QRectF(self.width() - 118, 16, 100, 32)
+
+    # Input --------------------------------------------------------------------------------
+    KEYS = {Qt.Key_Left: 'left', Qt.Key_A: 'left', Qt.Key_Right: 'right', Qt.Key_D: 'right',
+            Qt.Key_Up: 'up', Qt.Key_W: 'up', Qt.Key_Down: 'down', Qt.Key_S: 'down'}
+
+    def mouseMoveEvent(self, event):
+        self.pointer = event.position()
+
+    def mousePressEvent(self, event):
+        if self.flip0 < self.NEVER and self.t > self.flip0 + .4:
+            self.close()                                    # The cards are out: a click closes.
+            return
+        point = event.position() if event is not None else None
+        if point is None or self.skip_rect().contains(point):
+            self.skip()
+            return
+        to = point - self.her                               # A click is a little dash that way.
+        n = max(1.0, math.hypot(to.x(), to.y()))
+        self.velocity += QPointF(to.x() / n, to.y() / n) * self.height() * 1.1
+        self.pointer = point
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key in self.KEYS:
+            self.keys.add(self.KEYS[key])
+        elif key in (Qt.Key_Escape, Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter):
+            if self.flip0 < self.NEVER and self.t > self.flip0 + .4:
+                self.close()
+            else:
+                self.skip()
+
+    def keyReleaseEvent(self, event):
+        self.keys.discard(self.KEYS.get(event.key()))
+
     # Painting ---------------------------------------------------------------------------
     def paintEvent(self, event):
         p = QPainter(self)
@@ -292,27 +485,80 @@ class WishShow(QWidget):
         self._paint_shower(p)
         if self.ten:
             self._paint_orbit(p, behind=True)
-        for index in self.order:                            # Catches light her from behind.
+        for index in self.catch:                            # Catches light her from behind.
             self._paint_burst(p, index)
         p.setCompositionMode(QPainter.CompositionMode_SourceOver)
         self._paint_her(p)
         p.setCompositionMode(QPainter.CompositionMode_Plus)
         if self.ten:
             self._paint_orbit(p, behind=False)
-        for index in self.order:
-            self._paint_destined(p, index)
+        self._paint_wishing_stars(p)
+        for index in self.touch:
+            self._paint_charge(p, index)
         if not self.ten:
             self._paint_found(p)
         self._paint_card_lights(p)
         p.setCompositionMode(QPainter.CompositionMode_SourceOver)
         self._paint_cards(p)
         p.setOpacity(1)
-        if self.t > self.length - .9:
-            p.setPen(QColor(220, 220, 255, int(200 * _ease((self.t - self.length + .9) / .4))))
-            p.setFont(QFont('Microsoft YaHei UI', 10))
-            p.drawText(QRectF(0, self.height() - 44, self.width(), 26), Qt.AlignCenter,
-                       text('shop_wish_close', self.language))
+        self._paint_hud(p)
         p.end()
+
+    def _paint_hud(self, p):
+        w, h, t = self.width(), self.height(), self.t
+        p.setFont(QFont('Microsoft YaHei UI', 10))
+        if self.flip0 < self.NEVER and t > self.flip0 + .4:
+            p.setPen(QColor(220, 220, 255, int(200 * _ease((t - self.flip0 - .4) / .4))))
+            p.drawText(QRectF(0, h - 44, w, 26), Qt.AlignCenter, text('shop_wish_close', self.language))
+            return
+        fade = _ease((t - self.INTRO + .2) / .5) * (1 - _ease((t - self.flip0 + 1.2) / .4))
+        if fade <= .01:
+            return
+        caught, total = len(self.results) - len(self.queue), len(self.results)
+        hint = text('shop_wish_hint', self.language, caught=caught, total=total)
+        p.setPen(QColor(232, 228, 255, int(220 * fade)))
+        p.drawText(QRectF(0, h - 46, w, 26), Qt.AlignCenter, hint)
+        box = self.skip_rect()
+        p.setPen(QPen(QColor(220, 215, 255, int(150 * fade)), 1))
+        p.setBrush(QColor(20, 16, 50, int(120 * fade)))
+        p.drawRoundedRect(box, 16, 16)
+        p.setPen(QColor(235, 232, 255, int(230 * fade)))
+        p.drawText(box, Qt.AlignCenter, text('shop_wish_skip', self.language))
+
+    def _paint_wishing_stars(self, p):
+        """The stars she can catch: bright, slow, all alike until caught (no hint of rarity)."""
+        h, t = self.height(), self.t
+        for star in self.stars:
+            age = t - star['born']
+            fade = _ease(age / .5)
+            v = star['vel']
+            angle = math.degrees(math.atan2(v.y(), v.x()))
+            trail = star['trail']
+            for k, point in enumerate(reversed(trail)):      # Stardust it leaves behind.
+                light(p, f'sparkle_{SHOWER[(star["id"] + k) % 4]}', point, h * (.045 - k * .0028),
+                      fade * (1 - k / len(trail)) * .7)
+            pulse = .9 + .1 * math.sin(t * 4 + star['phase'])
+            streak(p, f'meteor_{star["key"]}', star['pos'], angle, h * .32, fade, grow=age / .6)
+            light(p, f'sparkle_{star["key"]}', star['pos'], h * .16 * pulse, .55 * fade)
+            play_loop(p, 'wishstar', star['pos'], h * .3 * pulse, age + star['phase'], fade)
+
+    def _paint_charge(self, p, index):
+        """Her star lights up in her hands, climbing the rarities until it reaches its own."""
+        at, where = self.touch[index]
+        t, h = self.t, self.height()
+        if not at <= t < self.catch[index]:
+            return
+        f = (t - at) / self.CHARGE
+        hand = self.hand()
+        point = where + (hand - where) * _out(f / .35)
+        rank = self.rank(index)
+        step = min(rank, int(f * (rank + 1.0)))                 # Blue, then white, gold ... up to its own.
+        shown = shop.RARITIES[step]
+        grow = .6 + .8 * f
+        play(p, 'charge', point, h * .42, t - at)
+        play_loop(p, 'wishstar', point, h * .22 * grow, t * 1.5)
+        light(p, f'hero_{shown}', point, h * .16 * grow, .45 + .45 * f, angle=t * 60)
+        light(p, 'flare_gold' if shown == 'haori' else 'flare', point, h * (.5 + .6 * f), .3 + .4 * f)
 
     def _paint_sky(self, p):
         w, h, t = self.width(), self.height(), self.t
@@ -351,7 +597,7 @@ class WishShow(QWidget):
         radiant = QPointF(w * 1.22, -h * .38)
         focus = 1.0
         if not self.ten:                                    # The sky hushes while hers comes.
-            focus = 1 - .45 * math.exp(-((t - self.catch[0] + .3) / .7) ** 2)
+            focus = 1 - .45 * math.exp(-((t - self.catch.get(0, self.NEVER) + .3) / .7) ** 2)
         for at, life, x, y, depth, key in self.shower:
             age = t - at
             if not 0 <= age <= life:
@@ -373,64 +619,19 @@ class WishShow(QWidget):
                 flicker = .75 + .25 * math.sin(t * 31 + at * 17)
                 light(p, f'sparkle_{key}', head, h * .05 * depth * flicker, alpha * .8, angle=angle * .2)
 
-    def _destined_path(self, index, f):
-        """Point on its curved path down to her hand, and its heading in degrees."""
-        w, h = self.width(), self.height()
-        rng = random.Random(index * 13 + 5)
-        start = QPointF(w * rng.uniform(.80, 1.06), -h * rng.uniform(.02, .12))
-        end = self.hand()
-        mid = (start + end) * .5
-        bend = QPointF(-(end.y() - start.y()), end.x() - start.x()) * (rng.uniform(.18, .3) * (1 if index % 2 else -1))
-        control = mid + bend
-        a, b, c = (1 - f) ** 2, 2 * (1 - f) * f, f * f
-        point = start * a + control * b + end * c
-        tangent = (control - start) * (2 * (1 - f)) + (end - control) * (2 * f)
-        return point, math.degrees(math.atan2(tangent.y(), tangent.x()))
-
-    def _paint_destined(self, p, index):
-        """Its star coming down: a curving comet in its rarity's colour."""
-        t, h = self.t, self.height()
-        at = self.catch[index]
-        if not at - self.travel <= t < at:
-            return
-        rarity, rank = self.rarity(index), self.rank(index)
-        f = _ease((t - (at - self.travel)) / self.travel)
-        head, angle = self._destined_path(index, f)
-        for k in range(1, 22):                              # Its curved trail of light.
-            g = f - k * .018
-            if g <= 0:
-                break
-            point, _ = self._destined_path(index, g)
-            light(p, f'sparkle_{rarity}', point, h * (.05 - k * .0016) * (1 + rank * .12), (1 - k / 22) * .55)
-        streak(p, f'meteor_{rarity}', head, angle, h * (.22 + .04 * rank), 1.0, grow=f / .25)
-        size = h * (.07 + .025 * rank)
-        light(p, f'hero_{rarity}', head, size * 2.2, .9, angle=t * 60)
-        light(p, f'sparkle_{rarity}', head, size, 1.0)
-
     def _paint_burst(self, p, index):
-        """The catch: a flash, a shock ring, god rays, a lens streak and sparks."""
+        """The catch: its rarity's burst (After Effects), with a lens streak across the sky."""
         t = self.t - self.catch[index]
-        if not 0 <= t <= 1.6:
+        if not 0 <= t <= 1.7:
             return
         h, w = self.height(), self.width()
         rarity, rank = self.rarity(index), self.rank(index)
-        strength = (1 + rank) / 5 * (1.0 if not self.ten or index == self.best else .45)
-        centre = self.hand()
-        light(p, f'hero_{rarity}', centre, h * (.14 + .24 * strength) * _out(t / .2), (1 - _ease(t / .6)) * .85)
-        light(p, f'shock_{rarity}', centre, h * (.15 + 1.1 * strength) * _out(t / .9), (1 - _ease(t / 1.0)) * (.3 + .6 * strength))
-        light(p, f'rays_{rarity}', centre, h * (.5 + .8 * strength), (1 - _ease(t / 1.2)) * (.35 + .5 * strength),
-              angle=t * 25 + index * 40)
-        light(p, 'flare_gold' if rarity == 'haori' else 'flare', centre, w * (.4 + .5 * strength),
-              (1 - _ease(t / .8)) * (.5 + .5 * strength))
-        if index not in self.sparks:
-            rng = random.Random(index * 7 + 1)
-            self.sparks[index] = [(rng.uniform(0, math.tau), rng.uniform(.25, 1.0), rng.uniform(.6, 1.4),
-                                   rng.random()) for _ in range(int(24 + 40 * strength))]
-        for angle, speed, size, kind in self.sparks[index]:
-            d = h * (.18 + .38 * strength) * speed * _out(t / 1.3)
-            q = centre + QPointF(math.cos(angle) * d, math.sin(angle) * d + h * .05 * t * t)
-            key = rarity if kind < .7 else SHOWER[int(kind * 10) % 4]
-            light(p, f'sparkle_{key}', q, h * .045 * size * (1 - t / 1.6), (1 - _ease(t / 1.6)))
+        strength = (1 + rank) / 5 * (1.0 if not self.ten or index == self.best else .5)
+        centre = self.burst_at.setdefault(index, QPointF(self.hand()))
+        if not play(p, f'reveal_{rarity}', centre, h * (.55 + .55 * strength), t):
+            light(p, f'shock_{rarity}', centre, h * (.15 + 1.1 * strength) * _out(t / .9), 1 - _ease(t / 1.0))
+        light(p, 'flare_gold' if rarity == 'haori' else 'flare', centre, w * (.45 + .55 * strength),
+              (1 - _ease(t / .7)) * (.35 + .5 * strength))
 
     def _star_look(self, p, rarity, centre, width, alpha, t):
         """A find's light, alive: each rarity moves in its own way."""
@@ -456,7 +657,7 @@ class WishShow(QWidget):
     def _paint_found(self, p):
         """One wish: the caught star rises from her hands, grows, then becomes the card."""
         t, h = self.t, self.height()
-        at = self.catch[0]
+        at = self.catch.get(0, self.NEVER)
         if not at <= t < self.flip0 + .3:
             return
         rarity, rank = self.rarity(0), self.rank(0)
@@ -480,7 +681,7 @@ class WishShow(QWidget):
         """Ten wishes: each caught star circles her until the cards come."""
         t, h = self.t, self.height()
         for k, index in enumerate(self.order):
-            at = self.catch[index]
+            at = self.catch.get(index, self.NEVER)
             if t < at:
                 continue
             point, depth = self._orbit_point(k, t)
@@ -505,17 +706,16 @@ class WishShow(QWidget):
         if pos.x() < -size:
             return
         name = self.pose_name()
-        sprite = self.pose(name, size if not self.ten else self.height() * .34)
+        sprite = self.pose(name, self.height() * (.34 if self.ten else .40))
         if sprite is None:
             return
         p.setCompositionMode(QPainter.CompositionMode_Plus)    # Her own soft light, and a stardust wake.
         light(p, 'sparkle_lavender', pos, size * 1.3, .35)
-        for k in range(14):
-            back = (self.t - k * .05)
-            if back < .7:
+        for k, (at, was) in enumerate(reversed(self.wake[::3])):
+            if k >= 14 or at < .7:
                 break
-            was = self._wake_point(back)
-            light(p, f'sparkle_{SHOWER[k % 4]}', was, size * (.16 - k * .009), .5 * (1 - k / 14))
+            light(p, f'sparkle_{SHOWER[k % 4]}', was + QPointF(0, size * .18), size * (.16 - k * .009),
+                  .5 * (1 - k / 14))
         p.setCompositionMode(QPainter.CompositionMode_SourceOver)
         sw = sprite.width() / sprite.devicePixelRatio() * size / (sprite.height() / sprite.devicePixelRatio())
         p.save()
@@ -526,14 +726,6 @@ class WishShow(QWidget):
         p.setOpacity(_ease((self.t - .7) / .3))
         p.drawPixmap(QRectF(-sw / 2, -size / 2, sw, size), sprite, QRectF(sprite.rect()))
         p.restore()
-
-    def _wake_point(self, t):
-        """Where she was at time ``t`` (her stardust wake), offset to around her waist."""
-        now = self.t
-        self.t = t
-        pos, size, lean, left = self.her_place()
-        self.t = now
-        return pos + QPointF(0, size * .18)
 
     def _paint_card_lights(self, p):
         """Behind each turned card, its star keeps shining."""

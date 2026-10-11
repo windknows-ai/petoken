@@ -89,6 +89,9 @@ def _star(p, c, r, colour):
                              c + QPointF(-r, 0), c + QPointF(-r * .28, -r * .28)]))
 
 
+DECOR_PARTS = ('head', 'back', 'ground', 'buddy', 'star')
+
+
 def item_name(item, language):
     names = item.get('names')
     if names:                                               # Drawn decorations carry their own names.
@@ -248,6 +251,20 @@ class ShopPage(QWidget):
         cat.addWidget(self.set_pick)
         cat.addStretch(1)
         layout.addLayout(cat)
+        # Decorations have parts: a row of small tabs (all, head, back, ground, buddy, task star).
+        self.parts = QHBoxLayout()
+        self.parts.setSpacing(6)
+        self.part_buttons = {}
+        for part in ('all',) + DECOR_PARTS:
+            button = QPushButton()
+            button.setCheckable(True)
+            button.setObjectName('chip')
+            button.clicked.connect(lambda _=False, part=part: self._pick_part(part))
+            self.part_buttons[part] = button
+            self.parts.addWidget(button)
+        self.parts.addStretch(1)
+        layout.addLayout(self.parts)
+        self.part = 'all'
         self.grid = QGridLayout()
         self.grid.setSpacing(10)
         layout.addLayout(self.grid)
@@ -296,6 +313,8 @@ class ShopPage(QWidget):
         self.featured_title.setText(self.tr('shop_featured'))
         self.wish_title.setText(self.tr('shop_wish'))
         self.catalog_title.setText(self.tr('shop_catalog'))
+        for part, button in self.part_buttons.items():
+            button.setText(self.tr('shop_part_all') if part == 'all' else self.tr(f'shop_slot_{part}'))
         self.wardrobe_title.setText(self.tr('shop_wardrobe'))
         self.book_title.setText(self.tr('shop_book'))
         self.preset_name.setPlaceholderText(self.tr('shop_preset_name'))
@@ -382,6 +401,16 @@ class ShopPage(QWidget):
         self._clear(self.grid)
         kind = self.set_pick.currentData() or shop.SETS[0]
         items = [i for i in shop.CATALOG if i['set'] == kind and shop.in_window(i, s.today())]
+        decor = kind == 'decor'
+        for part, button in self.part_buttons.items():
+            button.setVisible(decor)
+            button.setChecked(part == self.part)
+            if decor and part != 'all':
+                have = sum(1 for i in items if i['slot'] == part and i['id'] in s.owned())
+                total = sum(1 for i in items if i['slot'] == part)
+                button.setText(f'{self.tr("shop_slot_" + part)} {have}/{total}')
+        if decor and self.part != 'all':
+            items = [i for i in items if i['slot'] == self.part]
         columns = max(2, (self.width() - 40) // (ItemCard.W + 10))
         for index, item in enumerate(items):
             self.grid.addWidget(self._card(item), index // columns, index % columns)
@@ -411,6 +440,10 @@ class ShopPage(QWidget):
             holder_layout.addWidget(label)
             holder_layout.addWidget(bar, 1)
             self.book.addWidget(holder)
+
+    def _pick_part(self, part):
+        self.part = part
+        self.refresh()
 
     # Actions -------------------------------------------------------------------------
     def act(self, item, action):

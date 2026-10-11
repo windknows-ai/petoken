@@ -127,6 +127,8 @@ class WorkbenchWindow(QWidget):
             QLabel {{background:transparent;}}
             QLabel#heading {{font-family:{theme.FONT_DISPLAY}; font-size:22px; font-weight:600;}}
             QLabel#muted {{color:{theme.MUTED};}}
+            QPushButton#chip {{background:{theme.TABLE_BG}; border:1px solid {theme.BORDER_CONTROL}; border-radius:13px; padding:4px 12px;}}
+            QPushButton#chip:checked {{background:{theme.TAB_SELECTED_BG}; border-color:{theme.VIOLET}; color:{theme.VIOLET}; font-weight:600;}}
             QLabel#section {{font-size:14px; font-weight:600; color:{theme.VIOLET}; padding:2px 0px 4px 2px;}}
             QLabel#summary {{background:{theme.SURFACE_TOP}; border:1px solid {theme.BORDER_SOFT}; border-radius:12px;
                              padding:5px 12px; color:{theme.VIOLET};}}

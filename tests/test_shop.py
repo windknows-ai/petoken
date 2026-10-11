@@ -148,12 +148,34 @@ class ShopTests(unittest.TestCase):
         for results in (self.shop.wish(10), self.shop.wish(1)):
             show = WishShow(None, results, 'zh_CN')
             show.timer.stop()
-            while show.t < show.length + .5:                       # Every moment paints.
-                show.t += .35
+            steps = 0
+            while show.queue and steps < 2000:                    # A player chasing the nearest star.
+                if show.stars:
+                    star = min(show.stars, key=lambda s: (s['pos'].x() - show.her.x()) ** 2
+                               + (s['pos'].y() - show.her.y()) ** 2)
+                    show.pointer = star['pos']
+                show.advance(1 / 30)
+                steps += 1
+                if steps % 20 == 0:
+                    self.assertFalse(show.grab().isNull())
+            self.assertFalse(show.queue)                            # Every star found (helped if slow).
+            self.assertEqual(sorted(show.catch), list(range(len(results))))
+            while show.t < show.length:                           # Bursts, cards.
+                show.advance(.2)
                 self.assertFalse(show.grab().isNull())
-            show.mousePressEvent(None)                             # Skip, then close.
-            self.assertGreaterEqual(show.t, show.length - .6)
             show.close()
+        idle = WishShow(None, self.shop.wish(1), 'zh_CN')            # Nobody steers: it still ends.
+        idle.timer.stop()
+        for _ in range(900):
+            idle.advance(1 / 30)
+        self.assertFalse(idle.queue)
+        skipped = WishShow(None, self.shop.wish(10), 'zh_CN')        # Skip: everything at once.
+        skipped.timer.stop()
+        skipped.skip()
+        self.assertFalse(skipped.queue)
+        self.assertLess(skipped.flip0, 10)
+        idle.close()
+        skipped.close()
         page.deleteLater()
 
 
