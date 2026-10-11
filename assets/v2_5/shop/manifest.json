@@ -1,0 +1,852 @@
+[
+  {
+    "id": "head_star_bow",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "星光蝴蝶结",
+    "name_en": "Starlight Bow",
+    "frames": [
+      "head_star_bow.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 244
+    }
+  },
+  {
+    "id": "head_crescent_clip",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "月牙发夹",
+    "name_en": "Crescent Clip",
+    "frames": [
+      "head_crescent_clip.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 392
+    }
+  },
+  {
+    "id": "head_cloud_beret",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "云朵贝雷帽",
+    "name_en": "Cloud Beret",
+    "frames": [
+      "head_cloud_beret.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 212
+    }
+  },
+  {
+    "id": "head_pearl_flower",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "珍珠小花",
+    "name_en": "Pearl Blossom",
+    "frames": [
+      "head_pearl_flower.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 298
+    }
+  },
+  {
+    "id": "head_frost_cat_ears",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "冰蓝猫耳",
+    "name_en": "Frost Cat Ears",
+    "frames": [
+      "head_frost_cat_ears.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 244
+    }
+  },
+  {
+    "id": "head_lilac_rabbit_ears",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "丁香兔耳",
+    "name_en": "Lilac Bunny Ears",
+    "frames": [
+      "head_lilac_rabbit_ears.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 364
+    }
+  },
+  {
+    "id": "head_moon_sleepcap",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "月夜睡帽",
+    "name_en": "Moon Nightcap",
+    "frames": [
+      "head_moon_sleepcap.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 262
+    }
+  },
+  {
+    "id": "head_crystal_sprout",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "水晶嫩芽",
+    "name_en": "Crystal Sprout",
+    "frames": [
+      "head_crystal_sprout.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 392
+    }
+  },
+  {
+    "id": "head_pearl_tiara",
+    "category": "head",
+    "rarity": "fanxing",
+    "name_zh": "珍珠小冠",
+    "name_en": "Pearl Tiara",
+    "frames": [
+      "head_pearl_tiara.png"
+    ],
+    "anchor": {
+      "x": 168,
+      "y": 200
+    }
+  },
+  {
+    "id": "head_lunar_tiara",
+    "category": "head",
+    "rarity": "mingyue",
+    "name_zh": "月牙冠",
+    "name_en": "Lunar Tiara",
+    "frames": [
+      "head_lunar_tiara.png"
+    ],
+    "anchor": {
+      "x": 188,
+      "y": 276
+    }
+  },
+  {
+    "id": "head_crystal_circlet",
+    "category": "head",
+    "rarity": "mingyue",
+    "name_zh": "冰晶小冠",
+    "name_en": "Ice Crystal Circlet",
+    "frames": [
+      "head_crystal_circlet.png"
+    ],
+    "anchor": {
+      "x": 188,
+      "y": 258
+    }
+  },
+  {
+    "id": "head_lavender_wreath",
+    "category": "head",
+    "rarity": "mingyue",
+    "name_zh": "丁香花环",
+    "name_en": "Lavender Wreath",
+    "frames": [
+      "head_lavender_wreath.png"
+    ],
+    "anchor": {
+      "x": 188,
+      "y": 230
+    }
+  },
+  {
+    "id": "head_moon_rabbit_hat",
+    "category": "head",
+    "rarity": "mingyue",
+    "name_zh": "月兔绒帽",
+    "name_en": "Moon Bunny Cap",
+    "frames": [
+      "head_moon_rabbit_hat.png"
+    ],
+    "anchor": {
+      "x": 188,
+      "y": 316
+    }
+  },
+  {
+    "id": "head_celestial_beret",
+    "category": "head",
+    "rarity": "mingyue",
+    "name_zh": "星术贝雷帽",
+    "name_en": "Celestial Beret",
+    "frames": [
+      "head_celestial_beret.png"
+    ],
+    "anchor": {
+      "x": 188,
+      "y": 276
+    }
+  },
+  {
+    "id": "head_butterfly_ribbon",
+    "category": "head",
+    "rarity": "mingyue",
+    "name_zh": "星蝶丝带",
+    "name_en": "Star Butterfly Ribbon",
+    "frames": [
+      "head_butterfly_ribbon.png"
+    ],
+    "anchor": {
+      "x": 188,
+      "y": 290
+    }
+  },
+  {
+    "id": "head_prism_crown",
+    "category": "head",
+    "rarity": "haori",
+    "name_zh": "棱光王冠",
+    "name_en": "Prism Crown",
+    "frames": [
+      "head_prism_crown.png"
+    ],
+    "anchor": {
+      "x": 208,
+      "y": 364
+    }
+  },
+  {
+    "id": "head_orbit_halo",
+    "category": "head",
+    "rarity": "haori",
+    "name_zh": "月轨光冠",
+    "name_en": "Lunar Orbit Halo",
+    "frames": [
+      "head_orbit_halo.png"
+    ],
+    "anchor": {
+      "x": 208,
+      "y": 246
+    }
+  },
+  {
+    "id": "head_aurora_antlers",
+    "category": "head",
+    "rarity": "haori",
+    "name_zh": "极光鹿角",
+    "name_en": "Aurora Antlers",
+    "frames": [
+      "head_aurora_antlers.png"
+    ],
+    "anchor": {
+      "x": 208,
+      "y": 332
+    }
+  },
+  {
+    "id": "back_cloud_wings",
+    "category": "back",
+    "rarity": "fanxing",
+    "name_zh": "云羽小翅",
+    "name_en": "Cloud Wings",
+    "frames": [
+      "back_cloud_wings.png"
+    ],
+    "anchor": {
+      "x": 368,
+      "y": 212
+    }
+  },
+  {
+    "id": "back_moon_ribbon",
+    "category": "back",
+    "rarity": "fanxing",
+    "name_zh": "月光飘带",
+    "name_en": "Moon Ribbons",
+    "frames": [
+      "back_moon_ribbon.png"
+    ],
+    "anchor": {
+      "x": 368,
+      "y": 292
+    }
+  },
+  {
+    "id": "back_butterfly_wings",
+    "category": "back",
+    "rarity": "fanxing",
+    "name_zh": "星蝶双翼",
+    "name_en": "Star Butterfly Wings",
+    "frames": [
+      "back_butterfly_wings.png"
+    ],
+    "anchor": {
+      "x": 368,
+      "y": 335
+    }
+  },
+  {
+    "id": "back_crystal_wings",
+    "category": "back",
+    "rarity": "mingyue",
+    "name_zh": "冰晶羽翼",
+    "name_en": "Crystal Wings",
+    "frames": [
+      "back_crystal_wings.png"
+    ],
+    "anchor": {
+      "x": 438,
+      "y": 423
+    }
+  },
+  {
+    "id": "back_lunar_fan",
+    "category": "back",
+    "rarity": "mingyue",
+    "name_zh": "月纹折扇",
+    "name_en": "Lunar Fan",
+    "frames": [
+      "back_lunar_fan.png"
+    ],
+    "anchor": {
+      "x": 438,
+      "y": 375
+    }
+  },
+  {
+    "id": "back_constellation_wheel",
+    "category": "back",
+    "rarity": "mingyue",
+    "name_zh": "星座法轮",
+    "name_en": "Constellation Wheel",
+    "frames": [
+      "back_constellation_wheel.png"
+    ],
+    "anchor": {
+      "x": 438,
+      "y": 444
+    }
+  },
+  {
+    "id": "back_phoenix_plumes",
+    "category": "back",
+    "rarity": "haori",
+    "name_zh": "星辉凤羽",
+    "name_en": "Radiant Phoenix Plumes",
+    "frames": [
+      "back_phoenix_plumes.png"
+    ],
+    "anchor": {
+      "x": 488,
+      "y": 447
+    }
+  },
+  {
+    "id": "back_prism_mandala",
+    "category": "back",
+    "rarity": "haori",
+    "name_zh": "棱镜星轮",
+    "name_en": "Prism Mandala",
+    "frames": [
+      "back_prism_mandala.png"
+    ],
+    "anchor": {
+      "x": 488,
+      "y": 484
+    }
+  },
+  {
+    "id": "back_aurora_cape",
+    "category": "back",
+    "rarity": "yinhe",
+    "name_zh": "银河流光披风",
+    "name_en": "Galactic Aurora Cape",
+    "frames": [
+      "back_aurora_cape.png"
+    ],
+    "anchor": {
+      "x": 488,
+      "y": 454
+    }
+  },
+  {
+    "id": "back_starsea_seraph",
+    "category": "back",
+    "rarity": "xinghai",
+    "name_zh": "星海六翼",
+    "name_en": "Starsea Seraph",
+    "frames": [
+      "back_starsea_seraph.png"
+    ],
+    "anchor": {
+      "x": 488,
+      "y": 485
+    }
+  },
+  {
+    "id": "ground_cloud_cushion",
+    "category": "ground",
+    "rarity": "fanxing",
+    "name_zh": "云朵软垫",
+    "name_en": "Cloud Cushion",
+    "frames": [
+      "ground_cloud_cushion.png"
+    ],
+    "anchor": {
+      "x": 328,
+      "y": 158
+    }
+  },
+  {
+    "id": "ground_moon_ripple",
+    "category": "ground",
+    "rarity": "fanxing",
+    "name_zh": "月光水波",
+    "name_en": "Moonlit Ripples",
+    "frames": [
+      "ground_moon_ripple.png"
+    ],
+    "anchor": {
+      "x": 328,
+      "y": 136
+    }
+  },
+  {
+    "id": "ground_lavender_garden",
+    "category": "ground",
+    "rarity": "fanxing",
+    "name_zh": "丁香花圃",
+    "name_en": "Lavender Garden",
+    "frames": [
+      "ground_lavender_garden.png"
+    ],
+    "anchor": {
+      "x": 328,
+      "y": 170
+    }
+  },
+  {
+    "id": "ground_star_disc",
+    "category": "ground",
+    "rarity": "fanxing",
+    "name_zh": "星星小盘",
+    "name_en": "Little Star Disc",
+    "frames": [
+      "ground_star_disc.png"
+    ],
+    "anchor": {
+      "x": 328,
+      "y": 143
+    }
+  },
+  {
+    "id": "ground_constellation_map",
+    "category": "ground",
+    "rarity": "mingyue",
+    "name_zh": "星座罗盘",
+    "name_en": "Constellation Compass",
+    "frames": [
+      "ground_constellation_map.png"
+    ],
+    "anchor": {
+      "x": 388,
+      "y": 243
+    }
+  },
+  {
+    "id": "ground_crystal_lotus",
+    "category": "ground",
+    "rarity": "mingyue",
+    "name_zh": "冰晶莲座",
+    "name_en": "Crystal Lotus Seat",
+    "frames": [
+      "ground_crystal_lotus.png"
+    ],
+    "anchor": {
+      "x": 388,
+      "y": 228
+    }
+  },
+  {
+    "id": "ground_moon_lily_pool",
+    "category": "ground",
+    "rarity": "mingyue",
+    "name_zh": "月莲水庭",
+    "name_en": "Moon Lily Pool",
+    "frames": [
+      "ground_moon_lily_pool.png"
+    ],
+    "anchor": {
+      "x": 388,
+      "y": 183
+    }
+  },
+  {
+    "id": "ground_radiant_circle",
+    "category": "ground",
+    "rarity": "haori",
+    "name_zh": "星辉魔法阵",
+    "name_en": "Radiant Magic Circle",
+    "frames": [
+      "ground_radiant_circle.png"
+    ],
+    "anchor": {
+      "x": 438,
+      "y": 234
+    }
+  },
+  {
+    "id": "ground_prism_tide",
+    "category": "ground",
+    "rarity": "haori",
+    "name_zh": "极光潮汐",
+    "name_en": "Prismatic Tide",
+    "frames": [
+      "ground_prism_tide.png"
+    ],
+    "anchor": {
+      "x": 438,
+      "y": 233
+    }
+  },
+  {
+    "id": "ground_galaxy_vortex",
+    "category": "ground",
+    "rarity": "yinhe",
+    "name_zh": "银河星旋",
+    "name_en": "Galactic Vortex",
+    "frames": [
+      "ground_galaxy_vortex.png"
+    ],
+    "anchor": {
+      "x": 438,
+      "y": 248
+    }
+  },
+  {
+    "id": "buddy_star_sprite",
+    "category": "buddy",
+    "rarity": "fanxing",
+    "name_zh": "星豆精灵",
+    "name_en": "Star Bean Sprite",
+    "frames": [
+      "buddy_star_sprite_1.png",
+      "buddy_star_sprite_2.png"
+    ],
+    "anchor": {
+      "x": 128,
+      "y": 134
+    }
+  },
+  {
+    "id": "buddy_moon_kitten",
+    "category": "buddy",
+    "rarity": "fanxing",
+    "name_zh": "月牙小猫",
+    "name_en": "Moon Kitten",
+    "frames": [
+      "buddy_moon_kitten_1.png",
+      "buddy_moon_kitten_2.png"
+    ],
+    "anchor": {
+      "x": 128,
+      "y": 131
+    }
+  },
+  {
+    "id": "buddy_jelly_lamp",
+    "category": "buddy",
+    "rarity": "fanxing",
+    "name_zh": "水母小灯",
+    "name_en": "Jelly Lamp",
+    "frames": [
+      "buddy_jelly_lamp_1.png",
+      "buddy_jelly_lamp_2.png"
+    ],
+    "anchor": {
+      "x": 128,
+      "y": 147
+    }
+  },
+  {
+    "id": "buddy_pearl_bunny",
+    "category": "buddy",
+    "rarity": "fanxing",
+    "name_zh": "珍珠兔",
+    "name_en": "Pearl Bunny",
+    "frames": [
+      "buddy_pearl_bunny_1.png",
+      "buddy_pearl_bunny_2.png"
+    ],
+    "anchor": {
+      "x": 128,
+      "y": 154
+    }
+  },
+  {
+    "id": "buddy_cloud_puff",
+    "category": "buddy",
+    "rarity": "fanxing",
+    "name_zh": "云朵团子",
+    "name_en": "Cloud Dumpling",
+    "frames": [
+      "buddy_cloud_puff_1.png",
+      "buddy_cloud_puff_2.png"
+    ],
+    "anchor": {
+      "x": 128,
+      "y": 105
+    }
+  },
+  {
+    "id": "buddy_crescent_spirit",
+    "category": "buddy",
+    "rarity": "mingyue",
+    "name_zh": "弯月精灵",
+    "name_en": "Crescent Spirit",
+    "frames": [
+      "buddy_crescent_spirit_1.png",
+      "buddy_crescent_spirit_2.png"
+    ],
+    "anchor": {
+      "x": 148,
+      "y": 164
+    }
+  },
+  {
+    "id": "buddy_crystal_moth",
+    "category": "buddy",
+    "rarity": "mingyue",
+    "name_zh": "冰晶星蛾",
+    "name_en": "Crystal Star Moth",
+    "frames": [
+      "buddy_crystal_moth_1.png",
+      "buddy_crystal_moth_2.png"
+    ],
+    "anchor": {
+      "x": 148,
+      "y": 145
+    }
+  },
+  {
+    "id": "buddy_starlight_fox",
+    "category": "buddy",
+    "rarity": "mingyue",
+    "name_zh": "星灯小狐",
+    "name_en": "Starlight Fox",
+    "frames": [
+      "buddy_starlight_fox_1.png",
+      "buddy_starlight_fox_2.png"
+    ],
+    "anchor": {
+      "x": 148,
+      "y": 145
+    }
+  },
+  {
+    "id": "buddy_lantern_fairy",
+    "category": "buddy",
+    "rarity": "haori",
+    "name_zh": "星灯花灵",
+    "name_en": "Star Lantern Fairy",
+    "frames": [
+      "buddy_lantern_fairy_1.png",
+      "buddy_lantern_fairy_2.png"
+    ],
+    "anchor": {
+      "x": 163,
+      "y": 187
+    }
+  },
+  {
+    "id": "buddy_galaxy_whale",
+    "category": "buddy",
+    "rarity": "yinhe",
+    "name_zh": "银河小鲸",
+    "name_en": "Galaxy Whale",
+    "frames": [
+      "buddy_galaxy_whale_1.png",
+      "buddy_galaxy_whale_2.png"
+    ],
+    "anchor": {
+      "x": 163,
+      "y": 162
+    }
+  },
+  {
+    "id": "star_heart",
+    "category": "star",
+    "rarity": "fanxing",
+    "name_zh": "冰晶爱心",
+    "name_en": "Ice Crystal Heart",
+    "frames": [
+      "star_heart.png"
+    ],
+    "anchor": {
+      "x": 88,
+      "y": 77
+    }
+  },
+  {
+    "id": "star_crescent",
+    "category": "star",
+    "rarity": "fanxing",
+    "name_zh": "珍珠弯月",
+    "name_en": "Pearl Crescent",
+    "frames": [
+      "star_crescent.png"
+    ],
+    "anchor": {
+      "x": 88,
+      "y": 82
+    }
+  },
+  {
+    "id": "star_blossom",
+    "category": "star",
+    "rarity": "fanxing",
+    "name_zh": "丁香小花",
+    "name_en": "Lilac Blossom",
+    "frames": [
+      "star_blossom.png"
+    ],
+    "anchor": {
+      "x": 88,
+      "y": 88
+    }
+  },
+  {
+    "id": "star_snowflake",
+    "category": "star",
+    "rarity": "fanxing",
+    "name_zh": "冰霜雪花",
+    "name_en": "Frost Snowflake",
+    "frames": [
+      "star_snowflake.png"
+    ],
+    "anchor": {
+      "x": 82,
+      "y": 88
+    }
+  },
+  {
+    "id": "star_paw",
+    "category": "star",
+    "rarity": "fanxing",
+    "name_zh": "软萌猫爪",
+    "name_en": "Soft Cat Paw",
+    "frames": [
+      "star_paw.png"
+    ],
+    "anchor": {
+      "x": 88,
+      "y": 78
+    }
+  },
+  {
+    "id": "star_music_note",
+    "category": "star",
+    "rarity": "fanxing",
+    "name_zh": "星光音符",
+    "name_en": "Starlight Note",
+    "frames": [
+      "star_music_note.png"
+    ],
+    "anchor": {
+      "x": 69,
+      "y": 88
+    }
+  },
+  {
+    "id": "star_diamond",
+    "category": "star",
+    "rarity": "fanxing",
+    "name_zh": "菱形水晶",
+    "name_en": "Diamond Crystal",
+    "frames": [
+      "star_diamond.png"
+    ],
+    "anchor": {
+      "x": 52,
+      "y": 88
+    }
+  },
+  {
+    "id": "star_moonstone",
+    "category": "star",
+    "rarity": "mingyue",
+    "name_zh": "月华宝石",
+    "name_en": "Moonstone Gem",
+    "frames": [
+      "star_moonstone.png"
+    ],
+    "anchor": {
+      "x": 87,
+      "y": 88
+    }
+  },
+  {
+    "id": "star_butterfly",
+    "category": "star",
+    "rarity": "mingyue",
+    "name_zh": "星蝶",
+    "name_en": "Star Butterfly",
+    "frames": [
+      "star_butterfly.png"
+    ],
+    "anchor": {
+      "x": 88,
+      "y": 79
+    }
+  },
+  {
+    "id": "star_comet",
+    "category": "star",
+    "rarity": "mingyue",
+    "name_zh": "流星",
+    "name_en": "Comet",
+    "frames": [
+      "star_comet.png"
+    ],
+    "anchor": {
+      "x": 88,
+      "y": 82
+    }
+  },
+  {
+    "id": "star_lotus",
+    "category": "star",
+    "rarity": "mingyue",
+    "name_zh": "冰莲",
+    "name_en": "Ice Lotus",
+    "frames": [
+      "star_lotus.png"
+    ],
+    "anchor": {
+      "x": 88,
+      "y": 67
+    }
+  },
+  {
+    "id": "star_prism_star",
+    "category": "star",
+    "rarity": "haori",
+    "name_zh": "棱光星",
+    "name_en": "Prismatic Star",
+    "frames": [
+      "star_prism_star.png"
+    ],
+    "anchor": {
+      "x": 86,
+      "y": 88
+    }
+  }
+]
