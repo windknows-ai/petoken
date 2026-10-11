@@ -2,8 +2,10 @@
 from collections import deque
 import math
 import sys
+import time
+import weakref
 
-from PySide6.QtCore import Qt, QPointF
+from PySide6.QtCore import Qt, QPointF, QTimer
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QRadialGradient, QPolygonF
 from PySide6.QtWidgets import QWidget
 
@@ -16,9 +18,47 @@ RING_LAYERS = ((13, (132, 112, 255), 22, 13), (7, (158, 144, 255), 42, 25),
                (3.4, (177, 177, 255), 165, 105), (1.15, (252, 250, 255), 255, 215))
 RING_SEGMENTS = 96
 RING_MEET = (196, 168, 250)
-# 2.4 star-ring skins (unlocked with stardust): 'meteor' gives the stars long
-# tails, 'aurora' turns the empty ring into slowly flowing aurora colours.
+# 2.4 star-ring skins (unlocked with stardust): 'meteor' sends small meteors
+# with golden tails around the ring and gives task stars long fiery trails;
+# 'aurora' makes the whole ring flow in aurora colours under a soft glow.
 SKIN = 'default'
+_LAYERS = weakref.WeakSet()
+SKIN_TICK_MS = 40
+_SKIN_CLOCK = None
+
+
+def set_skin(skin):
+    """Wear ``skin`` and repaint the ring now. One shared clock keeps a skin
+    moving even when no task stars tick the ring; it stops for 'default'."""
+    global SKIN
+    SKIN = skin
+    for layer in list(_LAYERS):
+        layer.update()
+    _wake_skin_clock()
+
+
+def _wake_skin_clock():
+    global _SKIN_CLOCK
+    if SKIN == 'default' or not any(layer.isVisible() for layer in list(_LAYERS)):
+        return
+    if _SKIN_CLOCK is None:
+        _SKIN_CLOCK = QTimer()
+        _SKIN_CLOCK.setInterval(SKIN_TICK_MS)
+        _SKIN_CLOCK.timeout.connect(_skin_tick)
+    _SKIN_CLOCK.start()
+
+
+def _skin_tick():
+    visible = [layer for layer in list(_LAYERS) if layer.isVisible()]
+    if SKIN == 'default' or not visible:
+        _SKIN_CLOCK.stop()
+        return
+    now = time.monotonic()
+    for layer in visible:
+        layer.now = now
+        layer.update()
+
+
 AURORA = ((92, 225, 200), (120, 160, 255), (190, 120, 255), (110, 235, 170))
 
 
@@ -86,6 +126,11 @@ class HaloLayer(QWidget):
         self.stars = {}
         self.tints = []
         self._trails = {}
+        _LAYERS.add(self)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        _wake_skin_clock()
 
     def record_sample(self, identity, x, y, stamp, depth=0.0):
         self._trails.setdefault(identity, deque(maxlen=self.MAX_SAMPLES)).append(
@@ -93,7 +138,7 @@ class HaloLayer(QWidget):
 
     @property
     def age(self):
-        return self.AGE * 1.9 if SKIN == 'meteor' else self.AGE
+        return self.AGE * 3.0 if SKIN == 'meteor' else self.AGE
 
     def prune(self, now):
         self.now = now
@@ -134,6 +179,40 @@ class HaloLayer(QWidget):
             self.setGeometry(left, top, width, height)
         self.update()
 
+    METEORS = 7
+
+    def _paint_meteors(self, painter, start):
+        """Small meteors circling the ring, each with a golden tail."""
+        for index in range(self.METEORS):
+            head = (math.tau * index / self.METEORS + self.now * (.45 + .06 * (index % 3))) % math.tau
+            if (head < math.pi) != self.front:
+                continue
+            steps = 16
+            for k in range(steps):
+                a0 = head - .95 * k / steps
+                a1 = head - .95 * (k + 1) / steps
+                if (a1 % math.tau < math.pi) != self.front:
+                    break
+                x0, y0, _ = geometry.project(self.pose, a0)
+                x1, y1, _ = geometry.project(self.pose, a1)
+                fade = 1 - k / steps
+                for width, color in ((10, QColor(255, 170, 80, int(70 * fade))),
+                                     (3.0, QColor(255, 226, 160, int(240 * fade)))):
+                    pen = QPen(color, width * fade + .5)
+                    pen.setCapStyle(Qt.RoundCap)
+                    painter.setPen(pen)
+                    painter.drawLine(QPointF(x0 - self.x(), y0 - self.y()), QPointF(x1 - self.x(), y1 - self.y()))
+            x, y, _ = geometry.project(self.pose, head)
+            point = QPointF(x - self.x(), y - self.y())
+            glow = QRadialGradient(point, 7)
+            glow.setColorAt(0, QColor(255, 250, 230, 230))
+            glow.setColorAt(1, QColor(255, 190, 110, 0))
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(glow)
+            painter.drawEllipse(point, 7, 7)
+            painter.setBrush(QColor(255, 255, 250))
+            painter.drawEllipse(point, 1.8, 1.8)
+
     def paintEvent(self, event):
         if self.pose is None:
             return
@@ -145,7 +224,14 @@ class HaloLayer(QWidget):
         for angle in angles:
             x, y, _ = geometry.project(self.pose, angle)
             points.append(QPointF(x - self.x(), y - self.y()))
-        if not self.tints and SKIN == 'aurora':
+        if SKIN == 'aurora':
+            # A wide soft curtain under the band, then the band itself.
+            for index in range(len(points) - 1):
+                tint = aurora_tint((angles[index] + angles[index + 1]) / 2, self.now)
+                pen = QPen(QColor(*tint, 46 if self.front else 28), 24)
+                pen.setCapStyle(Qt.FlatCap)
+                painter.setPen(pen)
+                painter.drawLine(points[index], points[index + 1])
             for layer, (width, _rgb, front_alpha, back_alpha) in enumerate(RING_LAYERS):
                 alpha = front_alpha if self.front else back_alpha
                 for index in range(len(points) - 1):
@@ -216,7 +302,9 @@ class HaloLayer(QWidget):
                     pen.setDashPattern([1.5, 4])
                     painter.setPen(pen)
                     painter.drawPath(piece)
-        for index in range(12):
+        if SKIN == 'meteor':
+            self._paint_meteors(painter, start)
+        for index in range(12 if SKIN != 'meteor' else 0):
             angle = start + math.pi * (index + .4) / 12
             x, y, _ = geometry.project(outer if index % 3 else inset, angle)
             point = QPointF(x - self.x(), y - self.y())
@@ -254,11 +342,14 @@ class HaloLayer(QWidget):
             painter.drawEllipse(QPointF(x, y + 24), 1.1, 1.1)
         for key, trail in self._trails.items():
             # A trail follows its own star: Codex blue, Claude Code gold.
-            if isinstance(key, tuple) and key and key[0] in ('codex', 'claude'):
+            if SKIN == 'meteor':
+                glow, body = (255, 168, 80), (255, 226, 160)       # Meteor fire.
+            elif isinstance(key, tuple) and key and key[0] in ('codex', 'claude'):
                 ring = star_palette(key[0])['ring']
                 glow, body = ring, tuple(round(c + (255 - c) * .35) for c in ring)
             else:
                 glow, body = (158, 144, 255), (184, 218, 255)
+            wide = 1.6 if SKIN == 'meteor' else 1.0
             for first, last in zip(trail, list(trail)[1:]):
                 x, y, stamp, depth = last
                 if (depth >= 0) != self.front:
@@ -268,10 +359,10 @@ class HaloLayer(QWidget):
                     continue
                 strength = fade * (.60 + .40 * (depth + 1) / 2)
                 a, b = QPointF(first[0] - self.x(), first[1] - self.y()), QPointF(x - self.x(), y - self.y())
-                for width, color in ((8, QColor(*glow, int(30 * strength))),
+                for width, color in ((8, QColor(*glow, int(30 * strength * wide))),
                                      (2.5, QColor(*body, int(150 * strength))),
                                      (.9, QColor(252, 249, 255, int(230 * strength)))):
-                    pen = QPen(color, width * (.7 + .3 * fade))
+                    pen = QPen(color, width * wide * (.7 + .3 * fade))
                     pen.setCapStyle(Qt.RoundCap)
                     painter.setPen(pen)
                     painter.drawLine(a, b)

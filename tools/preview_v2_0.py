@@ -460,7 +460,7 @@ class Preview(QWidget):
     def wear_skin(self, skin):
         """Try a skin without unlocking it (the test build only)."""
         import halo_scene
-        halo_scene.SKIN = skin
+        halo_scene.set_skin(skin)
 
     def fake_meeting(self):
         """A meeting starting in a minute: the card, quiet while it runs, then the summary."""

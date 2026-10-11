@@ -6402,7 +6402,7 @@ class Panel(QWidget):
         skin = self.prefs.get('ring_skin', 'default')
         if skin != 'default' and f'skin_{skin}' not in unlocked(self.stardust.total()):
             skin = 'default'
-        halo_scene.SKIN = skin
+        halo_scene.set_skin(skin)
 
     def stardust_unlocked(self, name):
         """A new unlock: she is delighted, a notice says what it is."""
