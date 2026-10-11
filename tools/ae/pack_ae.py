@@ -14,8 +14,13 @@ from PySide6.QtGui import QColor, QGuiApplication, QImage, QPainter
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / 'build' / 'ae_out'
 TARGET = ROOT / 'assets' / 'v2_5' / 'wish' / 'seq'
-SEQUENCES = dict(wishstar=dict(size=192), charge=dict(size=256, reverse=True),
-                 **{f'reveal_{r}': dict(size=448) for r in ('fanxing', 'mingyue', 'haori', 'yinhe', 'xinghai')})
+RARITIES = ('fanxing', 'mingyue', 'haori', 'yinhe', 'xinghai')
+SEQUENCES = dict(wishstar=dict(size=(192, 192)), charge=dict(size=(256, 256), reverse=True),
+                 **{f'reveal_{r}': dict(size=(448, 448)) for r in RARITIES},
+                 **{f'pillar_{r}': dict(size=(192, 768)) for r in RARITIES},
+                 **{f'cardbeam_{r}': dict(size=(128, 512)) for r in RARITIES},
+                 **{f'emblem_{r}': dict(size=(224, 224)) for r in RARITIES},
+                 exclusive_yinhe=dict(size=(960, 540), quality=86), exclusive_xinghai=dict(size=(960, 540), quality=86))
 
 
 def main():
@@ -39,10 +44,10 @@ def main():
             p = QPainter(flat)
             p.drawImage(0, 0, image)
             p.end()
-            side = options['size']
-            flat = flat.scaled(side, side, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+            width, height = options['size']
+            flat = flat.scaled(width, height, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
             target = out / f'{index:02d}.jpg'
-            flat.save(str(target), 'JPG', 90)
+            flat.save(str(target), 'JPG', options.get('quality', 90))
             total += target.stat().st_size
         print(f'{name}: {len(frames)} frames')
     print(f'{total / 1024:.0f} KB in {TARGET}')

@@ -238,6 +238,102 @@ def sky(w=1920, h=1200):
     save_png('sky', lum + (out - lum) * 1.5)                           # A little richer colour.
 
 
+def sky_layers(w=2560, h=1440):
+    """The night sky as three parallax layers (2.5, round 5):
+    sky_far   - deep gradient, nebulae (two-level domain warp), dark dust, the Milky Way;
+    sky_stars - the star field on black (drawn additively, drifts a little faster);
+    sky_dust  - faint near wisps on black (drifts fastest)."""
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    u, v = x / w, y / h
+    f = v[..., None]
+    top, mid, bottom = np.array([3, 4, 16]) / 255, np.array([9, 8, 32]) / 255, np.array([22, 13, 46]) / 255
+    base = np.where(f < .6, top + (mid - top) * (f / .6), mid + (bottom - mid) * ((f - .6) / .4)) ** 2.2
+
+    def field(beta, seed, scale=1.0):
+        return fbm(h, w, beta, seed).astype(np.float32) * scale
+
+    # Two-level domain warp: turbulent, wispy gas rather than blobs.
+    q1, q2 = field(3.5, 101, 140), field(3.5, 102, 140)
+    r1 = sample(field(3.2, 103, 110), x + q1, y + q2)
+    r2 = sample(field(3.2, 104, 110), x + q1 * .7, y + q2 * .7)
+    gas = sample(field(3.0, 105), x + r1, y + r2)
+    detail = sample(field(2.3, 106), x + r1 * .5, y + r2 * .5)
+    density = np.clip(gas * 1.25 + detail * .35 + .12, 0, None) ** 2.4
+    filaments = (1 - np.abs(sample(field(2.7, 107), x + r1 * 1.4, y + r2 * 1.4))) ** 9
+    # Where the gas glows at all: large soft regions, leaving clear dark sky between them.
+    regions = np.clip(field(4.2, 108) * 1.6 + .25, 0, 1) ** 1.5
+    regions *= np.clip(1.15 - ((u - .5) ** 2 * 1.2 + (v - .48) ** 2 * 1.8), 0, 1)
+    # Colour drifts across the sky: violet, star blue, teal, rose, a little champagne.
+    palette = np.array([[.50, .30, .95], [.25, .45, 1.0], [.20, .75, .85], [.90, .35, .70], [1.0, .78, .52]],
+                       np.float32)
+    hue_field = (np.clip(field(4.4, 109) * .5 + .5, 0, .999) * (len(palette) - 1))
+    k = np.floor(hue_field).astype(int)
+    t = (hue_field - k)[..., None]
+    colour = palette[k] * (1 - t) + palette[np.minimum(k + 1, len(palette) - 1)] * t
+    emission = colour * ((density * .09 + filaments * density * .09) * regions)[..., None]
+    # Bright knots where stars are born.
+    for cx, cy, rad, rgb in ((.26, .32, .05, (.75, .55, 1)), (.71, .24, .04, (.45, .7, 1)), (.6, .7, .035, (1, .55, .8))):
+        knot = np.exp(-(((u - cx) / rad) ** 2 + ((v - cy) / (rad * 1.6)) ** 2))
+        emission += np.array(rgb, np.float32) * (knot * (density + .2) * .12)[..., None]
+    # Dark dust: absorbs the glow in ragged lanes.
+    dust = np.clip(sample(field(2.9, 110), x + q1 * 1.2, y + q2 * 1.2) * 2.2 + .1, 0, 1) ** 1.3
+    absorb = 1 - .8 * dust * np.clip(regions * 1.4, 0, 1)
+    # The Milky Way, diagonal, with its own dust lanes.
+    a = math.radians(-24)
+    along = (x - w * .5) * math.cos(a) + (y - h * .42) * math.sin(a)
+    across = -(x - w * .5) * math.sin(a) + (y - h * .42) * math.cos(a)
+    wobble = sample(field(3.3, 111), x, y) * 90
+    band = np.exp(-((across + wobble) / 210) ** 2)
+    core = np.exp(-((across + wobble) / 80) ** 2) * np.exp(-(along / (w * .42)) ** 2)
+    lanes = 1 - .9 * np.clip(sample(field(2.6, 112), x + r1, y + r2) * 2 + .2, 0, 1) * \
+        np.exp(-((across + wobble * .5 - 12) / 70) ** 2)
+    mottled = np.clip(gas + .7, 0, 1.8) ** 2
+    milky = (np.array([.66, .64, 1.0], np.float32) * (band * mottled * .03)[..., None]
+             + np.array([1.0, .88, .74], np.float32) * (core * mottled * .045)[..., None]) * lanes[..., None]
+    nebula = (emission + milky) * absorb[..., None]
+    far = base + nebula + blur(nebula, 30) * .35
+    vignette = np.clip(1 - .4 * (((u - .5) * 1.5) ** 2 + ((v - .5) * 1.3) ** 2), .45, 1)
+    far *= vignette[..., None]
+    out = tonemap(far, 1.7, 1 / 2.2)
+    lum = out.mean(-1, keepdims=True)
+    out = lum + (out - lum) * 1.35
+    out += RNG.normal(0, .6 / 255, out.shape)                        # Dither: no banding in the gradients.
+    save_png('sky_far', out)
+
+    # Stars: everywhere, denser in the band and in a few clusters, thinned by the dust.
+    count = 30000
+    xs, ys = RNG.random(count) * w, RNG.random(count) * h
+    band_n = 26000
+    tt = RNG.random(band_n) * 2 - 1
+    off = RNG.normal(size=band_n) * 150
+    bx = w * .5 + tt * w * .8 * math.cos(a) - off * math.sin(a)
+    by = h * .42 + tt * w * .8 * math.sin(a) + off * math.cos(a)
+    clusters = []
+    for cx, cy, spread, n in ((.18, .64, 40, 900), (.8, .52, 34, 700), (.44, .2, 30, 500)):
+        clusters.append((RNG.normal(cx * w, spread, n), RNG.normal(cy * h, spread * .8, n)))
+    xs = np.concatenate([xs, bx] + [c[0] for c in clusters])
+    ys = np.concatenate([ys, by] + [c[1] for c in clusters])
+    inside = (xs >= 0) & (xs < w - 1) & (ys >= 0) & (ys < h - 1)
+    xs, ys = xs[inside], ys[inside]
+    bright = (RNG.pareto(2.6, xs.size) + 1) ** 1.6 * .03
+    bright *= np.clip(sample(absorb, xs, ys), .15, 1)
+    bright = np.minimum(bright, 7)
+    stars = np.zeros((h, w, 3), np.float32)
+    splat(stars, xs, ys, star_temperature(xs.size).astype(np.float32) * bright[:, None])
+    peak = stars.max(-1, keepdims=True)
+    hot = stars * (peak > np.quantile(peak[peak > 0], .9993))
+    stars = stars + convolve(hot, spikes(h, w, [(0, 1, .5), (90, 1, .5)], 7, .55)) * .22
+    stars = bloom(stars, ((.8, .5), (2.5, .22), (8, .06)))
+    save_png('sky_stars', tonemap(stars, 1.3, 1 / 2.0))
+
+    # Near wisps: faint, soft, warm and cool.
+    wisp = np.clip(sample(field(3.8, 113), x + q1 * 2, y + q2 * 2) * 1.6 - .25, 0, None) ** 2
+    tint = np.where((field(4.5, 114) > 0)[..., None], np.array([.62, .56, 1.0], np.float32),
+                    np.array([1.0, .82, .62], np.float32))
+    near = blur(tint * (wisp * .05)[..., None], 6)
+    save_png('sky_dust', tonemap(near, 1.0, 1 / 2.0))
+
+
 # Meteors -----------------------------------------------------------------------------------
 def meteor(name, colour, w=1024, h=96, tail=260.0, seed=0, rainbow=False, sparkly=False, hero=False):
     """A meteor pointing right: the head near the right end, its tail fading left.
@@ -448,6 +544,8 @@ def main():
         return not only or name in only
     if want('sky'):
         sky()
+    if want('skylayers'):
+        sky_layers()
     if want('meteors'):
         for k, (name, colour) in enumerate(PALETTE.items()):
             meteor(f'meteor_{name}', colour, seed=k)

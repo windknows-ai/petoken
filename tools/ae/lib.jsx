@@ -151,14 +151,33 @@ function vignette(comp, inner) {
     var l = comp.layers.addSolid([0, 0, 0], "edge", comp.width, comp.height, 1);
     var mask = l.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
     var shape = new Shape();
-    var r = comp.width * inner / 2, cx = comp.width / 2, cy = comp.height / 2, k = .5523 * r;
-    shape.vertices = [[cx, cy - r], [cx + r, cy], [cx, cy + r], [cx - r, cy]];
-    shape.inTangents = [[-k, 0], [0, -k], [k, 0], [0, k]];
-    shape.outTangents = [[k, 0], [0, k], [-k, 0], [0, -k]];
+    var small = Math.min(comp.width, comp.height);
+    var rx = comp.width * Math.min(inner, .98) / 2, ry = comp.height * Math.min(inner, .98) / 2;
+    var cx = comp.width / 2, cy = comp.height / 2, kx = .5523 * rx, ky = .5523 * ry;
+    shape.vertices = [[cx, cy - ry], [cx + rx, cy], [cx, cy + ry], [cx - rx, cy]];
+    shape.inTangents = [[-kx, 0], [0, -ky], [kx, 0], [0, ky]];
+    shape.outTangents = [[kx, 0], [0, ky], [-kx, 0], [0, -ky]];
     shape.closed = true;
     mask.property("ADBE Mask Shape").setValue(shape);
     mask.inverted = true;
-    mask.property("ADBE Mask Feather").setValue([comp.width * .22, comp.width * .22]);
+    mask.property("ADBE Mask Feather").setValue([small * .22, small * .22]);
+    return l;
+}
+
+// An image (rendered elsewhere) as a layer.
+function picture(comp, path) {
+    var footage = app.project.importFile(new ImportOptions(new File(path)));
+    var l = comp.layers.add(footage);
+    var mask = l.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");   // Round edge: no square.
+    var w = footage.width, h = footage.height, r = Math.min(w, h) * .44, k = .5523 * r;
+    var sh = new Shape();
+    sh.vertices = [[w / 2, h / 2 - r], [w / 2 + r, h / 2], [w / 2, h / 2 + r], [w / 2 - r, h / 2]];
+    sh.inTangents = [[-k, 0], [0, -k], [k, 0], [0, k]];
+    sh.outTangents = [[k, 0], [0, k], [-k, 0], [0, -k]];
+    sh.closed = true;
+    mask.property("ADBE Mask Shape").setValue(sh);
+    mask.property("ADBE Mask Feather").setValue([r * .3, r * .3]);
+    addMode(l);
     return l;
 }
 
@@ -172,6 +191,33 @@ function scale(layer, list) {
 
 function rotate(layer, list) {
     keys(layer.property("ADBE Transform Group").property("ADBE Rotate Z"), list);
+}
+
+// A CC Particle World emitter. o: rate, life, velocity, type (1 line, 2 star, 5 soft orb), birth, death,
+// from, to, and optionally x/y/z (producer place), rx/ry/rz (producer size), gravity, resistance,
+// extra, animation, opacity, seed, glow [radius, intensity], glowA/glowB (tint).
+function emitter(comp, name, o) {
+    var l = addMode(solid(comp, name));
+    var e = effect(l, "CC Particle World");
+    var guides = ["0051", "0052", "0053", "0055", "0060", "0061"];
+    for (var g = 0; g < guides.length; g++) set(e, "CC Particle World-" + guides[g], 0);
+    var p = function (id, v) { if (v !== undefined) set(e, "CC Particle World-" + id, v); };
+    p("0004", o.rate); p("0005", o.life);
+    p("0007", o.x); p("0008", o.y); p("0009", o.z);
+    p("0010", o.rx === undefined ? .01 : o.rx); p("0011", o.ry === undefined ? .01 : o.ry);
+    p("0012", o.rz === undefined ? .01 : o.rz);
+    p("0015", o.animation); p("0016", o.velocity); p("0018", o.gravity === undefined ? 0 : o.gravity);
+    p("0041", o.resistance); p("0019", o.extra); p("0020", o.extraAngle);
+    p("0023", o.type); p("0024", o.birth); p("0025", o.death); p("0026", o.variation === undefined ? 60 : o.variation);
+    p("0027", o.opacity === undefined ? 100 : o.opacity); p("0029", o.from); p("0030", o.to);
+    p("0043", o.rotationSpeed); p("0104", o.seed || 1);
+    if (o.glow) glow(l, o.glow[0], o.glow[1], 30, o.glowA, o.glowB);
+    return l;
+}
+
+function at(layer, x, y) {
+    layer.property("ADBE Transform Group").property("ADBE Position").setValue([x, y]);
+    return layer;
 }
 
 // Render a comp to a TIFF sequence: <ROOT>/<name>/<name>_00000.tif

@@ -18,9 +18,9 @@ def main():
     total = 0
     for png in sorted(SOURCE.glob('*.png')):
         image = QImage(str(png))
-        if png.stem == 'sky':
-            out = TARGET / 'sky.jpg'
-            image.save(str(out), 'JPG', 90)
+        if png.stem == 'sky' or png.stem.startswith('sky_'):          # Full-frame layers: JPEG.
+            out = TARGET / f'{png.stem}.jpg'
+            image.save(str(out), 'JPG', 92)
         else:
             out = TARGET / f'{png.stem}.webp'
             image.save(str(out), 'WEBP', 92)
