@@ -86,69 +86,53 @@ COVERS_23 = {
 # Feature video covers (1.0 – 2.4): (file stem, pill, headline, sub, sub on tall covers, picture, card).
 COVERS_FEAT = {
     'zh_CN': (
-        ('Token分析', 'Petoken · Token 分析', ('AI 用了多少？', '一眼算清楚'), '按模型 · 按会话 · 按天
-费用估算 · 只在本地',
+        ('Token分析', 'Petoken · Token 分析', ('AI 用了多少？', '一眼算清楚'), '按模型 · 按会话 · 按天\n费用估算 · 只在本地',
          '按模型 · 按会话 · 按天', 'v2_0/thinking_1', 'analytics'),
-        ('星环', 'Petoken · 星环', ('每个任务', '都是一颗星'), '会转的星环 · 点开看详情
-任务再多也不乱',
+        ('星环', 'Petoken · 星环', ('每个任务', '都是一颗星'), '会转的星环 · 点开看详情\n任务再多也不乱',
          '一颗星一个任务', 'v1_1/working', 'ring'),
-        ('Claude与Codex双支持', 'Petoken · 双 AI', ('Claude Code', '+ Codex'), '金色和蓝色星星
-两边额度一起看',
+        ('Claude与Codex双支持', 'Petoken · 双 AI', ('Claude Code', '+ Codex'), '金色和蓝色星星\n两边额度一起看',
          '金色 Claude · 蓝色 Codex', 'v1_1/wave', 'card'),
-        ('工作台', 'Petoken · 工作台', ('项目 待办 便签', '都放这里'), '按项目归类 AI 任务
-只存在你的电脑上',
+        ('工作台', 'Petoken · 工作台', ('项目 待办 便签', '都放这里'), '按项目归类 AI 任务\n只存在你的电脑上',
          '项目 · 待办 · 便签', 'v2_0/ready_go_1', 'wb_projects'),
-        ('通知与提醒', 'Petoken · 通知', ('AI 做完了？', '她第一个告诉你'), '完成 · 出错 · 等你确认
-通知中心 · 免打扰',
+        ('通知与提醒', 'Petoken · 通知', ('AI 做完了？', '她第一个告诉你'), '完成 · 出错 · 等你确认\n通知中心 · 免打扰',
          '完成 · 出错 · 等你确认', 'v1_1/celebrate', 'wb_notify'),
-        ('省时小助手', 'Petoken · 省时助手', ('少切窗口', '多写代码'), '额度预测 · 桌宠上批准
-完成小结 · 快速启动',
+        ('省时小助手', 'Petoken · 省时助手', ('少切窗口', '多写代码'), '额度预测 · 桌宠上批准\n完成小结 · 快速启动',
          '桌宠上批准 · 快速启动', 'v2_0/thumbs_up_1', 'approval'),
-        ('报告', 'Petoken · 报告', ('AI 这周', '干了多少活？'), '数据面板 · 折线图
-和上一期比一比',
+        ('报告', 'Petoken · 报告', ('AI 这周', '干了多少活？'), '数据面板 · 折线图\n和上一期比一比',
          '数据面板 · 折线图', 'v2_0/proud_1', 'report_board'),
-        ('把待办交给AI', 'Petoken · 交给 AI', ('待办做不完？', '交给 AI！'), '马上做或定时
-做完先给你验收',
+        ('把待办交给AI', 'Petoken · 交给 AI', ('待办做不完？', '交给 AI！'), '马上做或定时\n做完先给你验收',
          '马上做 · 定时做 · 先验收', 'v2_0/cheer_1', 'give_ai'),
-        ('2.0陪伴合集', 'Petoken 2.0', ('她真的', '活过来了！'), '41 个动作 · 互动和心情
-专注陪伴 · 积分贴纸',
+        ('2.0陪伴合集', 'Petoken 2.0', ('她真的', '活过来了！'), '41 个动作 · 互动和心情\n专注陪伴 · 积分贴纸',
          '互动 · 心情 · 专注陪伴', 'v2_0/headpat_happy_1', 'guide_poses'),
-        ('2.4星海觉醒', 'Petoken 2.4', ('攒星辉', '唤醒星海！'), '日历提醒 · 星环皮肤
-第三形态 · 星海觉醒',
+        ('2.4星海觉醒', 'Petoken 2.4', ('攒星辉', '唤醒星海！'), '日历提醒 · 星环皮肤\n第三形态 · 星海觉醒',
          '日历提醒 · 星环皮肤 · 星海', 'v2_4/star_idle_1', 'collection_star'),
     ),
     'en': (
         ('Token-analytics', 'Petoken · Token analytics', ('How much', 'did AI use?'),
-         'By model · session · day
-Cost estimate · local only', 'By model · session · day', 'v2_0/thinking_1',
+         'By model · session · day\nCost estimate · local only', 'By model · session · day', 'v2_0/thinking_1',
          'analytics'),
-        ('Star-ring', 'Petoken · Star ring', ('Every task', 'is a star'), 'A turning ring · click for details
-'
-         'Tidy with many tasks', 'One star per task', 'v1_1/working', 'ring'),
-        ('Claude-and-Codex', 'Petoken · Two AIs', ('Claude Code', '+ Codex'), 'Gold and blue stars
-Both limits '
-         'at a glance', 'Gold Claude · blue Codex', 'v1_1/wave', 'card'),
-        ('Workbench', 'Petoken · Workbench', ('Projects, todos', '& notes'), 'AI tasks by project
-Saved on your '
-         'computer', 'Projects · todos · notes', 'v2_0/ready_go_1', 'wb_projects'),
-        ('Notifications', 'Petoken · Notifications', ('AI done?', "She'll tell you"), 'Finished · failed · '
-         'approvals
-History · Do Not Disturb', 'Finished · failed · approvals', 'v1_1/celebrate', 'wb_notify'),
-        ('Time-saver', 'Petoken · Time saver', ('Less switching,', 'more coding'), 'Limit forecasts · approve on '
-         'the pet
-Recaps · quick launch', 'Approve on the pet', 'v2_0/thumbs_up_1', 'approval'),
-        ('Reports', 'Petoken · Reports', ('What did AI', 'get done?'), 'Data board · line charts
-Versus last '
-         'period', 'Data board · charts', 'v2_0/proud_1', 'report_board'),
-        ('Give-todos-to-AI', 'Petoken · Give to AI', ('Too many todos?', 'Hand them over!'), 'Now or scheduled
-'
-         'You review first', 'Now · scheduled · reviewed', 'v2_0/cheer_1', 'give_ai'),
-        ('2.0-Companion', 'Petoken 2.0', ('She really', 'comes alive!'), '41 poses · play and moods
-Focus '
-         'together · stickers', 'Play · moods · focus', 'v2_0/headpat_happy_1', 'guide_poses'),
-        ('2.4-Starsea', 'Petoken 2.4', ('Collect stardust,', 'awaken Starsea!'), 'Meeting reminders · ring '
-         'skins
-Her third form', 'Reminders · skins · Starsea', 'v2_4/star_idle_1', 'collection_star'),
+        ('Star-ring', 'Petoken · Star ring', ('Every task', 'is a star'),
+         'A turning ring · click for details\nTidy with many tasks', 'One star per task', 'v1_1/working', 'ring'),
+        ('Claude-and-Codex', 'Petoken · Two AIs', ('Claude Code', '+ Codex'),
+         'Gold and blue stars\nBoth limits at a glance', 'Gold Claude · blue Codex', 'v1_1/wave', 'card'),
+        ('Workbench', 'Petoken · Workbench', ('Projects, todos', '& notes'),
+         'AI tasks by project\nSaved on your computer', 'Projects · todos · notes', 'v2_0/ready_go_1', 'wb_projects'),
+        ('Notifications', 'Petoken · Notifications', ('AI done?', "She'll tell you"),
+         'Finished · failed · approvals\nHistory · Do Not Disturb', 'Finished · failed · approvals', 'v1_1/celebrate',
+         'wb_notify'),
+        ('Time-saver', 'Petoken · Time saver', ('Less switching,', 'more coding'),
+         'Limit forecasts · approve on the pet\nRecaps · quick launch', 'Approve on the pet', 'v2_0/thumbs_up_1',
+         'approval'),
+        ('Reports', 'Petoken · Reports', ('What did AI', 'get done?'),
+         'Data board · line charts\nVersus last period', 'Data board · charts', 'v2_0/proud_1', 'report_board'),
+        ('Give-todos-to-AI', 'Petoken · Give to AI', ('Too many todos?', 'Hand them over!'),
+         'Now or scheduled\nYou review first', 'Now · scheduled · reviewed', 'v2_0/cheer_1', 'give_ai'),
+        ('2.0-Companion', 'Petoken 2.0', ('She really', 'comes alive!'),
+         '41 poses · play and moods\nFocus together · stickers', 'Play · moods · focus', 'v2_0/headpat_happy_1',
+         'guide_poses'),
+        ('2.4-Starsea', 'Petoken 2.4', ('Collect stardust,', 'awaken Starsea!'),
+         'Meeting reminders · ring skins\nHer third form', 'Reminders · skins · Starsea', 'v2_4/star_idle_1',
+         'collection_star'),
     ),
 }
 

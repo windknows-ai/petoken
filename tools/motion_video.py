@@ -54,6 +54,8 @@ THEMES = {
     'sunset': ('#2B1240', '#C9506F', '#FFC48A', '#FFE27A'),
 }
 GOLD = QColor('#FFD45E')
+# The CPU encoder: NVENC runs out of memory while a game or another app holds the GPU.
+ENCODER = ('-c:v', 'libx264', '-preset', 'medium', '-crf', '19')
 LANG = 'zh_CN'
 W, H = 1920, 1080
 VERTICAL = False
@@ -933,8 +935,7 @@ def main(argv=None):
             return 0
         silent = out_dir / 'video_only.mp4'
         proc = subprocess.Popen([args.ffmpeg, '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
-                                 '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-', '-c:v', 'h264_nvenc', '-preset', 'p7',
-                                 '-rc', 'vbr', '-cq', '21', '-b:v', '0', '-g', '120', '-bf', '2',
+                                 '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-', *ENCODER, '-g', '120',
                                  '-pix_fmt', 'yuv420p', '-movflags', '+faststart', str(silent)], stdin=subprocess.PIPE)
         for n, s in enumerate(shots):
             motion.begin(n)
