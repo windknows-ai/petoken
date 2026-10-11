@@ -2,6 +2,20 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.4.1 — 2026-10-11
+
+### Changed
+- **New ring skin effects**: Meteor sends shooting stars through the sky behind her (twinkling sky stars, showers, fine circling stars); Aurora raises curtains from the ring behind her in the stars' own colours. The ring and task trails keep their usual look.
+- **The Aurora ring moves with your music** (only the speakers' level is read; nothing is recorded).
+- **Collection**: how to earn stardust and a preview card for each skin and the Starsea form; the page scrolls.
+- The star ring follows her at once when she is dragged or moved.
+
+### Fixed
+- No straight streaks across the ring after she moves; no flashing when dragging or changing skins.
+- Game-mode transformation: a soft spotlight with no straight edges, and no flash as it ends.
+
+See [release notes](docs/RELEASE_NOTES_v2.4.1.md).
+
 ## V2.4.0 — 2026-10-10
 
 ### Added
