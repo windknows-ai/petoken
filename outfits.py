@@ -34,14 +34,15 @@ def catalog(prices):
     for series in sorted(p.name for p in OUTFIT_DIR.iterdir() if p.is_dir()):
         for tier in ('xinghai', 'yinhe', 'haori', 'mingyue', 'fanxing'):
             folder = OUTFIT_DIR / series / tier
-            if not (folder / 'idle_1.png').is_file():
+            first = next((folder / f'idle_1{x}' for x in ('.webp', '.png') if (folder / f'idle_1{x}').is_file()), None)
+            if first is None:
                 continue
             zh, en = SERIES.get(series, (series, series))
             items.append(dict(id=f'outfit.{series}_{tier}', set='outfit', name=f'{series}_{tier}', rarity=tier,
                               slot='outfit', price=prices.get(tier), theme=THEME.get(series), window=None,
                               names=dict(zh_CN=f'{zh}·{TIER[tier][0]}', en_US=f'{en} · {TIER[tier][1]}',
                                          en=f'{en} · {TIER[tier][1]}'),
-                              art=['idle_1.png'], art_dir=f'outfits/{series}/{tier}', series=series, tier=tier))
+                              art=[first.name], art_dir=f'outfits/{series}/{tier}', series=series, tier=tier))
     return items
 
 
@@ -56,7 +57,7 @@ def core_pose(state):
 @functools.lru_cache(maxsize=256)
 def _frames(series, tier, pose):
     folder = OUTFIT_DIR / series / tier
-    found = sorted(folder.glob(f'{pose}_[0-9].png'))
+    found = sorted(folder.glob(f'{pose}_[0-9].webp')) or sorted(folder.glob(f'{pose}_[0-9].png'))
     return tuple(str(p.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/') for p in found)
 
 
@@ -66,9 +67,10 @@ def frame_path(item, state, index=0, blink=False):
     if item is None or pose is None:
         return None
     if blink:
-        path = OUTFIT_DIR / item['series'] / item['tier'] / f'{pose}_blink.png'
-        if path.is_file():
-            return str(path.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/')
+        for suffix in ('.webp', '.png'):                    # WebP in the package, PNG in the repository.
+            path = OUTFIT_DIR / item['series'] / item['tier'] / f'{pose}_blink{suffix}'
+            if path.is_file():
+                return str(path.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/')
     frames = _frames(item['series'], item['tier'], pose) or _frames(item['series'], item['tier'], 'idle')
     return frames[index % len(frames)] if frames else None
 

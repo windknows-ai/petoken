@@ -72,6 +72,13 @@ foreach ($folder in Get-ChildItem -Directory -Path (Join-Path $internal 'assets\
     }
 }
 if ($LASTEXITCODE -ne 0) { throw 'Shrinking the 2.0 artwork failed.' }
+# ... and as WebP, about a tenth of the size (alpha kept; outfits.py reads either).
+$outfitRoot = Join-Path $internal 'assets\v2_5\outfits'
+if (Test-Path -LiteralPath $outfitRoot) {
+    $sheet = Join-Path $outfitRoot 'OUTFITS_PREVIEW.png'
+    if (Test-Path -LiteralPath $sheet) { Remove-Item -LiteralPath $sheet -Force }
+    & $python (Join-Path $repo 'tools\to_webp.py') $outfitRoot
+}
 # The shop decorations keep their drawn size (their anchors are in those pixels);
 # only Codex's contact sheet of all 60 stays out of the package.
 $shopSheet = Join-Path $internal 'assets\v2_5\shop\SHOP_PREVIEW.png'
