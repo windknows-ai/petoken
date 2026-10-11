@@ -1,0 +1,926 @@
+[
+  {
+    "file": "assets/v2_0/bored_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/bored_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/bored_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/bored_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/cheer_1.png",
+    "hand": "left",
+    "x": 398,
+    "y": 416,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/cheer_2.png",
+    "hand": "left",
+    "x": 480,
+    "y": 685,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/cheer_blink.png",
+    "hand": "left",
+    "x": 398,
+    "y": 416,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/clap_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/clap_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/clap_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/clap_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/coquettish_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/coquettish_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/coquettish_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/coquettish_4.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/coquettish_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/curious_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/curious_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/curious_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/dragged_1.png",
+    "hand": "left",
+    "x": 411,
+    "y": 747,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/dragged_2.png",
+    "hand": "left",
+    "x": 411,
+    "y": 747,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/dragged_3.png",
+    "hand": "left",
+    "x": 428,
+    "y": 672,
+    "angle": 310,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/dragged_4.png",
+    "hand": "right",
+    "x": 758,
+    "y": 794,
+    "angle": 35,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/focus_done_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_done_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_read_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_read_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_read_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_read_4.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_read_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_tea_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/focus_tea_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/greet_morning_1.png",
+    "hand": "right",
+    "x": 859,
+    "y": 710,
+    "angle": 25,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/greet_morning_2.png",
+    "hand": "right",
+    "x": 930,
+    "y": 746,
+    "angle": 25,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/greet_morning_blink.png",
+    "hand": "right",
+    "x": 859,
+    "y": 710,
+    "angle": 25,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/greet_night_1.png",
+    "hand": "right",
+    "x": 929,
+    "y": 676,
+    "angle": 45,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/greet_night_2.png",
+    "hand": "right",
+    "x": 992,
+    "y": 695,
+    "angle": 45,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/grievance_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/grievance_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/headpat_happy_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/headpat_happy_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/headpat_happy_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/headpat_happy_4.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/headpat_happy_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/heart_1.png",
+    "hand": "left",
+    "x": 463,
+    "y": 727,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/hold_card_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/hold_card_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/hug_1.png",
+    "hand": "left",
+    "x": 344,
+    "y": 718,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/hug_2.png",
+    "hand": "left",
+    "x": 248,
+    "y": 711,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/hug_blink.png",
+    "hand": "left",
+    "x": 248,
+    "y": 711,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/idle_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/landing_1.png",
+    "hand": "left",
+    "x": 342,
+    "y": 805,
+    "angle": 325,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/landing_blink.png",
+    "hand": "left",
+    "x": 342,
+    "y": 805,
+    "angle": 325,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/packing_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/packing_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/peek_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/peek_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/poked_1.png",
+    "hand": "right",
+    "x": 833,
+    "y": 587,
+    "angle": 30,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/pout_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/pout_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/pout_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/proud_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/ready_go_1.png",
+    "hand": "left",
+    "x": 478,
+    "y": 676,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/ready_go_blink.png",
+    "hand": "left",
+    "x": 478,
+    "y": 676,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/shy_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/shy_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/sleep_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/sleep_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/sleep_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/stretch_break_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/stretch_break_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/stretch_break_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/surprised_1.png",
+    "hand": "left",
+    "x": 421,
+    "y": 655,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/thinking_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/thinking_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/thinking_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/thumbs_up_1.png",
+    "hand": "left",
+    "x": 490,
+    "y": 669,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/thumbs_up_blink.png",
+    "hand": "left",
+    "x": 490,
+    "y": 669,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/wake_stretch_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/wake_stretch_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/worried_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/worried_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/worried_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_0/yawn_1.png",
+    "hand": "left",
+    "x": 356,
+    "y": 421,
+    "angle": 345,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/yawn_2.png",
+    "hand": "left",
+    "x": 380,
+    "y": 211,
+    "angle": 350,
+    "front": true
+  },
+  {
+    "file": "assets/v2_0/yawn_3.png",
+    "hand": "left",
+    "x": 446,
+    "y": 596,
+    "angle": 345,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/form2_idle_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/form2_idle_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/form2_idle_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/form2_idle_4.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/form2_idle_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_bored_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_bored_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_bored_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_cheer_1.png",
+    "hand": "right",
+    "x": 989,
+    "y": 470,
+    "angle": 20,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/game_cheer_2.png",
+    "hand": "right",
+    "x": 996,
+    "y": 437,
+    "angle": 20,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/game_defeat_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_defeat_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_defeat_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_drink_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_drink_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_tense_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_tense_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_tense_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_victory_1.png",
+    "hand": "right",
+    "x": 1011,
+    "y": 771,
+    "angle": 40,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/game_victory_2.png",
+    "hand": "right",
+    "x": 1015,
+    "y": 750,
+    "angle": 40,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/game_watch_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_watch_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_watch_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/game_watch_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/mvp_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/mvp_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/mvp_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/xform_armor_1.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_armor_2.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_armor_3.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_armor_4.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_armor_5.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_armor_6.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_armor_7.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_base.png",
+    "hand": "left",
+    "x": 346,
+    "y": 744,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_rise_0a.png",
+    "hand": "left",
+    "x": 422,
+    "y": 954,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_rise_0b.png",
+    "hand": "left",
+    "x": 439,
+    "y": 815,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_rise_1.png",
+    "hand": "left",
+    "x": 480,
+    "y": 821,
+    "angle": 350,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_rise_2.png",
+    "hand": "left",
+    "x": 428,
+    "y": 812,
+    "angle": 350,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_rise_3.png",
+    "hand": "left",
+    "x": 368,
+    "y": 768,
+    "angle": 320,
+    "front": true
+  },
+  {
+    "file": "assets/v2_1/xform_weapon_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_1/xform_weapon_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_change_0.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_change_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_change_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_change_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_goodnight_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_goodnight_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_idle_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_idle_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_idle_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_idle_4.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_idle_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_milk_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_milk_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_read_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_read_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_read_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_settle_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_settle_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_sleep_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_sleep_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_sleep_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_wake_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_wake_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_yawn_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_3/night_yawn_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/awaken_0.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/awaken_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/awaken_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/awaken_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/awaken_4.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_celebrate_1.png",
+    "hand": "left",
+    "x": 549,
+    "y": 761,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_4/star_celebrate_2.png",
+    "hand": "left",
+    "x": 294,
+    "y": 452,
+    "angle": 335,
+    "front": true
+  },
+  {
+    "file": "assets/v2_4/star_dragged_1.png",
+    "hand": "left",
+    "x": 381,
+    "y": 777,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_4/star_headpat_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_headpat_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_idle_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_idle_2.png",
+    "hand": "left",
+    "x": 383,
+    "y": 989,
+    "angle": 315,
+    "front": true
+  },
+  {
+    "file": "assets/v2_4/star_idle_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_idle_4.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_idle_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_poked_1.png",
+    "hand": "right",
+    "x": 870,
+    "y": 888,
+    "angle": 45,
+    "front": true
+  },
+  {
+    "file": "assets/v2_4/star_sad_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_sad_blink.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_sleep_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_sleep_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_thinking_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_thinking_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_typing_1.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_typing_2.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_typing_3.png",
+    "none": true
+  },
+  {
+    "file": "assets/v2_4/star_wave_1.png",
+    "hand": "left",
+    "x": 438,
+    "y": 592,
+    "angle": 340,
+    "front": true
+  },
+  {
+    "file": "assets/v2_4/star_wave_2.png",
+    "hand": "left",
+    "x": 481,
+    "y": 252,
+    "angle": 350,
+    "front": true
+  }
+]

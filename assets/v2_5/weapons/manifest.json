@@ -1,0 +1,142 @@
+[
+  {
+    "id": "starsea_scepter",
+    "rarity": "xinghai",
+    "name_zh": "星海权杖",
+    "name_en": "Starsea Scepter",
+    "file": "starsea_scepter.png"
+  },
+  {
+    "id": "galaxy_blade",
+    "rarity": "yinhe",
+    "name_zh": "银河之刃",
+    "name_en": "Galaxy Blade",
+    "file": "galaxy_blade.png"
+  },
+  {
+    "id": "solar_lance",
+    "rarity": "haori",
+    "name_zh": "皓日长枪",
+    "name_en": "Solar Lance",
+    "file": "solar_lance.png"
+  },
+  {
+    "id": "comet_wand",
+    "rarity": "haori",
+    "name_zh": "彗星魔杖",
+    "name_en": "Comet Wand",
+    "file": "comet_wand.png"
+  },
+  {
+    "id": "starlight_spear",
+    "rarity": "haori",
+    "name_zh": "星光长矛",
+    "name_en": "Starlight Spear",
+    "file": "starlight_spear.png"
+  },
+  {
+    "id": "crescent_bow",
+    "rarity": "mingyue",
+    "name_zh": "月牙弓",
+    "name_en": "Crescent Bow",
+    "file": "crescent_bow.png"
+  },
+  {
+    "id": "frost_sword",
+    "rarity": "mingyue",
+    "name_zh": "霜雪剑",
+    "name_en": "Frost Sword",
+    "file": "frost_sword.png"
+  },
+  {
+    "id": "sakura_fan",
+    "rarity": "mingyue",
+    "name_zh": "樱花扇",
+    "name_en": "Sakura Fan",
+    "file": "sakura_fan.png"
+  },
+  {
+    "id": "crystal_orb",
+    "rarity": "mingyue",
+    "name_zh": "水晶球",
+    "name_en": "Crystal Orb",
+    "file": "crystal_orb.png"
+  },
+  {
+    "id": "moon_lantern",
+    "rarity": "mingyue",
+    "name_zh": "月光灯笼",
+    "name_en": "Moon Lantern",
+    "file": "moon_lantern.png"
+  },
+  {
+    "id": "star_harp",
+    "rarity": "mingyue",
+    "name_zh": "星月竖琴",
+    "name_en": "Star Harp",
+    "file": "star_harp.png"
+  },
+  {
+    "id": "small_umbrella",
+    "rarity": "fanxing",
+    "name_zh": "星光小伞",
+    "name_en": "Little Star Umbrella",
+    "file": "small_umbrella.png"
+  },
+  {
+    "id": "feather_pen",
+    "rarity": "fanxing",
+    "name_zh": "羽毛笔",
+    "name_en": "Feather Quill",
+    "file": "feather_pen.png"
+  },
+  {
+    "id": "small_hammer",
+    "rarity": "fanxing",
+    "name_zh": "星星小锤",
+    "name_en": "Little Star Hammer",
+    "file": "small_hammer.png"
+  },
+  {
+    "id": "ribbon_wand",
+    "rarity": "fanxing",
+    "name_zh": "丝带棒",
+    "name_en": "Ribbon Baton",
+    "file": "ribbon_wand.png"
+  },
+  {
+    "id": "katana",
+    "rarity": "fanxing",
+    "name_zh": "霜月太刀",
+    "name_en": "Frostmoon Katana",
+    "file": "katana.png"
+  },
+  {
+    "id": "star_shield",
+    "rarity": "fanxing",
+    "name_zh": "星盾",
+    "name_en": "Star Shield",
+    "file": "star_shield.png"
+  },
+  {
+    "id": "star_kite",
+    "rarity": "fanxing",
+    "name_zh": "星星风筝",
+    "name_en": "Star Kite",
+    "file": "star_kite.png"
+  },
+  {
+    "id": "starlight_whip",
+    "rarity": "fanxing",
+    "name_zh": "星光鞭",
+    "name_en": "Starlight Whip",
+    "file": "starlight_whip.png"
+  },
+  {
+    "id": "feather_dart",
+    "rarity": "fanxing",
+    "name_zh": "羽镖",
+    "name_en": "Feather Dart",
+    "file": "feather_dart.png"
+  }
+]
