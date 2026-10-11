@@ -375,7 +375,7 @@ class HaloLayer(QWidget):
             lean = math.sin(now * .6 + angle * 2.2) * height * .1
             tint = aurora_tint(angle, now)
             top = _lerp(tint, (184, 160, 255), .55)
-            base_alpha = int(min(255, (175 if not self.front else 60) * (.35 + .65 * taper) * (1 + .45 * level + .4 * beat)))
+            base_alpha = int(min(225, (175 if not self.front else 60) * (.35 + .65 * taper) * (1 + .3 * level + .25 * beat)))
             gradient = QLinearGradient(x, y, x + lean, y - height)
             gradient.setColorAt(0, QColor(*tint, base_alpha))
             gradient.setColorAt(.3, QColor(*tint, int(base_alpha * .62)))
