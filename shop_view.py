@@ -159,6 +159,7 @@ class ShopPage(QWidget):
         scroll.setStyleSheet('QScrollArea, QWidget#shopViewport, QWidget#shopInner { background: transparent; }')
         scroll.setWidget(inner)
         outer.addWidget(scroll)
+        self.scroll = scroll
         layout = QVBoxLayout(inner)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(10)
@@ -375,6 +376,7 @@ class ShopPage(QWidget):
 
     # Actions -------------------------------------------------------------------------
     def act(self, item, action):
+        self._keep_place()
         s = self.shop
         if action == 'discount':
             s.draw_discount(item['id'])
@@ -386,7 +388,16 @@ class ShopPage(QWidget):
             s.unequip(item['slot'])
         self.refresh()
 
+    def _keep_place(self):
+        """Rebuilding the cards must not move the page: put it back where it was."""
+        bar = self.scroll.verticalScrollBar()
+        value = bar.value()
+        QTimer.singleShot(0, lambda: bar.setValue(value))
+        QTimer.singleShot(30, lambda: bar.setValue(value))
+        self.setFocus()
+
     def _sign_in(self):
+        self._keep_place()
         result = self.shop.sign_in()
         if result and hasattr(self.owner.panel, 'tray_notice'):
             self.owner.panel.tray_notice(self.tr('shop_signin_done', points=result['gained'], streak=result['streak']))
@@ -403,6 +414,7 @@ class ShopPage(QWidget):
         self.refresh()
 
     def _wish(self, count):
+        self._keep_place()
         results = self.shop.wish(count)
         if not results:
             return
@@ -417,183 +429,4 @@ class ShopPage(QWidget):
         self._show = show
 
 
-class WishShow(QWidget):
-    """She flies up into the stars and picks one (or sweeps past ten); each
-    star lights in its rarity's colour, then what she found is shown."""
-
-    def __init__(self, parent, results, language, starsea=False):
-        super().__init__(parent, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.starsea = starsea
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.results, self.language = results, language
-        self.ten = len(results) > 1
-        self.t = 0.0
-        self.length = 6.2 if self.ten else 4.4
-        if parent is not None:
-            self.setGeometry(parent.geometry())
-        else:
-            self.resize(900, 600)
-        rng = random.Random(7)
-        self.sky = [(rng.random(), rng.random() * .75, rng.random() * 1.6 + .4, rng.random() * 6.3) for _ in range(140)]
-        best = max(results, key=lambda r: shop.RARITIES.index(r['item']['rarity']))
-        self.order = sorted(range(len(results)), key=lambda i: (results[i] is best, shop.RARITIES.index(results[i]['item']['rarity'])))
-        self.sprite = self._sprite()
-        self.timer = QTimer(self)
-        self.timer.setInterval(16)
-        self.timer.timeout.connect(self._step)
-        self.timer.start()
-
-    def _sprite(self):
-        import pet_assets
-        for pose in (('star_celebrate',) if self.starsea else ()) + ('celebrate', 'idle'):
-            if pet_assets.frame_count(pose):
-                pixmap = pet_assets.frame_for(pose, 0)
-            else:
-                pixmap = pet_assets.sprite_for(pose)
-            if pixmap is not None and not pixmap.isNull():
-                return pixmap.scaledToHeight(220, Qt.SmoothTransformation)
-        return None
-
-    def _step(self):
-        self.t += .016
-        if self.t > self.length + 30:
-            self.close()
-        self.update()
-
-    def mousePressEvent(self, event):
-        if self.t < self.length - .4:
-            self.t = self.length - .4                    # Skip to what she found.
-        else:
-            self.close()
-
-    def keyPressEvent(self, event):
-        self.mousePressEvent(event)
-
-    def _star_points(self):
-        w, h = self.width(), self.height()
-        if not self.ten:
-            return [QPointF(w * .5, h * .2)]
-        return [QPointF(w * (.12 + .76 * k / 9), h * (.3 - .12 * math.sin(math.pi * k / 9))) for k in range(10)]
-
-    def paintEvent(self, event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        w, h, t = self.width(), self.height(), self.t
-        fade = min(1.0, t / .6)
-        sky = QLinearGradient(0, 0, 0, h)
-        sky.setColorAt(0, QColor(8, 8, 32, int(245 * fade)))
-        sky.setColorAt(1, QColor(30, 22, 74, int(245 * fade)))
-        p.fillRect(self.rect(), sky)
-        for x, y, size, phase in self.sky:
-            a = int(fade * 160 * (.5 + .5 * math.sin(t * 2 + phase)))
-            p.setPen(Qt.NoPen)
-            p.setBrush(QColor(220, 225, 255, a))
-            p.drawEllipse(QPointF(x * w, y * h), size * .6, size * .6)
-        points = self._star_points()
-        fly_start, fly_end = .6, 2.0 if not self.ten else 1.6
-        sweep_end = fly_end if not self.ten else 4.4
-        # Where she is: up from below, then (ten) across the arc of stars.
-        reveal = max(0.0, min(1.0, (t - (self.length - .4)) / .4))
-        pos = scale = None
-        if self.sprite is not None:
-            if t < fly_end:
-                f = max(0.0, (t - fly_start) / (fly_end - fly_start))
-                f = f * f * (3 - 2 * f)
-                start = QPointF(w * .5, h * 1.05)
-                goal = points[0] if not self.ten else QPointF(w * .08, h * .45)
-                pos = start + (goal - start) * f
-                scale = 1 - (.3 if not self.ten else .55) * f
-            else:
-                f = min(1.0, (t - fly_end) / max(.01, sweep_end - fly_end))
-                pos = points[0] if not self.ten else QPointF(w * (.08 + .84 * f), h * (.42 - .14 * math.sin(math.pi * f)))
-                scale = .7 if not self.ten else .45
-            if not self.ten:                                  # She hovers just below the star she picked.
-                pos = pos + QPointF(0, 90 * min(1.0, max(0.0, t - fly_end) / .5))
-        hand = pos + QPointF(0, 14 * scale) if pos is not None else None
-        # The stars she picks light up in their rarity's colour.
-        stars = []
-        for index in self.order:
-            point = points[index] if self.ten else points[0]
-            if self.ten:
-                lit_at = fly_end + (sweep_end - fly_end) * (index + .5) / 10
-                if index == self.order[-1]:
-                    lit_at = sweep_end + .1                   # The best one flares last.
-            else:
-                lit_at = fly_end
-            a = max(0.0, min(1.0, (t - lit_at) / .35))
-            held = 0.0
-            if a > 0 and not self.ten and hand is not None:  # The star comes down into her hands.
-                held = max(0.0, min(1.0, (t - lit_at - .35) / .6))
-                held = held * held * (3 - 2 * held)
-                point = point + (hand - point) * held
-            stars.append((index, point, a * (1 - .55 * reveal), held))
-        for index, point, a, held in stars:                   # Their light, behind her.
-            if a <= 0:
-                continue
-            rarity = self.results[index]['item']['rarity']
-            colour = rarity_colour(rarity, t, index / 10)
-            big = 1 + shop.RARITIES.index(rarity) * .35 + (1.2 if not self.ten else 0)
-            radius = 60 * big * a * (1 - .45 * held)
-            glow = QRadialGradient(point, radius)
-            glow.setColorAt(0, QColor(colour.red(), colour.green(), colour.blue(), int(230 * (1 - .4 * held))))
-            glow.setColorAt(1, QColor(colour.red(), colour.green(), colour.blue(), 0))
-            p.setPen(Qt.NoPen)
-            p.setBrush(glow)
-            p.drawEllipse(point, radius, radius)
-            if rarity == 'xinghai':                         # Iridescent rays.
-                rays = QConicalGradient(point, t * 90)
-                for k in range(7):
-                    rays.setColorAt(k / 6, QColor.fromHsvF((k / 6 + t * .2) % 1, .6, 1, .5))
-                p.setBrush(rays)
-                p.drawEllipse(point, 90 * a, 90 * a)
-        if pos is not None:                                   # Her, with a trail of light.
-            for k in range(8):
-                p.setPen(Qt.NoPen)
-                p.setBrush(QColor(200, 190, 255, int(40 * (1 - k / 8))))
-                p.drawEllipse(pos + QPointF(0, 30 * k * scale), 30 * scale * (1 - k / 10), 30 * scale * (1 - k / 10))
-            sw, sh = self.sprite.width() * scale, self.sprite.height() * scale
-            p.drawPixmap(QRectF(pos.x() - sw / 2, pos.y() - sh / 2, sw, sh), self.sprite, QRectF(self.sprite.rect()))
-        for index, point, a, held in stars:                   # The stars themselves, in front.
-            if a <= 0:
-                _star(p, point, 5, QColor(220, 225, 255, 140))
-                continue
-            rarity = self.results[index]['item']['rarity']
-            big = 1 + shop.RARITIES.index(rarity) * .35 + (1.2 if not self.ten else 0)
-            p.setPen(QPen(QColor(255, 255, 255, 200), 1.2))
-            _star(p, point, 10 * big * (.6 + .4 * a) * (1 - .3 * held), rarity_colour(rarity, t, index / 10))
-        # What she found.
-        if t >= self.length - .4:
-            a = min(1.0, (t - (self.length - .4)) / .4)
-            self._paint_results(p, a)
-
-    def _paint_results(self, p, a):
-        w, h = self.width(), self.height()
-        n = len(self.results)
-        cols = 5 if self.ten else 1
-        cw, ch = (150, 120) if self.ten else (260, 200)
-        rows = math.ceil(n / cols)
-        x0 = (w - cols * (cw + 14)) / 2
-        y0 = h * .45 if self.ten else h * .56
-        p.setOpacity(a)
-        for k, result in enumerate(self.results):
-            item = result['item']
-            box = QRectF(x0 + (k % cols) * (cw + 14), y0 + (k // cols) * (ch + 14), cw, ch)
-            colour = rarity_colour(item['rarity'], self.t, k / 10)
-            p.setPen(QPen(colour, 3))
-            p.setBrush(QColor(24, 20, 60, 235))
-            p.drawRoundedRect(box, 12, 12)
-            glyph(p, item['slot'], QRectF(box.center().x() - ch * .22, box.top() + 10, ch * .44, ch * .44), colour)
-            p.setPen(QColor('#FFFFFF'))
-            p.setFont(QFont('Microsoft YaHei UI', 10 if self.ten else 13, QFont.Bold))
-            p.drawText(QRectF(box.left(), box.top() + ch * .56, cw, 22), Qt.AlignCenter, item_name(item, self.language))
-            p.setPen(colour)
-            p.setFont(QFont('Microsoft YaHei UI', 8 if self.ten else 10))
-            line = text(f'shop_rarity_{item["rarity"]}', self.language)
-            if result['refund']:
-                line += ' · ' + text('shop_refund', self.language, points=result['refund'])
-            p.drawText(QRectF(box.left(), box.top() + ch * .56 + 22, cw, 18), Qt.AlignCenter, line)
-        p.setPen(QColor(220, 220, 255))
-        p.setFont(QFont('Microsoft YaHei UI', 9))
-        p.drawText(QRectF(0, h - 40, w, 24), Qt.AlignCenter, text('shop_wish_close', self.language))
-        p.setOpacity(1)
+from wish_show import WishShow  # noqa: E402  (the show lives in its own module)
