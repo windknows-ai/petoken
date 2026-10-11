@@ -277,6 +277,13 @@ class Preview(QWidget):
                         button('清零', self.reset_stardust), self.star_state))
         form.addRow(row(button('商店：+1000 星辉', lambda: self.add_stardust(1000)), button('商店：到第二天', self.shop_next_day),
                         button('商店：清空', self.shop_reset), button('商店：打开', self.open_shop)))
+        wish = QComboBox()
+        for label, value in (('单抽 · 繁星', 'fanxing'), ('单抽 · 明月', 'mingyue'), ('单抽 · 皓日', 'haori'),
+                             ('单抽 · 银河', 'yinhe'), ('单抽 · 星海', 'xinghai'), ('十连（含星海）', 'ten')):
+            wish.addItem(label, value)
+        form.addRow(row(QLabel('抽卡动画演示（不花星辉、不入账）：'), wish,
+                        button('播放', lambda: self.demo_wish(wish.currentData())),
+                        button('商店：拥有全部装饰', self.own_all_decor)))
         skins = QComboBox()
         for label, value in (('原来的', 'default'), ('流星（尾巴更长）', 'meteor'), ('极光（没任务时）', 'aurora')):
             skins.addItem(label, value)
@@ -469,6 +476,39 @@ class Preview(QWidget):
         self.panel.shop.state = {}
         self.panel.shop._save()
         self.panel.tray_notice('（测试版）商店', '已清空：没买过东西，保底重新计。')
+
+    def demo_wish(self, kind):
+        """Play the wishing show for a chosen rarity without spending or keeping anything."""
+        import shop
+        from wish_show import WishShow
+
+        def found(rarity):
+            return dict(item=next(i for i in shop.CATALOG if i['rarity'] == rarity and i['set'] == 'decor'), refund=0)
+        if kind == 'ten':
+            results = [found(r) for r in ('fanxing', 'fanxing', 'mingyue', 'fanxing', 'haori', 'mingyue', 'fanxing',
+                                          'yinhe', 'mingyue', 'xinghai')]
+        else:
+            results = [found(kind)]
+        self.panel.open_workbench()
+        window = self.panel.workbench_window
+        if window is not None:
+            window.tabs.setCurrentIndex(window.shop_tab)
+        starsea = getattr(self.panel, 'starsea', None)
+        self._wish = WishShow(window, results, self.panel.prefs.get('language', 'zh_CN'),
+                              bool(starsea is not None and starsea.active))
+        self._wish.show()
+        self._wish.raise_()
+
+    def own_all_decor(self):
+        """Own every decoration so each can be tried on (Workbench › Shop › wardrobe)."""
+        import shop
+        owned = self.panel.shop.state.setdefault('owned', [])
+        for item in shop.CATALOG:
+            if item['set'] == 'decor' and item['id'] not in owned:
+                owned.append(item['id'])
+        self.panel.shop._save()
+        self.open_shop()
+        self.panel.tray_notice('（测试版）商店', '60 件装饰都已拥有：在商店的“装饰”里点“穿戴”，她马上戴上。')
 
     def open_shop(self):
         self.panel.open_workbench()
