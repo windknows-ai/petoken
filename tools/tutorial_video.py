@@ -376,6 +376,28 @@ def capture_all(pv, base, size=(1120, 820)):
     tab(5, 'report_app_time', lambda: window.report_page.show_sub(2), dict(list=window.report_page.app_time.list))
     window.report_page.show_sub(0)
     tab(window.collection_tab, 'collection')
+    # 2.4: stardust part way (Meteor and Aurora unlocked, Starsea still to come).
+    store.add_points('star_review', 'tutorial', 450, time.time())
+    tabs.setCurrentIndex(window.collection_tab)
+    old_size = window.size()
+    window.resize(880, old_size.height())          # Narrow: the stardust part wraps and the cards fill the shot.
+    window.refresh()
+    page = window.collection_page
+    page.apply_language()
+    pump(.5)
+    shot = grab(page)                      # Only its stardust part, so the cards are big enough to read.
+    cards = page.skin_cards
+    region = rect_in(page.stardust_title, page).united(rect_in(cards['starsea'], page)).united(
+        rect_in(page.stardust_earn, page)).adjusted(-16, -14, 16, 14)
+    region.setWidth(min(region.width(), rect_in(cards['starsea'], page).right() + 40 - region.x()))
+    dpr = shot['dpr']
+    shot['image'] = shot['image'].copy(int(region.x() * dpr), int(region.y() * dpr),
+                                       int(region.width() * dpr), int(region.height() * dpr))
+    origin = region.topLeft()
+    shot['marks']['cards'] = rect_in(cards['default'], page).united(rect_in(cards['starsea'], page)).translated(-origin)
+    shot['marks']['earn'] = rect_in(page.stardust_earn, page).translated(-origin)
+    out['collection_star'] = shot
+    window.resize(old_size)
     guide = window.guide_page
     tabs.setCurrentIndex(window.guide_tab)
     guide.apply_language()
@@ -392,6 +414,7 @@ def capture_all(pv, base, size=(1120, 820)):
     scroll.verticalScrollBar().setValue(scroll.verticalScrollBar().maximum())     # The late-night group.
     pump(.3)
     out['guide_night'] = grab(window)
+    out['guide_starsea'] = out['guide_night']          # The last group is Starsea now.
     # Dialogs from the workbench.
     from todo_ai import GiveToAiDialog, ReviewDialog
     from project_start import HandoffHistory, ProjectPresetDialog
@@ -460,13 +483,16 @@ def capture_all(pv, base, size=(1120, 820)):
     from widget import SETTINGS_PAGES, Settings
     settings = Settings(panel)
     settings.push_enabled.setChecked(True)          # Its rows show only when it is on.
+    settings.calendar_enabled.setChecked(True)
+    settings.calendar_sources.setPlainText('https://outlook.office365.com/owa/calendar/…/calendar.ics')
     settings.show()
     for page in SETTINGS_PAGES:
         settings.tabs.setCurrentIndex(SETTINGS_PAGES.index(page))
         pump(.3)
         shot = grab(settings)
-        for key in ('claude_probe', 'dnd', 'game_auto', 'game_scale', 'push_enabled', 'push_subscribe', 'push_test',
-                    'push_when', 'night'):
+        from widget import SETTINGS_LAYOUT
+        labels = dict(SETTINGS_LAYOUT).get(page, ())
+        for key in [label[:-len('_label')] for label in labels]:
             frame = getattr(settings, key + '_label', None)
             while frame is not None and frame.objectName() != 'settingCard':
                 frame = frame.parentWidget()
@@ -495,6 +521,13 @@ def capture_all(pv, base, size=(1120, 820)):
         leftover.unlink()
     controller.tick()
     window.hide()
+    # Token analytics (1.0).
+    panel.open_analytics()
+    analytics = panel.analytics_window
+    analytics.resize(1180, 840)
+    pump(1.2)
+    out['analytics'] = grab(analytics)
+    analytics.hide()
     # Usage card with N/A and the sync note.
     import usage_overlay as uo
     now = time.time()
@@ -541,6 +574,14 @@ def capture_all(pv, base, size=(1120, 820)):
     pump(4.0)                      # Let the comet trails from moving her fade out.
     pet_rect = base.pet.frameGeometry()
     shoot('ring', {})
+    manager = base.panel.task_manager
+    first = next(iter(sorted(manager._windows, key=str)), None)
+    if first is not None:
+        manager.orb_activated(first)
+        pump(1.2)
+        shoot('ring_detail', {})
+        manager.collapse_detail()
+        pump(1.0)
     out['card'] = grab(overlay) if overlay is not None else out['ring']
     base.panel.set_panel_pinned(True)
     pump(1.0)
@@ -624,6 +665,58 @@ def record_lives(pv, base, wanted, folder, rerecord=False):
     return {name: (paths[name], probe_size(FFMPEG, paths[name])) for name in wanted}
 
 
+RING_LIVES = ('ring_live', 'ring_meteor', 'ring_aurora')
+
+
+def record_ring_lives(pv, base, wanted, folder, rerecord=False):
+    """The star ring recorded off the screen: with tasks, the Meteor skin, and
+    the Aurora skin with no tasks (2.4)."""
+    from tools.live_capture import Recorder, probe_size
+    import halo_scene
+    import pet_geometry
+    folder.mkdir(parents=True, exist_ok=True)
+    paths = {name: folder / f'{LANG}_{name}.mp4' for name in RING_LIVES}
+    if rerecord or not all(paths[name].exists() for name in wanted):
+        pet, panel = base.pet, base.panel
+        pet.apply_pet_scale(130)
+        base.count.setValue(3)
+        screen = QGuiApplication.primaryScreen().availableGeometry()
+        stage_rect = QRect(screen.right() - 1300, screen.top() + 60, 1200, 1000)
+        stage = Stage(stage_rect)
+        stage.show()
+        for window in (panel, pv, base):
+            window.hide()
+        sx, sy, sw, sh = pet_geometry.scaled_sprite_rect(pet.pet_scale)
+        pet.move(int(stage_rect.center().x() - sx - sw / 2), int(stage_rect.center().y() - sy - sh / 2 + 40))
+        pet.show()
+        pet.raise_()
+        pump(5.0)
+        box = QRect(pet.x() + int(sx), pet.y() + int(sy), int(sw), int(sh))
+        region = QRect(box.center().x() - int(sw * 1.2), box.center().y() - int(sh * .85),
+                       int(sw * 2.4), int(sh * 1.6)).intersected(stage_rect)
+
+        def record(name, seconds):
+            recorder = Recorder(FFMPEG, region, paths[name], FPS)
+            pump(seconds)
+            recorder.stop()
+            print('recorded', name, flush=True)
+
+        record('ring_live', 8)
+        halo_scene.set_skin('meteor')
+        pump(2.0)
+        record('ring_meteor', 8)
+        base.count.setValue(0)
+        halo_scene.set_skin('aurora')
+        pump(3.0)
+        record('ring_aurora', 8)
+        halo_scene.set_skin('default')
+        base.count.setValue(3)
+        stage.close()
+        pet.hide()
+        pet.apply_pet_scale(100)
+    return {name: (paths[name], probe_size(FFMPEG, paths[name])) for name in wanted}
+
+
 # Her animation ------------------------------------------------------------
 
 CLIPS = {
@@ -646,6 +739,16 @@ CLIPS = {
     'night_sleep': [('night_sleep', 4.5), ('night_wake', 2.8), ('night_idle', 2.2)],
     'night_goodnight': [('night_goodnight', 4)],
     'sit': [('stretch_break', 3.4), ('idle', 1.6)],
+    # 2.4 meetings and Starsea; everyday poses for the 1.x videos.
+    'meeting': [('hold_card', 3.4), ('wave', 2.4)],
+    'awaken': [('idle', 1.0), ('awaken_0', .8), ('awaken_1', .9), ('awaken_2', .9), ('awaken_3', .9),
+               ('awaken_4', 1.0), ('star_celebrate', 2.2), ('star_idle', 2.4)],
+    'star_poses': [('star_typing', 2.6), ('star_thinking', 2.4), ('star_wave', 2.4), ('star_headpat', 2.4),
+                   ('star_celebrate', 2.4)],
+    'typing': [('typing', 4)], 'working': [('codex_working', 4)], 'music': [('music', 3), ('guitar', 3)],
+    'follow': [('typing', 2.6), ('music', 2.6), ('microphone', 2.6)],
+    'thinking': [('thinking', 3), ('curious', 2.5)], 'review': [('thumbs_up', 2.4), ('proud', 2.6)],
+    'project': [('ready_go', 2.6), ('packing', 2.4)], 'goal': [('worried', 2.4), ('clap', 2.6)],
 }
 
 

@@ -203,3 +203,7 @@ SCRIPTS = {
     'short': dict(zh_CN=dict(shots=SHORT_ZH, out='Petoken-抖音竖屏.mp4', theme='brand', vertical=True),
                   en=dict(shots=SHORT_EN, out='Petoken-Short.mp4', theme='brand', vertical=True)),
 }
+
+# The feature videos (1.0 – 2.4).
+from tools.motion_scripts_features import FEATURE_SCRIPTS  # noqa: E402
+SCRIPTS.update(FEATURE_SCRIPTS)

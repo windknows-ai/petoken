@@ -50,6 +50,8 @@ THEMES = {
     'space': ('#050A22', '#1B2470', '#5FD4FF', '#FFD45E'),
     'night': ('#0B1030', '#2E2F78', '#B9A8FF', '#FFE08A'),
     'pink': ('#2A1450', '#B23E8F', '#FFB1D8', '#FFE27A'),
+    'mint': ('#0C2235', '#1E7F8E', '#7CF2D0', '#FFD45E'),
+    'sunset': ('#2B1240', '#C9506F', '#FFC48A', '#FFE27A'),
 }
 GOLD = QColor('#FFD45E')
 LANG = 'zh_CN'
@@ -208,6 +210,15 @@ def headline(p, text, x, y, size, t, width, accent, align=Qt.AlignLeft, start=.1
     """A title whose characters or words pop in with an overshoot, over a sweeping colour bar."""
     f = font(size)
     lines = wrap(units(text), f, width)
+    floor = size * .66                       # A slightly long title shrinks onto one line first.
+    while len(lines) == 2 and size > floor and len(text) <= 12:
+        size -= 4
+        f = font(size)
+        lines = wrap(units(text), f, width)
+    if len(lines) > 1 and size <= floor:
+        size = int(floor / .66)
+        f = font(size)
+        lines = wrap(units(text), f, width)
     while len(lines) > 2 and size > 40:
         size -= 6
         f = font(size)
@@ -545,6 +556,43 @@ class Motion:
             y += h * .17
         p.restore()
 
+    def draw_toast(self, p, s, t, rect):
+        """Desktop notices popping up in the corner while she reacts beside them."""
+        left = QRectF(rect.left() - W * .05, rect.top() + 60, rect.width() * .42, rect.height() - 60)
+        self.draw_pose(p, dict(s, labels=()), t, left)
+        w, h = rect.width() * .56, 150
+        x = rect.right() - w
+        y = rect.bottom() - 40
+        for i, (title, text) in enumerate(self.notices):
+            at = .7 + i * .9
+            a = ease_out((t - at) / .45)
+            if a <= 0:
+                continue
+            y -= h + 22
+            card = QRectF(x + (1 - a) * (w + 120), y, w, h)
+            p.save()
+            p.setOpacity(clamp(a * 1.4))
+            shadow(p, card, 18, .9)
+            p.setPen(QPen(QColor(255, 255, 255, 40), 1.5))
+            p.setBrush(QColor(38, 36, 58, 245))
+            p.drawRoundedRect(card, 18, 18)
+            icon = QRectF(card.left() + 22, card.top() + 20, 30, 30)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(self.accent))
+            p.drawRoundedRect(icon, 8, 8)
+            p.setPen(QColor('#BDB6E4'))
+            p.setFont(font(20, False))
+            p.drawText(QRectF(icon.right() + 12, icon.top() - 2, w, 34), Qt.AlignLeft | Qt.AlignVCenter, 'Petoken')
+            p.setPen(QColor('#FFFFFF'))
+            p.setFont(font(27))
+            p.drawText(card.adjusted(22, 60, -22, 0), Qt.AlignLeft | Qt.AlignTop,
+                       QFontMetricsF(font(27)).elidedText(title, Qt.ElideRight, w - 44))
+            p.setPen(QColor('#D6D1F2'))
+            p.setFont(font(21, False))
+            p.drawText(card.adjusted(22, 100, -22, -8), Qt.AlignLeft | Qt.AlignTop,
+                       QFontMetricsF(font(21, False)).elidedText(text or ' ', Qt.ElideRight, w - 44))
+            p.restore()
+
     def draw_list(self, p, s, t, rect):
         items = s['items']
         cols = 1 if VERTICAL else 2
@@ -746,14 +794,15 @@ class Motion:
             self.decoder.close()
             self.decoder = None
         self.frames = None
-        if s['kind'] in ('pose', 'outro') and s.get('clip'):
+        if s['kind'] in ('pose', 'outro', 'toast') and s.get('clip'):
             self.frames = self.clipper.frames(s['clip'], s['duration'] + .1)
         if s['kind'] == 'live':
             from tools.live_capture import Decoder
             path, (w, h) = self.lives[s['name']]
             rect = self.stage('live')[0]
             # The middle of the recording: she, her ring and the rings, without the empty backdrop.
-            crop = (int(w * .72) // 2 * 2, int(h * .86) // 2 * 2)
+            keep = s.get('crop', (.72, .86))
+            crop = (int(w * keep[0]) // 2 * 2, int(h * keep[1]) // 2 * 2)
             if VERTICAL:
                 crop = (min(crop[0], int(crop[1] * rect.width() / rect.height())) // 2 * 2, crop[1])
             w, h = crop
@@ -825,7 +874,11 @@ def capture(language, out_dir, ffmpeg, wanted_lives, rerecord):
     stack = ExitStack()
     pv, base = tv.setup(stack, language)
     stills = tv.capture_all(pv, base)
-    lives = tv.record_lives(pv, base, wanted_lives, out_dir / 'live', rerecord) if wanted_lives else {}
+    game = [name for name in wanted_lives if name in tv.LIVES]
+    ring = [name for name in wanted_lives if name in tv.RING_LIVES]
+    lives = tv.record_lives(pv, base, game, out_dir / 'live', rerecord) if game else {}
+    if ring:
+        lives.update(tv.record_ring_lives(pv, base, ring, out_dir / 'live', rerecord))
     from notifications import recap_detail
     events = [dict(kind='finished', provider='claude', project='website', title=tv.U('history')[0],
                    detail=recap_detail(dict(files=['src/login.ts', 'src/form.css'], duration_s=372, usd=.42))),
