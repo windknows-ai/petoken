@@ -705,8 +705,8 @@ def record_ring_lives(pv, base, wanted, folder, rerecord=False):
         pump(2.0)
         settle_ring(panel, 2.0)
         box = QRect(pet.x() + int(sx), pet.y() + int(sy), int(sw), int(sh))
-        region = QRect(box.center().x() - int(sw * 1.2), box.center().y() - int(sh * .85),
-                       int(sw * 2.4), int(sh * 1.6)).intersected(stage_rect)
+        region = QRect(box.center().x() - int(sw * 1.3), box.center().y() - int(sh * 1.15),
+                       int(sw * 2.6), int(sh * 1.9)).intersected(stage_rect)
 
         def record(name, seconds):
             recorder = Recorder(FFMPEG, region, paths[name], FPS)

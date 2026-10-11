@@ -120,16 +120,16 @@ class SkinCard(QWidget):
                 (x1, y1), (x2, y2) = point(a), point(b)
                 p.drawLine(QPointF(x1, y1), QPointF(x2, y2))
         if aurora:
-            return            # The aurora ring shows with no tasks: no stars.
+            return
         meteor = self.choice == 'meteor'
-        tail = 2.6 if meteor else .35
-        heads = ((.5, 1.7, 2.9) if front else (3.9, 5.4)) if meteor else ((.9, 2.4) if front else (4.0, 5.3))
+        tail = .6 if meteor else .35
+        heads = ((.9, 2.4) if front else (4.0, 5.3))
         for head in heads:
             for k in range(20):
                 t0, t1 = head - tail * k / 20, head - tail * (k + 1) / 20
                 fade = 1 - k / 20
-                color = QColor(255, 236, 190, int(235 * fade)) if meteor else QColor(220, 210, 255, int(200 * fade))
-                pen = QPen(color, (3.4 if meteor else 2.6) * fade + .4)
+                color = QColor(255, 244, 222, int(220 * fade)) if meteor else QColor(220, 210, 255, int(200 * fade))
+                pen = QPen(color, 2.6 * fade + .4)
                 pen.setCapStyle(Qt.RoundCap)
                 p.setPen(pen)
                 p.drawLine(QPointF(*point(t0)), QPointF(*point(t1)))
@@ -137,6 +137,37 @@ class SkinCard(QWidget):
             p.setBrush(QColor(255, 255, 255))
             x, y = point(head)
             p.drawEllipse(QPointF(x, y), 3.2, 3.2)
+
+    def _shooting_stars(self, p):
+        from PySide6.QtGui import QLinearGradient
+        for (hx, hy), length, rgb in (((40, 34), 70, (255, 226, 170)), ((112, 18), 52, (190, 220, 255))):
+            tx, ty = hx + length * .86, hy - length * .5
+            gradient = QLinearGradient(tx, ty, hx, hy)
+            gradient.setColorAt(0, QColor(*rgb, 0))
+            gradient.setColorAt(1, QColor(255, 255, 255, 240))
+            p.setPen(QPen(gradient, 2.2))
+            p.drawLine(QPointF(tx, ty), QPointF(hx, hy))
+            p.setPen(QPen(QColor(255, 255, 255, 210), 1))
+            p.drawLine(QPointF(hx - 5, hy), QPointF(hx + 5, hy))
+            p.drawLine(QPointF(hx, hy - 5), QPointF(hx, hy + 5))
+
+    def _curtains(self, p):
+        import math
+        from PySide6.QtGui import QLinearGradient
+        import halo_scene
+        for i in range(40):
+            angle = math.pi + math.pi * (i + .5) / 40
+            x = self.W / 2 + 60 * math.cos(angle)
+            y = 72 + 15 * math.sin(angle)
+            height = 30 + 34 * (.5 + .5 * math.sin(angle * 3.1)) * (.6 + .4 * math.cos(angle * 1.7))
+            tint = halo_scene.aurora_tint(angle, 0)
+            gradient = QLinearGradient(x, y, x, y - height)
+            gradient.setColorAt(0, QColor(*tint, 170))
+            gradient.setColorAt(1, QColor(*tint, 0))
+            pen = QPen(gradient, 3.4)
+            pen.setCapStyle(Qt.FlatCap)
+            p.setPen(pen)
+            p.drawLine(QPointF(x, y), QPointF(x, y - height))
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -147,6 +178,10 @@ class SkinCard(QWidget):
         p.drawRoundedRect(QRectF(2, 2, self.W - 4, 104), 10, 10)
         if not self.unlocked:
             p.setOpacity(.45)
+        if self.choice == 'meteor':
+            self._shooting_stars(p)
+        elif self.choice == 'aurora':
+            self._curtains(p)
         self._ring(p, False)
         sprite = self.sprite()
         if sprite is not None:

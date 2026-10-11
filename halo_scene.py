@@ -1,12 +1,13 @@
 """One projected halo clock and two compact, input-transparent depth layers."""
 from collections import deque
 import math
+import random
 import sys
 import time
 import weakref
 
 from PySide6.QtCore import Qt, QPointF, QTimer
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QRadialGradient, QPolygonF
+from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPainterPath, QPen, QRadialGradient, QPolygonF
 from PySide6.QtWidgets import QWidget
 
 import halo_geometry as geometry
@@ -18,10 +19,15 @@ RING_LAYERS = ((13, (132, 112, 255), 22, 13), (7, (158, 144, 255), 42, 25),
                (3.4, (177, 177, 255), 165, 105), (1.15, (252, 250, 255), 255, 215))
 RING_SEGMENTS = 96
 RING_MEET = (196, 168, 250)
-# 2.4 star-ring skins (unlocked with stardust): 'meteor' sends small meteors
-# with golden tails around the ring and gives task stars long fiery trails;
-# 'aurora' makes the whole ring flow in aurora colours under a soft glow.
+# 2.4 star-ring skins (unlocked with stardust). 'meteor': shooting stars streak
+# through the night sky behind her and a few small stars circle the ring.
+# 'aurora': aurora curtains rise from the ring behind her, flowing green to
+# violet, the ring glows in aurora colours and motes of light drift up.
+# The ring itself, task stars and their trails stay as they are.
 SKIN = 'default'
+# Room each skin needs around the ring, as a share of its radius:
+# (above on the back layer, above on the front layer, to each side).
+SKIN_ROOM = {'meteor': (1.15, .2, .45), 'aurora': (1.25, .45, .1)}
 _LAYERS = weakref.WeakSet()
 SKIN_TICK_MS = 40
 _SKIN_CLOCK = None
@@ -138,7 +144,7 @@ class HaloLayer(QWidget):
 
     @property
     def age(self):
-        return self.AGE * 3.0 if SKIN == 'meteor' else self.AGE
+        return self.AGE
 
     def prune(self, now):
         self.now = now
@@ -183,45 +189,149 @@ class HaloLayer(QWidget):
                 bounds[1] = min(bounds[1], y - 12)
                 bounds[2] = max(bounds[2], x + 12)
                 bounds[3] = max(bounds[3], y + 12)
+        room = SKIN_ROOM.get(SKIN)
+        if room is not None:
+            above, above_front, side = room
+            bounds[1] -= pose.rx * (above_front if self.front else above)
+            bounds[0] -= pose.rx * side
+            bounds[2] += pose.rx * side
         left, top = math.floor(bounds[0]), math.floor(bounds[1])
         width, height = math.ceil(bounds[2]) - left + 1, math.ceil(bounds[3]) - top + 1
         if (self.x(), self.y(), self.width(), self.height()) != (left, top, width, height):
             self.setGeometry(left, top, width, height)
         self.update()
 
-    METEORS = 7
+    METEORS = 4
+
+    def _xy(self, angle):
+        x, y, _ = geometry.project(self.pose, angle)
+        return x - self.x(), y - self.y()
 
     def _paint_meteors(self, painter, start):
-        """Small meteors circling the ring, each with a golden tail."""
+        """A few fine stars circling the ring with short white-gold tails."""
         for index in range(self.METEORS):
-            head = (math.tau * index / self.METEORS + self.now * (.45 + .06 * (index % 3))) % math.tau
+            head = (math.tau * index / self.METEORS + self.now * (.38 + .05 * index)) % math.tau
             if (head < math.pi) != self.front:
                 continue
-            steps = 16
+            steps = 14
             for k in range(steps):
-                a0 = head - .95 * k / steps
-                a1 = head - .95 * (k + 1) / steps
+                a0, a1 = head - .6 * k / steps, head - .6 * (k + 1) / steps
                 if (a1 % math.tau < math.pi) != self.front:
                     break
-                x0, y0, _ = geometry.project(self.pose, a0)
-                x1, y1, _ = geometry.project(self.pose, a1)
                 fade = 1 - k / steps
-                for width, color in ((10, QColor(255, 170, 80, int(70 * fade))),
-                                     (3.0, QColor(255, 226, 160, int(240 * fade)))):
-                    pen = QPen(color, width * fade + .5)
+                for width, color in ((5, QColor(255, 214, 150, int(40 * fade))),
+                                     (1.6, QColor(255, 246, 225, int(210 * fade)))):
+                    pen = QPen(color, width * fade + .4)
                     pen.setCapStyle(Qt.RoundCap)
                     painter.setPen(pen)
-                    painter.drawLine(QPointF(x0 - self.x(), y0 - self.y()), QPointF(x1 - self.x(), y1 - self.y()))
-            x, y, _ = geometry.project(self.pose, head)
-            point = QPointF(x - self.x(), y - self.y())
-            glow = QRadialGradient(point, 7)
-            glow.setColorAt(0, QColor(255, 250, 230, 230))
-            glow.setColorAt(1, QColor(255, 190, 110, 0))
+                    painter.drawLine(QPointF(*self._xy(a0)), QPointF(*self._xy(a1)))
+            point = QPointF(*self._xy(head))
+            glow = QRadialGradient(point, 6)
+            glow.setColorAt(0, QColor(255, 252, 240, 220))
+            glow.setColorAt(1, QColor(255, 210, 140, 0))
             painter.setPen(Qt.NoPen)
             painter.setBrush(glow)
-            painter.drawEllipse(point, 7, 7)
-            painter.setBrush(QColor(255, 255, 250))
-            painter.drawEllipse(point, 1.8, 1.8)
+            painter.drawEllipse(point, 6, 6)
+
+    SHOOT_PERIOD = .3
+
+    def _paint_shooting_stars(self, painter):
+        """Shooting stars streaking down through the sky behind her."""
+        pose, now = self.pose, self.now
+        rx = pose.rx
+        slot = int(now / self.SHOOT_PERIOD)
+        for k in range(slot - 5, slot + 1):
+            rnd = random.Random(k * 7919 + 17)
+            if rnd.random() < .2:
+                continue                                  # Not every moment has one.
+            born = k * self.SHOOT_PERIOD + rnd.random() * self.SHOOT_PERIOD
+            life = .8 + rnd.random() * .6
+            age = now - born
+            if not 0 <= age <= life:
+                continue
+            fade = math.sin(math.pi * age / life) ** .8
+            sx = pose.cx + (rnd.random() * 2.1 - .75) * rx
+            sy = pose.cy - rx * (.5 + rnd.random() * .55)
+            heading = math.radians(148 + rnd.random() * 22)          # Down and to the left.
+            speed = rx * (1.5 + rnd.random() * .9)
+            dx, dy = math.cos(heading), math.sin(heading)
+            hx, hy = sx + dx * speed * age - self.x(), sy + dy * speed * age - self.y()
+            tail = rx * (.65 + rnd.random() * .45) * min(1.0, age / .2)
+            tx, ty = hx - dx * tail, hy - dy * tail
+            core = QColor(*rnd.choice(((255, 226, 170), (190, 220, 255), (236, 196, 255))))
+            for width, alpha in ((11, 60), (4.5, 110), (2.2, 255)):
+                gradient = QLinearGradient(tx, ty, hx, hy)
+                gradient.setColorAt(0, QColor(core.red(), core.green(), core.blue(), 0))
+                gradient.setColorAt(.75, QColor(core.red(), core.green(), core.blue(), int(alpha * .55 * fade)))
+                gradient.setColorAt(1, QColor(255, 255, 255, int(alpha * fade)))
+                pen = QPen(QBrush(gradient), width)
+                pen.setCapStyle(Qt.RoundCap)
+                painter.setPen(pen)
+                painter.drawLine(QPointF(tx, ty), QPointF(hx, hy))
+            head = QPointF(hx, hy)
+            glow = QRadialGradient(head, 12)
+            glow.setColorAt(0, QColor(255, 255, 255, int(240 * fade)))
+            glow.setColorAt(.4, QColor(core.red(), core.green(), core.blue(), int(120 * fade)))
+            glow.setColorAt(1, QColor(core.red(), core.green(), core.blue(), 0))
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(glow)
+            painter.drawEllipse(head, 12, 12)
+            spark = 7 + 4 * math.sin(now * 9 + k)            # A twinkling four-point flare.
+            painter.setPen(QPen(QColor(255, 255, 255, int(200 * fade)), 1.1))
+            painter.drawLine(QPointF(hx - spark, hy), QPointF(hx + spark, hy))
+            painter.drawLine(QPointF(hx, hy - spark), QPointF(hx, hy + spark))
+            painter.setPen(Qt.NoPen)
+            for d in range(7):                            # Stardust left behind.
+                f = (d + 1) / 8
+                px = hx - dx * tail * f + (rnd.random() - .5) * 6
+                py = hy - dy * tail * f + (rnd.random() - .5) * 6
+                painter.setBrush(QColor(255, 250, 235, int(170 * fade * (1 - f))))
+                painter.drawEllipse(QPointF(px, py), 1.4, 1.4)
+
+    CURTAIN_STRIPS = 84
+
+    def _paint_curtains(self, painter, start):
+        """Aurora curtains rising from the ring, folding and drifting."""
+        pose, now = self.pose, self.now
+        rx = pose.rx
+        tall = 1.0 if not self.front else .32
+        strips = self.CURTAIN_STRIPS
+        width = max(2.5, 2 * rx / strips * 1.9)
+        for i in range(strips):
+            angle = start + math.pi * (i + .5) / strips
+            x, y = self._xy(angle)
+            wave = (.5 + .5 * math.sin(angle * 3.1 + now * .9)) * (.55 + .45 * math.cos(angle * 1.7 - now * .55))
+            height = rx * (.28 + .78 * wave) * tall
+            lean = math.sin(now * .6 + angle * 2.2) * height * .1
+            tint = aurora_tint(angle, now)
+            top = _lerp(tint, (200, 140, 255), .55)
+            base_alpha = 175 if not self.front else 60
+            gradient = QLinearGradient(x, y, x + lean, y - height)
+            gradient.setColorAt(0, QColor(*tint, base_alpha))
+            gradient.setColorAt(.3, QColor(*tint, int(base_alpha * .62)))
+            gradient.setColorAt(.75, QColor(*top, int(base_alpha * .22)))
+            gradient.setColorAt(1, QColor(*top, 0))
+            pen = QPen(QBrush(gradient), width)
+            pen.setCapStyle(Qt.FlatCap)
+            painter.setPen(pen)
+            painter.drawLine(QPointF(x, y), QPointF(x + lean, y - height))
+            if i % 7 == 3:                                # Bright folds in the curtain.
+                ray = QLinearGradient(x, y, x + lean, y - height * .9)
+                ray.setColorAt(0, QColor(235, 255, 245, int(base_alpha * 1.1)))
+                ray.setColorAt(1, QColor(235, 255, 245, 0))
+                pen = QPen(QBrush(ray), 1.2)
+                painter.setPen(pen)
+                painter.drawLine(QPointF(x, y), QPointF(x + lean, y - height * .9))
+        painter.setPen(Qt.NoPen)
+        for j in range(14 if not self.front else 5):      # Motes of light drifting up.
+            phase = (now * .22 + j / 14) % 1.0
+            angle = start + math.pi * ((j * .618) % 1.0)
+            x, y = self._xy(angle)
+            mx = x + math.sin(now * 1.3 + j) * 7
+            my = y - phase * rx * (.95 * tall + .1)
+            color = _lerp(aurora_tint(angle, now), (255, 255, 255), .6)
+            painter.setBrush(QColor(*color, int(210 * math.sin(math.pi * phase))))
+            painter.drawEllipse(QPointF(mx, my), 1.5, 1.5)
 
     def paintEvent(self, event):
         if self.pose is None:
@@ -234,14 +344,12 @@ class HaloLayer(QWidget):
         for angle in angles:
             x, y, _ = geometry.project(self.pose, angle)
             points.append(QPointF(x - self.x(), y - self.y()))
+        if SKIN == 'meteor' and not self.front:
+            self._paint_shooting_stars(painter)
+            painter.setBrush(Qt.NoBrush)
         if SKIN == 'aurora':
-            # A wide soft curtain under the band, then the band itself.
-            for index in range(len(points) - 1):
-                tint = aurora_tint((angles[index] + angles[index + 1]) / 2, self.now)
-                pen = QPen(QColor(*tint, 46 if self.front else 28), 24)
-                pen.setCapStyle(Qt.FlatCap)
-                painter.setPen(pen)
-                painter.drawLine(points[index], points[index + 1])
+            self._paint_curtains(painter, start)
+            painter.setBrush(Qt.NoBrush)
             for layer, (width, _rgb, front_alpha, back_alpha) in enumerate(RING_LAYERS):
                 alpha = front_alpha if self.front else back_alpha
                 for index in range(len(points) - 1):
@@ -314,7 +422,8 @@ class HaloLayer(QWidget):
                     painter.drawPath(piece)
         if SKIN == 'meteor':
             self._paint_meteors(painter, start)
-        for index in range(12 if SKIN != 'meteor' else 0):
+            painter.setBrush(Qt.NoBrush)
+        for index in range(12):
             angle = start + math.pi * (index + .4) / 12
             x, y, _ = geometry.project(outer if index % 3 else inset, angle)
             point = QPointF(x - self.x(), y - self.y())
@@ -352,14 +461,12 @@ class HaloLayer(QWidget):
             painter.drawEllipse(QPointF(x, y + 24), 1.1, 1.1)
         for key, trail in self._trails.items():
             # A trail follows its own star: Codex blue, Claude Code gold.
-            if SKIN == 'meteor':
-                glow, body = (255, 168, 80), (255, 226, 160)       # Meteor fire.
-            elif isinstance(key, tuple) and key and key[0] in ('codex', 'claude'):
+            if isinstance(key, tuple) and key and key[0] in ('codex', 'claude'):
                 ring = star_palette(key[0])['ring']
                 glow, body = ring, tuple(round(c + (255 - c) * .35) for c in ring)
             else:
                 glow, body = (158, 144, 255), (184, 218, 255)
-            wide = 1.6 if SKIN == 'meteor' else 1.0
+            wide = 1.0
             for first, last in zip(trail, list(trail)[1:]):
                 x, y, stamp, depth = last
                 if (depth >= 0) != self.front:
