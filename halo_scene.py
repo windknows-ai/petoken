@@ -211,14 +211,21 @@ class HaloLayer(QWidget):
         width, height = math.ceil(bounds[2]) - left + 1, math.ceil(bounds[3]) - top + 1
         # Resizing a translucent window makes it flash, so the layer keeps a
         # little spare room and only moves while what it shows still fits.
+        # It keeps a fixed offset from the ring's centre, so nothing drawn in it
+        # (sky stars, shooting stars) shifts against her from frame to frame.
         w, h = self.width(), self.height()
-        if width <= w <= width * 1.3 + 40 and height <= h <= height * 1.3 + 40:
-            spot = (left - (w - width) // 2, top - (h - height) // 2)
+        offset = getattr(self, '_offset', None)
+        centre = (round(pose.cx), round(pose.cy))
+        spot = (centre[0] + offset[0], centre[1] + offset[1]) if offset else None
+        fits = (spot is not None and w <= width * 1.3 + 40 and h <= height * 1.3 + 40
+                and spot[0] <= left and spot[1] <= top and spot[0] + w >= left + width and spot[1] + h >= top + height)
+        if fits:
             if (self.x(), self.y()) != spot:
                 self.move(*spot)
         else:
             pad_w, pad_h = int(width * .1) + 12, int(height * .1) + 12
             self.setGeometry(left - pad_w, top - pad_h, width + 2 * pad_w, height + 2 * pad_h)
+            self._offset = (left - pad_w - centre[0], top - pad_h - centre[1])
         self.update()
 
     METEORS = 4
@@ -272,11 +279,11 @@ class HaloLayer(QWidget):
     def _paint_sky(self, painter, count, colours):
         """Small stars twinkling in the sky above the ring."""
         rnd = random.Random(29)
-        w, h = self.width(), self.height()
-        top = max(8.0, self._xy(math.pi * 1.5)[1] - self.pose.rx * .9)
+        rx = self.pose.rx
+        cx, cy = self.pose.cx - self.x(), self.pose.cy - self.y()
         for j in range(count):
-            x = 10 + rnd.random() * (w - 20)
-            y = top + rnd.random() * max(10.0, self._xy(math.pi * 1.5)[1] - top - 6)
+            x = cx + (rnd.random() * 2 - 1) * rx * 1.25
+            y = cy - rx * (.32 + rnd.random() * .8)
             twinkle = max(0.0, math.sin(self.now * (1.1 + rnd.random() * 1.6) + rnd.random() * 6.3))
             if twinkle > .05:
                 self._star_shape(painter, QPointF(x, y), 1.4 + rnd.random() * 1.6, rnd.choice(colours),
@@ -290,7 +297,6 @@ class HaloLayer(QWidget):
         rx = pose.rx
         w, h = self.width(), self.height()
         margin = 16.0
-        ring_top = self._xy(math.pi * 1.5)[1]
         self._paint_sky(painter, 12, METEOR_COLOURS)
         slot = int(now / self.SHOOT_PERIOD)
         for k in range(slot - 7, slot + 1):
@@ -301,8 +307,11 @@ class HaloLayer(QWidget):
             born = k * self.SHOOT_PERIOD + rnd.random() * self.SHOOT_PERIOD
             heading = math.radians(146 + rnd.random() * 20)          # Down and to the left.
             dx, dy = math.cos(heading), math.sin(heading)
-            sx = margin + w * (.35 + rnd.random() * .62)
-            sy = margin + rnd.random() * max(10.0, (ring_top - margin) * .7)
+            cx, cy = pose.cx - self.x(), pose.cy - self.y()
+            sx = cx + (rnd.random() * 1.9 - .55) * rx
+            sy = cy - rx * (.5 + rnd.random() * .6)
+            if not (margin < sx < w - margin and margin < sy < h - margin):
+                continue
             # The farthest it can go before leaving the layer.
             room = min((sx - margin) / -dx if dx < 0 else 1e9, (h - margin - sy) / dy if dy > 0 else 1e9)
             travel = min(rx * (.9 + rnd.random() * .7), room)

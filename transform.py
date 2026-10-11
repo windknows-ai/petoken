@@ -622,8 +622,12 @@ class TransformStage(QWidget):
                     top = top * top * (3 - 2 * top)         # Fades in under the lamp.
                     light = core * grain * top * (1 - .35 * d) * land
                 # The pool on the floor: a flat, soft ellipse.
-                pu, pv = u / .85, (v - floor) / .06
+                pu, pv = u / .6, (v - floor) / .06
                 light += .5 * math.exp(-(pu * pu + pv * pv) * 1.6)
+                # Nothing reaches the texture's sides or bottom: no straight edge anywhere.
+                side = max(0.0, min(1.0, (1 - abs(u)) / .3))
+                bottom = max(0.0, min(1.0, (1 - v) / .06))
+                light *= (side * side * (3 - 2 * side)) * (bottom * bottom * (3 - 2 * bottom))
                 a = max(0.0, min(1.0, light))
                 alpha = int(a * 255)
                 r, g, bl = int(232 * a), int(241 * a), int(255 * a)
@@ -645,7 +649,7 @@ class TransformStage(QWidget):
         floor_y = target.bottom() - target.height() * .02
         top_y = max(0.0, target.top() - target.height() * .6)
         height = (floor_y - top_y) / .86
-        width = min(target.width() * 1.5, self.width() * .98)
+        width = min(target.width() * 1.5, self.width() * .9)
         area = QRectF(target.center().x() - width / 2, top_y, width, height)
         layer = QImage(texture.size(), QImage.Format_ARGB32_Premultiplied)
         layer.fill(Qt.transparent)

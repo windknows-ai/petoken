@@ -19,6 +19,7 @@ ffmpeg. The scene list lives in tools/tutorial_script.py.
 """
 import argparse
 import json
+import os
 import math
 import re
 import subprocess
@@ -1446,9 +1447,10 @@ def use_language(language, script=None):
 def setup(stack, language='zh_CN', script=None):
     """The sandboxed test build with sample data: (v2 preview, base preview)."""
     use_language(language, script)
-    from tools.live_capture import Ghost
-    ghost = Ghost(QApplication.instance())          # Nothing pops up on the person's screen.
-    stack.callback(ghost.stop)
+    if not os.environ.get('PETOKEN_SHOW_WINDOWS'):     # On-screen checks set it to see the real thing.
+        from tools.live_capture import Ghost
+        ghost = Ghost(QApplication.instance())      # Nothing pops up on the person's screen.
+        stack.callback(ghost.stop)
     directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-tutorial-'))
     stack.enter_context(patch('widget.PREF_DIR', Path(directory)))
     stack.enter_context(patch('quick_launch.build_command', lambda *a, **k: ['tutorial']))
