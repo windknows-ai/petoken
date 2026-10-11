@@ -150,10 +150,18 @@ def play_loop(p, name, centre, width, t, alpha=1.0, angle=0.0, height=None):
         play(p, name, centre, width, v * period, alpha * weight, angle=angle, height=height)
 
 
-def _scaled_layer(path, w, h, cover, ratio):
+def _scaled_layer(path, w, h, cover, ratio, add=None):
     image = QImage(path)
     if image.isNull():
         return None
+    if add is not None:                                    # Light added onto it (the stars onto the far sky).
+        extra = QImage(add)
+        if not extra.isNull():
+            image = image.convertToFormat(QImage.Format_RGB32)
+            p = QPainter(image)
+            p.setCompositionMode(QPainter.CompositionMode_Plus)
+            p.drawImage(QRectF(image.rect()), extra, QRectF(extra.rect()))
+            p.end()
     scale = max(w / image.width(), h / image.height()) * cover
     scaled = image.scaled(int(image.width() * scale * ratio), int(image.height() * scale * ratio),
                           Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
@@ -327,7 +335,8 @@ class WishShow(QWidget):
                 continue
             centre, (cw, ch) = self.slot(k)
             side = int(min(cw * .86, ch * .36) * ratio)
-            self._art[index] = _POOL.submit(_fitted_art, str(shop.ASSETS / frames[0]), side, ratio)
+            folder = shop.WEAPONS if self.results[index]['item'].get('art_dir') == 'weapons' else shop.ASSETS
+            self._art[index] = _POOL.submit(_fitted_art, str(folder / frames[0]), side, ratio)
         self._frames = {}                                   # The card frames, scaled to the cards.
         for k, index in enumerate(self.order if self.ten else [0]):
             rarity = self.rarity(index)
@@ -339,10 +348,14 @@ class WishShow(QWidget):
 
     def _prepare_layers(self):
         w, h, ratio = self.width(), self.height(), self.devicePixelRatioF()
-        for name, cover in (('sky_far', 1.10), ('sky_stars', 1.16), ('sky_dust', 1.24)):
-            path = FX_DIR / f'{name}.jpg'
-            if path.is_file() and (name, w, h) not in self._layers:
-                self._layers[(name, w, h)] = _POOL.submit(_scaled_layer, str(path), w, h, cover, ratio)
+        # The far sky and its stars are joined once into one picture (one blit a frame, not two).
+        far, stars = FX_DIR / 'sky_far.jpg', FX_DIR / 'sky_stars.jpg'
+        if far.is_file() and ('sky_far', w, h) not in self._layers:
+            self._layers[('sky_far', w, h)] = _POOL.submit(_scaled_layer, str(far), w, h, 1.12, ratio,
+                                                           str(stars) if stars.is_file() else None)
+        dust = FX_DIR / 'sky_dust.jpg'
+        if dust.is_file() and ('sky_dust', w, h) not in self._layers:
+            self._layers[('sky_dust', w, h)] = _POOL.submit(_scaled_layer, str(dust), w, h, 1.24, ratio)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -407,7 +420,12 @@ class WishShow(QWidget):
         return self.INTRO <= self.t and bool(self.queue)
 
     def _step(self):
-        self.advance(self.FPS_MS / 1000)
+        # Real time, not a fixed tick: a slow frame never makes the show lurch or crawl.
+        import time as clock
+        now = clock.perf_counter()
+        last = getattr(self, '_last_step', None)
+        self._last_step = now
+        self.advance(min(.05, now - last) if last is not None else self.FPS_MS / 1000)
         if self.t > self.length + 30:
             self.timer.stop()
         self.update()
@@ -483,7 +501,7 @@ class WishShow(QWidget):
             self.exclusive[index] = self.t + .35
             self.catch[index] = self.exclusive[index] + self.EXCLUSIVE
             self._cue(self.t, 'catch')
-            self._cue(self.exclusive[index], 'rise')
+            self._cue(self.exclusive[index], 'rise_xinghai' if rarity == 'xinghai' else 'rise')
         else:
             self.catch[index] = self.t + self.CHARGE
             self._cue(self.t, 'catch')
@@ -839,8 +857,7 @@ class WishShow(QWidget):
         drift = min(1.0, t / 16.0)
         lean = (self.her.x() / max(1, w) - .5)
         p.setOpacity(_ease(t / .5))
-        for name, cover, speed, parallax, mode in (('sky_far', 1.10, .6, .010, None),
-                                                    ('sky_stars', 1.16, .9, .022, QPainter.CompositionMode_Plus),
+        for name, cover, speed, parallax, mode in (('sky_far', 1.12, .7, .014, None),
                                                     ('sky_dust', 1.24, 1.3, .045, QPainter.CompositionMode_Plus)):
             layer = self._layer(name, cover)
             if layer is None:

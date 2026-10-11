@@ -125,6 +125,28 @@ class ShopTests(unittest.TestCase):
         self.shop._own(rest[-1], 'test')
         self.assertEqual(self.store.stardust(reason='star_collection'), shop.COLLECTION_BONUS)
 
+    def test_discount_card_draw_uses_the_shops_draw(self):
+        from discount_draw import DiscountDraw, discount_text
+        self.give(5000)
+        pick = [i for i, _ in self.shop.featured()][0]
+        done = []
+        draw = DiscountDraw(None, pick, lambda: self.shop.draw_discount(pick['id']), 'zh_CN', on_done=done.append)
+        draw.timer.stop()
+        self.assertIsNone(draw.card_at(draw.slot_point(0)))   # Not ready while shuffling.
+        while not draw.ready():
+            draw.advance(1 / 30)
+        k = draw.card_at(draw.card_place(3)[0])
+        self.assertIsNotNone(k)
+        draw.mousePressEvent(type('E', (), {'position': lambda self: draw.card_place(k)[0]})())
+        self.assertEqual(draw.value, self.shop.state['featured']['items'][pick['id']])   # Drawn by the shop.
+        for _ in range(60):
+            self.assertFalse(draw.grab().isNull())
+            draw.advance(1 / 30)
+        draw.close()
+        self.assertEqual(done, [draw.value])
+        self.assertEqual(discount_text(.75), '7.5')
+        self.assertEqual(discount_text(.7), '7')
+
     def test_limited_items_only_in_their_window(self):
         kimono = shop.BY_ID['outfit.sakura_kimono']
         self.assertTrue(shop.in_window(kimono, datetime(2026, 4, 1).date()))
@@ -187,7 +209,7 @@ class ShopTests(unittest.TestCase):
             listened.close()
         finally:
             wish_sound.Sounds = original
-        for name in ('open', 'catch', 'rise', 'burst_xinghai', 'flip_fine'):
+        for name in ('open', 'catch', 'rise_xinghai', 'burst_xinghai', 'flip_fine'):
             self.assertIn(name, heard)
         idle = WishShow(None, self.shop.wish(1), 'zh_CN')            # Nobody steers: it still ends.
         idle.timer.stop()

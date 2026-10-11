@@ -109,7 +109,8 @@ def item_art(item, frame=0):
         return None
     name = frames[frame % len(frames)]
     if name not in _ART:
-        pixmap = QPixmap(str(shop.ASSETS / name))
+        folder = shop.WEAPONS if item.get('art_dir') == 'weapons' else shop.ASSETS
+        pixmap = QPixmap(str(folder / name))
         _ART[name] = pixmap if not pixmap.isNull() else None
     return _ART[name]
 
@@ -449,8 +450,9 @@ class ShopPage(QWidget):
     def act(self, item, action):
         self._keep_place()
         s = self.shop
-        if action == 'discount':
-            s.draw_discount(item['id'])
+        if action == 'discount':                           # A card draw shows it (discount_draw.py).
+            self.show_discount_draw(item)
+            return
         elif action == 'buy':
             s.buy(item['id'])
         elif action == 'wear':
@@ -491,6 +493,23 @@ class ShopPage(QWidget):
             return
         self.show_wish(results)
         self.refresh()
+
+    def show_discount_draw(self, item):
+        from discount_draw import DiscountDraw
+        panel = self.owner.panel
+
+        def remember(enabled):
+            panel.prefs['wish_sound'] = enabled
+            persist = getattr(panel, 'persist', None)
+            if persist is not None:
+                persist()
+        draw = DiscountDraw(self.owner, item, lambda: self.shop.draw_discount(item['id']), self.language,
+                            sound=panel.prefs.get('wish_sound', True), on_sound=remember,
+                            on_done=lambda value: self.refresh())
+        draw.show()
+        draw.raise_()
+        draw.setFocus()
+        self._draw = draw
 
     def show_wish(self, results):
         starsea = getattr(self.owner.panel, 'starsea', None)

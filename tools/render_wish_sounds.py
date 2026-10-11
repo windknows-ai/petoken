@@ -154,6 +154,40 @@ def save(name, mono, gain=.8, verb=2.4, mix=.35):
     print('wrote', name, f'{len(stereo) / RATE:.1f}s')
 
 
+def brass(names, length):
+    """A warm horn chord swelling in: bright saw-like voices behind a moving filter."""
+    t = seconds(length)
+    out = np.zeros_like(t)
+    for f in (note(n) for n in names):
+        for k in range(3):
+            phase = np.cumsum(2 * np.pi * f * (1 + RNG.normal(0, .003)) / RATE)
+            out += sum(np.sin(phase * h) / h for h in range(1, 14))
+    swell = np.minimum(1, t / (length * .35)) * np.minimum(1, np.maximum(0, (length - t) / (length * .4)))
+    return lowpass(out, 2600) * swell
+
+
+def drone(freq, length):
+    """A deep held tone (the floor under the grand finds)."""
+    t = seconds(length)
+    tone = np.sin(2 * np.pi * freq * t) + .5 * np.sin(2 * np.pi * freq * 2.003 * t) + .25 * np.sin(2 * np.pi * freq * 3 * t)
+    return tone * np.minimum(1, t / .3) * np.exp(-t / (length * .55))
+
+
+def timpani(length):
+    """A drum roll growing louder (before Starsea's burst)."""
+    t = seconds(length)
+    out = np.zeros_like(t)
+    hits = int(length * 18)
+    for k in range(hits):
+        at = k / 18
+        i = int(at * RATE)
+        seg_t = seconds(.25)
+        hit = np.sin(2 * np.pi * 70 * seg_t) * np.exp(-seg_t / .12) + lowpass(RNG.normal(0, 1, len(seg_t)), 300) * np.exp(-seg_t / .05) * .4
+        level = (k / hits) ** 1.6
+        out[i:i + len(hit)] += hit[:len(out) - i] * level
+    return out
+
+
 def pad(names, length):
     return choir([note(n) for n in names], length, attack=length * .4, release=length * .45)
 
@@ -185,31 +219,63 @@ def main():
     tones = sum(np.sin(2 * np.pi * np.cumsum(f * 2 ** (t * .9)) / RATE) for f in (220, 330, 440)) * (t / 1.9) ** 2 * .12
     save('rise', mix(1.95, (0, noise_sweep(1.9, 300, 6000), .5), (0, roll, .8), (0, tones, 1),
                      (0, sparkle(1.9, 40), .3)), gain=.7, verb=2.0, mix=.35)
-    # Bursts, from modest to grand.
-    save('burst_fanxing', mix(1.6, (0, bell(note('G5'), 1.6, .9), .6), (.06, bell(note('D6'), 1.5, .8), .4),
-                              (0, sparkle(1.2, 20), .35)), gain=.55, verb=2.0, mix=.38)
-    save('burst_mingyue', mix(2.0, (0, bell(note('A5'), 2.0, 1.1, 1.3), .6), (.16, bell(note('E6'), 1.8, 1.0, 1.3), .55),
-                              (0, sparkle(1.6, 35, 4000, 10000), .45), (0, pad(['A4', 'E5'], 1.8), .12)),
-         gain=.6, verb=2.4, mix=.42)
-    save('burst_haori', mix(3.0, (0, boom(1.6, 52), .45), (0, bell(note('D5'), 2.8, 1.4), .45),
-                            (.02, bell(note('F#5'), 2.6, 1.3), .35), (.04, bell(note('A5'), 2.6, 1.3), .35),
-                            (.0, pad(['D4', 'A4', 'F#5'], 2.6), .18), (.05, sparkle(2.4, 45), .45)),
-         gain=.72, verb=2.8, mix=.42)
-    arp = mix(1.4, *[(k * .07, bell(note(n), 1.2, .8), .35) for k, n in enumerate(['C6', 'E6', 'G6', 'B6', 'D7', 'E7'])])
-    save('burst_yinhe', mix(3.6, (0, boom(2.0, 44), .6), (0, pad(['C4', 'G4', 'B4', 'E5'], 3.4), .3),
-                            (.08, arp, 1), (0, bell(note('C5'), 3.2, 1.8), .4), (.1, sparkle(3.0, 50), .5)),
-         gain=.78, verb=3.2, mix=.45)
-    harp = mix(1.2, *[(k * .045, pluck(note(n), 1.0), .4) for k, n in
-                      enumerate(['C5', 'E5', 'G5', 'B5', 'D6', 'E6', 'G6', 'B6', 'D7', 'E7'])])
-    save('burst_xinghai', mix(4.2, (0, boom(2.2, 40), .7), (.05, harp, 1), (0, pad(['C4', 'G4', 'E5', 'B5'], 4.0), .34),
-                              (.5, pad(['F4', 'C5', 'A5', 'E6'], 3.6), .22), (0, bell(note('C6'), 3.6, 2.0, 1.4), .4),
-                              (.1, sparkle(3.6, 70, 3000, 11000), .55)), gain=.82, verb=3.6, mix=.48)
+    # Bursts, far apart from one another: the rarer, the deeper, longer and louder.
+    save('burst_fanxing', mix(1.0, (0, bell(note('A6'), 1.0, .45, .7), .6), (0, sparkle(.6, 12, 5000, 9000), .25)),
+         gain=.32, verb=1.2, mix=.3)
+    save('burst_mingyue', mix(1.8, (0, bell(note('E6'), 1.8, 1.0, 1.3), .65), (.14, bell(note('B6'), 1.6, .9, 1.3), .55),
+                              (0, sparkle(1.4, 30, 4500, 11000), .4)), gain=.45, verb=2.0, mix=.4)
+    save('burst_haori', mix(3.2, (0, boom(1.4, 60), .35), (0, brass(['D4', 'A4', 'D5', 'F#5'], 2.6), .5),
+                            (0, bell(note('D6'), 2.8, 1.4), .45), (.04, bell(note('A6'), 2.6, 1.2), .3),
+                            (.05, sparkle(2.6, 50), .45)), gain=.62, verb=2.8, mix=.42)
+    arp = mix(1.6, *[(k * .08, bell(note(n), 1.4, .9), .35) for k, n in
+                     enumerate(['E7', 'B6', 'G6', 'E6', 'B5', 'G5', 'E5'])])          # A falling cascade.
+    save('burst_yinhe', mix(4.4, (0, boom(2.4, 40), .8), (.35, boom(1.6, 55), .35), (0, drone(note('E2'), 4.0), .4),
+                            (0, pad(['E4', 'B4', 'G5', 'D6'], 4.0), .4), (.15, arp, 1),
+                            (.1, sparkle(3.6, 60, 3000, 10000), .5)), gain=.82, verb=3.6, mix=.46)
+    harp = mix(1.4, *[(k * .04, pluck(note(n), 1.1), .4) for k, n in
+                      enumerate(['C4', 'E4', 'G4', 'C5', 'E5', 'G5', 'C6', 'E6', 'G6', 'C7', 'E7', 'G7'])])
+    save('burst_xinghai', mix(4.8, (0, boom(2.6, 36), 1.0), (.35, boom(1.8, 50), .45),
+                              (.05, harp, 1), (0, brass(['C4', 'G4', 'C5', 'E5', 'G5'], 3.6), .55),
+                              (0, pad(['C4', 'G4', 'E5', 'C6'], 4.4), .42), (.7, pad(['F4', 'C5', 'A5', 'F6'], 3.6), .3),
+                              (0, bell(note('C6'), 4.2, 2.2, 1.4), .45), (.1, sparkle(4.4, 80, 3000, 12000), .6)),
+         gain=.95, verb=4.0, mix=.5)
+    # Starsea's own opening gathers with a drum roll under the riser.
+    t = seconds(1.9)
+    tones = sum(np.sin(2 * np.pi * np.cumsum(f * 2 ** (t * 1.0)) / RATE) for f in (262, 330, 392, 523)) * (t / 1.9) ** 2 * .1
+    save('rise_xinghai', mix(1.95, (0, noise_sweep(1.9, 300, 8000), .5), (.85, timpani(1.05), .9), (0, tones, 1),
+                             (0, sparkle(1.9, 60, 4000, 12000), .4)), gain=.78, verb=2.2, mix=.38)
     # Cards turning.
     flick = noise_sweep(.22, 6000, 1500, rise=False) * .6
     save('flip', mix(.3, (0, flick, 1), (.02, bell(note('E7'), .25, .08), .08)), gain=.4, verb=.8, mix=.25)
     save('flip_fine', mix(1.2, (0, flick, 1), (.03, bell(note('B6'), 1.1, .6), .5), (.03, sparkle(.9, 30), .3)),
          gain=.5, verb=1.6, mix=.35)
+    # The discount draw (cards shuffled, one turned, what it holds).
+    swish = mix(.9, *[(k * .11, noise_sweep(.2, 2500 + k * 600, 7000, rise=False), .5) for k in range(7)])
+    save('shuffle', swish, gain=.42, verb=.9, mix=.25)
+    save('pick', mix(.6, (0, noise_sweep(.3, 1500, 8000), .6), (.25, bell(note('G6'), .35, .15), .3)), gain=.45, verb=1.0, mix=.3)
+    save('discount', mix(1.6, (0, bell(note('C6'), 1.4, .8), .5), (.08, bell(note('G6'), 1.3, .7), .4),
+                         (0, sparkle(1.2, 30), .35)), gain=.5, verb=1.8, mix=.38)
+    save('discount_great', mix(2.6, (0, boom(1.2, 70), .3), (0, brass(['C5', 'E5', 'G5', 'C6'], 1.8), .45),
+                               (.0, bell(note('C6'), 2.2, 1.2), .45), (.1, bell(note('E6'), 2.0, 1.1), .35),
+                               (.2, bell(note('G6'), 2.0, 1.1), .35), (0, sparkle(2.2, 60), .5)),
+         gain=.62, verb=2.4, mix=.42)
+
+
+def to_mp3():
+    """WAV -> 160 kbps MP3 (what the app ships), if the ffmpeg with libmp3lame is there."""
+    import subprocess
+    ffmpeg = 'D:/Documents/ChatGPT/petoken-game-mode-concept/tools/ffmpeg.exe'
+    if not os.path.exists(ffmpeg):
+        print('ffmpeg not found: WAVs left as they are')
+        return
+    for name in sorted(os.listdir(OUT)):
+        if name.endswith('.wav'):
+            wav = os.path.join(OUT, name)
+            subprocess.run([ffmpeg, '-loglevel', 'error', '-y', '-i', wav, '-codec:a', 'libmp3lame', '-b:a', '160k',
+                            wav[:-4] + '.mp3'], check=True)
+            os.remove(wav)
 
 
 if __name__ == '__main__':
     main()
+    to_mp3()

@@ -18,6 +18,7 @@ hop carries the hat along.
 """
 from __future__ import annotations
 
+import functools
 import math
 import sys
 import time
@@ -31,8 +32,55 @@ import shop
 
 LYING = frozenset({'sleep', 'star_sleep', 'dragged', 'star_dragged', 'landing', 'peek'})
 SCALE = .42 / 336             # A Stars-rarity hat (336 px wide) is .42 of her sprite box; all pieces share it.
-BEHIND = ('ground', 'back')
-FRONT = ('buddy', 'head')
+BEHIND = ('ground', 'back', 'weapon')
+FRONT = ('buddy', 'head', 'weapon')
+# How each piece sits on her, beyond the kind's rule: scale, nudge (fractions of her sprite box),
+# turn (degrees) and, for clips and flowers, 'side' (pinned at the side of her head, not on top).
+# Checked one by one on her idle, wave, typing and thinking poses.
+FIT = {
+    'head_cloud_beret': dict(scale=1.2, dy=.075), 'head_moon_sleepcap': dict(scale=1.22, dy=.085),
+    'head_celestial_beret': dict(scale=1.18, dy=.075, angle=-6), 'head_moon_rabbit_hat': dict(scale=1.15, dy=.08),
+    'head_prism_crown': dict(dy=.04), 'head_lunar_tiara': dict(dy=.045), 'head_crystal_circlet': dict(dy=.04),
+    'head_pearl_tiara': dict(dy=.045), 'head_orbit_halo': dict(dy=-.015), 'head_lavender_wreath': dict(scale=1.05, dy=.05),
+    'head_frost_cat_ears': dict(dy=.055), 'head_lilac_rabbit_ears': dict(dy=.05), 'head_aurora_antlers': dict(dy=.045),
+    'head_star_bow': dict(dx=-.1, dy=.05, angle=-14, scale=.9), 'head_butterfly_ribbon': dict(dx=-.1, dy=.05, angle=-12, scale=.9),
+    'head_crescent_clip': dict(side=True, scale=.62, angle=-30), 'head_pearl_flower': dict(side=True, scale=.6, angle=-20),
+    'head_crystal_sprout': dict(side=True, scale=.62, angle=-28),
+    'back_cloud_wings': dict(scale=1.5, dy=-.05), 'back_butterfly_wings': dict(scale=1.42, dy=-.04),
+    'back_moon_ribbon': dict(scale=1.55, dy=-.02), 'back_crystal_wings': dict(scale=1.18, dy=-.04),
+    'ground_lavender_garden': dict(scale=1.18), 'ground_star_disc': dict(scale=1.22), 'ground_moon_ripple': dict(scale=1.1),
+}
+# Bulky weapons drawn smaller so they never hide her face.
+WEAPON_SCALE = dict(sakura_fan=.6, crystal_orb=.6, star_shield=.55, star_harp=.62, small_umbrella=.68,
+                    small_hammer=.66, star_kite=.72, starlight_whip=.82, moon_lantern=.9)
+HANDS_FILE = shop.WEAPONS / 'hands.json'
+_HANDS = None
+
+
+def hands():
+    """{frame file: hand} measured by Codex for every pose frame (None where no hand can hold)."""
+    global _HANDS
+    if _HANDS is None:
+        try:
+            import json
+            _HANDS = {e['file']: (None if e.get('none') else e) for e in json.loads(HANDS_FILE.read_text(encoding='utf-8'))}
+        except (OSError, ValueError, KeyError):
+            _HANDS = {}
+    return _HANDS
+
+
+@functools.lru_cache(maxsize=512)
+def frame_file(state, index=0, blink=False):
+    """The picture file she shows for ``state`` (its ``index`` frame, or its blink)."""
+    import pet_assets
+    try:
+        entry = pet_assets.entry_for(state)
+        if blink and entry.blink:
+            return entry.blink
+        frames = pet_assets.existing_frames(entry)
+        return frames[index % len(frames)] if frames else entry.path
+    except (AttributeError, KeyError, ZeroDivisionError):
+        return None
 STAR = None                   # The worn task-star style (an item), read by the task stars.
 _HEADS = {}
 
@@ -167,10 +215,11 @@ class Decor:
             pass
 
     # Her picture --------------------------------------------------------------------------
-    def pet_painted(self, state, pixmap, transform, rect):
-        """Called from her paint with what she drew and how it was placed."""
+    def pet_painted(self, state, pixmap, transform, rect, source=None):
+        """Called from her paint with what she drew (``source``: its file), and how it was placed."""
         if not self.layers():
             return
+        self.source = source
         pose = (state, pixmap.cacheKey(), transform, QRectF(rect))
         if self.pose is None or pose[1:] != self.pose[1:] or pose[0] != self.pose[0] or 'buddy' in self.items:
             self.pose = (state, pixmap, transform, QRectF(rect))
@@ -197,25 +246,38 @@ class Decor:
             if art is None:
                 continue
             ax, ay = item['anchor']
+            fit = FIT.get(item['name'], {})
+            size = scale * fit.get('scale', 1.0)
+            nudge = QPointF(fit.get('dx', 0) * rect.width(), fit.get('dy', 0) * rect.height())
+            turn = fit.get('angle', 0)
+            if slot == 'weapon':                            # In her hand, as Codex measured it per frame.
+                hand = hands().get(getattr(self, 'source', None) or '')
+                if hand is None or bool(hand.get('front', True)) != layer.front:
+                    continue
+                point = QPointF(rect.x() + hand['x'] / 1254 * rect.width(), rect.y() + hand['y'] / 1254 * rect.height())
+                self._draw(p, art, point, (ax, ay), rect.width() / 1254 * WEAPON_SCALE.get(item['name'], 1.0),
+                           hand.get('angle', 0))
+                continue
             if slot == 'head':
                 fx, fy = head_top(pixmap)
-                point = QPointF(rect.x() + fx * rect.width(), rect.y() + (fy + .07) * rect.height())
+                if fit.get('side'):                         # Pinned at the side of her head, away from her feather.
+                    point = QPointF(rect.x() + (fx - .2) * rect.width(), rect.y() + (fy + .13) * rect.height())
+                else:
+                    point = QPointF(rect.x() + (fx - .03) * rect.width(), rect.y() + (fy + .07) * rect.height())
             elif slot == 'back':
                 point = QPointF(rect.center().x(), rect.y() + rect.height() * .5)
             elif slot == 'ground':
                 point = QPointF(rect.center().x(), rect.bottom() + rect.height() * .01)
-                self._draw(p, art, point, (ax, ay), scale * .78)
-                continue
-            else:                                           # A buddy bobs beside her.
-                point = QPointF(rect.right() + side * .02, rect.y() + rect.height() * .42 + math.sin(now * 2.3) * side * .03)
-                self._draw(p, art, point, (ax, ay), scale * .8)
-                continue
-            self._draw(p, art, point, (ax, ay), scale)
+                size *= .78
+            else:                                           # A buddy bobs at her left, clear of her raised hand.
+                point = QPointF(rect.left() - side * .06, rect.y() + rect.height() * .4 + math.sin(now * 2.3) * side * .03)
+                size *= .8
+            self._draw(p, art, point + nudge, (ax, ay), size, turn)
 
     _SCALED = {}
 
-    def _draw(self, p, art, point, anchor, scale):
-        """``art`` with its anchor at ``point``; scaled once per size, not every frame."""
+    def _draw(self, p, art, point, anchor, scale, angle=0.0):
+        """``art`` with its anchor at ``point`` (turned ``angle`` about it); scaled once per size."""
         ratio = self.pet.devicePixelRatioF()
         key = (art.cacheKey(), round(scale * ratio, 4))
         if key not in self._SCALED:
@@ -225,8 +287,13 @@ class Decor:
                                 Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
             self._SCALED[key] = scaled
         scaled = self._SCALED[key]
-        p.drawPixmap(QRectF(point.x() - anchor[0] * scale, point.y() - anchor[1] * scale, art.width() * scale,
-                            art.height() * scale), scaled, QRectF(scaled.rect()))
+        p.save()
+        p.translate(point)
+        if angle:
+            p.rotate(angle)
+        p.drawPixmap(QRectF(-anchor[0] * scale, -anchor[1] * scale, art.width() * scale, art.height() * scale),
+                     scaled, QRectF(scaled.rect()))
+        p.restore()
 
     def close(self):
         for layer in (self.back, self.front):

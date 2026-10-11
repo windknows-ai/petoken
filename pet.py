@@ -722,8 +722,9 @@ class DesktopPet(QWidget):
             x=round((sx+(sw-size.width())/2+tap_shift)*dpr)/dpr
             y=round((sy+sh-size.height())*dpr)/dpr
             p.drawPixmap(QPointF(x,y),rendered)
+            from decor import frame_file
             self.decor.pet_painted(self.current_state,rendered,p.transform(),
-                                   QRectF(x,y,size.width(),size.height()))
+                                   QRectF(x,y,size.width(),size.height()),frame_file(self.current_state))
         p.restore()
 
     def sync_focus_tag(self):
@@ -778,7 +779,9 @@ class DesktopPet(QWidget):
             layer(self.pose_pixmap(f.previous,f.previous_index),1-f.fade)
         drawn=layer(self.pose_pixmap(f.state,f.index,f.blink),1.)
         if drawn:
-            self.decor.pet_painted(f.state,drawn[0],p.transform(),drawn[1])
+            from decor import frame_file
+            index=self.typing_count() if f.state=='typing' else f.index
+            self.decor.pet_painted(f.state,drawn[0],p.transform(),drawn[1],frame_file(f.state,index,f.blink))
         if f.next_index is not None and f.state!='typing':
             layer(self.pose_pixmap(f.state,f.next_index),f.next_alpha)
         p.setOpacity(1.)

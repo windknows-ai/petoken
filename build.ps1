@@ -70,6 +70,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Shrinking the 2.0 artwork failed.' }
 # only Codex's contact sheet of all 60 stays out of the package.
 $shopSheet = Join-Path $internal 'assets\v2_5\shop\SHOP_PREVIEW.png'
 if (Test-Path -LiteralPath $shopSheet) { Remove-Item -LiteralPath $shopSheet -Force }
+foreach ($sheet in 'EQUIPPED_PREVIEW.png', 'WEAPONS_PREVIEW.png') {
+    $path = Join-Path $internal (Join-Path 'assets' (Join-Path 'v2_5' (Join-Path 'weapons' $sheet)))
+    if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Force }
+}
 Copy-Item -LiteralPath (Join-Path $repo 'README.md') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'LICENSE') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'THIRD_PARTY_NOTICES.md') -Destination $app -Force

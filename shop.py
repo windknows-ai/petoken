@@ -25,6 +25,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 ASSETS = Path(__file__).resolve().parent / 'assets' / 'v2_5' / 'shop'
+WEAPONS = Path(__file__).resolve().parent / 'assets' / 'v2_5' / 'weapons'
+GRIP = (627, 900)             # Where every weapon picture is held (Codex drew them on her 1254 px canvas).
 
 RARITIES = ('fanxing', 'mingyue', 'haori', 'yinhe', 'xinghai')      # Low .. high.
 SETS = ('outfit', 'weapon', 'decor')
@@ -51,17 +53,14 @@ _NAMES = {
                'frost_coat', 'cloud_cape', 'mint_hoodie', 'night_sailor', 'lavender_dress', 'cocoa_sweater',
                'ocean_dress', 'peach_dress', 'ink_hanfu', 'candy_dress', 'forest_cloak', 'ruby_dress',
                'pearl_dress', 'twilight_dress'),
-    'weapon': ('starsea_staff', 'galaxy_blade', 'sun_spear', 'moon_bow', 'comet_wand', 'frost_sword',
-               'sakura_fan', 'star_lance', 'crystal_orb', 'lantern', 'umbrella', 'quill', 'mallet',
-               'ribbon_wand', 'katana', 'harp', 'shield', 'kite', 'whip', 'feather_dart'),
 }
 # Matching themes make a set (one outfit, one weapon, one decoration).
 _THEMES = dict(sakura=('sakura_kimono', 'sakura_fan', 'head_pearl_flower'),
                frost=('frost_coat', 'frost_sword', 'star_snowflake'),
-               moon=('moon_dress', 'moon_bow', 'ground_moon_ripple'),
-               starsea=('starsea_gown', 'starsea_staff', 'back_starsea_seraph'))
+               moon=('moon_dress', 'crescent_bow', 'ground_moon_ripple'),
+               starsea=('starsea_gown', 'starsea_scepter', 'back_starsea_seraph'))
 # Only on sale at certain times of year: (month, day) from .. to.
-_LIMITED = dict(sakura_kimono=((3, 15), (4, 30)), lantern=((1, 20), (2, 20)), frost_coat=((12, 1), (2, 28)))
+_LIMITED = dict(sakura_kimono=((3, 15), (4, 30)), moon_lantern=((1, 20), (2, 20)), frost_coat=((12, 1), (2, 28)))
 
 
 def _decorations():
@@ -83,9 +82,27 @@ def _decorations():
     return sorted(items, key=lambda i: order[i['rarity']])
 
 
+def _weapons():
+    """Codex's 20 drawn weapons (assets/v2_5/weapons/manifest.json), held at GRIP."""
+    try:
+        manifest = json.loads((WEAPONS / 'manifest.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return []
+    items = []
+    for entry in manifest:
+        name, rarity = entry['id'], entry['rarity']
+        theme = next((t for t, members in _THEMES.items() if name in members), None)
+        items.append(dict(id=f'weapon.{name}', set='weapon', name=name, rarity=rarity, slot='weapon',
+                          price=PRICES.get(rarity), theme=theme, window=_LIMITED.get(name),
+                          names=dict(zh_CN=entry['name_zh'], en=entry['name_en']), art=[entry['file']],
+                          art_dir='weapons', anchor=GRIP))
+    order = {r: k for k, r in enumerate(reversed(RARITIES))}
+    return sorted(items, key=lambda i: order[i['rarity']])
+
+
 def _catalog():
     items = []
-    for kind in ('outfit', 'weapon'):
+    for kind in ('outfit',):
         names = list(_NAMES[kind])
         for rarity in reversed(RARITIES):                     # The first names are the rarest.
             for _ in range(SPREAD[rarity]):
@@ -94,7 +111,7 @@ def _catalog():
                 items.append(dict(id=f'{kind}.{name}', set=kind, name=name, rarity=rarity,
                                   slot=kind,
                                   price=PRICES.get(rarity), theme=theme, window=_LIMITED.get(name)))
-    return items + _decorations()
+    return items + _weapons() + _decorations()
 
 
 CATALOG = _catalog()
