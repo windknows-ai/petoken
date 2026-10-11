@@ -113,6 +113,8 @@ class Stage:
     def close(self):
         pass
 
+    hide = lower = raise_ = show
+
 
 def settle_ring(panel, seconds=1.0):
     """Wait until the star ring has caught up with her, then start its trails afresh."""

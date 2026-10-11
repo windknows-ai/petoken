@@ -32,8 +32,16 @@ def pump(seconds, every=None, shots=None, region=None, tag=''):
 
 
 def grab(rect):
-    screen = QGuiApplication.primaryScreen()
-    return screen.grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height()).toImage()
+    # Windows stay invisible (tutorial_video's Ghost): draw her scene off screen.
+    from tools.live_capture import composite
+    image = composite(rect)
+    backdrop = QImage(image.size(), QImage.Format_RGB32)
+    backdrop.setDevicePixelRatio(image.devicePixelRatio())
+    backdrop.fill(QColor('#2B2F48'))
+    p = QPainter(backdrop)
+    p.drawImage(0, 0, image)
+    p.end()
+    return backdrop
 
 
 def sheet(shots, name, cols=8, cell=260):
