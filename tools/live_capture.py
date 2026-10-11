@@ -47,6 +47,11 @@ class Recorder:
         self.proc.wait(timeout=30)
 
 
+# The windows that make up her scene.
+SCENE = {'DesktopPet', 'HaloLayer', 'TaskOrbWindow', 'TaskPageControls', 'UsageOverlay', 'FocusTag',
+         'TransformStage', 'GameHalo', 'StarFlight', 'GameUsage'}
+
+
 def composite(region, skip=()):
     """The app's own windows inside ``region`` (logical, global), drawn into one
     transparent image in their real stacking order. Nothing is read off the
@@ -61,8 +66,9 @@ def composite(region, skip=()):
     image.fill(0)
     windows = {}
     for widget in QApplication.topLevelWidgets():
-        if widget in skip or not widget.isVisible() or not widget.frameGeometry().intersects(region):
-            continue
+        if (widget in skip or type(widget).__name__ not in SCENE or not widget.isVisible()
+                or not widget.frameGeometry().intersects(region)):
+            continue                     # Only her scene: never a workbench or Settings left open.
         windows[int(widget.winId())] = widget
     order = []
     user32 = ctypes.windll.user32
