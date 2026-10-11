@@ -43,7 +43,7 @@ FIT = {
     'head_prism_crown': dict(dy=.04), 'head_lunar_tiara': dict(dy=.045), 'head_crystal_circlet': dict(dy=.04),
     'head_pearl_tiara': dict(dy=.045), 'head_orbit_halo': dict(dy=-.015), 'head_lavender_wreath': dict(scale=1.05, dy=.05),
     'head_frost_cat_ears': dict(dy=.055), 'head_lilac_rabbit_ears': dict(dy=.05), 'head_aurora_antlers': dict(dy=.045),
-    'head_star_bow': dict(dx=-.1, dy=.05, angle=-14, scale=.9), 'head_butterfly_ribbon': dict(dx=-.1, dy=.05, angle=-12, scale=.9),
+    'head_star_bow': dict(dx=-.07, dy=.085, angle=-12, scale=.82), 'head_butterfly_ribbon': dict(dx=-.07, dy=.08, angle=-10, scale=.82),
     'head_crescent_clip': dict(side=True, scale=.62, angle=-30), 'head_pearl_flower': dict(side=True, scale=.6, angle=-20),
     'head_crystal_sprout': dict(side=True, scale=.62, angle=-28),
     'back_cloud_wings': dict(scale=1.5, dy=-.05), 'back_butterfly_wings': dict(scale=1.42, dy=-.04),
@@ -106,7 +106,8 @@ def head_box(pixmap):
     and right edges over the head's top band, so the thin feather on one side never pulls them."""
     key = pixmap.cacheKey()
     if key not in _HEADS:
-        image = pixmap.toImage().convertToFormat(QImage.Format_ARGB32).scaledToWidth(128, Qt.FastTransformation)
+        source = pixmap.toImage() if hasattr(pixmap, 'toImage') else pixmap      # A QPixmap or a QImage.
+        image = source.convertToFormat(QImage.Format_ARGB32).scaledToWidth(128, Qt.FastTransformation)
         w, h = image.width(), image.height()
         found = (.5, .12, .5)
         top = None

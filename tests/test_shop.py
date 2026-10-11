@@ -173,6 +173,13 @@ class ShopTests(unittest.TestCase):
         for page in range(3):
             w.pages.setCurrentIndex(page)
             self.assertFalse(w.grab().isNull())
+        from PySide6.QtWidgets import QWidget
+        # No graphics effects anywhere: nested ones are not drawn (the wish buttons vanished).
+        self.assertEqual([c for c in w.findChildren(QWidget) if c.graphicsEffect() is not None], [])
+        before = w.signin.text()
+        w._sign_in()
+        self.assertNotEqual(w.signin.text(), before)                # Signed in: shown at once.
+        self.assertFalse(w.signin.isEnabled())
         w.close()
 
     def test_limited_items_only_in_their_window(self):
@@ -236,8 +243,9 @@ class ShopTests(unittest.TestCase):
             listened.close()
         finally:
             wish_sound.Sounds = original
-        for name in ('open', 'catch', 'rise_xinghai', 'burst_xinghai', 'flip_fine'):
+        for name in ('open', 'rise_xinghai', 'burst_xinghai', 'flip', 'flip_fine'):
             self.assertIn(name, heard)
+        self.assertEqual(len(heard), len(set(heard)))                 # Nothing piles up twice.
         idle = WishShow(None, self.shop.wish(1), 'zh_CN')            # Nobody steers: it still ends.
         idle.timer.stop()
         for _ in range(900):

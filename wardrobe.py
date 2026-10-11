@@ -51,9 +51,12 @@ QPushButton {{ background: rgba(255,255,255,16); border: 1px solid rgba(200,180,
 QPushButton:hover {{ background: rgba(190,160,255,48); border-color: rgba(220,200,255,150); }}
 QPushButton:disabled {{ color: rgba(236,232,255,90); border-color: rgba(200,180,255,30); }}
 QPushButton#primary {{ background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #9C7BFF, stop:1 #5C8DFF);
-                       border: 1px solid rgba(255,255,255,90); font-weight: 700; }}
-QPushButton#gold {{ background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #FFD98A, stop:1 #E09A3A);
-                    border: 1px solid rgba(255,255,255,120); color: #2A1A05; font-weight: 700; }}
+                       border: 2px solid rgba(220,205,255,160); font-weight: 700; }}
+QPushButton#primary:hover {{ border-color: #FFFFFF; }}
+QPushButton#gold {{ background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #FFE3A0, stop:1 #E09A3A);
+                    border: 2px solid rgba(255,240,200,190); color: #2A1A05; font-weight: 700; }}
+QPushButton#gold:hover {{ border-color: #FFFFFF; }}
+QPushButton#gold:disabled {{ background: rgba(255,255,255,16); color: rgba(236,232,255,110); border-color: rgba(200,180,255,40); }}
 QPushButton#tab {{ background: transparent; border: none; border-bottom: 2px solid transparent; border-radius: 0px;
                    padding: 8px 16px; font-size: 15px; color: {MUTED}; }}
 QPushButton#tab:checked {{ color: #FFFFFF; border-bottom: 2px solid {GOLD}; font-weight: 700; }}
@@ -67,9 +70,11 @@ QComboBox {{ background: rgba(255,255,255,16); border: 1px solid rgba(200,180,25
              padding: 5px 10px; }}
 QComboBox QAbstractItemView {{ background: #1C1640; color: {INK}; selection-background-color: #4A3A90; }}
 QScrollArea, QScrollArea > QWidget > QWidget {{ background: transparent; border: none; }}
-QScrollBar:vertical {{ background: transparent; width: 8px; }}
-QScrollBar::handle:vertical {{ background: rgba(200,180,255,80); border-radius: 4px; min-height: 30px; }}
-QScrollBar::add-line, QScrollBar::sub-line {{ height: 0px; }}
+QScrollBar:vertical {{ background: rgba(255,255,255,10); width: 8px; margin: 4px 0px; border: none; border-radius: 4px; }}
+QScrollBar::handle:vertical {{ background: rgba(200,180,255,110); border-radius: 4px; min-height: 30px; }}
+QScrollBar::handle:vertical:hover {{ background: rgba(230,215,255,170); }}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0px; border: none; background: none; }}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
 '''
 
 
@@ -357,12 +362,13 @@ class Doors(QWidget):
 
 class _MirrorPet:
     pet_scale = 100
+    ratio = 1.0                       # Screen pixels per mirror unit (her zoom x the screen's scale).
 
     def pos(self):
         return QPoint(0, 0)
 
     def devicePixelRatioF(self):
-        return 1.0
+        return self.ratio
 
 
 class _Layer:
@@ -383,23 +389,23 @@ class Mirror(QWidget):
         self._sky = None
         self._sprites = {}
 
-    def sprite(self, pose):
+    def sprite(self, pose, pixels):
+        """(state, picture file, image ``pixels`` tall) of her in ``pose`` wearing the outfit tried."""
+        import outfits
         outfit = self.wardrobe.preview_items().get('outfit')
-        key = (pose, outfit['id'] if outfit else None)
+        starsea = getattr(self.wardrobe.panel, 'starsea', None)
+        state = pose
+        if starsea is not None and starsea.active and f'star_{pose}' in pet_assets.STAR_REGISTRY:
+            state = f'star_{pose}'
+        path = (outfits.frame_path(outfit, state) if outfit is not None else None) or decor.frame_file(state, 0) \
+            or decor.frame_file('idle', 0)
+        key = (path, pixels)
         if key not in self._sprites:
-            import outfits
-            starsea = getattr(self.wardrobe.panel, 'starsea', None)
-            state = pose
-            if starsea is not None and starsea.active and f'star_{pose}' in pet_assets.STAR_REGISTRY:
-                state = f'star_{pose}'
-            pm = outfits.pixmap(outfit, state) if outfit is not None else None
-            if pm is None:
-                pm = pet_assets.frame_for(state, 0) if pet_assets.frame_count(state) else pet_assets.sprite_for(state)
-            if pm is None or pm.isNull():
-                pm = pet_assets.sprite_for('idle')
-            sx, sy, sw, sh = geometry.scaled_sprite_rect(100)
-            self._sprites[key] = (state, pm.scaled(sw * 2, sh * 2, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        return self._sprites[key]
+            image = QImage(str(pet_assets._file(path)))      # Full size, not the pet's 768 px copy.
+            if len(self._sprites) > 12:
+                self._sprites.clear()
+            self._sprites[key] = image.scaled(pixels, pixels, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        return state, path, self._sprites[key]
 
     def paintEvent(self, event):
         w, h = self.width(), self.height()
@@ -419,22 +425,23 @@ class Mirror(QWidget):
         self._glass = clip
         p.setClipPath(clip)
         self._paint_stage(p, w, h)
-        state, sprite = self.sprite(self.pose)
         sx, sy, sw, sh = geometry.scaled_sprite_rect(100)
-        k = min(w / 300, (h - 40) / 330)                   # Her 100 % box, scaled up into the mirror.
+        k = min(w / 345, (h - 40) / 360)                   # Her 100 % box, scaled up (pieces fit inside the glass).
+        ratio = self.devicePixelRatioF()
+        self.decor.pet.ratio = k * ratio
+        state, source, sprite = self.sprite(self.pose, int(sh * k * ratio))
         p.save()
         p.translate(w / 2 - (sx + sw / 2) * k, h * .86 - (sy + sh) * k + math.sin(self.wardrobe.t * 1.6) * 3)
         p.scale(k, k)
-        size_w, size_h = sprite.width() / 2, sprite.height() / 2
+        size_w, size_h = sprite.width() / (k * ratio), sprite.height() / (k * ratio)
         rect = QRectF(sx + (sw - size_w) / 2, sy + sh - size_h, size_w, size_h)
         self.decor.items = self.wardrobe.preview_items()
         self.decor.pose = (state, sprite, QTransform(), rect)
-        import outfits
-        self.decor.source = outfits.frame_path(self.wardrobe.preview_items().get('outfit'), state) or decor.frame_file(state, 0)
+        self.decor.source = source
         self.decor.paint(p, _Layer(False))
         p.setTransform(QTransform().translate(w / 2 - (sx + sw / 2) * k,
                                               h * .86 - (sy + sh) * k + math.sin(self.wardrobe.t * 1.6) * 3).scale(k, k))
-        p.drawPixmap(rect, sprite, QRectF(sprite.rect()))
+        p.drawImage(rect, sprite, QRectF(sprite.rect()))
         self.decor.paint(p, _Layer(True))
         p.restore()
         self._paint_burst(p, w, h)
@@ -620,6 +627,7 @@ class Wardrobe(QWidget):
         self.pages.addWidget(self._milestone_page())
         right.addWidget(self.pages, 1)
         self.pages.currentChanged.connect(lambda k: self.tab_buttons[k][0].setChecked(True))
+        self.pages.currentChanged.connect(self._page_fade)
         body.addLayout(right, 7)
         outer.addLayout(body, 1)
         grip = QSizeGrip(self)
@@ -628,20 +636,6 @@ class Wardrobe(QWidget):
         grip_row.addWidget(grip, 0, Qt.AlignRight | Qt.AlignBottom)
         outer.addLayout(grip_row)
         self.tab_buttons[0][0].setChecked(True)
-        from PySide6.QtWidgets import QGraphicsDropShadowEffect, QGraphicsOpacityEffect
-        from PySide6.QtCore import QPropertyAnimation
-        self._fade = QGraphicsOpacityEffect(self.pages)
-        self.pages.setGraphicsEffect(self._fade)
-        self._fade_anim = QPropertyAnimation(self._fade, b'opacity', self)
-        self._fade_anim.setDuration(260)
-        self.pages.currentChanged.connect(self._page_fade)
-        for button in self.findChildren(QPushButton):        # Gem buttons glow.
-            if button.objectName() in ('primary', 'gold'):
-                glow = QGraphicsDropShadowEffect(button)
-                glow.setBlurRadius(22)
-                glow.setOffset(0, 0)
-                glow.setColor(QColor(243, 201, 107, 150) if button.objectName() == 'gold' else QColor(150, 120, 255, 160))
-                button.setGraphicsEffect(glow)
         self.doors = Doors(self)
         self.clock = QTimer(self)
         self.clock.setInterval(33)
@@ -725,16 +719,10 @@ class Wardrobe(QWidget):
         self.clock.start()
         self.refresh()
         self.doors.open()                                    # The doors swing open every time.
-        self.sounds.play('open')
 
     def _page_fade(self, index):
-        self._fade_anim.stop()
-        self._fade_anim.setStartValue(0.0)
-        self._fade_anim.setEndValue(1.0)
-        self._fade_anim.start()
-        for tile in self.tiles:
+        for tile in self.tiles:                              # The pieces rise in again (no sound).
             tile.born = self.t
-        self.sounds.play('flip')
 
     def hideEvent(self, event):
         super().hideEvent(event)
@@ -796,6 +784,8 @@ class Wardrobe(QWidget):
         column = QVBoxLayout()
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setViewportMargins(0, 0, 10, 0)              # The bar runs beside the shelves, not over them.
         holder = Shelves(self)
         self.grid = QGridLayout(holder)
         self.grid.setSpacing(10)
@@ -856,7 +846,6 @@ class Wardrobe(QWidget):
     def choose(self, item):
         self.chosen = item
         self.mirror.burst('reveal_mingyue')                  # A shimmer as it is tried on.
-        self.sounds.play('catch')
         if item['slot'] == 'weapon' and decor.hands().get(decor.frame_file(self.mirror.pose, 0)) is None:
             pass                                             # It floats at her side in this pose.
         self._update_detail()
@@ -920,11 +909,9 @@ class Wardrobe(QWidget):
             return
         if store.equipped().get(item['slot']) == item['id']:
             store.unequip(item['slot'])
-            self.sounds.play('flip')
         elif item['id'] in store.owned():
             store.equip(item['id'])
             self.mirror.burst('reveal_haori')                # Put on: a gold burst.
-            self.sounds.play('flip_fine')
         elif store.buy(item['id']):
             store.equip(item['id'])                          # Bought: put it on.
             self.mirror.burst('reveal_haori')
@@ -971,6 +958,7 @@ class Wardrobe(QWidget):
         while self.featured_row.count():
             entry = self.featured_row.takeAt(0)
             if entry.widget() is not None:
+                entry.widget().hide()                        # Gone now, not when Qt gets round to it.
                 entry.widget().deleteLater()
         lang = self.language
         for item, discount in self.shop.featured():
@@ -1134,6 +1122,7 @@ class Wardrobe(QWidget):
         while self.book.count():
             entry = self.book.takeAt(0)
             if entry.widget() is not None:
+                entry.widget().hide()
                 entry.widget().deleteLater()
         for kind, (got, all_) in self.shop.collection().items():
             line = QWidget()

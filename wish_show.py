@@ -302,6 +302,8 @@ class WishShow(QWidget):
         self.sounds = Sounds(sound)
         self.on_sound = on_sound
         self._cues = [(0.0, 'open')]                        # (show time, sound): played as time passes.
+        self._played = {}
+        self._skipping = False
         self._poses = {}
         self._sky = None
         self.timer = QTimer(self)
@@ -449,6 +451,10 @@ class WishShow(QWidget):
             due = [cue for cue in self._cues if cue[0] <= self.t]
             self._cues = [cue for cue in self._cues if cue[0] > self.t]
             for _, name in due[-4:]:                        # Never a pile-up after a skip.
+                last = self._played.get(name)
+                if last is not None and self.t - last < .45:
+                    continue                                # The same sound again so soon: once is enough.
+                self._played[name] = self.t
                 self.sounds.play(name)
         t, w, h = self.t, self.width(), self.height()
         self._move_her(dt)
@@ -501,18 +507,26 @@ class WishShow(QWidget):
         if self.rank(index) >= 3:                           # Its own opening, then the burst on its flash.
             self.exclusive[index] = self.t + .35
             self.catch[index] = self.exclusive[index] + self.EXCLUSIVE
-            self._cue(self.t, 'catch')
+            if not self._skipping:
+                self._cue(self.t, 'catch')
             self._cue(self.exclusive[index], 'rise_xinghai' if rarity == 'xinghai' else 'rise')
         else:
             self.catch[index] = self.t + self.CHARGE
-            self._cue(self.t, 'catch')
-            self._cue(self.t + .02, 'charge')
-        self._cue(self.catch[index], f'burst_{rarity}')
+            if not self._skipping:
+                self._cue(self.t, 'catch')
+                self._cue(self.t + .02, 'charge')
+        if not self._skipping or not self.queue:            # Skipped: only the last (finest) one sounds.
+            self._cue(self.catch[index], f'burst_{rarity}')
         self.progress = self.catch[index]
         if not self.queue:
             self.flip0 = self.catch[index] + (1.25 if not self.ten else 1.3)
-            for k, card in enumerate(self.order if self.ten else [0]):
-                self._cue(self._flip_time(k), 'flip_fine' if self.rank(card) >= 2 else 'flip')
+            # One turn sound for the row, and a bell for the finest card only: ten cards turn in
+            # under a second, ten sounds would pile into noise.
+            cards = self.order if self.ten else [0]
+            self._cue(self._flip_time(0), 'flip')
+            best = max(range(len(cards)), key=lambda k: self.rank(cards[k]))
+            if self.rank(cards[best]) >= 2:
+                self._cue(self._flip_time(best), 'flip_fine')
             self.length = self.flip0 + (1.0 if not self.ten else 9 * self.STAGGER + 1.0)
 
     def _cue(self, at, name):
@@ -535,9 +549,11 @@ class WishShow(QWidget):
         hand = self.hand()
         if self.t < self.INTRO:
             self.t = self.INTRO
+        self._skipping = True
         while self.queue:
             self._caught(hand)
             self.t += .02
+        self._skipping = False
         self.t = max(self.t, self.flip0 - .3)
 
     def her_size(self):
