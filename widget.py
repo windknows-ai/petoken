@@ -5327,6 +5327,9 @@ class Panel(QWidget):
         self.stardust = Stardust(self)
         from starsea import StarseaForm
         self.starsea = StarseaForm(self)
+        # 2.5 Stardust Shop (its state sits beside the settings).
+        from shop import Shop
+        self.shop = Shop(self, PREF_DIR / 'shop.json')
         QTimer.singleShot(0, self.apply_ring_skin)
         QTimer.singleShot(0, self.starsea.apply)
         self.goal_clock = QTimer(self)

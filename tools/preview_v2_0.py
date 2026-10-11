@@ -275,6 +275,8 @@ class Preview(QWidget):
         form.addRow(row(button('+50 星辉', lambda: self.add_stardust(50)), button('到 150（流星）', lambda: self.stardust_to(150)),
                         button('到 400（极光）', lambda: self.stardust_to(400)), button('到 1000', lambda: self.stardust_to(1000)),
                         button('清零', self.reset_stardust), self.star_state))
+        form.addRow(row(button('商店：+1000 星辉', lambda: self.add_stardust(1000)), button('商店：到第二天', self.shop_next_day),
+                        button('商店：清空', self.shop_reset), button('商店：打开', self.open_shop)))
         skins = QComboBox()
         for label, value in (('原来的', 'default'), ('流星（尾巴更长）', 'meteor'), ('极光（没任务时）', 'aurora')):
             skins.addItem(label, value)
@@ -453,6 +455,26 @@ class Preview(QWidget):
         self.panel.prefs['ring_skin'] = 'default'
         self.panel.apply_ring_skin()
         self._describe_stardust()
+
+    def shop_next_day(self):
+        """Move the shop's clock on a day: new featured items, sign-in again."""
+        shop = self.panel.shop
+        offset = getattr(self, '_shop_days', 0) + 1
+        self._shop_days = offset
+        import time as clock
+        shop.clock = lambda: clock.time() + offset * 86400
+        self.panel.tray_notice('（测试版）商店', f'已经是第 {offset} 天之后。')
+
+    def shop_reset(self):
+        self.panel.shop.state = {}
+        self.panel.shop._save()
+        self.panel.tray_notice('（测试版）商店', '已清空：没买过东西，保底重新计。')
+
+    def open_shop(self):
+        self.panel.open_workbench()
+        window = self.panel.workbench_window
+        if window is not None:
+            window.tabs.setCurrentIndex(window.shop_tab)
 
     def fake_music(self):
         """A made-up rhythm for the Aurora ring, without playing anything."""

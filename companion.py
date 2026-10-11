@@ -94,10 +94,11 @@ class Companion:
                 return []
         except Exception:
             return []
-        star = {'todo_accepted': 'star_review', 'focus_done': 'star_focus'}.get(reason)
+        star = {'todo_accepted': 'star_review', 'focus_done': 'star_focus', 'goal_week': 'star_weekgoal'}.get(reason)
         dust = getattr(self.panel, 'stardust', None)
         if star and dust is not None:
-            dust.gain(star, ref)                 # Stardust too (2.4).
+            # Stardust too (2.4); a kept weekly goal gives the shop's bonus (2.5).
+            dust.gain(star, ref, 30 if star == 'star_weekgoal' else None)
         return self._check()
 
     def earn(self, sticker):

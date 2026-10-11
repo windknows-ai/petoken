@@ -83,6 +83,7 @@ class Stardust:
             seconds = None
         short = seconds is not None and seconds < 60
         fresh = self.gain('star_task_short' if short else 'star_task', ref)
+        fresh += self._daily_goal()
         if seconds:
             steps = int(seconds // TIME_STEP_S)
             room = TIME_DAILY_CAP - self.time_today()
@@ -90,6 +91,23 @@ class Stardust:
             if amount > 0:
                 fresh += self.gain('star_time', ref, amount)
         return fresh
+
+    DAILY_TASKS, DAILY_BONUS = 3, 20
+
+    def _daily_goal(self):
+        """The day's small goal (2.5): three finished AI tasks earn a bonus once."""
+        store = self.store
+        if store is None:
+            return []
+        day = datetime.fromtimestamp(self.clock()).replace(hour=0, minute=0, second=0, microsecond=0)
+        try:
+            rows = store.points_log(400)
+        except Exception:
+            return []
+        done = sum(1 for r in rows if str(r['reason']).startswith('star_task') and r['at'] >= day.timestamp())
+        if done >= self.DAILY_TASKS:
+            return self.gain('star_daily', day.date().isoformat(), self.DAILY_BONUS)
+        return []
 
     def time_today(self):
         store = self.store
