@@ -42,6 +42,11 @@ def set_skin(skin, reserve=None):
     SKIN = skin
     if reserve is not None:
         RESERVE_ROOM = bool(reserve)
+    try:
+        import audio_pulse                      # The aurora moves with whatever is playing.
+        audio_pulse.start() if skin == 'aurora' else audio_pulse.stop()
+    except Exception:
+        pass
     for layer in list(_LAYERS):
         layer.update()
     _wake_skin_clock()
@@ -357,6 +362,8 @@ class HaloLayer(QWidget):
         pose, now = self.pose, fx_now()
         rx = pose.rx
         tall = 1.0 if not self.front else .32
+        import audio_pulse
+        level, beat = audio_pulse.LEVEL, audio_pulse.BEAT        # Music lifts and brightens it.
         strips = self.CURTAIN_STRIPS
         width = max(2.5, 2 * rx / strips * 1.9)
         for i in range(strips):
@@ -364,11 +371,11 @@ class HaloLayer(QWidget):
             x, y = self._xy(angle)
             wave = (.5 + .5 * math.sin(angle * 3.1 + now * .9)) * (.55 + .45 * math.cos(angle * 1.7 - now * .55))
             taper = math.sin(math.pi * (i + .5) / strips) ** .7      # Softly lower towards both ends.
-            height = rx * (.28 + .78 * wave) * tall * taper
+            height = rx * (.28 + .78 * wave) * tall * taper * (1 + .6 * level * (.6 + .4 * wave))
             lean = math.sin(now * .6 + angle * 2.2) * height * .1
             tint = aurora_tint(angle, now)
             top = _lerp(tint, (184, 160, 255), .55)
-            base_alpha = int((175 if not self.front else 60) * (.35 + .65 * taper))
+            base_alpha = int(min(255, (175 if not self.front else 60) * (.35 + .65 * taper) * (1 + .45 * level + .4 * beat)))
             gradient = QLinearGradient(x, y, x + lean, y - height)
             gradient.setColorAt(0, QColor(*tint, base_alpha))
             gradient.setColorAt(.3, QColor(*tint, int(base_alpha * .62)))

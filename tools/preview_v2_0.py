@@ -280,7 +280,8 @@ class Preview(QWidget):
             skins.addItem(label, value)
         skins.currentIndexChanged.connect(lambda _: self.wear_skin(skins.currentData()))
         form.addRow('直接试星环皮肤', skins)
-        form.addRow(row(button('换上 / 换下星海形态（会先补到 1000 星辉）', self.toggle_starsea)))
+        form.addRow(row(button('换上 / 换下星海形态（会先补到 1000 星辉）', self.toggle_starsea),
+                        button('极光：模拟音乐律动（开 / 关）', self.fake_music)))
         self._describe_stardust()
 
         # Projects and notes.
@@ -452,6 +453,12 @@ class Preview(QWidget):
         self.panel.prefs['ring_skin'] = 'default'
         self.panel.apply_ring_skin()
         self._describe_stardust()
+
+    def fake_music(self):
+        """A made-up rhythm for the Aurora ring, without playing anything."""
+        import audio_pulse
+        audio_pulse.FAKE = not audio_pulse.FAKE
+        self.panel.tray_notice('（测试版）模拟音乐', '已打开：极光星环会跟着节拍动。' if audio_pulse.FAKE else '已关闭。')
 
     def toggle_starsea(self):
         self.stardust_to(1000)

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPen
+from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
                                QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
@@ -91,7 +91,7 @@ class SkinCard(QWidget):
             import pet_assets
             pose = 'star_idle' if self.choice == 'starsea' and pet_assets.has_own_art('star_idle') else 'idle'
             pixmap = pet_assets.frame_for(pose, 0) if pet_assets.frame_count(pose) else pet_assets.sprite_for(pose)
-            self._sprite = pixmap.scaledToHeight(80, Qt.SmoothTransformation) if pixmap else False
+            self._sprite = pixmap.scaledToHeight(92, Qt.SmoothTransformation) if pixmap else False
         return self._sprite or None
 
     def mousePressEvent(self, event):
@@ -101,7 +101,7 @@ class SkinCard(QWidget):
     def _ring(self, p, front):
         import math
         import halo_scene
-        cx, cy, rx, ry, tilt = self.W / 2, 88, 58, 11, math.radians(-5)
+        cx, cy, rx, ry, tilt = self.W / 2, 72, 60, 15, math.radians(-7)
 
         def point(t):
             x, y = rx * math.cos(t), ry * math.sin(t)
@@ -157,8 +157,8 @@ class SkinCard(QWidget):
         import halo_scene
         for i in range(40):
             angle = math.pi + math.pi * (i + .5) / 40
-            x = self.W / 2 + 58 * math.cos(angle)
-            y = 88 + 11 * math.sin(angle)
+            x = self.W / 2 + 60 * math.cos(angle)
+            y = 72 + 15 * math.sin(angle)
             height = 30 + 34 * (.5 + .5 * math.sin(angle * 3.1)) * (.6 + .4 * math.cos(angle * 1.7))
             tint = halo_scene.aurora_tint(angle, 0)
             gradient = QLinearGradient(x, y, x, y - height)
@@ -176,17 +176,32 @@ class SkinCard(QWidget):
         p.setPen(QPen(QColor(theme.VIOLET if self.current else theme.BORDER_SOFT), 2.5 if self.current else 1))
         p.setBrush(QColor(36, 30, 78) if self.unlocked else QColor(70, 66, 96))
         p.drawRoundedRect(QRectF(2, 2, self.W - 4, 104), 10, 10)
-        if not self.unlocked:
-            p.setOpacity(.45)
+        # The scene is drawn whole first (ring behind her, her, ring in front),
+        # then faded if locked, so she always hides the back of the ring.
+        from PySide6.QtGui import QImage
+        scene = QImage(self.W * 2, self.H * 2, QImage.Format_ARGB32_Premultiplied)
+        scene.setDevicePixelRatio(2)
+        scene.fill(Qt.transparent)
+        q = QPainter(scene)
+        q.setRenderHint(QPainter.Antialiasing)
+        q.setRenderHint(QPainter.SmoothPixmapTransform)
         if self.choice == 'meteor':
-            self._shooting_stars(p)
+            self._shooting_stars(q)
         elif self.choice == 'aurora':
-            self._curtains(p)
-        self._ring(p, False)
+            self._curtains(q)
+        self._ring(q, False)
         sprite = self.sprite()
         if sprite is not None:
-            p.drawPixmap(int((self.W - sprite.width()) / 2), 97 - sprite.height(), sprite)
-        self._ring(p, True)
+            q.drawPixmap(int((self.W - sprite.width()) / 2), 100 - sprite.height(), sprite)
+        self._ring(q, True)
+        q.end()
+        clip = QPainterPath()
+        clip.addRoundedRect(QRectF(2, 2, self.W - 4, 104), 10, 10)
+        p.save()
+        p.setClipPath(clip)
+        p.setOpacity(1.0 if self.unlocked else .45)
+        p.drawImage(QRectF(0, 0, self.W, self.H), scene)
+        p.restore()
         p.setOpacity(1)
         p.setPen(QColor(theme.INK))
         p.setFont(QFont('Microsoft YaHei UI', 9, QFont.DemiBold))
