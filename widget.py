@@ -7154,7 +7154,7 @@ def ui_selftest(report):
     """--selftest-ui <file>: load every Qt Quick page without showing it and write what went wrong
     (an empty list when all is well). Lets a packaged build be checked without a window."""
     import json
-    from PySide6.QtCore import QUrl, qInstallMessageHandler
+    from PySide6.QtCore import Property, QUrl, Slot, qInstallMessageHandler
     from PySide6.QtQuickWidgets import QQuickWidget
     from PySide6.QtWidgets import QApplication
     messages = []
@@ -7171,12 +7171,58 @@ def ui_selftest(report):
     stand.shop = Shop(stand, Path(tempfile.mkdtemp()) / 'shop.json')
     stand.stardust = None
     bridge = wardrobe.WardrobeBridge(None, stand)
-    view = QQuickWidget()
-    view.engine().addImportPath(str(wardrobe.ROOT / 'ui'))
-    view.engine().addImageProvider('petoken', wardrobe.Pictures(bridge))
-    view.rootContext().setContextProperty('bridge', bridge)
-    view.setSource(QUrl.fromLocalFile(str(wardrobe.ROOT / 'ui' / 'Petoken' / 'Wardrobe.qml')))
-    problems += [e.toString() for e in view.errors()]
+    import quick_ui
+    import widget_mirror
+    from PySide6.QtWidgets import QLabel, QListWidget, QTabWidget, QVBoxLayout, QWidget
+
+    def load(qml, **context):
+        view = QQuickWidget()
+        view.engine().addImportPath(str(quick_ui.QML_DIR))
+        view.engine().addImageProvider('petoken', wardrobe.Pictures(bridge))
+        view.engine().addImageProvider('mirror', widget_mirror._Shared(widget_mirror.images()))
+        for name, value in context.items():
+            view.rootContext().setContextProperty(name, value)
+        view.setSource(QUrl.fromLocalFile(str(quick_ui.QML_DIR / 'Petoken' / qml)))
+        return [e.toString() for e in view.errors()], view
+    errors, keep = load('Wardrobe.qml', bridge=bridge)
+    problems += errors
+    # A page of widgets (as a dialog, as the panel and as the workbench), drawn through the mirror.
+    page = QWidget()
+    column = QVBoxLayout(page)
+    tabs = QTabWidget()
+    tabs.addTab(QLabel('一'), '一')
+    spaces = QListWidget()
+    spaces.addItem('全部')
+    summary, status = QLabel('1'), QLabel('')
+    for widget in (tabs, spaces, summary, status):
+        column.addWidget(widget)
+    mirror = widget_mirror.Mirror(page, widget_mirror.images())
+    views = [keep]
+    for qml in ('MirrorDialog.qml', 'MirrorPanel.qml'):
+
+        class DialogBridge(quick_ui.HostBridge):
+            @Property(str, constant=True)
+            def title(self):
+                return 'Petoken'
+
+            @Slot(float)
+            def fit(self, height):
+                pass
+        dialog_bridge = DialogBridge(None, stand)
+        errors, view = load(qml, bridge=dialog_bridge, mirror=mirror)
+        problems += errors
+        views.append((view, dialog_bridge))
+
+    class Bench:
+        def open_tutorial(self):
+            pass
+    bench = Bench()
+    bench.panel, bench.tabs, bench.project_list, bench.summary, bench.status = stand, tabs, spaces, summary, status
+    import workbench_shell
+    bench_bridge = workbench_shell.WorkbenchBridge(None, bench)
+    errors, view = load('Workbench.qml', bridge=bench_bridge, mirror=mirror)
+    problems += errors
+    views.append((view, bench_bridge))
     problems += [m for m in messages if 'qml' in m.lower() or 'Cannot open' in m]
     Path(report).write_text(json.dumps(problems, ensure_ascii=False, indent=1), encoding='utf-8')
     return 0 if not problems else 1
