@@ -47,24 +47,32 @@ class StardustTests(unittest.TestCase):
 
     def test_gains_count_once_and_stay_apart_from_points(self):
         self.store.add_points('todo_done', 't1', 2, NOW)
-        self.dust.on_finished(finished('a', 30 * 60))          # +3 task, +3 time.
+        self.dust.on_finished(finished('a', 30 * 60))          # +5 task, +5 time.
         self.dust.on_finished(finished('a', 30 * 60))          # Same event: nothing.
-        self.dust.on_finished(finished('b', 20))               # Under a minute: +1.
+        self.dust.on_finished(finished('b', 20))               # Under a minute: +2.
         self.dust.gain('star_review', 'todo-7')
-        self.assertEqual(self.dust.total(), 3 + 3 + 1 + 8)
+        self.assertEqual(self.dust.total(), 5 + 5 + 2 + 12)
         self.assertEqual(self.store.points(), 2)
 
     def test_time_is_capped_per_day(self):
-        self.dust.on_finished(finished('long', 8 * 3600))       # 48 steps, capped at 40.
+        self.dust.on_finished(finished('long', 8 * 3600))       # 80 steps, capped at 60.
         self.dust.on_finished(finished('more', 3600))
         self.assertEqual(self.dust.time_today(), stardust.TIME_DAILY_CAP)
 
+    def test_work_earns_at_most_three_hundred_a_day(self):
+        for n in range(40):                                   # A very heavy day.
+            self.dust.on_finished(finished(f'w{n}', 40 * 60))
+            self.dust.gain('star_review', f'r{n}')
+        self.assertEqual(self.dust.work_today(), stardust.WORK_DAILY_CAP)
+        self.dust.gain('star_signin', 'today', 10)              # Sign-in comes on top.
+        self.assertEqual(self.dust.total(), stardust.WORK_DAILY_CAP + 10)
+
     def test_unlocks_fire_once_in_order(self):
         self.assertEqual(next_unlock(0), ('skin_meteor', 150))
-        self.dust.gain('star_review', 'x', 149)
+        self.dust.gain('star_gift', 'x', 149)
         self.assertEqual(self.panel.unlocks, [])
-        self.assertEqual(self.dust.gain('star_review', 'y', 300), ['skin_meteor', 'skin_aurora'])
-        self.dust.gain('star_review', 'z', 1)
+        self.assertEqual(self.dust.gain('star_gift', 'y', 300), ['skin_meteor', 'skin_aurora'])
+        self.dust.gain('star_gift', 'z', 1)
         self.assertEqual(self.panel.unlocks, ['skin_meteor', 'skin_aurora'])
         self.assertEqual(unlocked(1000), ['skin_meteor', 'skin_aurora', 'starsea'])
         self.assertIsNone(next_unlock(1000))
@@ -73,7 +81,7 @@ class StardustTests(unittest.TestCase):
         import random
         from shop import Shop
         from wardrobe import Wardrobe
-        self.dust.gain('star_review', 'x', 200)
+        self.dust.gain('star_gift', 'x', 200)
         self.panel.stardust = self.dust
         self.panel.apply_ring_skin = mock.Mock()
         self.panel.persist = mock.Mock()
@@ -83,7 +91,7 @@ class StardustTests(unittest.TestCase):
         self.assertEqual(bridge.milestone['totalText'], 'Stardust 200')
         self.assertAlmostEqual(bridge.milestone['fraction'], 200 / 400)
         self.assertIn('200 more', bridge.milestone['nextText'])
-        self.assertIn('+8', bridge.milestone['earnText'])
+        self.assertIn('+12', bridge.milestone['earnText'])
         cards = {c['key']: c for c in bridge.skins}
         self.assertEqual([k for k, c in cards.items() if c['unlocked']], ['default', 'meteor'])
         self.assertEqual(cards['aurora']['caption'], 'Unlocks at 400')
@@ -126,8 +134,8 @@ class PanelStardustTests(unittest.TestCase):
         self.panel.apply_ring_skin()
         self.assertEqual(halo_scene.SKIN, 'default')          # Not unlocked yet.
         self.panel.announce(finished('k1', 15 * 60))
-        self.assertEqual(self.panel.stardust.total(), 3 + 1)
-        self.panel.stardust.gain('star_review', 'big', 150)
+        self.assertEqual(self.panel.stardust.total(), 5 + 2)
+        self.panel.stardust.gain('star_gift', 'big', 150)
         self.assertEqual((self.panel.prefs['ring_skin'], halo_scene.SKIN), ('meteor', 'meteor'))
 
     def test_starsea_form_after_unlock_and_only_when_chosen(self):
@@ -138,7 +146,7 @@ class PanelStardustTests(unittest.TestCase):
         pet.activity_timer.stop()
         self.addCleanup(pet.close)
         self.assertFalse(self.panel.starsea.available())          # Not unlocked yet.
-        self.panel.stardust.gain('star_review', 'big', 1000)
+        self.panel.stardust.gain('star_gift', 'big', 1000)
         self.assertTrue(self.panel.starsea.available())
         self.assertFalse(self.panel.starsea.active)               # Never put on by itself.
         self.assertTrue(self.panel.starsea.toggle())

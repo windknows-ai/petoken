@@ -1,4 +1,4 @@
-"""2.5 Stardust Shop (test build: prices and odds are placeholders).
+"""2.5 Stardust Shop (wish price and odds set by the person; item prices still placeholders).
 
 Two balances (docs/V2_5_SHOP_PLAN.md):
 - earned stardust (stardust.Stardust.total(), never goes down) decides the
@@ -8,7 +8,8 @@ Two balances (docs/V2_5_SHOP_PLAN.md):
 Items come in three sets (outfits, weapons, decorations), each with its own
 rarity spread Starsea:Galaxy:Sun:Moon:Stars = 1:3:9:18:27 (scaled), and the
 Starsea rarity only comes from wishing. Every day four items are featured,
-each with a discount the person draws once (60 % .. 95 %).
+each with a discount the person draws once (60 % .. 95 %). A wish costs 250
+(ten for 2500); a heavy day of work earns about 300.
 
 The shop's own state (what was bought, spent, the wish counter, what is worn,
 saved outfits, today's featured items) lives in a small JSON file beside the
@@ -31,11 +32,12 @@ GRIP = (627, 900)             # Where every weapon picture is held (Codex drew t
 RARITIES = ('fanxing', 'mingyue', 'haori', 'yinhe', 'xinghai')      # Low .. high.
 SETS = ('outfit', 'weapon', 'decor')
 SLOTS = ('outfit', 'weapon', 'head', 'back', 'ground', 'buddy', 'star')
-# Placeholders until the person sets the real numbers.
+# Item prices are still placeholders; the wish price and odds are the person's (2026-10-12).
 PRICES = dict(fanxing=80, mingyue=200, haori=500, yinhe=1200)
-WISH_COST = 100
-TEN_COST = 1000
-ODDS = (('xinghai', .02), ('yinhe', .06), ('haori', .14), ('mingyue', .30), ('fanxing', .48))
+WISH_COST = 250
+TEN_COST = 2500
+# Starsea 0.6%, Galaxy 1.5%, Sun 4%, Moon 15%, the rest (78.9%) Stars.
+ODDS = (('xinghai', .006), ('yinhe', .015), ('haori', .04), ('mingyue', .15), ('fanxing', .789))
 PITY = 60                     # A Starsea item at the latest on this wish.
 REFUND = .5                   # A duplicate gives back this share of its value.
 VALUE = dict(PRICES, xinghai=3000)

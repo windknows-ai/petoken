@@ -42,7 +42,7 @@ class ShopTests(unittest.TestCase):
         self.panel.shop = self.shop
 
     def give(self, amount):
-        self.panel.stardust.gain('star_review', f'gift-{amount}-{self.now[0]}', amount)
+        self.panel.stardust.gain('star_gift', f'gift-{amount}-{self.now[0]}', amount)
 
     def test_spending_never_lowers_earned_stardust(self):
         self.give(500)
@@ -213,12 +213,12 @@ class ShopTests(unittest.TestCase):
             pass
         owner = Owner()
         owner.panel = self.panel
-        self.give(3000)
+        self.give(8000)
         page = ShopPage(owner)
         page.resize(900, 900)
         page.apply_language()
         self.assertEqual(len([c for c in page.cards if c.parent() is not None]) >= shop.FEATURED, True)
-        self.assertIn('3000', page.balance.text())
+        self.assertIn('8000', page.balance.text())
         for results in (self.shop.wish(10), self.shop.wish(1)):
             show = WishShow(None, results, 'zh_CN')
             show.timer.stop()

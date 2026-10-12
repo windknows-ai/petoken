@@ -1,9 +1,11 @@
 """Stardust (2.4): what the AIs got done for you, saved up for unlocks.
 
 Like companionship points it rewards work that helped you, never tokens
-spent: a finished AI task (+3, +1 when it took under a minute), AI work you
-accepted after review (+8), a focus round (+5), and the AI's working time
-(+1 per 10 minutes of a finished task, at most +40 a day). Each award counts
+spent: a finished AI task (+5, +2 when it took under a minute), AI work you
+accepted after review (+12), a focus round (+8), and the AI's working time
+(+1 per 6 minutes of a finished task, at most +60 a day). A heavy day of work
+earns about 300, and work never earns more than WORK_DAILY_CAP a day (sign-in,
+streaks and collection bonuses come on top). Each award counts
 once (by reason and a reference), stored with the points under a ``star_``
 reason so the two totals never mix.
 
@@ -16,9 +18,11 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
-GAINS = dict(star_task=3, star_task_short=1, star_review=8, star_focus=5)
-TIME_STEP_S = 10 * 60
-TIME_DAILY_CAP = 40
+GAINS = dict(star_task=5, star_task_short=2, star_review=12, star_focus=8)
+TIME_STEP_S = 6 * 60
+TIME_DAILY_CAP = 60
+WORK = ('star_task', 'star_task_short', 'star_review', 'star_focus', 'star_time', 'star_daily')
+WORK_DAILY_CAP = 300                  # What a heavy day of work earns at most (one wish is 250).
 UNLOCKS = (('skin_meteor', 150), ('skin_aurora', 400), ('starsea', 1000))
 SKINS = ('default', 'meteor', 'aurora')
 
@@ -64,7 +68,10 @@ class Stardust:
     def gain(self, reason, ref, amount=None):
         """Add stardust once per (reason, ref); returns what it newly unlocked."""
         before = self.total()
-        if not self._add(reason, ref, GAINS.get(reason, 0) if amount is None else amount):
+        amount = GAINS.get(reason, 0) if amount is None else amount
+        if reason in WORK:
+            amount = min(amount, max(0, WORK_DAILY_CAP - self.work_today()))
+        if not self._add(reason, ref, amount):
             return []
         fresh = [name for name in unlocked(self.total()) if name not in unlocked(before)]
         for name in fresh:
@@ -108,6 +115,17 @@ class Stardust:
         if done >= self.DAILY_TASKS:
             return self.gain('star_daily', day.date().isoformat(), self.DAILY_BONUS)
         return []
+
+    def work_today(self):
+        """Stardust earned by work since midnight (the part WORK_DAILY_CAP limits)."""
+        store = self.store
+        if store is None:
+            return 0
+        day = datetime.fromtimestamp(self.clock()).replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+        try:
+            return sum(store.stardust(reason=reason, since=day) for reason in WORK)
+        except Exception:
+            return 0
 
     def time_today(self):
         store = self.store
