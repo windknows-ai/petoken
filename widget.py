@@ -7219,6 +7219,10 @@ def ui_selftest(report):
             @Slot(float)
             def fitWidth(self, width):
                 pass
+
+            @Slot(float)
+            def fitWidth(self, width):
+                pass
         dialog_bridge = DialogBridge(None, stand)
         errors, view = load(qml, bridge=dialog_bridge, mirror=mirror)
         problems += errors
