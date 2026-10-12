@@ -1,63 +1,64 @@
-# Game-form art checkpoint
+# Game-form art delivery
 
-Task is **incomplete**: 71 of the corrected 96 requested sprite PNGs exist.
-Branch: `codex/forms-game`; isolated checkout: `D:/Documents/ChatGPT/petoken-forms-game`.
-Only this asset folder was changed. No code, existing art, root handoff files,
-Claude checkout, merge, push or publication was changed/performed.
+**Complete: 41 actions, 96 sprite PNGs, and FORMS_GAME_PREVIEW.png.**
+Branch: `codex/forms-game`; checkout: `D:/Documents/ChatGPT/petoken-forms-game`.
+All changes relative to base `ad44b23` are additions inside this asset folder.
+No application code or existing artwork changed. No merge, push or publication.
 
 ## Current progress
 
-- Updated user specification: 41 actions / 96 PNGs. Original planned-but-missing
-  default frames were explicitly removed by the user. The authoritative updated
-  table is `D:/Documents/ChatGPT/petoken-claude/docs/form_art/FORM_ART_2_GAME.md`.
-  The isolated checkout's old copy of that document is stale; do not edit it.
-- 71 wardrobe edits generated with the built-in image_gen tool, using each
-  exact default pose and `assets/v2_1/form2_idle_1.png` as the armor reference.
-- All 71 sprites checked as 1254x1254 RGBA with actual transparent pixels.
-- Lower-body registration below y=1000 matches each original alpha>8 bottom
-  anchor; the entire upper region remains unchanged during registration.
-- 32 subsequent frames reuse the original source motion masks, preserving
-  every RGBA pixel outside the permitted moving regions. This prevents armor
-  and hair details from changing across an animation.
-- `FORMS_GAME_PREVIEW.png` is a **progress** contact sheet with 25 PENDING slots,
-  not the final complete overview. No placeholder sprite files were created.
-- Per-file sources, missing filenames and next step: `GENERATION_STATE.json`.
-  Final pixel/dimension/hash checks: `VALIDATION.json`. Generated raw paths and
-  full drawing prompts: `GENERATION_PROMPTS.json`.
+- The user corrected the original 119-frame plan to the 96 actual default
+  frames. The authoritative updated table is
+  `D:/Documents/ChatGPT/petoken-claude/docs/form_art/FORM_ART_2_GAME.md`;
+  its SHA256 and all exact per-frame source paths are in GENERATION_STATE.json.
+  The isolated checkout's older task document is stale and intentionally untouched.
+- Every requested sprite was drawn with built-in image_gen, editing its exact
+  default pose with `assets/v2_1/form2_idle_1.png` as the game armor reference.
+  GENERATION_PROMPTS.json contains all 96 prompts and generated raw file paths.
+- All 96 filenames, 1254x1254 RGBA dimensions, real alpha, transparent corners
+  and immutable original hashes passed validation. All final hair-contour
+  registration offsets and alpha>8 bottom-baseline deltas are zero.
+- All 54 follow-up frames, including all 20 blinks, passed exact RGBA equality
+  outside their original permitted motion/eye masks. Blinks keep the complete
+  game-form first-frame body, armor, props and mouth fixed.
+- All source/output action sheets, all 20 closed-eye frames, composition seams
+  and the complete contact sheet were visually inspected. The overview has all
+  96 actual sprites and contains no PENDING placeholders.
+- Evidence: VALIDATION.json, FINAL_HEAD_CHECK.json, HEAD_REGISTRATION.json,
+  BASELINE_REGISTRATION.json, FRAME_CONTINUITY.json and COMPOSITION_PLAN.json.
 
-## Blocker and next steps
+## Decisions
 
-Built-in image_gen returned HTTP 429 `usage_limit_reached`, a 1440-minute Plus
-quota window. Reported reset: **2026-10-12 16:45:33 America/Toronto**
-(20:45:33 UTC, Unix 1791837933). Do not repeatedly retry before the reset.
-No paid API fallback or key access has been authorized.
+- Preserve each default pose instead of substituting the standing game idle.
+  Original occupied-hand props remain in place; armor is fitted to the existing
+  anatomy. Source-pose scale is unchanged during integer head registration.
+- Match hair-contour edges above y=850 to position the head. Register only the
+  lower region below y=1000 to its original bottom anchor; upper anatomy is not
+  scaled. These checks measure placement, not clothing-pixel identity.
+- Reuse the project's existing animation masks to prevent wardrobe/hair jitter.
+  The second stretch frame needed one mask adjustment: old stocking-only foot
+  protect polygons erased its registered armored-boot toe. Its full-body mask
+  now uses the already registered child feet and extends below the baseline to
+  avoid feather attenuation. Final head/bottom and fixed-region checks pass.
+- Initial 71-frame checkpoint: `5eea302`. The drawing quota interruption was
+  resolved after the user chose to wait for built-in generation; the remaining
+  25 frames were subsequently generated. No API fallback or key access used.
 
-1. Generate missing primary frames: `focus_done_1`, `stretch_break_1`,
-   `stretch_break_2`, `worried_2`, `proud_1`, using the exact table references.
-2. Generate all 20 `_blink` files as eye-only edits of the finished matching
-   game-form `_1` PNG, with the corresponding default blink as eye reference.
-   Sixteen attempted blink calls failed with the quota error; no blink PNG
-   exists yet. Four blink calls were not attempted after the limit was known.
-3. Finish registration, original motion-mask composition and visual inspection.
-   Pixel-perfect individual head/hand/foot landmark agreement has not been
-   numerically certified; do not claim complete pose acceptance yet.
-4. Validate the exact 96 filenames, RGBA/dimensions/transparency, outside-eye
-   equality for every blink, frame continuity, immutable source hashes and
-   allowed-directory-only Git changes. Replace the progress contact sheet with
-   the completed overview, update these records, and make the final local commit.
-5. Do not push, merge, tag or publish.
+## Next steps and open issues
 
-## Local finishing tools
+- This report belongs to the final local commit; use `git log -1` for its hash.
+- User owns final aesthetic acceptance and Claude owns integration if requested.
+  No known file, transparency, anchor-registration or animation-mask failure remains.
+- Stop after the final local commit/report. Do not merge, push, tag or publish.
 
-Authoring helpers are outside the repository at:
-`C:/Users/fengz/.codex/visualizations/2026/10/12/01a12eca-e5b7-7be1-87bd-8038dabcf65e/`:
-`game_pixels.ps1`, `game_compose.ps1`, and `game_sheet.ps1`.
-They use the installed System.Drawing runtime; no Python or new dependency was
-used. Compilation needs the installed .NET 10 Drawing.Common, Primitives,
-Private.Windows.GdiPlus and Private.Windows.Core assemblies. Initial compiler
-reference failures were repaired; no sprite was changed by the failed checks.
+## Project conventions and rework
 
-`COMPOSITION_PLAN.json` records the reusable parts/polygons and parents from
-the existing default-form validation files. Do not repeatedly composite already
-finished sprites: restore the applicable generated raw PNG first if a rework is
-needed, register its lower region, then apply the relevant motion-mask entry.
+- Exact corrected 41-action / 96-filename list; do not add nonexistent planned
+  default frames. The overview is additional to the 96 transparent sprite PNGs.
+- Authoring helpers live outside the repository at
+  `C:/Users/fengz/.codex/visualizations/2026/10/12/01a12eca-e5b7-7be1-87bd-8038dabcf65e/`:
+  game_pixels.ps1, game_compose.ps1, game_validate.ps1, game_sheet.ps1.
+  They use the installed System.Drawing runtime; no Python/new dependency used.
+- For rework, restore the relevant raw output from GENERATION_PROMPTS.json,
+  apply its recorded registration, then compose the applicable motion-mask entry.
+  Do not repeatedly composite a finished PNG. Preserve this art-only write scope.

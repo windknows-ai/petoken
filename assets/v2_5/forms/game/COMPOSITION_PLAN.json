@@ -2324,50 +2324,14 @@
         40,
         8,
         1213,
-        1218
+        1254
       ]
     ],
     "feather_px": 2,
     "mask_source": "REMAINING.method.parts",
     "is_blink": false,
-    "protect": [
-      [
-        [
-          437,
-          1216
-        ],
-        [
-          473,
-          1216
-        ],
-        [
-          473,
-          1253
-        ],
-        [
-          437,
-          1253
-        ]
-      ],
-      [
-        [
-          833,
-          1216
-        ],
-        [
-          867,
-          1216
-        ],
-        [
-          867,
-          1253
-        ],
-        [
-          833,
-          1253
-        ]
-      ]
-    ]
+    "protect": [],
+    "mask_refinement": "Whole-body mask extends below baseline to avoid feather attenuation. Original stocking-only foot protect polygons removed: they erase the independently registered armored boot toe. The child boot silhouette already matches its exact reference baseline."
   },
   {
     "file": "stretch_break_blink.png",
