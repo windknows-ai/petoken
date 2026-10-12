@@ -164,22 +164,30 @@ class ShopTests(unittest.TestCase):
         self.assertEqual(self.shop.equipped()['head'], crown['id'])
         w._act()                                                  # Take it off again.
         self.assertNotIn('head', self.shop.equipped())
-        for kind in ('weapon', 'back', 'star'):
+        self.assertEqual(w.errors, [])                              # The Qt Quick page loads cleanly.
+        bridge = w.bridge
+        for kind in ('weapon', 'back', 'star', 'outfit'):
             w.set_kind(kind)
-            self.assertTrue(all(t.item['slot'] == kind for t in w.tiles))
+            shown = [shop.BY_ID[i['id']]['slot'] for i in bridge.pageItems]
+            self.assertTrue(shown and all(slot == kind for slot in shown))
+        w.set_kind('head')                                          # 18 pieces: two pages of shelves.
+        self.assertEqual(bridge.pageCount, 2)
+        bridge.turn(1)
+        self.assertEqual(len(bridge.pageItems), 2)
+        from wardrobe import portrait
         for pose in ('cheer', 'idle'):
             w.set_pose(pose)
-            self.assertFalse(w.mirror.grab().isNull())
+            image = portrait(self.panel, w.preview_items(), pose, 300, 420)
+            self.assertGreater(image.pixelColor(150, 300).alpha(), 0)  # She is in the mirror.
         for page in range(3):
-            w.pages.setCurrentIndex(page)
+            bridge.setPage(page)
             self.assertFalse(w.grab().isNull())
-        from PySide6.QtWidgets import QWidget
-        # No graphics effects anywhere: nested ones are not drawn (the wish buttons vanished).
-        self.assertEqual([c for c in w.findChildren(QWidget) if c.graphicsEffect() is not None], [])
-        before = w.signin.text()
+        self.assertEqual(len(bridge.featured), shop.FEATURED)
+        self.assertEqual(len(bridge.skins), 4)
+        before = bridge.signText
         w._sign_in()
-        self.assertNotEqual(w.signin.text(), before)                # Signed in: shown at once.
-        self.assertFalse(w.signin.isEnabled())
+        self.assertNotEqual(bridge.signText, before)                # Signed in: shown at once.
+        self.assertTrue(bridge.signedIn)
         w.close()
 
     def test_limited_items_only_in_their_window(self):

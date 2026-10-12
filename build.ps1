@@ -38,6 +38,8 @@ try {
         --specpath $specDirectory `
         --icon (Join-Path $repo 'assets\petoken.ico') `
         --add-data "$(Join-Path $repo 'assets');assets" `
+        --add-data "$(Join-Path $repo 'ui');ui" `
+        --hidden-import PySide6.QtQuick --hidden-import PySide6.QtQuickWidgets --hidden-import PySide6.QtQml `
         --collect-submodules winrt `
         --exclude-module PIL `
         (Join-Path $repo 'widget.py')

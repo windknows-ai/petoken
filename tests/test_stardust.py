@@ -79,19 +79,20 @@ class StardustTests(unittest.TestCase):
         self.panel.persist = mock.Mock()
         self.panel.shop = Shop(self.panel, self.store_path.parent / 'shop.json', rng=random.Random(1))
         page = Wardrobe(self.panel)
-        self.assertEqual(page.stardust.text(), 'Stardust 200')
-        self.assertEqual((page.stardust_bar.value(), page.stardust_bar.maximum()), (200, 400))
-        self.assertIn('200 more', page.stardust_next.text())
-        self.assertIn('+8', page.stardust_earn.text())
-        cards = page.skin_cards
-        self.assertEqual([c for c, card in cards.items() if card.unlocked], ['default', 'meteor'])
-        self.assertEqual(cards['aurora'].caption, 'Unlocks at 400')
-        self.assertTrue(cards['default'].current)
-        cards['meteor'].on_click('meteor')
+        bridge = page.bridge
+        self.assertEqual(bridge.milestone['totalText'], 'Stardust 200')
+        self.assertAlmostEqual(bridge.milestone['fraction'], 200 / 400)
+        self.assertIn('200 more', bridge.milestone['nextText'])
+        self.assertIn('+8', bridge.milestone['earnText'])
+        cards = {c['key']: c for c in bridge.skins}
+        self.assertEqual([k for k, c in cards.items() if c['unlocked']], ['default', 'meteor'])
+        self.assertEqual(cards['aurora']['caption'], 'Unlocks at 400')
+        self.assertTrue(cards['default']['current'])
+        bridge.chooseSkin('meteor')
         self.assertEqual(self.panel.prefs['ring_skin'], 'meteor')
         self.panel.apply_ring_skin.assert_called()
-        self.assertTrue(cards['meteor'].current)
-        self.assertFalse(cards['meteor'].grab().isNull())
+        self.assertTrue({c['key']: c for c in bridge.skins}['meteor']['current'])
+        self.assertFalse(bridge.skin_image('meteor').isNull())
         page.deleteLater()
 
 

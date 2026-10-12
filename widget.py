@@ -6436,7 +6436,7 @@ class Panel(QWidget):
             pet.decor.refresh()
         window = getattr(self, 'wardrobe_window', None)
         if window is not None and window.isVisible():
-            window.mirror.update()
+            window.refresh()
 
     def stardust_unlocked(self, name):
         """A new unlock: she is delighted, a notice says what it is."""
@@ -7145,7 +7145,41 @@ class Panel(QWidget):
         return True
 
 
+def ui_selftest(report):
+    """--selftest-ui <file>: load every Qt Quick page without showing it and write what went wrong
+    (an empty list when all is well). Lets a packaged build be checked without a window."""
+    import json
+    from PySide6.QtCore import QUrl, qInstallMessageHandler
+    from PySide6.QtQuickWidgets import QQuickWidget
+    from PySide6.QtWidgets import QApplication
+    messages = []
+    qInstallMessageHandler(lambda mode, context, message: messages.append(message))
+    app = QApplication.instance() or QApplication(sys.argv[:1])  # noqa: F841
+    import wardrobe
+    wardrobe.load_fonts()
+    problems = []
+
+    class Stand:                               # Enough of a panel to load the page.
+        prefs = dict(language='zh_CN')
+    from shop import Shop
+    stand = Stand()
+    stand.shop = Shop(stand, Path(tempfile.mkdtemp()) / 'shop.json')
+    stand.stardust = None
+    bridge = wardrobe.WardrobeBridge(None, stand)
+    view = QQuickWidget()
+    view.engine().addImportPath(str(wardrobe.ROOT / 'ui'))
+    view.engine().addImageProvider('petoken', wardrobe.Pictures(bridge))
+    view.rootContext().setContextProperty('bridge', bridge)
+    view.setSource(QUrl.fromLocalFile(str(wardrobe.ROOT / 'ui' / 'Petoken' / 'Wardrobe.qml')))
+    problems += [e.toString() for e in view.errors()]
+    problems += [m for m in messages if 'qml' in m.lower() or 'Cannot open' in m]
+    Path(report).write_text(json.dumps(problems, ensure_ascii=False, indent=1), encoding='utf-8')
+    return 0 if not problems else 1
+
+
 def main():
+    if '--selftest-ui' in sys.argv[1:]:
+        return ui_selftest(sys.argv[sys.argv.index('--selftest-ui') + 1])
     if '--preview-workbench' in sys.argv[1:]:
         if __name__ == '__main__':
             sys.modules['widget'] = sys.modules[__name__]

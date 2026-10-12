@@ -1,0 +1,17 @@
+module Petoken
+singleton Theme 1.0 Theme.qml
+GemButton 1.0 components/GemButton.qml
+Icon 1.0 components/Icon.qml
+Chip 1.0 components/Chip.qml
+TabStrip 1.0 components/TabStrip.qml
+Dome 1.0 components/Dome.qml
+Doors 1.0 components/Doors.qml
+Mirror 1.0 components/Mirror.qml
+GlassPanel 1.0 components/GlassPanel.qml
+StarField 1.0 components/StarField.qml
+WindowShell 1.0 components/WindowShell.qml
+Page 1.0 Page.qml
+ClosetPage 1.0 ClosetPage.qml
+ShopPage 1.0 ShopPage.qml
+MilestonePage 1.0 MilestonePage.qml
+Wardrobe 1.0 Wardrobe.qml

@@ -36,7 +36,7 @@ class DiscountDraw(QWidget):
         self.host = parent.window() if parent is not None else None
         if self.host is not None:
             super().__init__(self.host)
-            self.setGeometry(self.host.rect())
+            self.setGeometry(self.host.overlay_rect() if hasattr(self.host, "overlay_rect") else self.host.rect())
             self.host.installEventFilter(self)
         else:
             super().__init__(None, Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -191,7 +191,7 @@ class DiscountDraw(QWidget):
 
     def eventFilter(self, obj, event):
         if obj is self.host and event.type() == QEvent.Resize:
-            self.setGeometry(self.host.rect())
+            self.setGeometry(self.host.overlay_rect() if hasattr(self.host, "overlay_rect") else self.host.rect())
         return False
 
     def closeEvent(self, event):

@@ -257,7 +257,7 @@ class WishShow(QWidget):
         self.ten = len(results) > 1
         self.t = 0.0
         if self.host is not None:
-            self.setGeometry(self.host.rect())
+            self.setGeometry(self.host.overlay_rect() if hasattr(self.host, "overlay_rect") else self.host.rect())
             self.host.installEventFilter(self)
         else:
             self.resize(1000, 640)
@@ -367,7 +367,7 @@ class WishShow(QWidget):
 
     def eventFilter(self, obj, event):
         if obj is self.host and event.type() == QEvent.Resize:
-            self.setGeometry(self.host.rect())              # Always the whole window it lives in.
+            self.setGeometry(self.host.overlay_rect() if hasattr(self.host, "overlay_rect") else self.host.rect())
         return False
 
     def closeEvent(self, event):
