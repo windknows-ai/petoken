@@ -47,19 +47,19 @@ class StardustTests(unittest.TestCase):
 
     def test_gains_count_once_and_stay_apart_from_points(self):
         self.store.add_points('todo_done', 't1', 2, NOW)
-        self.dust.on_finished(finished('a', 30 * 60))          # +5 task, +5 time.
+        self.dust.on_finished(finished('a', 30 * 60))          # +10 task, +10 time.
         self.dust.on_finished(finished('a', 30 * 60))          # Same event: nothing.
-        self.dust.on_finished(finished('b', 20))               # Under a minute: +2.
+        self.dust.on_finished(finished('b', 20))               # Under a minute: +4.
         self.dust.gain('star_review', 'todo-7')
-        self.assertEqual(self.dust.total(), 5 + 5 + 2 + 12)
+        self.assertEqual(self.dust.total(), 10 + 10 + 4 + 24)
         self.assertEqual(self.store.points(), 2)
 
     def test_time_is_capped_per_day(self):
-        self.dust.on_finished(finished('long', 8 * 3600))       # 80 steps, capped at 60.
+        self.dust.on_finished(finished('long', 8 * 3600))       # 160 steps, capped at 120.
         self.dust.on_finished(finished('more', 3600))
         self.assertEqual(self.dust.time_today(), stardust.TIME_DAILY_CAP)
 
-    def test_work_earns_at_most_three_hundred_a_day(self):
+    def test_work_earns_at_most_the_daily_cap(self):
         for n in range(40):                                   # A very heavy day.
             self.dust.on_finished(finished(f'w{n}', 40 * 60))
             self.dust.gain('star_review', f'r{n}')
@@ -91,7 +91,7 @@ class StardustTests(unittest.TestCase):
         self.assertEqual(bridge.milestone['totalText'], 'Stardust 200')
         self.assertAlmostEqual(bridge.milestone['fraction'], 200 / 400)
         self.assertIn('200 more', bridge.milestone['nextText'])
-        self.assertIn('+12', bridge.milestone['earnText'])
+        self.assertIn('+24', bridge.milestone['earnText'])
         cards = {c['key']: c for c in bridge.skins}
         self.assertEqual([k for k, c in cards.items() if c['unlocked']], ['default', 'meteor'])
         self.assertEqual(cards['aurora']['caption'], 'Unlocks at 400')
@@ -134,7 +134,7 @@ class PanelStardustTests(unittest.TestCase):
         self.panel.apply_ring_skin()
         self.assertEqual(halo_scene.SKIN, 'default')          # Not unlocked yet.
         self.panel.announce(finished('k1', 15 * 60))
-        self.assertEqual(self.panel.stardust.total(), 5 + 2)
+        self.assertEqual(self.panel.stardust.total(), 10 + 5)
         self.panel.stardust.gain('star_gift', 'big', 150)
         self.assertEqual((self.panel.prefs['ring_skin'], halo_scene.SKIN), ('meteor', 'meteor'))
 

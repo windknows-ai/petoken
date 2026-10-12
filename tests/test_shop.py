@@ -86,7 +86,7 @@ class ShopTests(unittest.TestCase):
         before = self.shop.spendable()
         again = self.shop._roll()
         self.assertEqual(again['item']['id'], first['item']['id'])
-        self.assertEqual(again['refund'], int(shop.VALUE['fanxing'] * shop.REFUND))
+        self.assertEqual(again['refund'], shop.REFUND)
         self.assertEqual(self.shop.spendable(), before + again['refund'])
 
     def test_not_enough_stardust(self):

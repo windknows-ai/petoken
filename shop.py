@@ -1,4 +1,4 @@
-"""2.5 Stardust Shop (wish price and odds set by the person; item prices still placeholders).
+"""2.5 Stardust Shop (prices, wish price and odds set by the person).
 
 Two balances (docs/V2_5_SHOP_PLAN.md):
 - earned stardust (stardust.Stardust.total(), never goes down) decides the
@@ -8,8 +8,8 @@ Two balances (docs/V2_5_SHOP_PLAN.md):
 Items come in three sets (outfits, weapons, decorations), each with its own
 rarity spread Starsea:Galaxy:Sun:Moon:Stars = 1:3:9:18:27 (scaled), and the
 Starsea rarity only comes from wishing. Every day four items are featured,
-each with a discount the person draws once (60 % .. 95 %). A wish costs 250
-(ten for 2500); a heavy day of work earns about 300.
+each with a discount the person draws once (60 % .. 95 %). A wish costs 300
+(ten for 3000); a heavy day of work earns about 600; a duplicate gives back 100.
 
 The shop's own state (what was bought, spent, the wish counter, what is worn,
 saved outfits, today's featured items) lives in a small JSON file beside the
@@ -32,15 +32,14 @@ GRIP = (627, 900)             # Where every weapon picture is held (Codex drew t
 RARITIES = ('fanxing', 'mingyue', 'haori', 'yinhe', 'xinghai')      # Low .. high.
 SETS = ('outfit', 'weapon', 'decor')
 SLOTS = ('outfit', 'weapon', 'head', 'back', 'ground', 'buddy', 'star')
-# Item prices are still placeholders; the wish price and odds are the person's (2026-10-12).
-PRICES = dict(fanxing=80, mingyue=200, haori=500, yinhe=1200)
-WISH_COST = 250
-TEN_COST = 2500
+# The person's numbers (2026-10-12).
+PRICES = dict(fanxing=200, mingyue=800, haori=1800, yinhe=4500)
+WISH_COST = 300
+TEN_COST = 3000
 # Starsea 0.6%, Galaxy 1.5%, Sun 4%, Moon 15%, the rest (78.9%) Stars.
 ODDS = (('xinghai', .006), ('yinhe', .015), ('haori', .04), ('mingyue', .15), ('fanxing', .789))
 PITY = 60                     # A Starsea item at the latest on this wish.
-REFUND = .5                   # A duplicate gives back this share of its value.
-VALUE = dict(PRICES, xinghai=3000)
+REFUND = 100                  # A duplicate from a wish gives back this much stardust, whatever its rarity.
 DISCOUNTS = (.6, .65, .7, .75, .8, .85, .9, .95)
 FEATURED = 4
 SIGNIN, STREAK_DAYS, STREAK_BONUS = 10, 7, 50
@@ -166,7 +165,7 @@ class Shop:
     def _own(self, item_id, source):
         owned = self.state.setdefault('owned', [])
         if item_id in owned:
-            refund = int(VALUE[BY_ID[item_id]['rarity']] * REFUND)
+            refund = REFUND
             self.state['refunds'] = self.state.get('refunds', 0) + refund
             return refund
         owned.append(item_id)

@@ -1,10 +1,10 @@
 """Stardust (2.4): what the AIs got done for you, saved up for unlocks.
 
 Like companionship points it rewards work that helped you, never tokens
-spent: a finished AI task (+5, +2 when it took under a minute), AI work you
-accepted after review (+12), a focus round (+8), and the AI's working time
-(+1 per 6 minutes of a finished task, at most +60 a day). A heavy day of work
-earns about 300, and work never earns more than WORK_DAILY_CAP a day (sign-in,
+spent: a finished AI task (+10, +4 when it took under a minute), AI work you
+accepted after review (+24), a focus round (+16), and the AI's working time
+(+1 per 3 minutes of a finished task, at most +120 a day). A heavy day of work
+earns about 600, and work never earns more than WORK_DAILY_CAP a day (sign-in,
 streaks and collection bonuses come on top). Each award counts
 once (by reason and a reference), stored with the points under a ``star_``
 reason so the two totals never mix.
@@ -18,11 +18,11 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
-GAINS = dict(star_task=5, star_task_short=2, star_review=12, star_focus=8)
-TIME_STEP_S = 6 * 60
-TIME_DAILY_CAP = 60
+GAINS = dict(star_task=10, star_task_short=4, star_review=24, star_focus=16)
+TIME_STEP_S = 3 * 60
+TIME_DAILY_CAP = 120
 WORK = ('star_task', 'star_task_short', 'star_review', 'star_focus', 'star_time', 'star_daily')
-WORK_DAILY_CAP = 300                  # What a heavy day of work earns at most (one wish is 250).
+WORK_DAILY_CAP = 600                  # What a heavy day of work earns at most (one wish is 300).
 UNLOCKS = (('skin_meteor', 150), ('skin_aurora', 400), ('starsea', 1000))
 SKINS = ('default', 'meteor', 'aurora')
 
