@@ -4297,6 +4297,12 @@ class Settings(QDialog):
         # left, the control on the right (details stay in tooltips).
         self.descriptions = []
         self._build_cards()
+        from quick_ui import ui_art
+        from PySide6.QtCore import QUrl
+        for index, key in enumerate(SETTINGS_PAGES):        # Codex's gem icons on the page rail, when drawn.
+            art = ui_art(f'set_{key}')
+            if art:
+                self.tabs.setTabIcon(index, QIcon(QUrl(art).toLocalFile()))
         self.tabs.tabBar().setUsesScrollButtons(False)       # Every tab always visible.
         self.clinginess.currentIndexChanged.connect(lambda _: self._describe_clinginess())
         # Only the options that matter for what is chosen show (less to read).

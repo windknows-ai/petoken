@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
@@ -27,7 +28,14 @@ class StickerBadge(QWidget):
         self.sticker, self.earned_at = sticker, earned_at
         self.setFixedSize(108, 136)
         self.art = None
-        path = ASSETS_DIR / 'v2_0' / f'sticker_{sticker}.png'
+        self.locked_art = False
+        import widget_mirror
+        from quick_ui import ui_art
+        self.dark = widget_mirror._FILTER is not None             # Drawn on night glass.
+        from PySide6.QtCore import QUrl
+        drawn = ui_art(f'sticker_{sticker}' if earned_at else f'sticker_{sticker}_locked')
+        path = Path(QUrl(drawn).toLocalFile()) if drawn else ASSETS_DIR / 'v2_0' / f'sticker_{sticker}.png'
+        self.locked_art = bool(drawn) and not earned_at              # Its own grey version: no fading.
         if path.is_file():
             from PySide6.QtGui import QPixmap
             pixmap = QPixmap(str(path))
@@ -43,7 +51,7 @@ class StickerBadge(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         box = QRectF(16, 4, 76, 76)
-        if not self.earned_at:
+        if not self.earned_at and not self.locked_art:
             p.setOpacity(.35)
         if self.art is not None:
             p.drawPixmap(box.toRect(), self.art)

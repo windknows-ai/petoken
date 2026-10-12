@@ -26,8 +26,13 @@ _DOTS = {}
 
 
 def _kind_dot(kind):
-    """Small coloured dot that marks a notification's type in the list."""
+    """Small coloured dot that marks a notification's type in the list (Codex's gem when drawn)."""
     if kind not in _DOTS:
+        from quick_ui import ui_art
+        art = ui_art(f'kind_{kind}')
+        if art:
+            _DOTS[kind] = QIcon(QUrl(art).toLocalFile())
+            return _DOTS[kind]
         pixmap = QPixmap(20, 20)
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
@@ -1459,6 +1464,10 @@ class WorkbenchTutorial(QDialog):
         self.position_label = QLabel()
         self.position_label.setObjectName('section')
         layout.addWidget(self.position_label)
+        self.picture = QLabel()                          # Codex's picture of the step, when drawn.
+        self.picture.setAlignment(Qt.AlignCenter)
+        self.picture.hide()
+        layout.addWidget(self.picture)
         self.title = QLabel()
         self.title.setObjectName('heading')
         self.title.setWordWrap(True)
@@ -1510,6 +1519,12 @@ class WorkbenchTutorial(QDialog):
         tr = self.owner.tr
         self.setWindowTitle(tr('wb_tutorial') + ' · Petoken')
         self.position_label.setText(tr('wb_tutorial_step', n=self.step + 1, total=TUTORIAL_STEPS))
+        from quick_ui import ui_art
+        art = ui_art(f'tutorial_{self.step}')
+        if art:
+            self.picture.setPixmap(QPixmap(QUrl(art).toLocalFile()).scaled(
+                384, 240, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.picture.setVisible(bool(art))
         self.title.setText(tr(f'wb_tutorial_title_{self.step}'))
         self.body.setText(tr(f'wb_tutorial_body_{self.step}'))
         self.action.setText(tr(f'wb_tutorial_action_{self.step}'))
