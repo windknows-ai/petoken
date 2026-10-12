@@ -694,6 +694,8 @@ def main(argv=None):
     parser.add_argument('--language', choices=('en', 'zh_CN'), default='zh_CN')
     args = parser.parse_args(argv)
     app = QApplication.instance() or QApplication([])
+    import widget_mirror
+    widget_mirror.install(app)
     app.setQuitOnLastWindowClosed(False)
     with ExitStack() as stack:
         directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-v2-qa-'))

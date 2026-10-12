@@ -14,11 +14,18 @@ QtObject {
     readonly property color goldDeep: "#C88A2E"
     readonly property color silver: "#DDE3FF"
     readonly property color violet: "#9C7BFF"
+    readonly property color violetSoft: "#B9A6FF"
     readonly property color ice: "#8EC8FF"
     readonly property color line: "#3A2F72"
     readonly property color glass: "#1AFFFFFF"
     readonly property color glassEdge: "#33E8DEFF"
     readonly property color good: "#7BE0B0"
+
+    // A colour chosen for the old light windows, made readable on night glass (same hue, lighter).
+    function readable(c) {
+        const k = Qt.color(c)
+        return k.hslLightness >= 0.62 ? k : Qt.hsla(k.hslHue, Math.min(0.85, k.hslSaturation), 0.72, 1)
+    }
 
     function rarity(name) {
         return ({ fanxing: "#5C82FF", mingyue: "#F4F6FF", haori: "#F6BE48",

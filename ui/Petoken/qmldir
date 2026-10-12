@@ -7,7 +7,10 @@ TabStrip 1.0 components/TabStrip.qml
 Dome 1.0 components/Dome.qml
 Doors 1.0 components/Doors.qml
 Mirror 1.0 components/Mirror.qml
+Tip 1.0 components/Tip.qml
 SectionTitle 1.0 components/SectionTitle.qml
+NavPill 1.0 components/NavPill.qml
+HomeBanner 1.0 components/HomeBanner.qml
 GlassPanel 1.0 components/GlassPanel.qml
 StarField 1.0 components/StarField.qml
 WindowShell 1.0 components/WindowShell.qml
@@ -16,3 +19,6 @@ ClosetPage 1.0 ClosetPage.qml
 ShopPage 1.0 ShopPage.qml
 MilestonePage 1.0 MilestonePage.qml
 Wardrobe 1.0 Wardrobe.qml
+MirrorDialog 1.0 MirrorDialog.qml
+Workbench 1.0 Workbench.qml
+MirrorPanel 1.0 MirrorPanel.qml

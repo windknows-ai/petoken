@@ -10,6 +10,9 @@ Item {
     property alias content: holder.data
     property alias titleExtras: extras.data
     property int margin: 14                               // Room for the shadow.
+    property bool compact: false                          // A dialog: a lower title bar, no minimize.
+    property bool bare: false                             // No title bar at all (the page has its own).
+    property string backdrop: ""                          // A drawn background over the night (Codex's art).
     signal closeRequested()
 
     function appear() { opener.restart() }
@@ -54,8 +57,22 @@ Item {
                 anchors.fill: parent
                 source: bridge.fxUrl("sky_far")
                 fillMode: Image.PreserveAspectCrop
+                sourceSize: Qt.size(1280, 800)
                 opacity: 0.22
                 layer.enabled: true
+                layer.effect: MultiEffect {
+                    maskEnabled: true
+                    maskSource: ShaderEffectSource { sourceItem: roundMask; hideSource: true }
+                }
+            }
+            Image {                                      // The window's own backdrop, when it has one.
+                visible: root.backdrop !== ""
+                anchors.fill: parent
+                source: root.backdrop
+                fillMode: Image.PreserveAspectCrop
+                sourceSize: Qt.size(1920, 1200)
+                opacity: 0.85
+                layer.enabled: visible
                 layer.effect: MultiEffect {
                     maskEnabled: true
                     maskSource: ShaderEffectSource { sourceItem: roundMask; hideSource: true }
@@ -72,7 +89,8 @@ Item {
         Item {                                           // Title bar: drag it to move the window.
             id: bar
             anchors { left: parent.left; right: parent.right; top: parent.top }
-            height: 64
+            height: root.bare ? 0 : (root.compact ? 56 : 64)
+            visible: !root.bare
             MouseArea {
                 anchors.fill: parent
                 onPressed: bridge.startMove()
@@ -83,21 +101,23 @@ Item {
                 x: 22; anchors.verticalCenter: parent.verticalCenter
                 spacing: 12
                 Rectangle {
-                    width: 38; height: 38; radius: 19
+                    width: root.compact ? 32 : 38; height: width; radius: width / 2
                     anchors.verticalCenter: parent.verticalCenter
                     gradient: Gradient {
                         GradientStop { position: 0; color: "#7A63E8" }
                         GradientStop { position: 1; color: "#3B2C8E" }
                     }
                     border.color: "#66FFFFFF"
-                    Icon { anchors.centerIn: parent; name: "sparkle"; filled: true; size: 20; color: Theme.gold }
+                    Image { id: badgeArt; anchors.fill: parent; source: bridge.artUrl("app_badge"); visible: source != ""
+                            sourceSize: Qt.size(96, 96); smooth: true }
+                    Icon { visible: !badgeArt.visible; anchors.centerIn: parent; name: "sparkle"; filled: true; size: root.compact ? 17 : 20; color: Theme.gold }
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.title
                     color: Theme.ink
                     font.family: Theme.serif
-                    font.pixelSize: 21
+                    font.pixelSize: root.compact ? 18 : 21
                     font.weight: Font.Bold
                 }
             }
@@ -110,7 +130,7 @@ Item {
                 anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
                 spacing: 8
                 Repeater {
-                    model: [ { icon: "minus", act: "min" }, { icon: "x", act: "close" } ]
+                    model: root.compact ? [ { icon: "x", act: "close" } ] : [ { icon: "minus", act: "min" }, { icon: "x", act: "close" } ]
                     delegate: Rectangle {
                         width: 34; height: 34; radius: 17
                         color: hover.containsMouse ? (modelData.act === "close" ? "#C0E0507A" : "#26FFFFFF") : "transparent"

@@ -566,6 +566,8 @@ def parse_args(argv=None):
 def main(argv=None):
     args = parse_args(argv)
     app = QApplication.instance() or QApplication([])
+    import widget_mirror
+    widget_mirror.install(app)
     with ExitStack() as stack:
         directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-synthetic-qa-'))
         stack.enter_context(patch('widget.PREF_DIR', Path(directory)))

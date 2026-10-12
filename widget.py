@@ -5397,6 +5397,9 @@ class Panel(QWidget):
                              if live else reports.ReportCache())
         if live:
             QTimer.singleShot(90_000, lambda: None if self.closing else self.report_cache.refresh())
+        # When the app draws its windows in Qt Quick, so is this one (it then stays off the screen).
+        import widget_mirror
+        self.skin = widget_mirror.Follower(self) if widget_mirror._FILTER is not None else None
 
     def anchor_to_pet(self):
         pet = getattr(self, 'pet', None)
@@ -5498,6 +5501,8 @@ class Panel(QWidget):
 
     def apply_language(self):
         self.prefs['language'] = self.language
+        import widget_mirror
+        widget_mirror.LANGUAGE = self.language
         t = self.tr_text
         self.spirit.setAccessibleName(t('spirit_accessible'))
         self.connection.setText(t('connecting'))
@@ -7204,6 +7209,8 @@ def main():
     parser.add_argument('--smoke', type=Path, help='Save a local screenshot after five seconds and exit')
     args = parser.parse_args()
     app = QApplication(sys.argv)
+    import widget_mirror
+    widget_mirror.install(app)                # Every dialog in Petoken's own Qt Quick look.
     app.setApplicationName('petoken')
     app.setApplicationVersion(APP_VERSION)
     app.setQuitOnLastWindowClosed(False)

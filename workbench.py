@@ -272,6 +272,36 @@ class WorkbenchWindow(QWidget):
         self.projects_table.setStyleSheet('QTreeWidget { outline: 0px; }')
         self.tutorial = WorkbenchTutorial(self)
         self.apply_language()
+        # Drawn in Petoken's own Qt Quick window (workbench_shell) when the app draws its windows that way:
+        # this one is then laid out but never put on the screen.
+        import workbench_shell
+        self.shell = None
+        if workbench_shell.wanted():
+            self.setAttribute(Qt.WA_DontShowOnScreen)
+            self.shell = workbench_shell.WorkbenchShell(self)
+
+    def show(self):
+        super().show()
+        if self.shell is not None:
+            self.shell.show()
+
+    def raise_(self):
+        super().raise_()
+        if self.shell is not None:
+            if self.shell.isMinimized():
+                self.shell.showNormal()
+            self.shell.raise_()
+
+    def activateWindow(self):
+        if self.shell is not None:
+            self.shell.activateWindow()
+        else:
+            super().activateWindow()
+
+    def hide(self):
+        super().hide()
+        if self.shell is not None:
+            self.shell.hide()
 
     @property
     def language(self):
@@ -1396,6 +1426,8 @@ class WorkbenchWindow(QWidget):
         if self._guard_note():
             self.tutorial.hide()
             event.accept()
+            if getattr(self, 'shell', None) is not None and self.shell.isVisible():
+                self.shell.hide()
         else:
             event.ignore()
 

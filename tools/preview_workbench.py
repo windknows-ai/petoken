@@ -68,6 +68,8 @@ def seed(window):
 def main(argv=None):
     args = parse_args(argv)
     app = QApplication.instance() or QApplication([])
+    import widget_mirror
+    widget_mirror.install(app)
     with ExitStack() as stack:
         directory = Path(stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-workbench-preview-')))
         stack.enter_context(patch('widget.PREF_DIR', directory))

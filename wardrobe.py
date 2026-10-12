@@ -14,11 +14,9 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PySide6.QtCore import Property, QObject, QPoint, QRectF, Qt, QUrl, Signal, Slot
-from PySide6.QtGui import QFontDatabase, QImage, QPainter, QRegion, QTransform
-from PySide6.QtQuick import QQuickImageProvider, QQuickWindow
-from PySide6.QtQuickWidgets import QQuickWidget
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import Property, QPoint, QRectF, Qt, Signal, Slot
+from PySide6.QtGui import QImage, QPainter, QTransform
+from PySide6.QtQuick import QQuickImageProvider
 
 import decor
 import pet_assets
@@ -26,26 +24,12 @@ import pet_geometry as geometry
 import shop
 from localization import text
 
-ROOT = Path(__file__).resolve().parent
 WARDROBE_DIR = pet_assets.ASSETS_DIR / 'v2_5' / 'wardrobe'
 KINDS = ('outfit', 'weapon', 'head', 'back', 'ground', 'buddy', 'star')
 PER_PAGE = 16                       # Four shelves of four.
 POSES = (('idle', 'wardrobe_pose_idle'), ('greet_morning', 'wardrobe_pose_greet'), ('cheer', 'wardrobe_pose_cheer'),
          ('thumbs_up', 'wardrobe_pose_thumbs'), ('ready_go', 'wardrobe_pose_ready'))
-MARGIN = 14                         # The window's shadow margin (WindowShell.margin).
-_FONTS = []
-
-
-def load_fonts():
-    """The bundled fonts (assets/fonts, SIL OFL): Noto Sans SC for words, Noto Serif SC for titles."""
-    if not _FONTS:
-        for path in sorted((pet_assets.ASSETS_DIR / 'fonts').glob('*.ttf')):
-            _FONTS.append(QFontDatabase.addApplicationFont(str(path)))
-    return _FONTS
-
-
-def file_url(path):
-    return QUrl.fromLocalFile(str(path)).toString()
+from quick_ui import MARGIN, HostBridge, QuickWindow, file_url, load_fonts   # noqa: E402,F401  (shared)
 
 
 def art_path(item):
@@ -184,14 +168,13 @@ class Pictures(QQuickImageProvider):
 
 
 # The data and actions -----------------------------------------------------------------------
-class WardrobeBridge(QObject):
+class WardrobeBridge(HostBridge):
     changed = Signal()
     opened = Signal()
     sparkle = Signal(bool)
 
     def __init__(self, window, panel):
-        super().__init__(window)
-        self.window, self.panel = window, panel
+        super().__init__(window, panel)
         self._kind = 'head'
         self._page = 0
         self._shelf = 0
@@ -204,15 +187,8 @@ class WardrobeBridge(QObject):
 
     # Helpers
     @property
-    def language(self):
-        return self.panel.prefs.get('language', 'zh_CN')
-
-    @property
     def shop(self):
         return self.panel.shop
-
-    def _t(self, key, **values):
-        return text(key, self.language, **values)
 
     def touch(self, portrait_too=False):
         if portrait_too:
@@ -247,32 +223,7 @@ class WardrobeBridge(QObject):
     def tr(self, key):
         if key == 'wardrobe_title_plain':
             return self._t('wardrobe_title').replace('✦', '').strip()
-        base, _, part = key.partition('@')                  # 'shop_featured@title' / '@note': a heading
-        if part:                                            # and its bracketed aside, shown apart.
-            import re
-            found = re.match(r'^(.*?)\s*[（(](.*)[）)]\s*$', self._t(base))
-            if found is None:
-                return self._t(base) if part == 'title' else ''
-            return found.group(1) if part == 'title' else found.group(2)
-        return self._t(key)
-
-    @Slot(str, bool, result=str)
-    def iconUrl(self, name, filled):
-        folder = pet_assets.ASSETS_DIR / 'icons' / ('fill' if filled else 'regular')
-        return file_url(folder / (f'{name}-fill.svg' if filled else f'{name}.svg'))
-
-    @Slot(str, result=str)
-    def wardrobeUrl(self, name):
-        return file_url(WARDROBE_DIR / f'{name}.png')
-
-    @Slot(str, result=str)
-    def fxUrl(self, name):
-        """A light: the sky as JPEG, glows with real transparency (tools/alpha_fx.py)."""
-        from wish_show import FX_DIR
-        if name.startswith('sky'):
-            return file_url(FX_DIR / f'{name}.jpg')
-        alpha = FX_DIR / 'alpha' / f'{name}.png'
-        return file_url(alpha if alpha.is_file() else FX_DIR / f'{name}.webp')
+        return super().tr(key)
 
     @Property(str, notify=changed)
     def balanceText(self):
@@ -601,62 +552,23 @@ class WardrobeBridge(QObject):
         self._fitting = {}
         self.touch(True)
 
-    @Slot()
-    def close(self):
-        self.window.close()
-
-    @Slot()
-    def minimize(self):
-        self.window.showMinimized()
-
-    @Slot()
-    def toggleMaximized(self):
-        if self.window.isMaximized():
-            self.window.showNormal()
-        else:
-            self.window.showMaximized()
-
-    @Slot()
-    def startMove(self):
-        handle = self.window.windowHandle()
-        if handle is not None:
-            handle.startSystemMove()
-
-    @Slot()
-    def startResize(self):
-        handle = self.window.windowHandle()
-        if handle is not None:
-            handle.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
 
 
 # The window ------------------------------------------------------------------------------------
-class Wardrobe(QWidget):
+class Wardrobe(QuickWindow):
     def __init__(self, panel):
-        super().__init__(None, Qt.Window | Qt.FramelessWindowHint)
-        load_fonts()
-        # Words drawn by the system's font renderer (hinted, ClearType-sharp), not scaled glyph
-        # textures, which look soft at the small sizes of Chinese labels.
-        QQuickWindow.setTextRenderType(QQuickWindow.TextRenderType.NativeTextRendering)
+        super().__init__()
         self.panel = panel
-        self.setAttribute(Qt.WA_TranslucentBackground)
         self.setWindowTitle(text('wardrobe_open', panel.prefs.get('language', 'zh_CN')))
         self.resize(1260 + 2 * MARGIN, 840 + 2 * MARGIN)
         self.setMinimumSize(1060, 720)
         self.bridge = WardrobeBridge(self, panel)
-        self.view = QQuickWidget(self)
-        self.view.setClearColor(Qt.transparent)
-        self.view.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        engine = self.view.engine()
-        engine.addImportPath(str(ROOT / 'ui'))
-        engine.addImageProvider('petoken', Pictures(self.bridge))
-        self.view.rootContext().setContextProperty('bridge', self.bridge)
-        self.view.setSource(QUrl.fromLocalFile(str(ROOT / 'ui' / 'Petoken' / 'Wardrobe.qml')))
-        self.errors = [e.toString() for e in self.view.errors()]
+        self.view.engine().addImageProvider('petoken', Pictures(self.bridge))
+        self.load('Wardrobe.qml', bridge=self.bridge)
         self._overlay = None
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.view.setGeometry(self.rect())
         if self._overlay is not None:
             try:
                 self._overlay.setGeometry(self.overlay_rect())
@@ -677,18 +589,6 @@ class Wardrobe(QWidget):
 
     def refresh(self):
         self.bridge.touch(True)
-
-    # The rounded body the shows play inside.
-    def overlay_rect(self):
-        return self.rect().adjusted(MARGIN + 1, MARGIN + 1, -MARGIN - 1, -MARGIN - 1)
-
-    @staticmethod
-    def overlay_mask(size, radius=29):
-        w, h = size.width(), size.height()
-        region = QRegion(radius, 0, w - 2 * radius, h).united(QRegion(0, radius, w, h - 2 * radius))
-        for x, y in ((0, 0), (w - 2 * radius, 0), (0, h - 2 * radius), (w - 2 * radius, h - 2 * radius)):
-            region = region.united(QRegion(x, y, 2 * radius, 2 * radius, QRegion.Ellipse))
-        return region
 
     def _sound_pref(self):
         panel = self.panel
