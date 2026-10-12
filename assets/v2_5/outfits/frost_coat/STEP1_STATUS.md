@@ -1,13 +1,12 @@
-# Frost coat step 1 — PARTIAL, 54/66
+# Frost coat step 1 — COMPLETE, 66/66; awaiting human art acceptance
 
-Branch: codex/outfits-frost-coat. Base: ad44b23. Local artwork checkpoint only; do not treat this as completion of step 1.
+Branch: codex/outfits-frost-coat. Base: ad44b23. The previous partial checkpoint is c1d077e; the completion commit follows it.
 
-- Completed: 18 of the existing 22 sprites per tier, 54 total. 48 built-in imagegen redraws, plus six eye-only blink versions.
-- Design: fanxing uses plain dark gray-blue single-layer cloth; mingyue uses pearl silver and a layered scalloped hem; haori uses warm ivory/champagne gold and a broad short cape.
-- Verified: all 54 delivered sprites are 1254x1254 RGBA with transparent borders; all six blinks preserve the open-frame alpha and differ only inside eye polygons. Remaining original files were hash checked and preserved. Three tier contact sheets and FROST_COAT_PREVIEW.png include explicit incomplete counts; the overview compares 128/64/48px on dark and light backgrounds.
-- Not yet redrawn: headpat_1.png, headpat_2.png, poked_1.png, dragged_1.png in EACH of fanxing, mingyue and haori, 12 total. These files still contain the original art.
-- Blocker: built-in imagegen returned HTTP 429 usage_limit_reached; reported reset 2026-10-12 20:45:33 UTC (16:45:33 America/Toronto). Do not silently switch to a paid API or other generator.
-- User chose to WAIT FOR GENERATION QUOTA and redraw the remaining twelve with imagegen. Do not use clothing-part composition for them.
-- Step 2 is not authorized until the user accepts the completed step 1. No runtime animation or app-integration acceptance is claimed.
+- Delivered: all existing22 sprite filenames in EACH of fanxing, mingyue and haori, 66 total. 60 direct built-in imagegen clothing redraws plus six eye-only blink variants.
+- Design: fanxing uses plain dark gray-blue single-layer cloth; mingyue uses pearl silver and two scalloped hem layers; haori uses brighter warm ivory/champagne gold with a broad short cape, clasp and embroidery.
+- The final12 (headpat_1/headpat_2/poked_1/dragged_1 per tier) were directly redrawn after imagegen quota became available again. The user's choice to wait was respected; no clothing-part composition shortcut or alternative image service was used.
+- Verified:66/66 sprite inventory, 1254x1254 RGBA and fully transparent borders;6/6 blinks differ only inside eye polygons and preserve the complete open-frame alpha. Previous54 sprite SHA256 hashes remain unchanged. Last12 all differ from old art. Provenance reports complete66/no pending frames/60 generation prompts.
+- All12 final poses and full tier sheets were visually inspected. FROST_COAT_PREVIEW.png compares the same idle pose across tiers at large size and128/64/48px on dark/light backgrounds, plus celebrate/sleep examples.
+- Step2 is not started or authorized until the user confirms this completed step1. Runtime animation scheduling, app integration and human aesthetic acceptance are outside this static asset validation. No code changes, push, merge or publication.
 
-Prompts/provenance: GENERATION.json. Recovery: D:\Documents\ChatGPT\petoken-takeover-backups\frost-coat-step1, including original PNGs and hashes, all raw generated PNGs, exact prompts, composition masks/code, verification logs, and finish.ps1.
+Prompts/provenance: GENERATION.json. Recovery: D:\Documents\ChatGPT\petoken-takeover-backups\frost-coat-step1, containing all original69 PNGs and hashes,60 generated PNGs and exact prompts, registration/eye masks in finish.cs, finish.ps1, verify66.ps1, final66-validation.txt, and final previews.

@@ -3,7 +3,7 @@
     "branch":  "codex/outfits-frost-coat",
     "registration":  "source pixels outside clothing masks; original skin and boot pixels restored; blink versions change eye polygons only",
     "base_commit":  "ad44b23",
-    "completed_sprite_count":  54,
+    "completed_sprite_count":  66,
     "prompts":  [
                     {
                         "tier":  "fanxing",
@@ -16,6 +16,24 @@
                         "frame":  "celebrate_2",
                         "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-1bff625c-c09b-4adf-88cb-e0d1f6925e09.png",
                         "prompt":  "Use case: identity-preserve. Image 1 is EDIT TARGET: original chibi frost_coat celebrate_2 animation frame. Image 2 is the fixed NEW fanxing wardrobe DESIGN reference ONLY. Redraw ONLY image 1\u0027s winter clothing to exactly match the construction/materials of image 2. KEEP image 1\u0027s exact gesture and facial expression, head/hair shape, hair ornaments, violet eyes, hands, bare skin/knees, boots, screen/keyboard or other props, sprite size and position. DO NOT copy reference pose: Preserve original pose and hands precisely, coat adapts to its existing sleeves. Outfit: FANXING basic rarity: PLAIN SINGLE-LAYER matte slate gray-blue wool coat, noticeably dark muted gray-blue body, SIMPLE COMPACT A-line hem with ONE plain edge (no layered scallops), modest gray-white fluffy collar/cuffs; TWO plain cloth-covered buttons. Absolutely NO pearl buttons, silver trims, gold, embroidery, cape, ribbons or glow. Narrow understated shoulder silhouette, simplest tier readable at 64px. Match image 2\u0027s buttons/brooch/cape, collar and hem details consistently; no new decorations. Style: same clean dark-navy anime chibi outlines and soft cel shading. Original 1254x1254 canvas, exact framing/registration/baseline, genuine RGBA TRANSPARENCY, no text/ground/shadow, no extra effects. "
+                    },
+                    {
+                        "tier":  "fanxing",
+                        "frame":  "dragged_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c44c2fa1-fbae-4086-bdbf-a9b0c485032d.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original fanxing frost_coat dragged_1 sprite. Image2 is the approved NEW fanxing coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep original wide-open surprised eyes and tiny round mouth, both arms outward and boots raised/slanted as she is lifted. Do not turn this into seated idle. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Plain dark desaturated slate gray-blue, SINGLE layer compact coat and simple hem, modest gray-white fluffy collar/cuffs, only two cloth-covered buttons; NO pearl/silver/gold decorations, embroidery, cape, ribbons or glow. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
+                    },
+                    {
+                        "tier":  "fanxing",
+                        "frame":  "headpat_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-bd459a89-fac0-4bd0-8906-89feb4314e84.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is edit target, original frost_coat fanxing headpat_1 sprite: same happy closed eyes, mouth, tilted head, hands curled on her knees, seated pose. Image2 is the approved new FANXING winter coat clothing DESIGN reference only. Redraw ONLY image1\u0027s coat to match image2: simple dark muted slate gray-blue single-layer wool coat, narrow understated shoulders, plain hem, modest gray-white fluffy collar/cuffs, only two plain cloth-covered buttons; NO pearls, gold, silver decoration, embroidery, cape, ribbons or glow. Retain image1\u0027s exact happy expression, head position, hands, knees, hair and hair ornaments, dark boots and foot positions. Do not use image2\u0027s face or hand pose. Same polished chibi anime navy lineart and soft cel shading. Exact original1254x1254 square RGBA canvas, true transparent background, no text, no ground/shadow, no cropping."
+                    },
+                    {
+                        "tier":  "fanxing",
+                        "frame":  "headpat_2",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8f32acd6-9efd-4eb2-afeb-ee2de19f31ea.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original fanxing frost_coat headpat_2 sprite. Image2 is the approved NEW fanxing coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep happy closed eyes and smile with BOTH hands up at cheeks. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Plain dark desaturated slate gray-blue, SINGLE layer compact coat and simple hem, modest gray-white fluffy collar/cuffs, only two cloth-covered buttons; NO pearl/silver/gold decorations, embroidery, cape, ribbons or glow. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
                     },
                     {
                         "tier":  "fanxing",
@@ -40,6 +58,12 @@
                         "frame":  "idle_4",
                         "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c20439ca-ce46-4009-b9bc-8afe1349109b.png",
                         "prompt":  "Use case: identity-preserve. Image 1 is EDIT TARGET: original chibi frost_coat idle_4 animation frame. Image 2 is the fixed NEW fanxing wardrobe DESIGN reference ONLY. Redraw ONLY image 1\u0027s winter clothing to exactly match the construction/materials of image 2. KEEP image 1\u0027s exact gesture and facial expression, head/hair shape, hair ornaments, violet eyes, hands, bare skin/knees, boots, screen/keyboard or other props, sprite size and position. DO NOT copy reference pose: Preserve original pose and hands precisely, coat adapts to its existing sleeves. Outfit: FANXING basic rarity: PLAIN SINGLE-LAYER matte slate gray-blue wool coat, noticeably dark muted gray-blue body, SIMPLE COMPACT A-line hem with ONE plain edge (no layered scallops), modest gray-white fluffy collar/cuffs; TWO plain cloth-covered buttons. Absolutely NO pearl buttons, silver trims, gold, embroidery, cape, ribbons or glow. Narrow understated shoulder silhouette, simplest tier readable at 64px. Match image 2\u0027s buttons/brooch/cape, collar and hem details consistently; no new decorations. Style: same clean dark-navy anime chibi outlines and soft cel shading. Original 1254x1254 canvas, exact framing/registration/baseline, genuine RGBA TRANSPARENCY, no text/ground/shadow, no extra effects. "
+                    },
+                    {
+                        "tier":  "fanxing",
+                        "frame":  "poked_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ba12d1f8-6a4f-4903-8f29-e74e52a2cb28.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original fanxing frost_coat poked_1 sprite. Image2 is the approved NEW fanxing coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep ONE eye closed, the other purple eye open, hand touching cheek and the other hand outward. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Plain dark desaturated slate gray-blue, SINGLE layer compact coat and simple hem, modest gray-white fluffy collar/cuffs, only two cloth-covered buttons; NO pearl/silver/gold decorations, embroidery, cape, ribbons or glow. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
                     },
                     {
                         "tier":  "fanxing",
@@ -115,6 +139,24 @@
                     },
                     {
                         "tier":  "haori",
+                        "frame":  "dragged_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-81d5e0da-b594-478c-a337-cae59d140cc5.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original haori frost_coat dragged_1 sprite. Image2 is the approved NEW haori coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep original wide-open surprised eyes and tiny round mouth, both arms outward and boots raised/slanted as she is lifted. Do not turn this into seated idle. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Warm bright ivory and CHAMPAGNE GOLD, a BROAD DISTINCT short shoulder CAPE with pointed tails to the elbows, gold embroidery, snowflake metal clasp, cream fluffy trim, amber coat lining and short gold/ivory side ribbons. Clearly wider shoulder silhouette, warm and bright compared with silver-blue mid-tier. NO halo, wings, crown or particles. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
+                    },
+                    {
+                        "tier":  "haori",
+                        "frame":  "headpat_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-0b84070f-c970-4271-b463-a13ac769cd26.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original haori frost_coat headpat_1 sprite. Image2 is the approved NEW haori coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep happy closed eyes, tilted head, smile, hands curled on knees. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Warm bright ivory and CHAMPAGNE GOLD, a BROAD DISTINCT short shoulder CAPE with pointed tails to the elbows, gold embroidery, snowflake metal clasp, cream fluffy trim, amber coat lining and short gold/ivory side ribbons. Clearly wider shoulder silhouette, warm and bright compared with silver-blue mid-tier. NO halo, wings, crown or particles. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
+                    },
+                    {
+                        "tier":  "haori",
+                        "frame":  "headpat_2",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-bee438f4-eeeb-43a6-b6c0-92859e4dd6c2.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original haori frost_coat headpat_2 sprite. Image2 is the approved NEW haori coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep happy closed eyes and smile with BOTH hands up at cheeks. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Warm bright ivory and CHAMPAGNE GOLD, a BROAD DISTINCT short shoulder CAPE with pointed tails to the elbows, gold embroidery, snowflake metal clasp, cream fluffy trim, amber coat lining and short gold/ivory side ribbons. Clearly wider shoulder silhouette, warm and bright compared with silver-blue mid-tier. NO halo, wings, crown or particles. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
+                    },
+                    {
+                        "tier":  "haori",
                         "frame":  "idle_1",
                         "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-1a981a2e-0405-4cc5-95c6-47140a68d478.png",
                         "prompt":  "Use case: identity-preserve. Edit ONLY the winter clothing in this exact RGBA seated chibi idle_1 sprite. KEEP the character\u0027s head, face, eyes, every hair lock and hair ornaments, skin, bare knees, boots and all their locations exactly unchanged. Keep original square canvas, size, pose and boot baseline. Match polished anime chibi clean navy outlines and cel-shading. True transparent background; no ground, no shadow, no text; do not crop. Design: HAORI highest of these three rarities: bright WARM IVORY and champagne-gold winter coat, a BROAD DISTINCT SHORT SHOULDER CAPE with pointed side tails reaching elbows; cape visually widens the shoulder silhouette, clearly separate from long coat. Champagne-gold embroidered snowflakes, gold metallic snowflake clasp, rich cream fluffy trim, a soft amber lining visible at the lower hem; two short ivory/gold trailing ribbons beside coat. Much warmer and brighter than silver/blue middle rarity, distinct silhouette at 64px. No halo, no wings, no crown, no particles, no background glow."
@@ -136,6 +178,12 @@
                         "frame":  "idle_4",
                         "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-69c50933-23ba-43dc-a715-9a9685aa546d.png",
                         "prompt":  "Use case: identity-preserve. Image 1 is EDIT TARGET: original chibi frost_coat idle_4 animation frame. Image 2 is the fixed NEW haori wardrobe DESIGN reference ONLY. Redraw ONLY image 1\u0027s winter clothing to exactly match the construction/materials of image 2. KEEP image 1\u0027s exact gesture and facial expression, head/hair shape, hair ornaments, violet eyes, hands, bare skin/knees, boots, screen/keyboard or other props, sprite size and position. DO NOT copy reference pose: Preserve original pose and hands precisely, coat adapts to its existing sleeves. Outfit: HAORI highest of these three rarities: bright WARM IVORY and champagne-gold winter coat, a BROAD DISTINCT SHORT SHOULDER CAPE with pointed side tails reaching elbows; cape visually widens the shoulder silhouette, clearly separate from long coat. Champagne-gold embroidered snowflakes, gold metallic snowflake clasp, rich cream fluffy trim, a soft amber lining visible at the lower hem; two short ivory/gold trailing ribbons beside coat. Much warmer and brighter than silver/blue middle rarity, distinct silhouette at 64px. No halo, no wings, no crown, no particles, no background glow. Match image 2\u0027s buttons/brooch/cape, collar and hem details consistently; no new decorations. Style: same clean dark-navy anime chibi outlines and soft cel shading. Original 1254x1254 canvas, exact framing/registration/baseline, genuine RGBA TRANSPARENCY, no text/ground/shadow, no extra effects. "
+                    },
+                    {
+                        "tier":  "haori",
+                        "frame":  "poked_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c7b7f63d-d435-4632-9322-a499ead89988.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original haori frost_coat poked_1 sprite. Image2 is the approved NEW haori coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep ONE eye closed, the other purple eye open, hand touching cheek and the other hand outward. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Warm bright ivory and CHAMPAGNE GOLD, a BROAD DISTINCT short shoulder CAPE with pointed tails to the elbows, gold embroidery, snowflake metal clasp, cream fluffy trim, amber coat lining and short gold/ivory side ribbons. Clearly wider shoulder silhouette, warm and bright compared with silver-blue mid-tier. NO halo, wings, crown or particles. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
                     },
                     {
                         "tier":  "haori",
@@ -211,6 +259,24 @@
                     },
                     {
                         "tier":  "mingyue",
+                        "frame":  "dragged_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-172109f8-42be-45be-8ba8-c522293e66e2.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original mingyue frost_coat dragged_1 sprite. Image2 is the approved NEW mingyue coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep original wide-open surprised eyes and tiny round mouth, both arms outward and boots raised/slanted as she is lifted. Do not turn this into seated idle. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Cool ice-blue and PEARL SILVER, two distinct scalloped coat hems, a small rounded silver shoulder mantle, pearl-silver piping and one small silver snowflake brooch. Restrained mid-tier design. NO gold or glow. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
+                    },
+                    {
+                        "tier":  "mingyue",
+                        "frame":  "headpat_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-101e0969-6e08-4f81-8a49-da5879ee7173.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original mingyue frost_coat headpat_1 sprite. Image2 is the approved NEW mingyue coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep happy closed eyes, tilted head, smile, hands curled on knees. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Cool ice-blue and PEARL SILVER, two distinct scalloped coat hems, a small rounded silver shoulder mantle, pearl-silver piping and one small silver snowflake brooch. Restrained mid-tier design. NO gold or glow. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
+                    },
+                    {
+                        "tier":  "mingyue",
+                        "frame":  "headpat_2",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-d6f49f87-6018-4f94-b975-ac1b25f013d8.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original mingyue frost_coat headpat_2 sprite. Image2 is the approved NEW mingyue coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep happy closed eyes and smile with BOTH hands up at cheeks. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Cool ice-blue and PEARL SILVER, two distinct scalloped coat hems, a small rounded silver shoulder mantle, pearl-silver piping and one small silver snowflake brooch. Restrained mid-tier design. NO gold or glow. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
+                    },
+                    {
+                        "tier":  "mingyue",
                         "frame":  "idle_1",
                         "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-cd5c8d72-572f-4c7a-bceb-514eeec3f5d7.png",
                         "prompt":  "Use case: identity-preserve. Edit ONLY the winter clothing in this exact RGBA seated chibi idle_1 sprite. KEEP the character\u0027s head, face, eyes, every hair lock and hair ornaments, skin, bare knees, boots and all their locations exactly unchanged. Keep original square canvas, size, pose and boot baseline. Match polished anime chibi clean navy outlines and cel-shading. True transparent background; no ground, no shadow, no text; do not crop. Design: MINGYUE middle rarity: crisp pale ice-blue and pearl-silver coat, two clearly visible layered scalloped hems (short silver outer layer over longer blue inner layer), a distinct short rounded silver shoulder mantle (not a cape), generous pearl-silver piping, ONE small silver snowflake brooch, NO gold and no glow. Brighter and more layered than plain gray-blue basic coat, still restrained."
@@ -232,6 +298,12 @@
                         "frame":  "idle_4",
                         "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-49a82db1-7b07-4394-a6ec-a4b81aea36bc.png",
                         "prompt":  "Use case: identity-preserve. Image 1 is EDIT TARGET: original chibi frost_coat idle_4 animation frame. Image 2 is the fixed NEW mingyue wardrobe DESIGN reference ONLY. Redraw ONLY image 1\u0027s winter clothing to exactly match the construction/materials of image 2. KEEP image 1\u0027s exact gesture and facial expression, head/hair shape, hair ornaments, violet eyes, hands, bare skin/knees, boots, screen/keyboard or other props, sprite size and position. DO NOT copy reference pose: Preserve original pose and hands precisely, coat adapts to its existing sleeves. Outfit: MINGYUE middle rarity: crisp pale ice-blue and pearl-silver coat, two clearly visible layered scalloped hems (short silver outer layer over longer blue inner layer), a distinct short rounded silver shoulder mantle (not a cape), generous pearl-silver piping, ONE small silver snowflake brooch, NO gold and no glow. Brighter and more layered than plain gray-blue basic coat, still restrained. Match image 2\u0027s buttons/brooch/cape, collar and hem details consistently; no new decorations. Style: same clean dark-navy anime chibi outlines and soft cel shading. Original 1254x1254 canvas, exact framing/registration/baseline, genuine RGBA TRANSPARENCY, no text/ground/shadow, no extra effects. "
+                    },
+                    {
+                        "tier":  "mingyue",
+                        "frame":  "poked_1",
+                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9052146d-61cf-44cc-a7b4-dccbd22a71a8.png",
+                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: original mingyue frost_coat poked_1 sprite. Image2 is the approved NEW mingyue coat DESIGN reference ONLY. Redraw ONLY image1\u0027s winter clothing to faithfully match image2\u0027s coat construction, palette, buttons/clasp/cape and hem. Keep ONE eye closed, the other purple eye open, hand touching cheek and the other hand outward. EXACTLY retain image1\u0027s pose, facial expression, all hand/skin positions, hair and ornaments, head size/position, knees and dark boots with their exact original positions; NEVER copy image2\u0027s idle face or pose. Costume: Cool ice-blue and PEARL SILVER, two distinct scalloped coat hems, a small rounded silver shoulder mantle, pearl-silver piping and one small silver snowflake brooch. Restrained mid-tier design. NO gold or glow. Match fixed design throughout all actions, cloth only. Same polished anime chibi navy outlines and soft cel-shading. Original1254x1254 square RGBA canvas, genuine transparent background, no text, ground, shadows or cropping."
                     },
                     {
                         "tier":  "mingyue",
@@ -295,13 +367,10 @@
                     }
                 ],
     "pending_frames":  [
-                           "headpat_1",
-                           "headpat_2",
-                           "poked_1",
-                           "dragged_1"
+
                        ],
     "date":  "2026-10-12",
     "raw_recovery":  "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\frost-coat-step1",
     "scope":  "step 1 only: 22 existing sprites per tier; 66 total",
-    "complete":  false
+    "complete":  true
 }
