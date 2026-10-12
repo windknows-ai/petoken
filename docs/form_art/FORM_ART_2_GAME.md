@@ -10,19 +10,19 @@
 
 她打游戏时的第二形态（参考 `assets/v2_1/form2_idle_1.png` 等已有的游戏形态图）：同一套装甲、银色冰蓝靛色配色和剑。整体更利落、更有精神。
 
-## 要画的动作（41 个，共 119 张）
+## 要画的动作（41 个，共 96 张）
 
-| 动作 | 要画的文件（PNG） | 默认形态的原图（照着它的姿势、位置画） |
+| 动作 | 要画的文件（PNG） | 默认形态的原图（照着它的姿势、位置画；这些文件都在仓库里） |
 | --- | --- | --- |
-| 待机 | `idle_1`、`idle_2`、`idle_3`、`idle_4`、`idle_blink` | `assets/v2_0/idle_1.png`、`assets/v2_0/idle_2.png`、`assets/v2_0/idle_3.png`、`assets/v2_0/idle_4.png`、`assets/v2_0/idle_blink.png` |
-| 跟着敲键盘 | `typing_1`、`typing_2`、`typing_3`、`typing_4`、`typing_blink` | `assets/v1_1/typing_1.png`、`assets/v1_1/typing_2.png`、`assets/v2_0/typing_3.png`、`assets/v2_0/typing_4.png`、`assets/v2_0/typing_blink.png` |
-| 盯着屏幕 | `codex_working_1`、`codex_working_2`、`codex_working_3`、`codex_working_blink` | `assets/v2_0/working_1.png`、`assets/v2_0/working_2.png`、`assets/v2_0/working_3.png`、`assets/v2_0/working_blink.png` |
-| 说话 | `microphone_1`、`microphone_blink` | `assets/v1_1/microphone.png`、`assets/v2_0/microphone_blink.png` |
-| 听歌 | `music_1`、`music_2`、`music_3`、`music_4`、`music_blink` | `assets/v2_0/music_1.png`、`assets/v2_0/music_2.png`、`assets/v2_0/music_3.png`、`assets/v2_0/music_4.png`、`assets/v2_0/music_blink.png` |
-| 弹吉他 | `guitar_1`、`guitar_blink` | `assets/v1_1/guitar.png`、`assets/v2_0/guitar_blink.png` |
-| 欢呼 | `celebrate_1`、`celebrate_2`、`celebrate_3`、`celebrate_blink` | `assets/v2_0/celebrate_1.png`、`assets/v2_0/celebrate_2.png`、`assets/v2_0/celebrate_3.png`、`assets/v2_0/celebrate_blink.png` |
-| 难过 | `sad_1`、`sad_blink` | `assets/v1_1/sad.png`、`assets/v2_0/sad_blink.png` |
-| 挥手提醒 | `wave_1`、`wave_2`、`wave_3`、`wave_blink` | `assets/v2_0/wave_1.png`、`assets/v2_0/wave_2.png`、`assets/v2_0/wave_3.png`、`assets/v2_0/wave_blink.png` |
+| 待机 | `idle_1`、`idle_blink` | `assets/v1_1/idle.png`、`assets/v2_0/idle_blink.png` |
+| 跟着敲键盘 | `typing_1`、`typing_2` | `assets/v1_1/typing_1.png`、`assets/v1_1/typing_2.png` |
+| 盯着屏幕 | `codex_working_1` | `assets/v1_1/working.png` |
+| 说话 | `microphone_1` | `assets/v1_1/microphone.png` |
+| 听歌 | `music_1` | `assets/v1_1/music.png` |
+| 弹吉他 | `guitar_1` | `assets/v1_1/guitar.png` |
+| 欢呼 | `celebrate_1` | `assets/v1_1/celebrate.png` |
+| 难过 | `sad_1` | `assets/v1_1/sad.png` |
+| 挥手提醒 | `wave_1` | `assets/v1_1/wave.png` |
 | 撒娇 | `coquettish_1`、`coquettish_2`、`coquettish_3`、`coquettish_4`、`coquettish_blink` | `assets/v2_0/coquettish_1.png`、`assets/v2_0/coquettish_2.png`、`assets/v2_0/coquettish_3.png`、`assets/v2_0/coquettish_4.png`、`assets/v2_0/coquettish_blink.png` |
 | 被摸头 | `headpat_happy_1`、`headpat_happy_2`、`headpat_happy_3`、`headpat_happy_4`、`headpat_happy_blink` | `assets/v2_0/headpat_happy_1.png`、`assets/v2_0/headpat_happy_2.png`、`assets/v2_0/headpat_happy_3.png`、`assets/v2_0/headpat_happy_4.png`、`assets/v2_0/headpat_happy_blink.png` |
 | 趴着睡 | `sleep_1`、`sleep_2`、`sleep_3` | `assets/v2_0/sleep_1.png`、`assets/v2_0/sleep_2.png`、`assets/v2_0/sleep_3.png` |
@@ -54,7 +54,7 @@
 | 收拾东西 | `packing_1`、`packing_blink` | `assets/v2_0/packing_1.png`、`assets/v2_0/packing_blink.png` |
 | 出发 | `ready_go_1`、`ready_go_blink` | `assets/v2_0/ready_go_1.png`、`assets/v2_0/ready_go_blink.png` |
 | 担心 | `worried_1`、`worried_2`、`worried_blink` | `assets/v2_0/worried_1.png`、`assets/v2_0/worried_2.png`、`assets/v2_0/worried_blink.png` |
-| 得意 | `proud_1`、`proud_blink` | `assets/v2_0/proud_1.png`、`assets/v2_0/proud_blink.png` |
+| 得意 | `proud_1` | `assets/v2_0/proud_1.png` |
 
 ## 通用要求
 
