@@ -1,0 +1,570 @@
+[
+  {
+    "file": "idle_1.png",
+    "original_generated_bottom_y": 1233,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "typing_1.png",
+    "original_generated_bottom_y": 1240,
+    "reference_bottom_y": 1224,
+    "final_bottom_y": 1224,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "typing_2.png",
+    "original_generated_bottom_y": 1236,
+    "reference_bottom_y": 1231,
+    "final_bottom_y": 1231,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "codex_working_1.png",
+    "original_generated_bottom_y": 1247,
+    "reference_bottom_y": 1249,
+    "final_bottom_y": 1249,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "microphone_1.png",
+    "original_generated_bottom_y": 1246,
+    "reference_bottom_y": 1229,
+    "final_bottom_y": 1229,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "music_1.png",
+    "original_generated_bottom_y": 1225,
+    "reference_bottom_y": 1223,
+    "final_bottom_y": 1223,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "guitar_1.png",
+    "original_generated_bottom_y": 1249,
+    "reference_bottom_y": 1238,
+    "final_bottom_y": 1238,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "celebrate_1.png",
+    "original_generated_bottom_y": 1238,
+    "reference_bottom_y": 1224,
+    "final_bottom_y": 1224,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "sad_1.png",
+    "original_generated_bottom_y": 1242,
+    "reference_bottom_y": 1238,
+    "final_bottom_y": 1238,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "wave_1.png",
+    "original_generated_bottom_y": 1246,
+    "reference_bottom_y": 1235,
+    "final_bottom_y": 1235,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "coquettish_1.png",
+    "original_generated_bottom_y": 1246,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "coquettish_2.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "coquettish_3.png",
+    "original_generated_bottom_y": 1232,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "coquettish_4.png",
+    "original_generated_bottom_y": 1220,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "headpat_happy_1.png",
+    "original_generated_bottom_y": 1233,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "headpat_happy_2.png",
+    "original_generated_bottom_y": 1240,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "headpat_happy_3.png",
+    "original_generated_bottom_y": 1227,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "headpat_happy_4.png",
+    "original_generated_bottom_y": 1220,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "sleep_1.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "sleep_2.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "sleep_3.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "bored_1.png",
+    "original_generated_bottom_y": 1204,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "bored_2.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "bored_3.png",
+    "original_generated_bottom_y": 1209,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "yawn_1.png",
+    "original_generated_bottom_y": 1222,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "yawn_2.png",
+    "original_generated_bottom_y": 1211,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "yawn_3.png",
+    "original_generated_bottom_y": 1225,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "wake_stretch_1.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "wake_stretch_2.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "curious_1.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "curious_2.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "thinking_1.png",
+    "original_generated_bottom_y": 1213,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "thinking_2.png",
+    "original_generated_bottom_y": 1220,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "shy_1.png",
+    "original_generated_bottom_y": 1233,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "shy_2.png",
+    "original_generated_bottom_y": 1221,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "pout_1.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "pout_2.png",
+    "original_generated_bottom_y": 1223,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "poked_1.png",
+    "original_generated_bottom_y": 1233,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "dragged_1.png",
+    "original_generated_bottom_y": 1240,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "dragged_2.png",
+    "original_generated_bottom_y": 1221,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "dragged_3.png",
+    "original_generated_bottom_y": 1222,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "dragged_4.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "landing_1.png",
+    "original_generated_bottom_y": 1222,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "hug_1.png",
+    "original_generated_bottom_y": 1222,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "hug_2.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "heart_1.png",
+    "original_generated_bottom_y": 1240,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "greet_morning_1.png",
+    "original_generated_bottom_y": 1234,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "greet_morning_2.png",
+    "original_generated_bottom_y": 1225,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "greet_night_1.png",
+    "original_generated_bottom_y": 1230,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "greet_night_2.png",
+    "original_generated_bottom_y": 1248,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "surprised_1.png",
+    "original_generated_bottom_y": 1225,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "thumbs_up_1.png",
+    "original_generated_bottom_y": 1225,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "cheer_1.png",
+    "original_generated_bottom_y": 1227,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "cheer_2.png",
+    "original_generated_bottom_y": 1224,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "clap_1.png",
+    "original_generated_bottom_y": 1230,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "clap_2.png",
+    "original_generated_bottom_y": 1232,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "clap_3.png",
+    "original_generated_bottom_y": 1232,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "peek_1.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "peek_2.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "grievance_1.png",
+    "original_generated_bottom_y": 1222,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "grievance_2.png",
+    "original_generated_bottom_y": 1220,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "focus_read_1.png",
+    "original_generated_bottom_y": 1220,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "focus_read_2.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "focus_read_3.png",
+    "original_generated_bottom_y": 1218,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "focus_read_4.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "focus_tea_1.png",
+    "original_generated_bottom_y": 1235,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "focus_tea_2.png",
+    "original_generated_bottom_y": 1226,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "hold_card_1.png",
+    "original_generated_bottom_y": 1229,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "packing_1.png",
+    "original_generated_bottom_y": 1243,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "ready_go_1.png",
+    "original_generated_bottom_y": 1219,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  },
+  {
+    "file": "worried_1.png",
+    "original_generated_bottom_y": 1224,
+    "reference_bottom_y": 1218,
+    "final_bottom_y": 1218,
+    "locked_region": "all pixels at y <= 1000",
+    "method": "Vertical registration below y=1000 only; no head/face movement."
+  }
+]

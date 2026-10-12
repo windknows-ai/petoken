@@ -1,0 +1,450 @@
+[
+  {
+    "file": "coquettish_2.png",
+    "parent": "coquettish_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 54338,
+    "changed_bbox": [
+      524,
+      778,
+      870,
+      996
+    ],
+    "mask_source": "VALIDATION.mask_polygons"
+  },
+  {
+    "file": "coquettish_3.png",
+    "parent": "coquettish_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 58179,
+    "changed_bbox": [
+      524,
+      731,
+      870,
+      996
+    ],
+    "mask_source": "VALIDATION.mask_polygons"
+  },
+  {
+    "file": "coquettish_4.png",
+    "parent": "coquettish_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 54326,
+    "changed_bbox": [
+      524,
+      778,
+      870,
+      996
+    ],
+    "mask_source": "VALIDATION.mask_polygons"
+  },
+  {
+    "file": "headpat_happy_2.png",
+    "parent": "headpat_happy_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 83625,
+    "changed_bbox": [
+      524,
+      627,
+      946,
+      996
+    ],
+    "mask_source": "VALIDATION.mask_polygons"
+  },
+  {
+    "file": "headpat_happy_3.png",
+    "parent": "headpat_happy_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 84330,
+    "changed_bbox": [
+      524,
+      627,
+      946,
+      996
+    ],
+    "mask_source": "VALIDATION.mask_polygons"
+  },
+  {
+    "file": "headpat_happy_4.png",
+    "parent": "headpat_happy_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 59086,
+    "changed_bbox": [
+      524,
+      726,
+      870,
+      996
+    ],
+    "mask_source": "VALIDATION.mask_polygons"
+  },
+  {
+    "file": "sleep_2.png",
+    "parent": "sleep_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 52778,
+    "changed_bbox": [
+      126,
+      516,
+      1087,
+      992
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "sleep_3.png",
+    "parent": "sleep_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 24133,
+    "changed_bbox": [
+      1103,
+      613,
+      1210,
+      959
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "bored_2.png",
+    "parent": "bored_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 167526,
+    "changed_bbox": [
+      53,
+      478,
+      536,
+      1077
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "bored_3.png",
+    "parent": "bored_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 171995,
+    "changed_bbox": [
+      53,
+      455,
+      536,
+      1077
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "yawn_2.png",
+    "parent": "yawn_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 130915,
+    "changed_bbox": [
+      279,
+      147,
+      776,
+      856
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "yawn_3.png",
+    "parent": "yawn_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 211706,
+    "changed_bbox": [
+      223,
+      288,
+      776,
+      847
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "wake_stretch_2.png",
+    "parent": "wake_stretch_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 178241,
+    "changed_bbox": [
+      318,
+      51,
+      742,
+      552
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "curious_2.png",
+    "parent": "curious_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 822774,
+    "changed_bbox": [
+      62,
+      13,
+      1215,
+      1220
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "thinking_2.png",
+    "parent": "thinking_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 67015,
+    "changed_bbox": [
+      723,
+      315,
+      1166,
+      954
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "shy_2.png",
+    "parent": "shy_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 70408,
+    "changed_bbox": [
+      568,
+      458,
+      866,
+      696
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "pout_2.png",
+    "parent": "pout_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 129566,
+    "changed_bbox": [
+      382,
+      535,
+      873,
+      1219
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "dragged_2.png",
+    "parent": "dragged_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 192850,
+    "changed_bbox": [
+      323,
+      664,
+      966,
+      1184
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "dragged_3.png",
+    "parent": "dragged_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 174379,
+    "changed_bbox": [
+      298,
+      617,
+      960,
+      1219
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "dragged_4.png",
+    "parent": "dragged_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 222901,
+    "changed_bbox": [
+      321,
+      651,
+      1027,
+      1192
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "hug_2.png",
+    "parent": "hug_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 325423,
+    "changed_bbox": [
+      101,
+      561,
+      1182,
+      935
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "greet_morning_2.png",
+    "parent": "greet_morning_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 67086,
+    "changed_bbox": [
+      784,
+      621,
+      1140,
+      864
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "greet_night_2.png",
+    "parent": "greet_night_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 55297,
+    "changed_bbox": [
+      831,
+      540,
+      1071,
+      800
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "cheer_2.png",
+    "parent": "cheer_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 157815,
+    "changed_bbox": [
+      269,
+      288,
+      574,
+      953
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "clap_2.png",
+    "parent": "clap_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 51575,
+    "changed_bbox": [
+      531,
+      663,
+      816,
+      845
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "clap_3.png",
+    "parent": "clap_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 68907,
+    "changed_bbox": [
+      502,
+      657,
+      849,
+      856
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "peek_2.png",
+    "parent": "peek_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 539827,
+    "changed_bbox": [
+      82,
+      9,
+      1180,
+      799
+    ],
+    "mask_source": "FULLPOSE.composition.parts"
+  },
+  {
+    "file": "grievance_2.png",
+    "parent": "grievance_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 5610,
+    "changed_bbox": [
+      771,
+      729,
+      833,
+      823
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "focus_read_2.png",
+    "parent": "focus_read_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 78647,
+    "changed_bbox": [
+      526,
+      789,
+      1016,
+      951
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "focus_read_3.png",
+    "parent": "focus_read_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 54162,
+    "changed_bbox": [
+      530,
+      613,
+      934,
+      947
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "focus_read_4.png",
+    "parent": "focus_read_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 43382,
+    "changed_bbox": [
+      524,
+      602,
+      940,
+      749
+    ],
+    "mask_source": "REMAINING.method.parts"
+  },
+  {
+    "file": "focus_tea_2.png",
+    "parent": "focus_tea_1.png",
+    "is_blink": false,
+    "fixed_region_changed_pixels": 0,
+    "changed_pixels": 32522,
+    "changed_bbox": [
+      870,
+      628,
+      1016,
+      856
+    ],
+    "mask_source": "REMAINING.method.parts"
+  }
+]

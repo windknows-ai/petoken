@@ -1,0 +1,730 @@
+{
+  "branch": "codex/forms-game",
+  "base_commit": "ad44b23",
+  "status": "partial_image_generation_quota_exhausted",
+  "spec_source": "D:\\Documents\\ChatGPT\\petoken-claude\\docs\\form_art\\FORM_ART_2_GAME.md",
+  "spec_sha256": "6DDCBBED9D0AAAE9C80BBDEE626B06797C65A0A822CB0D303FBF1215B2AD13B7",
+  "spec_revision": "User corrected to 41 actions / 96 frames; absent planned default frames omitted.",
+  "next_step": "Quota resets at 2026-10-12 16:45:33 America/Toronto (20:45:33 UTC). Generate focus_done_1, stretch_break_1, stretch_break_2, worried_2 and proud_1, then 20 eye-only blinks; normalize bottoms to exact default reference, compose only original motion masks, validate, replace progress preview and commit final completion. Do not push.",
+  "action_count": 41,
+  "frame_count": 96,
+  "frames": [
+    {
+      "action": "待机",
+      "file": "idle_1.png",
+      "reference": "assets/v1_1/idle.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "待机",
+      "file": "idle_blink.png",
+      "reference": "assets/v2_0/idle_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "跟着敲键盘",
+      "file": "typing_1.png",
+      "reference": "assets/v1_1/typing_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "跟着敲键盘",
+      "file": "typing_2.png",
+      "reference": "assets/v1_1/typing_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "盯着屏幕",
+      "file": "codex_working_1.png",
+      "reference": "assets/v1_1/working.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "说话",
+      "file": "microphone_1.png",
+      "reference": "assets/v1_1/microphone.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "听歌",
+      "file": "music_1.png",
+      "reference": "assets/v1_1/music.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "弹吉他",
+      "file": "guitar_1.png",
+      "reference": "assets/v1_1/guitar.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "欢呼",
+      "file": "celebrate_1.png",
+      "reference": "assets/v1_1/celebrate.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "难过",
+      "file": "sad_1.png",
+      "reference": "assets/v1_1/sad.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "挥手提醒",
+      "file": "wave_1.png",
+      "reference": "assets/v1_1/wave.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "撒娇",
+      "file": "coquettish_1.png",
+      "reference": "assets/v2_0/coquettish_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "撒娇",
+      "file": "coquettish_2.png",
+      "reference": "assets/v2_0/coquettish_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "撒娇",
+      "file": "coquettish_3.png",
+      "reference": "assets/v2_0/coquettish_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "撒娇",
+      "file": "coquettish_4.png",
+      "reference": "assets/v2_0/coquettish_4.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "撒娇",
+      "file": "coquettish_blink.png",
+      "reference": "assets/v2_0/coquettish_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "被摸头",
+      "file": "headpat_happy_1.png",
+      "reference": "assets/v2_0/headpat_happy_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被摸头",
+      "file": "headpat_happy_2.png",
+      "reference": "assets/v2_0/headpat_happy_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被摸头",
+      "file": "headpat_happy_3.png",
+      "reference": "assets/v2_0/headpat_happy_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被摸头",
+      "file": "headpat_happy_4.png",
+      "reference": "assets/v2_0/headpat_happy_4.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被摸头",
+      "file": "headpat_happy_blink.png",
+      "reference": "assets/v2_0/headpat_happy_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "趴着睡",
+      "file": "sleep_1.png",
+      "reference": "assets/v2_0/sleep_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "趴着睡",
+      "file": "sleep_2.png",
+      "reference": "assets/v2_0/sleep_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "趴着睡",
+      "file": "sleep_3.png",
+      "reference": "assets/v2_0/sleep_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "无聊趴着",
+      "file": "bored_1.png",
+      "reference": "assets/v2_0/bored_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "无聊趴着",
+      "file": "bored_2.png",
+      "reference": "assets/v2_0/bored_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "无聊趴着",
+      "file": "bored_3.png",
+      "reference": "assets/v2_0/bored_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "无聊趴着",
+      "file": "bored_blink.png",
+      "reference": "assets/v2_0/bored_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "打哈欠",
+      "file": "yawn_1.png",
+      "reference": "assets/v2_0/yawn_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "打哈欠",
+      "file": "yawn_2.png",
+      "reference": "assets/v2_0/yawn_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "打哈欠",
+      "file": "yawn_3.png",
+      "reference": "assets/v2_0/yawn_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "醒来伸懒腰",
+      "file": "wake_stretch_1.png",
+      "reference": "assets/v2_0/wake_stretch_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "醒来伸懒腰",
+      "file": "wake_stretch_2.png",
+      "reference": "assets/v2_0/wake_stretch_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "好奇凑近",
+      "file": "curious_1.png",
+      "reference": "assets/v2_0/curious_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "好奇凑近",
+      "file": "curious_2.png",
+      "reference": "assets/v2_0/curious_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "好奇凑近",
+      "file": "curious_blink.png",
+      "reference": "assets/v2_0/curious_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "盘腿思考",
+      "file": "thinking_1.png",
+      "reference": "assets/v2_0/thinking_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "盘腿思考",
+      "file": "thinking_2.png",
+      "reference": "assets/v2_0/thinking_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "盘腿思考",
+      "file": "thinking_blink.png",
+      "reference": "assets/v2_0/thinking_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "害羞捂脸",
+      "file": "shy_1.png",
+      "reference": "assets/v2_0/shy_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "害羞捂脸",
+      "file": "shy_2.png",
+      "reference": "assets/v2_0/shy_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "鼓脸",
+      "file": "pout_1.png",
+      "reference": "assets/v2_0/pout_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "鼓脸",
+      "file": "pout_2.png",
+      "reference": "assets/v2_0/pout_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "鼓脸",
+      "file": "pout_blink.png",
+      "reference": "assets/v2_0/pout_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "被戳",
+      "file": "poked_1.png",
+      "reference": "assets/v2_0/poked_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被拎起来",
+      "file": "dragged_1.png",
+      "reference": "assets/v2_0/dragged_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被拎起来",
+      "file": "dragged_2.png",
+      "reference": "assets/v2_0/dragged_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被拎起来",
+      "file": "dragged_3.png",
+      "reference": "assets/v2_0/dragged_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "被拎起来",
+      "file": "dragged_4.png",
+      "reference": "assets/v2_0/dragged_4.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "落地",
+      "file": "landing_1.png",
+      "reference": "assets/v2_0/landing_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "落地",
+      "file": "landing_blink.png",
+      "reference": "assets/v2_0/landing_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "欢迎回来",
+      "file": "hug_1.png",
+      "reference": "assets/v2_0/hug_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "欢迎回来",
+      "file": "hug_2.png",
+      "reference": "assets/v2_0/hug_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "欢迎回来",
+      "file": "hug_blink.png",
+      "reference": "assets/v2_0/hug_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "比心",
+      "file": "heart_1.png",
+      "reference": "assets/v2_0/heart_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "早安",
+      "file": "greet_morning_1.png",
+      "reference": "assets/v2_0/greet_morning_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "早安",
+      "file": "greet_morning_2.png",
+      "reference": "assets/v2_0/greet_morning_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "早安",
+      "file": "greet_morning_blink.png",
+      "reference": "assets/v2_0/greet_morning_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "晚安",
+      "file": "greet_night_1.png",
+      "reference": "assets/v2_0/greet_night_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "晚安",
+      "file": "greet_night_2.png",
+      "reference": "assets/v2_0/greet_night_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "吓一跳",
+      "file": "surprised_1.png",
+      "reference": "assets/v2_0/surprised_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "点赞",
+      "file": "thumbs_up_1.png",
+      "reference": "assets/v2_0/thumbs_up_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "点赞",
+      "file": "thumbs_up_blink.png",
+      "reference": "assets/v2_0/thumbs_up_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "加油",
+      "file": "cheer_1.png",
+      "reference": "assets/v2_0/cheer_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "加油",
+      "file": "cheer_2.png",
+      "reference": "assets/v2_0/cheer_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "加油",
+      "file": "cheer_blink.png",
+      "reference": "assets/v2_0/cheer_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "鼓掌",
+      "file": "clap_1.png",
+      "reference": "assets/v2_0/clap_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "鼓掌",
+      "file": "clap_2.png",
+      "reference": "assets/v2_0/clap_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "鼓掌",
+      "file": "clap_3.png",
+      "reference": "assets/v2_0/clap_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "鼓掌",
+      "file": "clap_blink.png",
+      "reference": "assets/v2_0/clap_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "躲着偷看你",
+      "file": "peek_1.png",
+      "reference": "assets/v2_0/peek_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "躲着偷看你",
+      "file": "peek_2.png",
+      "reference": "assets/v2_0/peek_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "委屈",
+      "file": "grievance_1.png",
+      "reference": "assets/v2_0/grievance_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "委屈",
+      "file": "grievance_2.png",
+      "reference": "assets/v2_0/grievance_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "陪你看书",
+      "file": "focus_read_1.png",
+      "reference": "assets/v2_0/focus_read_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "陪你看书",
+      "file": "focus_read_2.png",
+      "reference": "assets/v2_0/focus_read_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "陪你看书",
+      "file": "focus_read_3.png",
+      "reference": "assets/v2_0/focus_read_3.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "陪你看书",
+      "file": "focus_read_4.png",
+      "reference": "assets/v2_0/focus_read_4.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "陪你看书",
+      "file": "focus_read_blink.png",
+      "reference": "assets/v2_0/focus_read_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "喝茶休息",
+      "file": "focus_tea_1.png",
+      "reference": "assets/v2_0/focus_tea_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "喝茶休息",
+      "file": "focus_tea_2.png",
+      "reference": "assets/v2_0/focus_tea_2.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "专注完成",
+      "file": "focus_done_1.png",
+      "reference": "assets/v2_0/focus_done_1.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "专注完成",
+      "file": "focus_done_blink.png",
+      "reference": "assets/v2_0/focus_done_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "起来活动",
+      "file": "stretch_break_1.png",
+      "reference": "assets/v2_0/stretch_break_1.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "起来活动",
+      "file": "stretch_break_2.png",
+      "reference": "assets/v2_0/stretch_break_2.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "起来活动",
+      "file": "stretch_break_blink.png",
+      "reference": "assets/v2_0/stretch_break_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "举着卡片",
+      "file": "hold_card_1.png",
+      "reference": "assets/v2_0/hold_card_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "举着卡片",
+      "file": "hold_card_blink.png",
+      "reference": "assets/v2_0/hold_card_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "收拾东西",
+      "file": "packing_1.png",
+      "reference": "assets/v2_0/packing_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "收拾东西",
+      "file": "packing_blink.png",
+      "reference": "assets/v2_0/packing_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "出发",
+      "file": "ready_go_1.png",
+      "reference": "assets/v2_0/ready_go_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "出发",
+      "file": "ready_go_blink.png",
+      "reference": "assets/v2_0/ready_go_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "担心",
+      "file": "worried_1.png",
+      "reference": "assets/v2_0/worried_1.png",
+      "reference_exists": true,
+      "status": "generated_dimension_alpha_checked_pose_review_pending"
+    },
+    {
+      "action": "担心",
+      "file": "worried_2.png",
+      "reference": "assets/v2_0/worried_2.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "担心",
+      "file": "worried_blink.png",
+      "reference": "assets/v2_0/worried_blink.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    },
+    {
+      "action": "得意",
+      "file": "proud_1.png",
+      "reference": "assets/v2_0/proud_1.png",
+      "reference_exists": true,
+      "status": "pending_imagegen_quota"
+    }
+  ],
+  "verification_note": "Pixel helper fixed by referencing the installed .NET 10 System.Drawing.Common, Primitives, GdiPlus and Core assemblies. Initial QA found boot-baseline drift; correction and continuity composition pending.",
+  "imagegen_error": "HTTP 429 usage_limit_reached, plan_type plus, limit_window_minutes 1440, resets_at 1791837933",
+  "generated_count": 71,
+  "missing_count": 25,
+  "missing_files": [
+    "idle_blink.png",
+    "coquettish_blink.png",
+    "headpat_happy_blink.png",
+    "bored_blink.png",
+    "curious_blink.png",
+    "thinking_blink.png",
+    "pout_blink.png",
+    "landing_blink.png",
+    "hug_blink.png",
+    "greet_morning_blink.png",
+    "thumbs_up_blink.png",
+    "cheer_blink.png",
+    "clap_blink.png",
+    "focus_read_blink.png",
+    "focus_done_1.png",
+    "focus_done_blink.png",
+    "stretch_break_1.png",
+    "stretch_break_2.png",
+    "stretch_break_blink.png",
+    "hold_card_blink.png",
+    "packing_blink.png",
+    "ready_go_blink.png",
+    "worried_2.png",
+    "worried_blink.png",
+    "proud_1.png"
+  ],
+  "baseline_mismatch_count": 0,
+  "verified": [
+    "71 source PNGs are 1254x1254 RGBA with real transparent pixels.",
+    "All 71 alpha>8 bottom anchors equal exact per-frame default reference.",
+    "32 follow-up frames composed with original source motion masks; fixed-region RGBA changed pixels = 0.",
+    "Preview visibly labels every missing frame PENDING; no placeholder sprite files created."
+  ],
+  "open_issues": [
+    "Task incomplete: 25 PNGs still missing due to built-in image generation daily quota.",
+    "Pointwise pixel-perfect head/hand/individual foot landmark agreement is not numerically verified; further alignment and sprite overlay acceptance required.",
+    "Partial preview is not the final 96-frame delivery.",
+    "No API fallback, API key access, push or publication authorized/performed."
+  ],
+  "conventions": "41 actions / 96 filenames from updated source task table. Never add planned nonexistent default frames. Blinks change only eyes; use matching generated action_1 as parent. All new tracked files confined to assets/v2_5/forms/game/."
+}
