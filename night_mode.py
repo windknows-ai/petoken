@@ -120,9 +120,12 @@ class NightMode(QObject):
         """The night version of ``pose`` while it is night and its art exists."""
         if not self.active:
             return pose
-        if pose.startswith('night_'):
+        if pose.startswith(('night_', 'night:')):
             return pose
         import pet_assets
+        full = pet_assets.full_set('night', pose)           # Its own pajama picture of this action.
+        if full:
+            return full
         night = NIGHT_POSES.get(pose, 'night_idle')
         return night if pet_assets.has_own_art(night) else pose
 

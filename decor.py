@@ -50,11 +50,11 @@ FIT = {
 # on her hair: sunk ``depth`` head-widths below the top of her hair, as wide as ``cover`` of her hair
 # there. So they sit on her in every pose and outfit instead of floating at a fixed point.
 WORN = {
-    'head_prism_crown': (.3, .86), 'head_pearl_tiara': (.3, .84), 'head_lunar_tiara': (.42, 1.0),
-    'head_crystal_circlet': (.4, 1.0), 'head_lavender_wreath': (.3, 1.0), 'head_aurora_antlers': (.26, .8),
-    'head_frost_cat_ears': (.4, 1.02), 'head_lilac_rabbit_ears': (.44, .97),
-    'head_cloud_beret': (.42, 1.08), 'head_celestial_beret': (.42, 1.08), 'head_moon_rabbit_hat': (.42, 1.08),
-    'head_moon_sleepcap': (.44, 1.1),
+    'head_prism_crown': (.36, .86), 'head_pearl_tiara': (.36, .84), 'head_lunar_tiara': (.46, 1.0),
+    'head_crystal_circlet': (.44, 1.0), 'head_lavender_wreath': (.42, 1.02), 'head_aurora_antlers': (.32, .8),
+    'head_frost_cat_ears': (.42, 1.02), 'head_lilac_rabbit_ears': (.46, .97),
+    'head_cloud_beret': (.44, 1.08), 'head_celestial_beret': (.44, 1.08), 'head_moon_rabbit_hat': (.44, 1.08),
+    'head_moon_sleepcap': (.46, 1.1),
 }
 # Bulky weapons drawn smaller so they never hide her face.
 WEAPON_SCALE = dict(sakura_fan=.6, crystal_orb=.6, star_shield=.55, star_harp=.62, small_umbrella=.68,
@@ -246,6 +246,14 @@ def worn_on_head(pixmap, rect, art, item_name, base):
     scale = max(base * .6, min(base * 1.9, cover * hair / max(1.0, bw)))
     point = QPointF(rect.x() + centre * rect.width(), rect.y() + row[0] * rect.height())
     return point, (bx, by), scale
+
+
+def own_fit(item, rect):
+    """The person's own adjustment of a piece (the wardrobe's adjust buttons, shop.OWN_FIT):
+    (offset, scale, extra turn), the offset in fractions of her picture."""
+    own = shop.OWN_FIT.get(item['id']) or {}
+    return (QPointF(own.get('dx', 0) * rect.width(), own.get('dy', 0) * rect.height()),
+            own.get('scale', 1.0), own.get('angle', 0))
 
 
 def worn_items(panel):
@@ -443,14 +451,16 @@ class Decor:
                 if front != layer.front:
                     continue                                # Held in front, or floating behind her.
                 point = QPointF(rect.x() + fx * rect.width(), rect.y() + fy * rect.height())
-                self._draw(p, art, point, (ax, ay), rect.width() / 1254 * grow * WEAPON_SCALE.get(item['name'], 1.0),
-                           turn_to)
+                shift, grown, turned = own_fit(item, rect)
+                self._draw(p, art, point + shift, (ax, ay),
+                           rect.width() / 1254 * grow * WEAPON_SCALE.get(item['name'], 1.0) * grown, turn_to + turned)
                 continue
             if slot == 'head' and item['name'] in WORN:
                 placed = worn_on_head(pixmap, rect, art, item['name'], size)
                 if placed is not None:
                     point, anchor, size = placed
-                    self._draw(p, art, point + nudge, anchor, size, turn)
+                    shift, grown, turned = own_fit(item, rect)
+                    self._draw(p, art, point + nudge + shift, anchor, size * grown, turn + turned)
                     continue
             if slot == 'head':
                 fx, fy, fw = head_box(pixmap)
@@ -467,7 +477,8 @@ class Decor:
             else:                                           # A buddy bobs at her left, clear of her raised hand.
                 point = QPointF(rect.left() - side * .06, rect.y() + rect.height() * .4 + math.sin(now * 2.3) * side * .03)
                 size *= .8
-            self._draw(p, art, point + nudge, (ax, ay), size, turn)
+            shift, grown, turned = own_fit(item, rect)
+            self._draw(p, art, point + nudge + shift, (ax, ay), size * grown, turn + turned)
 
     _SCALED = {}
 

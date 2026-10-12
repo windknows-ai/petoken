@@ -11,13 +11,19 @@ NAMES = ('sparkle_lavender', 'sparkle_champagne', 'sparkle_ice', 'sparkle_pearl'
          'hero_xinghai', 'hero_yinhe', 'hero_haori', 'flare')
 
 
-def to_alpha(image):
+def to_alpha(image, vignette=False):
+    """``vignette``: fade to nothing towards the edges, so a turning picture never shows its square."""
     image = image.convertToFormat(QImage.Format_RGB32)
     out = QImage(image.size(), QImage.Format_ARGB32)
+    w, h = image.width(), image.height()
     for y in range(image.height()):
         for x in range(image.width()):
             c = image.pixelColor(x, y)
             a = max(c.red(), c.green(), c.blue())
+            if vignette:
+                r = (((x + .5) / w - .5) ** 2 + ((y + .5) / h - .5) ** 2) ** .5 * 2   # 0 centre, 1 edge middle.
+                fade = 1.0 if r < .62 else max(0.0, 1 - (r - .62) / .36)
+                a = int(a * fade * fade * (3 - 2 * fade))
             if a < 2:
                 out.setPixelColor(x, y, QColor(0, 0, 0, 0))
                 continue
@@ -35,7 +41,7 @@ def main():
         image = QImage(str(SOURCE / f'{name}.webp'))
         if image.width() > 256:
             image = image.scaledToWidth(256)
-        to_alpha(image).save(str(target / f'{name}.png'))
+        to_alpha(image, vignette=name.startswith(('hero_', 'flare'))).save(str(target / f'{name}.png'))
         print(name)
 
 

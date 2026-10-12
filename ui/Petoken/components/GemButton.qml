@@ -12,6 +12,7 @@ Item {
     property string kind: "violet"
     property bool checked: false
     property real fontSize: 14
+    property bool autoRepeat: false                      // Held down: clicks again and again.
     signal clicked()
 
     implicitHeight: 40
@@ -110,6 +111,15 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onClicked: if (root.enabled) root.clicked()
+        onClicked: if (root.enabled && !repeat.fired) root.clicked()
+        onPressed: if (root.autoRepeat) { repeat.fired = false; repeat.interval = 420; repeat.start() }
+        onReleased: repeat.stop()
+        onCanceled: repeat.stop()
+    }
+    Timer {
+        id: repeat
+        property bool fired: false
+        repeat: true
+        onTriggered: { fired = true; interval = 70; if (root.enabled) root.clicked() }
     }
 }

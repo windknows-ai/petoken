@@ -174,6 +174,19 @@ class ShopTests(unittest.TestCase):
         w.bridge.clearFitting()
         self.assertNotIn('outfit', w.preview_items())
         self.assertFalse(w.bridge.trying)
+        w.choose(crown)                                             # Fitting a piece by hand.
+        self.assertTrue(w.bridge.canAdjust)
+        self.addCleanup(shop.OWN_FIT.clear)
+        w.bridge.nudge(0, .02)
+        w.bridge.growPiece(1.1)
+        self.assertAlmostEqual(shop.OWN_FIT[crown['id']]['dy'], .02)
+        self.assertIn('110%', w.bridge.fitText)
+        w.bridge.resetFit()
+        self.assertNotIn(crown['id'], shop.OWN_FIT)
+        w.bridge.setZoom(1.3)
+        self.assertAlmostEqual(w.bridge.zoom, 1.3)
+        self.assertIn('0.6%', w.bridge.oddsText)                    # The odds, shown openly.
+        self.assertIn(str(shop.REFUND), w.bridge.oddsText)
         self.assertEqual(w.errors, [])                              # The Qt Quick page loads cleanly.
         bridge = w.bridge
         for kind in ('weapon', 'back', 'star', 'outfit'):

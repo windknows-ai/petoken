@@ -165,3 +165,43 @@ class DecorTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class OwnFitAndFullSetTests(unittest.TestCase):
+    def test_own_fit_moves_grows_and_turns_a_piece(self):
+        import tempfile
+        from pathlib import Path
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        store = shop.Shop(FakePanel({}), Path(temp.name) / 'shop.json')
+        self.addCleanup(shop.OWN_FIT.clear)
+        crown = shop.BY_ID['decor.head_prism_crown']
+        store.adjust_fit(crown['id'], dx=.02, dy=-.01, scale=1.1, angle=5)
+        store.adjust_fit(crown['id'], dx=.02)
+        shift, grown, turned = decor.own_fit(crown, QRectF(0, 0, 200, 100))
+        self.assertAlmostEqual(shift.x(), 8, delta=.01)
+        self.assertAlmostEqual(shift.y(), -1, delta=.01)
+        self.assertAlmostEqual(grown, 1.1)
+        self.assertEqual(turned, 5)
+        again = shop.Shop(FakePanel({}), Path(temp.name) / 'shop.json')     # Kept with the shop.
+        self.assertIn(crown['id'], again.state['fit'])
+        again.reset_fit(crown['id'])
+        self.assertEqual(decor.own_fit(crown, QRectF(0, 0, 200, 100))[1], 1.0)
+
+    def test_forms_use_their_full_set_once_drawn(self):
+        import pet_assets
+        import starsea
+        self.addCleanup(pet_assets._FULL_CACHE.clear)
+        pet_assets._FULL_CACHE['night:typing'] = True
+        pet_assets._FULL_CACHE['star:hug'] = True
+        self.assertEqual(pet_assets.full_set('night', 'typing'), 'night:typing')
+        self.assertIsNone(pet_assets.full_set('night', 'hug') if not pet_assets._file(
+            pet_assets._FORM_ENTRIES['night:hug'].path).is_file() else None)
+        from night_mode import NightMode
+        night = NightMode.__new__(NightMode)
+        night.active = True
+        self.assertEqual(night.pose('typing'), 'night:typing')
+        sea = starsea.StarseaForm.__new__(starsea.StarseaForm)
+        sea.__dict__['active'] = True
+        self.assertEqual(sea.pose('hug'), 'star:hug')
+        self.assertEqual(sea.pose('night:typing'), 'night:typing')   # Another form's picture stays.

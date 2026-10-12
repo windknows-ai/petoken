@@ -23,7 +23,7 @@ NEAREST = dict(
     packing='idle', grievance='sad', worried='sad', pout='sad', shy='headpat', coquettish='headpat',
     headpat_happy='headpat', surprised='poked', landing='dragged', bored='idle', yawn='sleep', wake_stretch='idle')
 # States that are a different look of hers already: an outfit never covers them.
-OWN_LOOK = ('star_', 'night_', 'game_', 'form2', 'xform', 'awaken')
+OWN_LOOK = ('star_', 'night_', 'game_', 'form2', 'xform', 'awaken', 'night:', 'game:', 'star:')
 
 
 def catalog(prices):
@@ -67,11 +67,14 @@ def frame_path(item, state, index=0, blink=False):
     if item is None or pose is None:
         return None
     if blink:
-        for suffix in ('.webp', '.png'):                    # WebP in the package, PNG in the repository.
-            path = OUTFIT_DIR / item['series'] / item['tier'] / f'{pose}_blink{suffix}'
-            if path.is_file():
-                return str(path.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/')
-    frames = _frames(item['series'], item['tier'], pose) or _frames(item['series'], item['tier'], 'idle')
+        for name in ((state, pose) if state in pet_assets.FULL_POSES else (pose,)):
+            for suffix in ('.webp', '.png'):                # WebP in the package, PNG in the repository.
+                path = OUTFIT_DIR / item['series'] / item['tier'] / f'{name}_blink{suffix}'
+                if path.is_file():
+                    return str(path.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/')
+    exact = state if state in pet_assets.FULL_POSES else None     # Its own picture of this very action.
+    frames = ((exact and _frames(item['series'], item['tier'], exact)) or _frames(item['series'], item['tier'], pose)
+              or _frames(item['series'], item['tier'], 'idle'))
     return frames[index % len(frames)] if frames else None
 
 

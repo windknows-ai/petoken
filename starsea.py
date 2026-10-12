@@ -22,7 +22,7 @@ STAR_POSES.update(dict.fromkeys(('thinking', 'curious', 'bored', 'peek'), 'star_
 STAR_POSES.update(dict.fromkeys(('headpat_happy', 'coquettish', 'shy'), 'star_headpat'))
 STAR_POSES.update(dict.fromkeys(('poked', 'surprised', 'landing'), 'star_poked'))
 # Poses that belong to another look and are shown as they are.
-OTHER_FORMS = ('star_', 'awaken_', 'night_', 'form2_', 'game_', 'xform_')
+OTHER_FORMS = ('star_', 'awaken_', 'night_', 'form2_', 'game_', 'xform_', 'night:', 'game:', 'star:')
 # The awakening, (pose, seconds); played backwards to change back.
 AWAKEN = (('awaken_0', .7), ('awaken_1', .8), ('awaken_2', .8), ('awaken_3', .8), ('awaken_4', 1.0))
 
@@ -69,5 +69,8 @@ class StarseaForm:
         if not self.active or pose.startswith(OTHER_FORMS):
             return pose
         import pet_assets
+        full = pet_assets.full_set('star', pose)             # Its own Starsea picture of this action.
+        if full:
+            return full
         star = STAR_POSES.get(pose, 'star_idle')
         return star if pet_assets.has_own_art(star) else pose

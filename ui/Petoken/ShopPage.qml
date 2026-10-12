@@ -79,7 +79,11 @@ Page {
                 id: bannerShape
                 anchors.fill: parent
                 radius: Theme.radius
-                clip: true
+                layer.enabled: true                      // Its pictures cut to the round corners (clip is square).
+                layer.effect: MultiEffect {
+                    maskEnabled: true
+                    maskSource: ShaderEffectSource { sourceItem: bannerMask; hideSource: true }
+                }
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
                     GradientStop { position: 0; color: "#24185C" }
@@ -98,9 +102,8 @@ Page {
                     anchors { right: parent.right; rightMargin: 40; verticalCenter: parent.verticalCenter }
                     width: 190; height: 190
                     source: bridge.fxUrl("hero_xinghai")
+                    sourceSize: Qt.size(380, 380)
                     RotationAnimation on rotation { from: 0; to: 360; duration: 26000; loops: Animation.Infinite }
-                    layer.enabled: true
-                    layer.effect: MultiEffect { brightness: 0.05 }
                 }
                 Column {
                     anchors { left: parent.left; leftMargin: 28; verticalCenter: parent.verticalCenter }
@@ -114,6 +117,37 @@ Page {
                         GemButton { height: 44; fontSize: 15; kind: "gold"; icon: "shooting-star"; text: bridge.wishTenText; enabled: bridge.canWishTen; onClicked: bridge.wish(10) }
                     }
                 }
+            }
+            Rectangle { id: bannerMask; anchors.fill: parent; radius: Theme.radius; visible: false; layer.enabled: true }
+            Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border.color: "#5A4BA8" }
+            GemButton {                                  // The odds, shown openly.
+                anchors { right: parent.right; top: parent.top; margins: 12 }
+                kind: "ghost"; height: 30; fontSize: 12; icon: "info"
+                text: bridge.tr("wardrobe_odds")
+                checked: odds.visible
+                onClicked: odds.visible = !odds.visible
+            }
+            Rectangle {
+                id: odds
+                visible: false
+                z: 5
+                anchors { right: parent.right; top: parent.top; rightMargin: 12; topMargin: 50 }
+                width: Math.min(parent.width - 24, oddsWords.implicitWidth + 32)
+                height: oddsWords.implicitHeight + 24
+                radius: 16
+                color: "#F2120D30"
+                border.color: Theme.glassEdge
+                Text {
+                    id: oddsWords
+                    anchors.centerIn: parent
+                    width: Math.min(implicitWidth, odds.parent.width - 56)
+                    text: bridge.oddsText
+                    color: Theme.ink
+                    wrapMode: Text.Wrap
+                    lineHeight: 1.35
+                    font.family: Theme.sans; font.pixelSize: 13
+                }
+                MouseArea { anchors.fill: parent; onClicked: odds.visible = false }
             }
         }
         Item { Layout.fillHeight: true }

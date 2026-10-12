@@ -9,6 +9,7 @@ Item {
     id: root
     property string portrait: ""                          // image://petoken/mirror/... (her and her pieces)
     property bool trying: false
+    property real zoom: 1.0                               // Her size in the glass (only hers).
     readonly property real k: Math.min(width / 760, height / 1000)
     readonly property real fw: 760 * k
     readonly property real fh: 1000 * k
@@ -53,19 +54,21 @@ Item {
             Image {                                      // Her.
                 id: her
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: parent.height * 0.12
-                width: parent.width * 1.0
-                height: parent.height * 0.86
+                readonly property real baseY: glass.height * 0.98 - height     // Her feet stay on the floor.
+                y: baseY
+                width: parent.width * root.zoom
+                height: parent.height * 0.86 * root.zoom
                 fillMode: Image.PreserveAspectFit
                 source: root.portrait
                 sourceSize: Qt.size(width * Screen.devicePixelRatio, height * Screen.devicePixelRatio)
                 smooth: true
                 cache: false
-                SequentialAnimation on y {
+                transform: Translate { id: bob }             // A gentle float (y itself follows her size).
+                SequentialAnimation {
                     loops: Animation.Infinite
                     running: true
-                    NumberAnimation { from: glass.height * 0.06; to: glass.height * 0.06 - 5; duration: 1700; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: glass.height * 0.06 - 5; to: glass.height * 0.06; duration: 1700; easing.type: Easing.InOutSine }
+                    NumberAnimation { target: bob; property: "y"; from: 0; to: -5; duration: 1700; easing.type: Easing.InOutSine }
+                    NumberAnimation { target: bob; property: "y"; from: -5; to: 0; duration: 1700; easing.type: Easing.InOutSine }
                 }
                 Behavior on source { SequentialAnimation {
                     NumberAnimation { target: her; property: "opacity"; to: 0.25; duration: 90 }

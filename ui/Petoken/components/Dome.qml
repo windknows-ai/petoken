@@ -14,7 +14,7 @@ Item {
     height: 144
 
     readonly property bool hot: mouse.containsMouse
-    z: hot ? 6 : (chosen ? 5 : 0)
+    z: hot ? 20 : (chosen ? 5 : 0)
     readonly property color tone: Theme.rarity(item.rarity || "")
 
     opacity: 0
@@ -86,19 +86,19 @@ Item {
             }
         }
     }
-    Rectangle {                                          // Its name, floating up under the pointer.
+    Rectangle {                                          // Its name, just under it while the pointer is there.
         id: nameTag
-        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.top; bottomMargin: root.hot || root.chosen ? 2 : -6 }
-        z: 10
+        anchors { horizontalCenter: parent.horizontalCenter; top: parent.bottom; topMargin: root.hot ? 4 : -4 }
+        z: 30
         height: 28
         width: nameText.implicitWidth + 26
         radius: 14
-        color: "#F2201848"
+        color: "#FA1A1446"
         border.color: Qt.lighter(root.tone, 1.1)
-        opacity: root.hot || root.chosen ? 1 : 0
+        opacity: root.hot ? 1 : 0
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: Theme.quick } }
-        Behavior on anchors.bottomMargin { NumberAnimation { duration: Theme.quick; easing.type: Easing.OutCubic } }
+        Behavior on anchors.topMargin { NumberAnimation { duration: Theme.quick; easing.type: Easing.OutCubic } }
         Text {
             id: nameText
             anchors.centerIn: parent

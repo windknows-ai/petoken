@@ -114,6 +114,11 @@ def in_window(item, day):
     return (m1, d1) <= key <= (m2, d2) if (m1, d1) <= (m2, d2) else key >= (m1, d1) or key <= (m2, d2)
 
 
+# The person's own fit of each piece: {item id: dict(dx, dy, scale, angle)} (decor.own_fit).
+OWN_FIT = {}
+FIT_LIMITS = dict(dx=(-.35, .35), dy=(-.35, .35), scale=(.4, 2.5), angle=(-180, 180))
+
+
 class Shop:
     def __init__(self, panel, path, clock=time.time, rng=None):
         self.panel = panel
@@ -121,6 +126,8 @@ class Shop:
         self.clock = clock
         self.rng = rng or random.Random()
         self.state = self._load()
+        OWN_FIT.clear()
+        OWN_FIT.update(self.state.get('fit') or {})
 
     # Storage -------------------------------------------------------------------
     def _load(self):
@@ -131,6 +138,26 @@ class Shop:
         except (OSError, ValueError):
             pass
         return {}
+
+    def adjust_fit(self, item_id, dx=0.0, dy=0.0, scale=1.0, angle=0.0):
+        """Move, grow or turn a piece on her (the person's own fit, kept per piece)."""
+        own = dict(OWN_FIT.get(item_id) or {})
+        for key, by in (('dx', dx), ('dy', dy), ('angle', angle)):
+            low, high = FIT_LIMITS[key]
+            own[key] = round(max(low, min(high, own.get(key, 0) + by)), 4)
+        low, high = FIT_LIMITS['scale']
+        own['scale'] = round(max(low, min(high, own.get('scale', 1.0) * scale)), 4)
+        OWN_FIT[item_id] = own
+        self.state['fit'] = dict(OWN_FIT)
+        self._save()
+        self._worn_changed()
+        return own
+
+    def reset_fit(self, item_id):
+        OWN_FIT.pop(item_id, None)
+        self.state['fit'] = dict(OWN_FIT)
+        self._save()
+        self._worn_changed()
 
     def _save(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)

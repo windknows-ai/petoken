@@ -45,6 +45,11 @@ class DiscountDraw(QWidget):
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.StrongFocus)
         self.item, self.draw, self.language, self.on_done = item, draw, language, on_done
+        # The window behind, as a picture: drawn under the veil, so the show covers it solidly. A
+        # see-through veil let the light-on-black bursts (drawn adding light, alpha too) punch an
+        # opaque dark box into it.
+        view = getattr(self.host, 'view', None)
+        self._behind = view.grabFramebuffer() if view is not None else None
         self.t = 0.0
         self.rng = random.Random(hash(item['id']) & 0xffff)
         self.slots = list(range(CARDS))                     # Card k sits at slot self.slots[k].
@@ -219,7 +224,17 @@ class DiscountDraw(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         w, h, t = self.width(), self.height(), self.t
-        p.fillRect(self.rect(), QColor(4, 4, 16, int(215 * _ease(t / .3))))
+        behind = self._behind
+        if behind is not None and not behind.isNull():
+            ratio = behind.devicePixelRatio() or 1.0
+            g = self.geometry()
+            p.drawImage(QRectF(self.rect()), behind, QRectF(g.x() * ratio, g.y() * ratio, w * ratio, h * ratio))
+            p.fillRect(self.rect(), QColor(4, 4, 16, int(215 * _ease(t / .3))))
+            p.setCompositionMode(QPainter.CompositionMode_DestinationOver)
+            p.fillRect(self.rect(), QColor(4, 4, 16))              # Wholly opaque underneath.
+            p.setCompositionMode(QPainter.CompositionMode_SourceOver)
+        else:
+            p.fillRect(self.rect(), QColor(4, 4, 16, int(215 * _ease(t / .3))))
         glow = QLinearGradient(0, h * .3, 0, h)
         glow.setColorAt(0, QColor(80, 60, 160, 0))
         glow.setColorAt(1, QColor(80, 60, 160, int(70 * _ease(t / .4))))

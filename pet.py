@@ -533,6 +533,8 @@ class DesktopPet(QWidget):
         # Her Starsea form (2.4) when you chose it; night and game poses stay as they are.
         starsea=getattr(self.panel,'starsea',None)
         starry=starsea.pose if starsea is not None and not gaming else (lambda pose:pose)
+        if gaming:                       # In game mode an action shows in her game form once it is drawn.
+            starry=lambda pose:pose if pose.startswith(('form2_','game_')) else (assets.full_set('game',pose) or pose)
         # Being dragged > notification > preview > interaction > game > focus > task > mood.
         if self.preview_state or (self.change_state and not gaming):
             state=self.preview_state or self.change_state

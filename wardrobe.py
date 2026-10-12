@@ -68,8 +68,8 @@ def portrait(panel, items, pose, width, height):
     outfit = items.get('outfit')
     starsea = getattr(panel, 'starsea', None)
     state = pose
-    if starsea is not None and getattr(starsea, 'active', False) and f'star_{pose}' in pet_assets.STAR_REGISTRY:
-        state = f'star_{pose}'
+    if starsea is not None and getattr(starsea, 'active', False):
+        state = starsea.pose(pose)                          # Her Starsea look in the mirror too.
     path = (outfits.frame_path(outfit, state) if outfit is not None else None) or decor.frame_file(state, 0) \
         or decor.frame_file('idle', 0)
     sx, sy, sw, sh = geometry.scaled_sprite_rect(100)
@@ -483,6 +483,69 @@ class WardrobeBridge(HostBridge):
             self.sparkle.emit(True)
             self.sounds.play('discount')
         self.touch(True)
+
+    # Fitting a piece by hand, and her size in the mirror ----------------------------------
+    def _fit_item(self):
+        item = self._chosen
+        return item if item is not None and item.get('art') and item['slot'] not in ('outfit', 'star') else None
+
+    @Property(bool, notify=changed)
+    def canAdjust(self):
+        return self._fit_item() is not None
+
+    @Property(str, notify=changed)
+    def fitText(self):
+        item = self._fit_item()
+        if item is None:
+            return self._t('wardrobe_fit_none')
+        own = shop.OWN_FIT.get(item['id']) or {}
+        return self._t('wardrobe_fit_now', scale=round(own.get('scale', 1.0) * 100), angle=round(own.get('angle', 0)))
+
+    @Slot(float, float)
+    def nudge(self, dx, dy):
+        item = self._fit_item()
+        if item is not None:
+            self.shop.adjust_fit(item['id'], dx=dx, dy=dy)
+            self.touch(True)
+
+    @Slot(float)
+    def growPiece(self, factor):
+        item = self._fit_item()
+        if item is not None:
+            self.shop.adjust_fit(item['id'], scale=factor)
+            self.touch(True)
+
+    @Slot(float)
+    def turnPiece(self, degrees):
+        item = self._fit_item()
+        if item is not None:
+            self.shop.adjust_fit(item['id'], angle=degrees)
+            self.touch(True)
+
+    @Slot()
+    def resetFit(self):
+        item = self._fit_item()
+        if item is not None:
+            self.shop.reset_fit(item['id'])
+            self.touch(True)
+
+    @Property(str, notify=changed)
+    def oddsText(self):
+        """The odds, read from the shop's own numbers (what is shown is what is drawn)."""
+        rates = ' · '.join(f"{self._t(f'shop_rarity_{name}')} {chance * 100:g}%" for name, chance in shop.ODDS)
+        rules = self._t('wardrobe_odds_text', refund=shop.REFUND).split('\n', 1)[1]
+        return rates + '\n' + rules
+
+    @Property(float, notify=changed)
+    def zoom(self):
+        """Her size in the mirror (only her: the mirror and the closet stay as they are)."""
+        return float(self.shop.state.get('mirror_zoom', 1.0))
+
+    @Slot(float)
+    def setZoom(self, value):
+        self.shop.state['mirror_zoom'] = round(max(.6, min(1.6, value)), 3)
+        self.shop._save()
+        self.touch()
 
     @Slot()
     def clearFitting(self):

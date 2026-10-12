@@ -160,6 +160,35 @@ STAR_REGISTRY = tuple(
     for name, frames, blink in _STAR) + tuple(
     AssetEntry(f"awaken_{n}", f"assets/v2_4/awaken_{n}.png", "assets/v1_1/idle.png") for n in range(5))
 
+# 2.5 every action in every form: the night pajamas, the game form and Starsea each get a full set of
+# her default actions (assets/v2_5/forms/<form>/<pose>_<n>.png, <pose>_blink.png), drawn in that
+# form's look. A form uses its full-set picture of an action once it exists (full_set), else what it
+# did before. The states are named '<form>:<pose>'.
+FULL_POSES = tuple(entry.state for entry in REGISTRY + COMPANION_REGISTRY)
+FORM_DIRS = dict(night='night', game='game', star='starsea')
+FORM_PREFIXES = tuple(f'{form}:' for form in FORM_DIRS)
+FORM_REGISTRY = tuple(
+    AssetEntry(f'{form}:{pose}', f'assets/v2_5/forms/{folder}/{pose}.png', 'assets/v1_1/idle.png',
+               frames=tuple(f'assets/v2_5/forms/{folder}/{pose}_{n}.png' for n in range(1, 7)),
+               blink=f'assets/v2_5/forms/{folder}/{pose}_blink.png')
+    for form, folder in FORM_DIRS.items() for pose in FULL_POSES)
+
+
+def full_set(form, pose):
+    """'<form>:<pose>' when that form has its own picture of the action, else None."""
+    if pose not in FULL_POSES:
+        return None
+    state = f'{form}:{pose}'
+    if state not in _FULL_CACHE:
+        entry = _FORM_ENTRIES[state]
+        _FULL_CACHE[state] = _file(entry.path).is_file() or bool(existing_frames(entry))
+    return state if _FULL_CACHE[state] else None
+
+
+_FULL_CACHE = {}
+_FORM_ENTRIES = {entry.state: entry for entry in FORM_REGISTRY}
+
+
 # Activity-layer names that are not character poses.
 ALIASES = {"working": "codex_working", "usage": "idle"}
 
@@ -171,7 +200,7 @@ PREVIEW_STATES = ("idle", "typing", "microphone", "music", "working", "usage",
 def entry_for(state):
     """Return the registry entry for ``state``; unknown states map to idle."""
     key = ALIASES.get(state, state)
-    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY + STAR_REGISTRY:
+    for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY + STAR_REGISTRY + FORM_REGISTRY:
         if entry.state == key:
             return entry
     return REGISTRY[0]
@@ -333,7 +362,7 @@ def load_sprites():
         # Companion poses share the V1.1 pixmap they fall back to, so they
         # cost no extra memory until their own art exists.
         paths = {resolve_path(entry): table[entry.state] for entry in REGISTRY}
-        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY + STAR_REGISTRY:
+        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY + STAR_REGISTRY + FORM_REGISTRY:
             path = resolve_path(entry)
             table[entry.state] = paths.get(path) or (pose_source(path) if path else None)
         table['working'] = table['codex_working']
