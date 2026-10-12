@@ -16,10 +16,11 @@ Item {
         rowSpacing: Math.max(10, g.node.spacing || 0)
         columnSpacing: Math.max(12, g.node.spacing || 0)
         Repeater {
-            model: g.node.cells || []
+            model: (g.node.cells || []).length                // By count: a rebuilt tree keeps its pieces
             delegate: Loader {
                 id: cell
-                required property var modelData
+                required property int index
+                readonly property var modelData: (g.node.cells || [])[index] || ({})
                 source: "MirrorNode.qml"
                 onLoaded: { item.node = Qt.binding(() => cell.modelData.node); item.m = Qt.binding(() => g.m) }
                 visible: item ? item.shown : true
@@ -27,8 +28,8 @@ Item {
                 Layout.column: modelData.c
                 Layout.rowSpan: modelData.rs
                 Layout.columnSpan: modelData.cs
-                Layout.fillWidth: modelData.node.t === "space" ? !!modelData.node.hx : (modelData.node.t === "label" ? !!modelData.node.hg : true)
-                Layout.fillHeight: !!modelData.node.vx
+                Layout.fillWidth: (modelData.node || {}).t === "space" ? !!modelData.node.hx : ((modelData.node || {}).t === "label" ? !!modelData.node.hg : true)
+                Layout.fillHeight: !!(modelData.node || {}).vx
             }
         }
     }

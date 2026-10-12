@@ -7,11 +7,12 @@ top-level window one QML page is shown in.
 """
 from __future__ import annotations
 
+import functools
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QUrl, Qt, Slot
 from PySide6.QtGui import QFontDatabase, QRegion
-from PySide6.QtQuick import QQuickWindow
+from PySide6.QtQuick import QQuickImageProvider, QQuickWindow
 from PySide6.QtQuickWidgets import QQuickWidget
 from PySide6.QtWidgets import QWidget
 
@@ -44,6 +45,7 @@ def file_url(path):
 _ART_ALIAS = {}
 
 
+@functools.lru_cache(maxsize=512)
 def ui_art(name):
     """A picture Codex drew for the interface (assets/ui/<name>.png or assets/ui/<part>/<name>.png),
     or '' while it has none."""
@@ -58,6 +60,59 @@ def ui_art(name):
         for path in sorted(folder.glob(f'*/{candidate}.png')):
             return file_url(path)
     return ''
+
+
+class Icons(QQuickImageProvider):
+    """image://icon/<name>/<filled 0|1>/<colour without #>: a Phosphor icon drawn in that colour at the
+    size asked (no shader per icon: dozens of tinted icons cost nothing to draw)."""
+
+    def __init__(self):
+        super().__init__(QQuickImageProvider.Image)
+        self._cache = {}
+
+    def requestImage(self, ident, size, requested):
+        from PySide6.QtCore import QRectF
+        from PySide6.QtGui import QColor, QImage, QPainter
+        from PySide6.QtSvg import QSvgRenderer
+        name, _, rest = ident.partition('/')
+        filled, _, colour = rest.partition('/')
+        side = max(8, requested.width() if requested.width() > 0 else 40)
+        key = (name, filled, colour, side)
+        if key not in self._cache:
+            folder = pet_assets.ASSETS_DIR / 'icons' / ('fill' if filled == '1' else 'regular')
+            path = folder / (f'{name}-fill.svg' if filled == '1' else f'{name}.svg')
+            image = QImage(side, side, QImage.Format_ARGB32_Premultiplied)
+            image.fill(0)
+            p = QPainter(image)
+            p.setRenderHint(QPainter.Antialiasing)
+            QSvgRenderer(str(path)).render(p, QRectF(0, 0, side, side))
+            p.setCompositionMode(QPainter.CompositionMode_SourceIn)
+            p.fillRect(image.rect(), QColor('#' + colour[:8]) if colour else QColor('white'))
+            p.end()
+            if len(self._cache) > 600:
+                self._cache.clear()
+            self._cache[key] = image
+        return self._cache[key]
+
+
+class _Icons(QQuickImageProvider):
+    """The shared icon store, registered in an engine (a provider belongs to the engine it is in)."""
+
+    def __init__(self):
+        super().__init__(QQuickImageProvider.Image)
+
+    def requestImage(self, ident, size, requested):
+        return icons().requestImage(ident, size, requested)
+
+
+_ICONS = None
+
+
+def icons():
+    global _ICONS
+    if _ICONS is None:
+        _ICONS = Icons()
+    return _ICONS
 
 
 class HostBridge(QObject):
@@ -148,6 +203,7 @@ class QuickWindow(QWidget):
         self.view.setClearColor(Qt.transparent)
         self.view.setResizeMode(QQuickWidget.SizeRootObjectToView)
         self.view.engine().addImportPath(str(QML_DIR))
+        self.view.engine().addImageProvider('icon', _Icons())
         self.errors = []
 
     def load(self, qml, **context):

@@ -20,11 +20,11 @@ Item {
         rowSpacing: 16
         columnSpacing: 16
         Repeater {
-            model: sp.kids
+            model: sp.kids.length                // By count: a rebuilt tree keeps its pieces
             delegate: Loader {
                 id: pane
-                required property var modelData
                 required property int index
+                readonly property var modelData: sp.kids[index] || ({})
                 source: "MirrorNode.qml"
                 onLoaded: { item.node = Qt.binding(() => pane.modelData); item.m = Qt.binding(() => sp.m) }
                 visible: item ? item.shown : true

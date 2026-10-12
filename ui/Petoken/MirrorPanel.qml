@@ -3,24 +3,21 @@ import Petoken
 import "mirror"
 
 // A window of the app that is not a dialog (the usage panel), in Petoken's glass: no title bar of
-// its own (its page has one), its contents drawn by the mirror, gently scaled down if they run long.
+// its own (its page has one), its contents drawn by the mirror at their own size (never scaled:
+// scaled words blur). wantHeight tells the window how tall that needs it to be.
 Item {
     id: app
-    Component.onCompleted: shell.appear()
+    readonly property real wantHeight: page.implicitHeight + 2 * shell.margin
+    Component.onCompleted: { Theme.dark = false; shell.appear() }
     WindowShell {
         id: shell
         anchors.fill: parent
         bare: true
         content: Item {
-            id: area
             anchors.fill: parent
-            readonly property real fit: page.implicitHeight > 0 ? Math.min(1, height / page.implicitHeight) : 1
             MirrorNode {
                 id: page
-                width: area.width / area.fit
-                height: Math.max(implicitHeight, area.height / area.fit)
-                scale: area.fit
-                transformOrigin: Item.TopLeft
+                anchors.fill: parent
                 node: mirror.tree
                 m: mirror
             }

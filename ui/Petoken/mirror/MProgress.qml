@@ -12,7 +12,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: "#2A2266"
+        color: Theme.track
         Rectangle {
             width: parent.width * Math.max(0, Math.min(1, p.val.fraction || 0))
             height: parent.height
@@ -20,7 +20,7 @@ Item {
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0; color: Theme.violet }
-                GradientStop { position: 1; color: Theme.gold }
+                GradientStop { position: 1; color: Theme.dark ? Theme.gold : "#A497F2" }
             }
             Behavior on width { NumberAnimation { duration: Theme.smooth; easing.type: Easing.OutCubic } }
         }

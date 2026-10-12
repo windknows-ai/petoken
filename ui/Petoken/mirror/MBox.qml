@@ -30,10 +30,11 @@ Item {
         rowSpacing: gap
         columnSpacing: Math.max(8, gap)
         Repeater {
-            model: box.items
+            model: box.items.length                // By count: a rebuilt tree keeps its pieces
             delegate: Loader {
                 id: cell
-                required property var modelData
+                required property int index
+                readonly property var modelData: box.items[index] || ({})
                 readonly property var n: modelData
                 readonly property int stretch: n.stretch || 0
                 readonly property bool alignedH: ((n.align || 0) & (Qt.AlignLeft | Qt.AlignRight | Qt.AlignHCenter)) !== 0
@@ -45,7 +46,8 @@ Item {
                     ? (box.anyStretch ? (stretch > 0 || !!n.hx) : (!!n.hg && n.t !== "label" && n.t !== "space"
                                                                     && n.t !== "button" && n.t !== "check"))
                     : (!alignedH && n.t !== "space" && n.hg !== false && n.fw === undefined)
-                readonly property bool fillH: box.across ? (!alignedV && !!n.vx) : (stretch > 0 || !!n.vx)
+                // Across, Qt stretches every piece that may grow to the row's height (cards side by side line up).
+                readonly property bool fillH: box.across ? (!alignedV && (!!n.vx || (n.t === "container" && n.vg !== false))) : (stretch > 0 || !!n.vx)
                 Layout.fillWidth: fillW
                 Layout.fillHeight: fillH
                 Layout.horizontalStretchFactor: fillW && box.across ? Math.max(1, stretch) : -1

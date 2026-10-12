@@ -7186,6 +7186,7 @@ def ui_selftest(report):
         view.engine().addImportPath(str(quick_ui.QML_DIR))
         view.engine().addImageProvider('petoken', wardrobe.Pictures(bridge))
         view.engine().addImageProvider('mirror', widget_mirror._Shared(widget_mirror.images()))
+        view.engine().addImageProvider('icon', quick_ui._Icons())
         for name, value in context.items():
             view.rootContext().setContextProperty(name, value)
         view.setSource(QUrl.fromLocalFile(str(quick_ui.QML_DIR / 'Petoken' / qml)))

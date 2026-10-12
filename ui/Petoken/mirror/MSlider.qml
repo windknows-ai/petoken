@@ -24,7 +24,7 @@ Slider {
         width: s.availableWidth
         height: 8
         radius: 4
-        color: "#2A2266"
+        color: Theme.track
         Rectangle {
             width: s.visualPosition * parent.width
             height: parent.height
@@ -32,7 +32,7 @@ Slider {
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0; color: Theme.violet }
-                GradientStop { position: 1; color: Theme.gold }
+                GradientStop { position: 1; color: Theme.dark ? Theme.gold : "#A497F2" }
             }
         }
     }

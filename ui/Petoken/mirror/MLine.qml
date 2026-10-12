@@ -27,8 +27,8 @@ TextField {
     opacity: enabled ? 1 : 0.45
     background: Rectangle {
         radius: 14
-        color: f.activeFocus ? "#2A2268" : "#1E1850"
-        border.color: f.activeFocus ? Theme.violet : Theme.glassEdge
+        color: f.activeFocus ? Theme.fieldFocus : Theme.field
+        border.color: f.activeFocus ? Theme.violet : Theme.fieldEdge
         border.width: f.activeFocus ? 1.5 : 1
         Behavior on border.color { ColorAnimation { duration: Theme.quick } }
     }

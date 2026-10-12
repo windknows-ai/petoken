@@ -11,6 +11,7 @@ from __future__ import annotations
 import time
 
 from PySide6.QtCore import Property, QTimer, Signal, Slot
+from PySide6.QtWidgets import QFrame
 
 import pet_assets
 from quick_ui import MARGIN, HostBridge, QuickWindow, file_url, ui_art
@@ -128,10 +129,7 @@ class WorkbenchShell(QuickWindow):
         self.setMinimumSize(980, 640)
         self.bridge = WorkbenchBridge(self, workbench)
         workbench.summary.setProperty('mirrorSkip', True)    # Shown in the title bar instead.
-        for listing, art in ((workbench.todo_list, 'empty_todos'), (workbench.pending_list, 'empty_todos'),
-                             (workbench.notes_list, 'empty_notes'), (workbench.projects_table, 'empty_projects'),
-                             (workbench.notify_list, 'empty_notifications'), (workbench.task_list, 'empty_tasks')):
-            listing.setProperty('emptyArt', art)              # Her little scene where a list is empty.
+        workbench.findChild(QFrame, 'hero').setProperty('mirrorSkip', True)   # The shell has its own banner.
         self.mirror = widget_mirror.Mirror(workbench, widget_mirror.images(), self)
         self.mirror.treeChanged.connect(self.bridge.changed)
         self.mirror.valuesChanged.connect(self.bridge.summaryChanged)

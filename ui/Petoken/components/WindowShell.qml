@@ -30,7 +30,7 @@ Item {
         blurEnabled: true
         blur: 1.0
         blurMax: 40
-        opacity: 0.55
+        opacity: Theme.shadow
     }
     Item {
         id: body
@@ -47,19 +47,19 @@ Item {
             anchors.fill: parent
             radius: Theme.windowRadius
             gradient: Gradient {
-                GradientStop { position: 0; color: "#16113A" }
-                GradientStop { position: 0.55; color: "#120D30" }
-                GradientStop { position: 1; color: "#1D1246" }
+                GradientStop { position: 0; color: Theme.windowTop }
+                GradientStop { position: 1; color: Theme.windowBottom }
             }
-            border.color: "#4A3E8C"
+            border.color: Theme.windowEdge
             border.width: 1
             Image {                                      // The night outside, faint.
+                visible: Theme.dark
                 anchors.fill: parent
                 source: bridge.fxUrl("sky_far")
                 fillMode: Image.PreserveAspectCrop
                 sourceSize: Qt.size(1280, 800)
                 opacity: 0.22
-                layer.enabled: true
+                layer.enabled: visible
                 layer.effect: MultiEffect {
                     maskEnabled: true
                     maskSource: ShaderEffectSource { sourceItem: roundMask; hideSource: true }
@@ -83,7 +83,7 @@ Item {
                 anchors { fill: parent; margins: 1 }
                 radius: parent.radius - 1
                 color: "transparent"
-                border.color: "#12FFFFFF"
+                border.color: Theme.dark ? "#12FFFFFF" : "#80FFFFFF"
             }
         }
         Item {                                           // Title bar: drag it to move the window.
@@ -133,9 +133,10 @@ Item {
                     model: root.compact ? [ { icon: "x", act: "close" } ] : [ { icon: "minus", act: "min" }, { icon: "x", act: "close" } ]
                     delegate: Rectangle {
                         width: 34; height: 34; radius: 17
-                        color: hover.containsMouse ? (modelData.act === "close" ? "#C0E0507A" : "#26FFFFFF") : "transparent"
+                        color: hover.containsMouse ? (modelData.act === "close" ? "#E0507A" : (Theme.dark ? "#26FFFFFF" : "#14000000")) : "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.quick } }
-                        Icon { anchors.centerIn: parent; name: modelData.icon; size: 16; color: Theme.inkSoft }
+                        Icon { anchors.centerIn: parent; name: modelData.icon; size: 16
+                               color: hover.containsMouse && modelData.act === "close" ? "#FFFFFF" : Theme.inkSoft }
                         MouseArea {
                             id: hover
                             anchors.fill: parent

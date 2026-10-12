@@ -28,7 +28,7 @@ Item {
         visible: l.pill
         anchors.fill: parent
         radius: height / 2
-        color: "#2A2070"
+        color: Theme.dark ? "#2A2070" : "#EEEAFB"
         border.color: Theme.glassEdge
     }
     Text {

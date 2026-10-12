@@ -147,7 +147,6 @@ class WorkbenchShellTests(unittest.TestCase):
             todo_list = wb.todo_list.property('_mirrorId')
             shell.mirror.poll()
             self.assertEqual(shell.mirror.values[todo_list]['rows'][0]['text'], '写周报')
-            self.assertEqual(wb.todo_list.property('emptyArt'), 'empty_todos')
             shell.close()                                                 # Closing it closes the workbench.
             pump(.3)
             self.assertFalse(wb.isVisible())

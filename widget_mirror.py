@@ -29,8 +29,10 @@ from PySide6.QtWidgets import (QAbstractButton, QAbstractSpinBox, QBoxLayout, QC
                                QScrollArea, QSizePolicy, QSlider, QSpinBox, QSplitter, QStackedLayout,
                                QStackedWidget, QTabWidget, QTextEdit, QToolButton, QTreeWidget, QWidget)
 
-POLL_MS = 200
-CANVAS_MS = 700
+POLL_MS = 250
+_HIDDEN = {'v': False}
+_HEAVY = ('layout', 'pages', 'child', 'kids', 'items')
+CANVAS_MS = 1200
 LANGUAGE = 'zh_CN'                   # The app's language (set by the panel): names Qt's standard buttons.
 _STANDARD = {QDialogButtonBox.Ok: '好', QDialogButtonBox.Cancel: '取消', QDialogButtonBox.Yes: '是',
              QDialogButtonBox.No: '否', QDialogButtonBox.Save: '保存', QDialogButtonBox.Discard: '不保存',
@@ -133,6 +135,8 @@ class Mirror(QObject):
     piece shows now); its slots act on the real widgets."""
     treeChanged = Signal()
     valuesChanged = Signal()
+    reshaped = Signal()                  # Some pieces' own structure changed (isReshaped tells which).
+    updated = Signal()                   # Some pieces' values changed (isUpdated tells which).
 
     def __init__(self, root, images, parent=None, dense=False):
         super().__init__(parent)
@@ -142,6 +146,8 @@ class Mirror(QObject):
         self._widgets = {}               # id -> widget
         self._counter = 0
         self._tree = {}
+        self._nodes = {}
+        self._updated = self._reshaped = frozenset()
         self._values = {}
         self._fingerprint = None
         self._canvas_serial = {}
@@ -207,7 +213,7 @@ class Mirror(QObject):
         if item is None:
             return None
         if item.widget() is not None:
-            node = self._node(item.widget())
+            node = self._child(item.widget())
             if node is not None and item.alignment():
                 node['align'] = int(item.alignment())
             return node
@@ -237,6 +243,16 @@ class Mirror(QObject):
             out['mh'] = widget.minimumHeight()
         return out
 
+    def _child(self, widget):
+        """A widget inside another: built (and kept in _nodes under its id), handed to its parent as
+        just its spec (what it is and how it sizes, not what it holds). QML asks for the rest by id, so
+        when one part of a page is rebuilt only that part is redrawn."""
+        node = self._node(widget)
+        if node is None:
+            return None
+        self._nodes[node['id']] = node
+        return {k: v for k, v in node.items() if k not in _HEAVY} | {'ref': True}
+
     def _node(self, widget):
         if not _alive(widget) or widget.property('mirrorSkip'):
             return None
@@ -247,7 +263,7 @@ class Mirror(QObject):
         elif isinstance(widget, QDialogButtonBox):
             node.update(t='box', dir='h', spacing=10, margins=[0, 0, 0, 0],
                         items=[dict(t='space', w=0, h=0, hx=True, vx=False)]
-                        + [n for n in (self._node(b) for b in self._box_buttons(widget)) if n])
+                        + [n for n in (self._child(b) for b in self._box_buttons(widget)) if n])
         elif isinstance(widget, QCheckBox):
             node['t'] = 'check'
         elif isinstance(widget, QRadioButton):
@@ -280,17 +296,17 @@ class Mirror(QObject):
             node['empty'] = _art(widget.property('emptyArt'))
         elif isinstance(widget, QTabWidget):
             node['t'] = 'tabs'
-            node['pages'] = [self._node(widget.widget(i)) for i in range(widget.count())]
+            node['pages'] = [self._child(widget.widget(i)) for i in range(widget.count())]
         elif isinstance(widget, QStackedWidget):
             node['t'] = 'stacked'
-            node['pages'] = [self._node(widget.widget(i)) for i in range(widget.count())]
+            node['pages'] = [self._child(widget.widget(i)) for i in range(widget.count())]
         elif isinstance(widget, QScrollArea):
             node['t'] = 'scroll'
-            node['child'] = self._node(widget.widget()) if widget.widget() is not None else None
+            node['child'] = self._child(widget.widget()) if widget.widget() is not None else None
         elif isinstance(widget, QSplitter):
             node['t'] = 'splitter'
             node['dir'] = 'h' if widget.orientation() == Qt.Horizontal else 'v'
-            node['kids'] = [self._node(widget.widget(i)) for i in range(widget.count())]
+            node['kids'] = [self._child(widget.widget(i)) for i in range(widget.count())]
         elif widget.layout() is not None:
             node['t'] = 'container'
             node['title'] = widget.title() if isinstance(widget, QGroupBox) else ''
@@ -437,17 +453,32 @@ class Mirror(QObject):
         if shape != self._fingerprint:
             self._fingerprint = shape
             self._widgets = {}
-            self._tree = self._node(self.root) or {}
+            old = self._nodes
+            self._nodes = {}
+            self._tree = self._child(self.root) or {}
+            reshaped = [ident for ident, node in self._nodes.items() if old.get(ident) != node]
+            self._reshaped = set(reshaped)
+            self.reshaped.emit()
             self.treeChanged.emit()
         import time
         now = time.monotonic()
         if now >= self._canvas_due:                         # Drawn widgets: re-read now and then.
             self._canvas_due = now + CANVAS_MS / 1000
             self._refresh_canvases()
-        values = {ident: self._value(ident, widget) for ident, widget in list(self._widgets.items())
-                  if _alive(widget)}
-        if values != self._values:
+        values = {}
+        for ident, widget in list(self._widgets.items()):
+            if not _alive(widget):
+                continue
+            if widget is not self.root and not widget.isVisibleTo(self.root):
+                values[ident] = _HIDDEN                     # Not shown: nothing else to read.
+            else:
+                values[ident] = self._value(ident, widget)
+        old = self._values
+        changed = [ident for ident, value in values.items() if old.get(ident) != value]
+        if changed or len(values) != len(old):
             self._values = values
+            self._updated = set(changed)
+            self.updated.emit()
             self.valuesChanged.emit()
 
     def _refresh_canvases(self):
@@ -475,6 +506,24 @@ class Mirror(QObject):
     @Property('QVariant', notify=valuesChanged)
     def values(self):
         return self._values
+
+    @Slot(str, result=bool)
+    def isUpdated(self, ident):
+        return ident in self._updated
+
+    @Slot(str, result=bool)
+    def isReshaped(self, ident):
+        return ident in self._reshaped
+
+    @Slot(str, result='QVariant')
+    def nodeOf(self, ident):
+        """A piece's whole node (its layout and its children's specs)."""
+        return self._nodes.get(ident, {})
+
+    @Slot(str, result='QVariant')
+    def value(self, ident):
+        """What one piece shows (QML asks per piece, so a change converts only that piece)."""
+        return self._values.get(ident, {})
 
     # Acting on them -----------------------------------------------------------------------
     @Slot(str)
@@ -758,6 +807,9 @@ class Follower(QObject):
             self.mirror = Mirror(target, images(), self.window, dense=True)
             self.window.view.engine().addImageProvider('mirror', _Shared(images()))
             self.window.load(self.qml, bridge=self.bridge, mirror=self.mirror)
+            root = self.window.view.rootObject()
+            if root is not None:
+                root.wantHeightChanged.connect(lambda: QTimer.singleShot(0, self, self._replace))
             target.destroyed.connect(self.window.deleteLater)
         return self.window
 
@@ -770,7 +822,14 @@ class Follower(QObject):
     def _place(self):
         g = self.target.geometry()
         m = self.margin
-        self.window.setGeometry(g.x() - m, g.y() - m, g.width() + 2 * m, g.height() + 2 * m)
+        root = self.window.view.rootObject()
+        wanted = (root.property('wantHeight') or 0) if root is not None else 0
+        # As tall as its words need (they are never squeezed), at least the real one's height.
+        self.window.setGeometry(g.x() - m, g.y() - m, g.width() + 2 * m, max(g.height() + 2 * m, int(wanted) + 1))
+
+    def _replace(self):
+        if self.window is not None and _alive(self.window) and self.window.isVisible():
+            self._place()
 
     def _show(self):
         if not _alive(self.target) or not self.target.isVisible():

@@ -8,7 +8,7 @@ Item {
     // How tall the window wants to be for all of the dialog to show (read by widget_mirror).
     readonly property real wantHeight: page.implicitHeight + (shell.compact ? 56 : 64) + 20 + 2 * shell.margin + 8
     onWantHeightChanged: bridge.fit(wantHeight)
-    Component.onCompleted: shell.appear()
+    Component.onCompleted: { Theme.dark = false; shell.appear() }
 
     WindowShell {
         id: shell

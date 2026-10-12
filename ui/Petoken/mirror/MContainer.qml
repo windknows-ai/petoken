@@ -7,7 +7,7 @@ Item {
     property var node: ({})
     property var m: null
     property var val: ({})
-    readonly property bool card: ["settingCard", "card", "projectShelf", "summaryCard"].indexOf(node.role) >= 0
+    readonly property bool card: ["settingCard", "card", "projectShelf", "summaryCard", "poseCard", "levelCard"].indexOf(node.role) >= 0
                                   || (node.title || "") !== ""
     readonly property int pad: card ? ((node.layout && node.layout.margins && node.layout.margins[0] > 6) ? 4 : 14) : 0
     readonly property int titleRoom: (node.title || "") !== "" ? 30 : 0
@@ -18,8 +18,8 @@ Item {
         anchors.fill: parent
         radius: 18
         gradient: Gradient {
-            GradientStop { position: 0; color: "#3A221A5C" }
-            GradientStop { position: 1; color: "#4A140F3C" }
+            GradientStop { position: 0; color: Theme.dark ? "#3A221A5C" : Theme.card }
+            GradientStop { position: 1; color: Theme.dark ? "#4A140F3C" : Theme.card }
         }
         border.color: Theme.glassEdge
     }

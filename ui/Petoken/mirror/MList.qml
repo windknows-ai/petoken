@@ -14,18 +14,8 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: 18
-        color: "#26140F3C"
+        color: Theme.dark ? "#26140F3C" : Theme.card
         border.color: Theme.glassEdge
-    }
-    Image {                                              // Her little scene while the list is empty.
-        visible: l.rows.length === 0 && (l.node.empty || "") !== "" && l.height > 160
-        anchors.centerIn: parent
-        height: Math.min(parent.height - 40, 300)
-        width: height * 412 / 292
-        source: l.node.empty || ""
-        sourceClipRect: Qt.rect(34, 34, 412, 292)               // Inside its own drawn frame.
-        fillMode: Image.PreserveAspectFit
-        smooth: true
     }
     ListView {
         id: view
@@ -45,8 +35,8 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: 13
-                color: row.r.sel ? "#46389E" : (hover.hovered && row.r.en ? "#2A2270" : "transparent")
-                border.color: row.r.sel ? "#9C8BFF" : "transparent"
+                color: row.r.sel ? Theme.rowSelected : (hover.hovered && row.r.en ? Theme.rowHover : "transparent")
+                border.color: row.r.sel ? Theme.rowSelectedEdge : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.quick } }
             }
             Rectangle {                                  // The check: a round gem that fills with violet.
@@ -55,7 +45,7 @@ Item {
                 anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
                 width: 22; height: 22; radius: 11
                 color: row.r.on ? Theme.violet : "transparent"
-                border.color: row.r.on ? "#D9CCFF" : Theme.muted
+                border.color: row.r.on ? Theme.violet : Theme.muted
                 border.width: 1.5
                 Icon { visible: row.r.on; anchors.centerIn: parent; name: "check"; size: 13; color: "#FFFFFF" }
                 MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor

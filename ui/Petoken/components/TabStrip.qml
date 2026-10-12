@@ -49,12 +49,12 @@ Item {
         radius: 1.5
         gradient: Gradient {
             orientation: Gradient.Horizontal
-            GradientStop { position: 0; color: "#00F3C96B" }
-            GradientStop { position: 0.5; color: Theme.gold }
-            GradientStop { position: 1; color: "#00F3C96B" }
+            GradientStop { position: 0; color: Theme.dark ? "#00F3C96B" : "#006655C8" }
+            GradientStop { position: 0.5; color: Theme.dark ? Theme.gold : Theme.violet }
+            GradientStop { position: 1; color: Theme.dark ? "#00F3C96B" : "#006655C8" }
         }
         Behavior on x { NumberAnimation { duration: Theme.smooth; easing.type: Easing.OutCubic } }
         Behavior on width { NumberAnimation { duration: Theme.smooth; easing.type: Easing.OutCubic } }
-        Icon { anchors.centerIn: parent; name: "sparkle"; filled: true; size: 12; color: Theme.gold }
+        Icon { anchors.centerIn: parent; name: "sparkle"; filled: true; size: 12; color: Theme.dark ? Theme.gold : Theme.violet }
     }
 }

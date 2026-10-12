@@ -29,10 +29,11 @@ Item {
         rowSpacing: Math.max(12, form.node.spacing || 0)
         columnSpacing: 18
         Repeater {
-            model: form.cells
+            model: form.cells.length                // By count: a rebuilt tree keeps its pieces
             delegate: Loader {
                 id: cell
-                required property var modelData
+                required property int index
+                readonly property var modelData: form.cells[index] || ({})
                 source: "MirrorNode.qml"
                 onLoaded: { item.node = Qt.binding(() => cell.modelData.n); item.m = Qt.binding(() => form.m) }
                 visible: item ? item.shown : true
@@ -40,8 +41,8 @@ Item {
                 Layout.column: modelData.c
                 Layout.columnSpan: modelData.cs
                 Layout.fillWidth: modelData.c === 1 || modelData.cs === 2
-                Layout.fillHeight: !!modelData.n.vx
-                Layout.alignment: Qt.AlignLeft | (modelData.n.vx ? Qt.AlignTop : Qt.AlignVCenter)
+                Layout.fillHeight: !!(modelData.n || {}).vx
+                Layout.alignment: Qt.AlignLeft | ((modelData.n || {}).vx ? Qt.AlignTop : Qt.AlignVCenter)
             }
         }
     }

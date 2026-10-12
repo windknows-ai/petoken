@@ -25,18 +25,8 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: 18
-        color: "#26140F3C"
+        color: Theme.dark ? "#26140F3C" : Theme.card
         border.color: Theme.glassEdge
-    }
-    Image {                                              // Her little scene while the list is empty.
-        visible: t.rows.length === 0 && (t.node.empty || "") !== "" && t.height > 160
-        anchors.centerIn: parent
-        height: Math.min(parent.height - 40, 300)
-        width: height * 412 / 292
-        source: t.node.empty || ""
-        sourceClipRect: Qt.rect(34, 34, 412, 292)               // Inside its own drawn frame.
-        fillMode: Image.PreserveAspectFit
-        smooth: true
     }
     Row {
         id: header
@@ -71,8 +61,8 @@ Item {
             height: 44
             Rectangle {
                 anchors.fill: parent; radius: 13
-                color: row.modelData.sel ? "#46389E" : (hover.hovered ? "#2A2270" : "transparent")
-                border.color: row.modelData.sel ? "#9C8BFF" : "transparent"
+                color: row.modelData.sel ? Theme.rowSelected : (hover.hovered ? Theme.rowHover : "transparent")
+                border.color: row.modelData.sel ? Theme.rowSelectedEdge : "transparent"
             }
             Row {
                 x: 12

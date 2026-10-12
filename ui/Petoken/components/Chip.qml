@@ -10,7 +10,7 @@ Rectangle {
     implicitHeight: 32
     implicitWidth: row.implicitWidth + 26
     radius: height / 2
-    color: "#30140F3A"
+    color: Theme.dark ? "#30140F3A" : "#F1EEFA"
     border.color: Theme.glassEdge
     border.width: 1
     Row {

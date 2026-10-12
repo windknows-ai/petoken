@@ -15,7 +15,7 @@ Item {
     opacity: val.en !== false ? 1 : 0.45
     function shown(v) { return (s.val.prefix || "") + v.toFixed(s.decimals) + (s.val.suffix || "") }
     function put(v) { s.m.setValue(s.node.id, Math.max(s.val.min, Math.min(s.val.max, v))) }
-    Rectangle { anchors.fill: parent; radius: height / 2; color: "#1E1850"; border.color: Theme.glassEdge }
+    Rectangle { anchors.fill: parent; radius: height / 2; color: Theme.field; border.color: Theme.fieldEdge }
     GemButton { id: less; kind: "ghost"; anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                 height: 40; implicitWidth: 40; icon: "minus"; text: ""
                 enabled: s.val.en !== false && s.value > s.val.min; onClicked: s.put(s.value - s.step) }

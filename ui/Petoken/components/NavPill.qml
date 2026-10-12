@@ -11,45 +11,42 @@ Rectangle {
     property bool chosen: false
     property bool subtle: false
     signal picked()
-    height: subtle ? 42 : 48
+    height: subtle ? 42 : 46
     radius: height / 2
-    gradient: Gradient {
-        orientation: Gradient.Horizontal
-        GradientStop { position: 0; color: pill.chosen ? "#6A52D6" : (hover.hovered ? "#2C2472" : "#00000000") }
-        GradientStop { position: 1; color: pill.chosen ? "#4636A6" : (hover.hovered ? "#241D60" : "#00000000") }
+    color: pill.chosen ? Theme.rowSelected : (hover.hovered ? Theme.rowHover : "transparent")
+    border.color: pill.chosen ? Theme.rowSelectedEdge : "transparent"
+    Rectangle {                                          // A bar marks where you are.
+        visible: pill.chosen
+        x: 4; anchors.verticalCenter: parent.verticalCenter
+        width: 4; height: parent.height - 18; radius: 2
+        color: Theme.violet
     }
-    border.color: pill.chosen ? "#B9A8FF" : "transparent"
-    scale: tap.pressed ? 0.97 : 1
-    Behavior on scale { NumberAnimation { duration: Theme.quick; easing.type: Easing.OutBack } }
     Item {
         id: badge
-        x: 10; anchors.verticalCenter: parent.verticalCenter
-        width: pill.art ? 34 : 30; height: width
+        x: 14; anchors.verticalCenter: parent.verticalCenter
+        width: pill.art ? 30 : 26; height: width
         Image {
             visible: pill.art !== ""
             anchors.fill: parent
             source: pill.art
-            sourceSize: Qt.size(96, 96)
+            sourceSize: Qt.size(64, 64)
             smooth: true
-            opacity: pill.chosen || hover.hovered ? 1 : 0.82
         }
-        Rectangle {
+        Icon {
             visible: pill.art === ""
-            anchors.fill: parent
-            radius: width / 2
-            color: pill.chosen ? "#33FFFFFF" : "#1AFFFFFF"
-            Icon { anchors.centerIn: parent; name: pill.icon; filled: pill.chosen; size: 17
-                   color: pill.chosen ? Theme.gold : Theme.inkSoft }
+            anchors.centerIn: parent
+            name: pill.icon; filled: pill.chosen; size: 18
+            color: pill.chosen ? Theme.violet : Theme.inkSoft
         }
     }
     Text {
         anchors { left: badge.right; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
         text: pill.label
         elide: Text.ElideRight
-        color: pill.chosen ? Theme.ink : (hover.hovered ? Theme.ink : Theme.inkSoft)
+        color: pill.chosen ? Theme.violetSoft : Theme.ink
         font.family: Theme.sans
-        font.pixelSize: pill.subtle ? 14 : 15
-        font.weight: pill.chosen ? Font.Bold : Font.Medium
+        font.pixelSize: 14
+        font.weight: pill.chosen ? Font.Bold : Font.Normal
     }
     HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
     TapHandler { id: tap; onTapped: pill.picked() }

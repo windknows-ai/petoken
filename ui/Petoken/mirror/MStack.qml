@@ -6,7 +6,12 @@ Item {
     id: s
     property var node: ({})
     property var m: null
-    readonly property var owner: m ? (m.values[node.owner || node.id] || ({})) : ({})
+    readonly property string ownerId: node ? (node.owner || node.id || "") : ""
+    property var owner: ({})
+    function refresh() { owner = m && ownerId ? m.value(ownerId) : ({}) }
+    onOwnerIdChanged: refresh()
+    onMChanged: refresh()
+    Connections { target: s.m; function onUpdated() { if (s.ownerId && s.m.isUpdated(s.ownerId)) s.refresh() } }
     readonly property int current: owner.current !== undefined ? owner.current : 0
     readonly property var page: (node.pages || [])[current] || null
     implicitWidth: holder.item ? holder.item.implicitWidth : 0

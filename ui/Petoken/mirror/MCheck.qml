@@ -16,7 +16,7 @@ Item {
 
     Image {                                              // Codex's gem switch, when there is one.
         id: switchArt
-        visible: !c.radio && source != ""
+        visible: Theme.dark && !c.radio && source != ""
         anchors.verticalCenter: parent.verticalCenter
         width: 54; height: 29
         source: c.radio ? "" : bridge.artUrl(c.on ? "toggle_on" : "toggle_off")
@@ -31,10 +31,10 @@ Item {
         height: c.radio ? 22 : 26
         radius: height / 2
         gradient: Gradient {
-            GradientStop { position: 0; color: c.on ? "#A98BFF" : "#2A2266" }
-            GradientStop { position: 1; color: c.on ? "#5B78F0" : "#1C1748" }
+            GradientStop { position: 0; color: c.on ? (Theme.dark ? "#A98BFF" : "#8676E4") : Theme.track }
+            GradientStop { position: 1; color: c.on ? (Theme.dark ? "#5B78F0" : "#6655C8") : (Theme.dark ? "#1C1748" : "#D8D3E8") }
         }
-        border.color: c.on ? "#D9CCFF" : Theme.glassEdge
+        border.color: c.on ? (Theme.dark ? "#D9CCFF" : "#5A4BB4") : Theme.fieldEdge
         Behavior on border.color { ColorAnimation { duration: Theme.quick } }
         Rectangle {
             visible: !c.radio

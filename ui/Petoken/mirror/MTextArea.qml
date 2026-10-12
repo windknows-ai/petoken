@@ -14,8 +14,8 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: 16
-        color: area.activeFocus ? "#2A2268" : "#1E1850"
-        border.color: area.activeFocus ? Theme.violet : Theme.glassEdge
+        color: area.activeFocus ? Theme.fieldFocus : Theme.field
+        border.color: area.activeFocus ? Theme.violet : Theme.fieldEdge
         border.width: area.activeFocus ? 1.5 : 1
     }
     ScrollView {
