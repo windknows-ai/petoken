@@ -1,0 +1,85 @@
+{
+  "scope": "partial checkpoint, not final 96-frame acceptance",
+  "frames": [
+    {
+      "frame": "idle_1",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "true_alpha": true,
+      "source_foot_band_alpha_exact": true,
+      "foot_anchor_y": 1217,
+      "sha256": "b57c922495cbd14257d9f05572c7fb4ffb4c1f2af39e8230c0e28b6a071a7fcb"
+    },
+    {
+      "frame": "idle_blink",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "true_alpha": true,
+      "source_foot_band_alpha_exact": true,
+      "foot_anchor_y": 1217,
+      "sha256": "26795b25d0c86703eca0488c601971ec629af4e5e88e9e3a25ad5cca6ffac6bd"
+    },
+    {
+      "frame": "typing_1",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "true_alpha": true,
+      "source_foot_band_alpha_exact": true,
+      "foot_anchor_y": 1221,
+      "sha256": "bbcdbfe2e27da72a50d7c9259164ea4ef9fa3debc4b8978b6c0aaf8c9d8d4c73"
+    },
+    {
+      "frame": "typing_2",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "true_alpha": true,
+      "source_foot_band_alpha_exact": true,
+      "foot_anchor_y": 1231,
+      "sha256": "c5f1180878de9eed9ba6293b7f0cf25fdb4138b620b53769354476e2d75cb794"
+    },
+    {
+      "frame": "microphone_1",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "true_alpha": true,
+      "source_foot_band_alpha_exact": true,
+      "foot_anchor_y": 1228,
+      "sha256": "b998f51e07911d0d87c85b14ff9372ab40ba772c495e24a605ab8d848f95fc34"
+    },
+    {
+      "frame": "guitar_1",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "true_alpha": true,
+      "source_foot_band_alpha_exact": true,
+      "foot_anchor_y": 1237,
+      "sha256": "9d39901d16511e6810299d40aaf89974325ade74ed671477ed4753b5a6ad1bab"
+    }
+  ],
+  "idle_blink_outside_eye_mask_exact": true,
+  "original_asset_hashes_unchanged": 121,
+  "remaining_frames": 90,
+  "limits": [
+    "Static images only; runtime animation/attachment integration untested.",
+    "Full pose registration and seam review remain required before final acceptance; source foot-band checks do not prove every limb coordinate.",
+    "The complete 96-frame overview has not been produced."
+  ]
+}

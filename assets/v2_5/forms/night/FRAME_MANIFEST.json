@@ -1,0 +1,578 @@
+[
+  {
+    "action": "待机",
+    "name": "idle_1",
+    "ref": "assets/v1_1/idle.png",
+    "status": "candidate_saved"
+  },
+  {
+    "action": "待机",
+    "name": "idle_blink",
+    "ref": "assets/v2_0/idle_blink.png",
+    "status": "candidate_saved"
+  },
+  {
+    "action": "跟着敲键盘",
+    "name": "typing_1",
+    "ref": "assets/v1_1/typing_1.png",
+    "status": "candidate_saved"
+  },
+  {
+    "action": "跟着敲键盘",
+    "name": "typing_2",
+    "ref": "assets/v1_1/typing_2.png",
+    "status": "candidate_saved"
+  },
+  {
+    "action": "盯着屏幕",
+    "name": "codex_working_1",
+    "ref": "assets/v1_1/working.png",
+    "status": "remaining"
+  },
+  {
+    "action": "说话",
+    "name": "microphone_1",
+    "ref": "assets/v1_1/microphone.png",
+    "status": "candidate_saved"
+  },
+  {
+    "action": "听歌",
+    "name": "music_1",
+    "ref": "assets/v1_1/music.png",
+    "status": "remaining"
+  },
+  {
+    "action": "弹吉他",
+    "name": "guitar_1",
+    "ref": "assets/v1_1/guitar.png",
+    "status": "candidate_saved"
+  },
+  {
+    "action": "欢呼",
+    "name": "celebrate_1",
+    "ref": "assets/v1_1/celebrate.png",
+    "status": "remaining"
+  },
+  {
+    "action": "难过",
+    "name": "sad_1",
+    "ref": "assets/v1_1/sad.png",
+    "status": "remaining"
+  },
+  {
+    "action": "挥手提醒",
+    "name": "wave_1",
+    "ref": "assets/v1_1/wave.png",
+    "status": "remaining"
+  },
+  {
+    "action": "撒娇",
+    "name": "coquettish_1",
+    "ref": "assets/v2_0/coquettish_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "撒娇",
+    "name": "coquettish_2",
+    "ref": "assets/v2_0/coquettish_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "撒娇",
+    "name": "coquettish_3",
+    "ref": "assets/v2_0/coquettish_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "撒娇",
+    "name": "coquettish_4",
+    "ref": "assets/v2_0/coquettish_4.png",
+    "status": "remaining"
+  },
+  {
+    "action": "撒娇",
+    "name": "coquettish_blink",
+    "ref": "assets/v2_0/coquettish_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被摸头",
+    "name": "headpat_happy_1",
+    "ref": "assets/v2_0/headpat_happy_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被摸头",
+    "name": "headpat_happy_2",
+    "ref": "assets/v2_0/headpat_happy_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被摸头",
+    "name": "headpat_happy_3",
+    "ref": "assets/v2_0/headpat_happy_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被摸头",
+    "name": "headpat_happy_4",
+    "ref": "assets/v2_0/headpat_happy_4.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被摸头",
+    "name": "headpat_happy_blink",
+    "ref": "assets/v2_0/headpat_happy_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "趴着睡",
+    "name": "sleep_1",
+    "ref": "assets/v2_0/sleep_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "趴着睡",
+    "name": "sleep_2",
+    "ref": "assets/v2_0/sleep_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "趴着睡",
+    "name": "sleep_3",
+    "ref": "assets/v2_0/sleep_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "无聊趴着",
+    "name": "bored_1",
+    "ref": "assets/v2_0/bored_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "无聊趴着",
+    "name": "bored_2",
+    "ref": "assets/v2_0/bored_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "无聊趴着",
+    "name": "bored_3",
+    "ref": "assets/v2_0/bored_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "无聊趴着",
+    "name": "bored_blink",
+    "ref": "assets/v2_0/bored_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "打哈欠",
+    "name": "yawn_1",
+    "ref": "assets/v2_0/yawn_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "打哈欠",
+    "name": "yawn_2",
+    "ref": "assets/v2_0/yawn_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "打哈欠",
+    "name": "yawn_3",
+    "ref": "assets/v2_0/yawn_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "醒来伸懒腰",
+    "name": "wake_stretch_1",
+    "ref": "assets/v2_0/wake_stretch_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "醒来伸懒腰",
+    "name": "wake_stretch_2",
+    "ref": "assets/v2_0/wake_stretch_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "好奇凑近",
+    "name": "curious_1",
+    "ref": "assets/v2_0/curious_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "好奇凑近",
+    "name": "curious_2",
+    "ref": "assets/v2_0/curious_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "好奇凑近",
+    "name": "curious_blink",
+    "ref": "assets/v2_0/curious_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "盘腿思考",
+    "name": "thinking_1",
+    "ref": "assets/v2_0/thinking_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "盘腿思考",
+    "name": "thinking_2",
+    "ref": "assets/v2_0/thinking_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "盘腿思考",
+    "name": "thinking_blink",
+    "ref": "assets/v2_0/thinking_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "害羞捂脸",
+    "name": "shy_1",
+    "ref": "assets/v2_0/shy_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "害羞捂脸",
+    "name": "shy_2",
+    "ref": "assets/v2_0/shy_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "鼓脸",
+    "name": "pout_1",
+    "ref": "assets/v2_0/pout_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "鼓脸",
+    "name": "pout_2",
+    "ref": "assets/v2_0/pout_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "鼓脸",
+    "name": "pout_blink",
+    "ref": "assets/v2_0/pout_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被戳",
+    "name": "poked_1",
+    "ref": "assets/v2_0/poked_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被拎起来",
+    "name": "dragged_1",
+    "ref": "assets/v2_0/dragged_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被拎起来",
+    "name": "dragged_2",
+    "ref": "assets/v2_0/dragged_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被拎起来",
+    "name": "dragged_3",
+    "ref": "assets/v2_0/dragged_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "被拎起来",
+    "name": "dragged_4",
+    "ref": "assets/v2_0/dragged_4.png",
+    "status": "remaining"
+  },
+  {
+    "action": "落地",
+    "name": "landing_1",
+    "ref": "assets/v2_0/landing_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "落地",
+    "name": "landing_blink",
+    "ref": "assets/v2_0/landing_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "欢迎回来",
+    "name": "hug_1",
+    "ref": "assets/v2_0/hug_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "欢迎回来",
+    "name": "hug_2",
+    "ref": "assets/v2_0/hug_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "欢迎回来",
+    "name": "hug_blink",
+    "ref": "assets/v2_0/hug_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "比心",
+    "name": "heart_1",
+    "ref": "assets/v2_0/heart_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "早安",
+    "name": "greet_morning_1",
+    "ref": "assets/v2_0/greet_morning_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "早安",
+    "name": "greet_morning_2",
+    "ref": "assets/v2_0/greet_morning_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "早安",
+    "name": "greet_morning_blink",
+    "ref": "assets/v2_0/greet_morning_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "晚安",
+    "name": "greet_night_1",
+    "ref": "assets/v2_0/greet_night_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "晚安",
+    "name": "greet_night_2",
+    "ref": "assets/v2_0/greet_night_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "吓一跳",
+    "name": "surprised_1",
+    "ref": "assets/v2_0/surprised_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "点赞",
+    "name": "thumbs_up_1",
+    "ref": "assets/v2_0/thumbs_up_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "点赞",
+    "name": "thumbs_up_blink",
+    "ref": "assets/v2_0/thumbs_up_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "加油",
+    "name": "cheer_1",
+    "ref": "assets/v2_0/cheer_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "加油",
+    "name": "cheer_2",
+    "ref": "assets/v2_0/cheer_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "加油",
+    "name": "cheer_blink",
+    "ref": "assets/v2_0/cheer_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "鼓掌",
+    "name": "clap_1",
+    "ref": "assets/v2_0/clap_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "鼓掌",
+    "name": "clap_2",
+    "ref": "assets/v2_0/clap_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "鼓掌",
+    "name": "clap_3",
+    "ref": "assets/v2_0/clap_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "鼓掌",
+    "name": "clap_blink",
+    "ref": "assets/v2_0/clap_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "躲着偷看你",
+    "name": "peek_1",
+    "ref": "assets/v2_0/peek_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "躲着偷看你",
+    "name": "peek_2",
+    "ref": "assets/v2_0/peek_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "委屈",
+    "name": "grievance_1",
+    "ref": "assets/v2_0/grievance_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "委屈",
+    "name": "grievance_2",
+    "ref": "assets/v2_0/grievance_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "陪你看书",
+    "name": "focus_read_1",
+    "ref": "assets/v2_0/focus_read_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "陪你看书",
+    "name": "focus_read_2",
+    "ref": "assets/v2_0/focus_read_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "陪你看书",
+    "name": "focus_read_3",
+    "ref": "assets/v2_0/focus_read_3.png",
+    "status": "remaining"
+  },
+  {
+    "action": "陪你看书",
+    "name": "focus_read_4",
+    "ref": "assets/v2_0/focus_read_4.png",
+    "status": "remaining"
+  },
+  {
+    "action": "陪你看书",
+    "name": "focus_read_blink",
+    "ref": "assets/v2_0/focus_read_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "喝茶休息",
+    "name": "focus_tea_1",
+    "ref": "assets/v2_0/focus_tea_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "喝茶休息",
+    "name": "focus_tea_2",
+    "ref": "assets/v2_0/focus_tea_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "专注完成",
+    "name": "focus_done_1",
+    "ref": "assets/v2_0/focus_done_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "专注完成",
+    "name": "focus_done_blink",
+    "ref": "assets/v2_0/focus_done_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "起来活动",
+    "name": "stretch_break_1",
+    "ref": "assets/v2_0/stretch_break_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "起来活动",
+    "name": "stretch_break_2",
+    "ref": "assets/v2_0/stretch_break_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "起来活动",
+    "name": "stretch_break_blink",
+    "ref": "assets/v2_0/stretch_break_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "举着卡片",
+    "name": "hold_card_1",
+    "ref": "assets/v2_0/hold_card_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "举着卡片",
+    "name": "hold_card_blink",
+    "ref": "assets/v2_0/hold_card_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "收拾东西",
+    "name": "packing_1",
+    "ref": "assets/v2_0/packing_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "收拾东西",
+    "name": "packing_blink",
+    "ref": "assets/v2_0/packing_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "出发",
+    "name": "ready_go_1",
+    "ref": "assets/v2_0/ready_go_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "出发",
+    "name": "ready_go_blink",
+    "ref": "assets/v2_0/ready_go_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "担心",
+    "name": "worried_1",
+    "ref": "assets/v2_0/worried_1.png",
+    "status": "remaining"
+  },
+  {
+    "action": "担心",
+    "name": "worried_2",
+    "ref": "assets/v2_0/worried_2.png",
+    "status": "remaining"
+  },
+  {
+    "action": "担心",
+    "name": "worried_blink",
+    "ref": "assets/v2_0/worried_blink.png",
+    "status": "remaining"
+  },
+  {
+    "action": "得意",
+    "name": "proud_1",
+    "ref": "assets/v2_0/proud_1.png",
+    "status": "remaining"
+  }
+]
