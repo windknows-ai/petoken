@@ -226,7 +226,7 @@ class DiscountDraw(QWidget):
         w, h, t = self.width(), self.height(), self.t
         behind = self._behind
         if behind is not None and not behind.isNull():
-            ratio = behind.devicePixelRatio() or 1.0
+            ratio = behind.width() / max(1, self.host.width())     # Its pixels per point (the grab has no ratio set).
             g = self.geometry()
             p.drawImage(QRectF(self.rect()), behind, QRectF(g.x() * ratio, g.y() * ratio, w * ratio, h * ratio))
             p.fillRect(self.rect(), QColor(4, 4, 16, int(215 * _ease(t / .3))))

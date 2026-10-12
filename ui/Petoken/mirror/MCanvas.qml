@@ -16,7 +16,7 @@ Item {
     Image {
         anchors.fill: parent
         source: c.val.img || ""
-        fillMode: Image.Stretch
+        fillMode: Image.PreserveAspectFit                // Never squeezed out of shape.
         smooth: true
         cache: false
     }

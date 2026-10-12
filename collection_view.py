@@ -29,9 +29,7 @@ class StickerBadge(QWidget):
         self.setFixedSize(108, 136)
         self.art = None
         self.locked_art = False
-        import widget_mirror
         from quick_ui import ui_art
-        self.dark = widget_mirror._FILTER is not None             # Drawn on night glass.
         from PySide6.QtCore import QUrl
         drawn = ui_art(f'sticker_{sticker}' if earned_at else f'sticker_{sticker}_locked')
         path = Path(QUrl(drawn).toLocalFile()) if drawn else ASSETS_DIR / 'v2_0' / f'sticker_{sticker}.png'
