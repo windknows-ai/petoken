@@ -12,11 +12,15 @@ Item {
     property string kind: "violet"
     property bool checked: false
     property real fontSize: 14
+    property bool compact: false                         // Snug: small windows beside her.
     property bool autoRepeat: false                      // Held down: clicks again and again.
     signal clicked()
 
     implicitHeight: 40
-    implicitWidth: text === "" ? Math.max(44, implicitHeight) : Math.max(88, label.implicitWidth + (icon || imageIcon ? 30 : 0) + 36)
+    // A symbol (↗, ×) or a short word is a round little button; words get room to breathe.
+    implicitWidth: text === "" ? Math.max(44, implicitHeight)
+        : compact ? Math.max(label.implicitWidth <= 24 && !icon && !imageIcon ? implicitHeight : 64, label.implicitWidth + (icon || imageIcon ? 26 : 0) + 26)
+        : Math.max(label.implicitWidth <= 24 && !icon && !imageIcon ? implicitHeight : 88, label.implicitWidth + (icon || imageIcon ? 30 : 0) + 36)
     opacity: enabled ? 1 : 0.42
 
     readonly property bool ghostly: kind === "ghost" || kind === "danger"

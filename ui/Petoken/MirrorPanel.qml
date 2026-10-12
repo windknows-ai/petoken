@@ -8,6 +8,7 @@ import "mirror"
 Item {
     id: app
     readonly property real wantHeight: page.implicitHeight + 2 * shell.margin
+    readonly property real wantWidth: page.implicitWidth + 2 * shell.margin
     Component.onCompleted: { Theme.dark = false; shell.appear() }
     WindowShell {
         id: shell

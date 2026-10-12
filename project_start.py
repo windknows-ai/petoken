@@ -253,7 +253,9 @@ class ContinuationCard(QWidget):
         self.lines.setVisible(bool(lines))
         layout.addWidget(self.lines)
         if info['handoff_md']:
-            md = QLabel(text('handoff_md', language) + '\n' + '\n'.join(info['handoff_md']))
+            shown = [line if len(line) <= 48 else line[:47] + '…' for line in info['handoff_md']]   # A glance, not the file.
+            md = QLabel(text('handoff_md', language) + '\n' + '\n'.join(shown))
+            md.setToolTip('\n'.join(info['handoff_md']))
             md.setObjectName('summary')
             md.setWordWrap(True)
             layout.addWidget(md)

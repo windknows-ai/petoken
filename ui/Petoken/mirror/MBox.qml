@@ -54,7 +54,7 @@ Item {
                 Layout.verticalStretchFactor: fillH && !box.across ? Math.max(1, stretch) : -1
                 Layout.preferredWidth: n.fw !== undefined ? n.fw : -1
                 Layout.preferredHeight: n.fh !== undefined ? n.fh : -1
-                Layout.minimumWidth: n.mw !== undefined ? Math.min(n.mw, 520) : 0
+                Layout.minimumWidth: n.mw !== undefined ? Math.min(n.mw, 520) : ({ spin: 150, combo: 150, date: 180, line: 120 })[n.t] || 0
                 Layout.minimumHeight: n.mh !== undefined ? Math.min(n.mh, 400) : 0
                 Layout.maximumWidth: n.xw !== undefined ? n.xw : Number.POSITIVE_INFINITY
                 Layout.alignment: {

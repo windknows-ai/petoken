@@ -27,7 +27,7 @@ Item {
     Rectangle {                                          // The workbench's summary pill.
         visible: l.pill
         anchors.fill: parent
-        radius: height / 2
+        radius: Math.min(height / 2, 14)                 // A pill on one line, a soft box on several.
         color: Theme.dark ? "#2A2070" : "#EEEAFB"
         border.color: Theme.glassEdge
     }
@@ -43,9 +43,9 @@ Item {
         elide: l.val.wrap ? Text.ElideNone : Text.ElideRight
         horizontalAlignment: ((l.val.align || 0) & Qt.AlignHCenter) ? Text.AlignHCenter
                              : ((l.val.align || 0) & Qt.AlignRight) ? Text.AlignRight : Text.AlignLeft
-        color: l.val.color ? Theme.readable(l.val.color)
+        color: l.val.color && !l.pill ? Theme.readable(l.val.color)
                : l.role === "muted" ? Theme.muted : l.role === "section" ? Theme.violetSoft
-               : l.pill ? Theme.gold : Theme.ink
+               : l.pill ? (Theme.dark ? Theme.gold : Theme.inkSoft) : Theme.ink
         linkColor: Theme.ice
         lineHeight: 1.18
         font.family: l.role === "heading" ? Theme.serif : Theme.sans

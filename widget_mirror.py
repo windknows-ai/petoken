@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (QAbstractButton, QAbstractSpinBox, QBoxLayout, QC
                                QDateTimeEdit, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog,
                                QFormLayout, QFrame, QGridLayout, QGroupBox, QLabel, QLineEdit,
                                QListWidget, QPlainTextEdit, QProgressBar, QPushButton, QRadioButton,
-                               QScrollArea, QSizePolicy, QSlider, QSpinBox, QSplitter, QStackedLayout,
+                               QScrollArea, QSizePolicy, QSlider, QSpinBox, QSplitter, QStackedLayout, QTableWidget,
                                QStackedWidget, QTabWidget, QTextEdit, QToolButton, QTreeWidget, QWidget)
 
 POLL_MS = 250
@@ -291,7 +291,7 @@ class Mirror(QObject):
         elif isinstance(widget, QListWidget):
             node['t'] = 'list'
             node['empty'] = _art(widget.property('emptyArt'))
-        elif isinstance(widget, QTreeWidget):
+        elif isinstance(widget, (QTreeWidget, QTableWidget)):
             node['t'] = 'tree'
             node['empty'] = _art(widget.property('emptyArt'))
         elif isinstance(widget, QTabWidget):
@@ -330,7 +330,7 @@ class Mirror(QObject):
                    tip=widget.toolTip())
         if isinstance(widget, QLabel):
             pixmap = widget.pixmap()
-            out.update(text=widget.text(), rich=widget.textFormat() == Qt.RichText or (
+            out.update(text=getattr(widget, 'full_text', None) or widget.text(), rich=widget.textFormat() == Qt.RichText or (
                 widget.textFormat() == Qt.AutoText and bool(re.search(r'<[a-zA-Z/][^>]*>', widget.text()))),
                 wrap=widget.wordWrap(), align=int(widget.alignment()), links=widget.openExternalLinks(),
                 img=self.images.picture(pixmap) if pixmap is not None and not pixmap.isNull() else '',
@@ -398,6 +398,20 @@ class Mirror(QObject):
                                  sel=item.isSelected(), tip=item.toolTip(0)))
             out.update(heads=heads, rows=rows, header=not widget.isHeaderHidden(),
                        widths=[widget.columnWidth(c) for c in range(widget.columnCount())])
+        elif isinstance(widget, QTableWidget):           # A table: its header and its cells, as text.
+            columns = widget.columnCount()
+            heads = [(widget.horizontalHeaderItem(c).text() if widget.horizontalHeaderItem(c) else '')
+                     for c in range(columns)]
+            rows = []
+            for row in range(min(widget.rowCount(), 400)):
+                if widget.isRowHidden(row):
+                    continue
+                cells = [(widget.item(row, c).text() if widget.item(row, c) else '') for c in range(columns)]
+                first = widget.item(row, 0)
+                rows.append(dict(row=row, cells=cells, sel=bool(first and first.isSelected()),
+                                 tip=first.toolTip() if first else ''))
+            out.update(heads=heads, rows=rows, header=widget.horizontalHeader().isVisible(),
+                       widths=[widget.columnWidth(c) for c in range(columns)])
         elif isinstance(widget, QTabWidget):
             out.update(labels=[widget.tabText(i).replace('&', '') for i in range(widget.count())],
                        tips=[widget.tabToolTip(i) for i in range(widget.count())],
@@ -722,6 +736,18 @@ class MirrorWindow:
                 self._wanted = height
                 QTimer.singleShot(0, window, self._fit)
 
+            @Slot(float)
+            def fitWidth(self, width):
+                QTimer.singleShot(0, window, lambda: self._fit_width(width))
+
+            def _fit_width(self, width):
+                if not _alive(window):
+                    return
+                screen = (window.screen() or QApplication.primaryScreen()).availableGeometry()
+                wanted = int(min(screen.width() - 40, width))
+                if wanted > window.width() + 4:              # Only ever wider, keeping its centre.
+                    window.setGeometry(window.x() - (wanted - window.width()) // 2, window.y(), wanted, window.height())
+
             def _fit(self):
                 if not _alive(window):
                     return
@@ -810,6 +836,7 @@ class Follower(QObject):
             root = self.window.view.rootObject()
             if root is not None:
                 root.wantHeightChanged.connect(lambda: QTimer.singleShot(0, self, self._replace))
+                root.wantWidthChanged.connect(lambda: QTimer.singleShot(0, self, self._replace))
             target.destroyed.connect(self.window.deleteLater)
         return self.window
 
@@ -825,7 +852,9 @@ class Follower(QObject):
         root = self.window.view.rootObject()
         wanted = (root.property('wantHeight') or 0) if root is not None else 0
         # As tall as its words need (they are never squeezed), at least the real one's height.
-        self.window.setGeometry(g.x() - m, g.y() - m, g.width() + 2 * m, max(g.height() + 2 * m, int(wanted) + 1))
+        wide = (root.property('wantWidth') or 0) if root is not None else 0
+        self.window.setGeometry(g.x() - m, g.y() - m, max(g.width() + 2 * m, int(wide) + 1),
+                                max(g.height() + 2 * m, int(wanted) + 1))
 
     def _replace(self):
         if self.window is not None and _alive(self.window) and self.window.isVisible():
@@ -869,7 +898,7 @@ class _Shared(QQuickImageProvider):
 
 
 # Windows beside her that are drawn from widgets too, shown through a follower window.
-FOLLOWED = frozenset({'ApprovalCard', 'QuestionCard', 'PlanCard', 'FocusCard', 'ContinuationCard'})
+FOLLOWED = frozenset({'ApprovalCard', 'QuestionCard', 'PlanCard', 'FocusCard', 'ContinuationCard', 'TaskPanelWindow'})
 
 
 class _Skin(QObject):

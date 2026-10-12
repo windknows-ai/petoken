@@ -19,6 +19,7 @@ Item {
         checked: !!b.val.checked
         enabled: b.val.en !== false
         imageIcon: b.val.icon || ""
+        compact: !!(b.m && b.m.dense)
         onClicked: b.hasMenu ? menuBox.open() : b.m.click(b.node.id)
     }
     Tip { text: b.val.tip || "" }
