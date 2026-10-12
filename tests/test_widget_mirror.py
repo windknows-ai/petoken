@@ -91,6 +91,9 @@ class MirrorTests(unittest.TestCase):
     def test_every_dialog_opens_in_its_mirror_window_and_answers(self):
         widget_mirror.install(APP)
         self.addCleanup(widget_mirror.uninstall, APP)
+        patcher = patch.object(widget_mirror, 'LANGUAGE', 'zh_CN')
+        patcher.start()
+        self.addCleanup(patcher.stop)
         form = Form()
         form.show()
         pump(1.2)
