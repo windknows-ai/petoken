@@ -449,7 +449,7 @@ class Preview(QWidget):
 
     def add_stardust(self, amount):
         import time as clock
-        self.panel.stardust.gain('star_review', f'test-{clock.time()}', amount)
+        self.panel.stardust.gain('star_test', f'test-{clock.time()}', amount)   # Not work: no daily cap.
         self._describe_stardust()
 
     def stardust_to(self, goal):
