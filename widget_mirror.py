@@ -699,6 +699,8 @@ class MirrorWindow:
         window.load('MirrorDialog.qml', bridge=bridge, mirror=mirror)
         hint = dialog.size().expandedTo(dialog.sizeHint())
         w = min(1180, max(440, int(hint.width() * 1.12))) + 2 * MARGIN
+        if any(tabs.count() > 5 for tabs in dialog.findChildren(QTabWidget)):
+            w = max(w, 1000 + 2 * MARGIN)                  # Its pages get a rail down the left (MTabs).
         h = min(900, max(220, int(hint.height() * 1.18) + 70)) + 2 * MARGIN
         window.resize(w, h)
         parent = dialog.parentWidget()
