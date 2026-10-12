@@ -8,36 +8,59 @@ Page {
     ColumnLayout {
         anchors.fill: parent
         anchors.topMargin: 8
-        spacing: 14
+        spacing: 16
 
-        Text { text: bridge.tr("shop_featured"); color: Theme.ink; font.family: Theme.serif; font.pixelSize: 17; font.weight: Font.Bold }
+        SectionTitle { key: "shop_featured" }
         Row {
-            spacing: 16
+            id: cards
+            spacing: 18
+            readonly property real cardWidth: Math.min(200, (parent.width - 3 * spacing) / 4)
             Repeater {
                 model: bridge.featured
                 delegate: GlassPanel {
-                    width: 168; height: 250
+                    width: cards.cardWidth; height: 300
                     Dome {
-                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 10 }
-                        width: 128; height: 158
+                        id: dome
+                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 14 }
+                        width: Math.min(132, parent.width - 36); height: width * 1.23
                         item: modelData
                         order: index
                         chosen: false
                         onPicked: bridge.tryOn(modelData.id)
                     }
+                    Rectangle {                          // Today's discount, once drawn.
+                        visible: modelData.offText !== ""
+                        anchors { left: parent.left; top: parent.top; margins: 12 }
+                        height: 26; width: offLabel.implicitWidth + 22; radius: 13
+                        gradient: Gradient {
+                            GradientStop { position: 0; color: "#FFE7AA" }
+                            GradientStop { position: 1; color: "#D9922F" }
+                        }
+                        Text { id: offLabel; anchors.centerIn: parent; text: modelData.offText; color: "#2B1806"
+                               font.family: Theme.sans; font.pixelSize: 13; font.weight: Font.Bold }
+                    }
                     Text {
-                        visible: modelData.priceText !== ""
-                        anchors { horizontalCenter: parent.horizontalCenter; bottom: buy.top; bottomMargin: 8 }
-                        text: modelData.priceText
+                        id: cardName
+                        anchors { horizontalCenter: parent.horizontalCenter; top: dome.bottom; topMargin: 10 }
+                        width: parent.width - 24
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        text: modelData.name
+                        color: Theme.ink
+                        font.family: Theme.sans; font.pixelSize: 15; font.weight: Font.DemiBold
+                    }
+                    Text {
+                        anchors { horizontalCenter: parent.horizontalCenter; top: cardName.bottom; topMargin: 4 }
+                        text: modelData.priceText !== "" ? modelData.priceText : " "
                         textFormat: Text.RichText
                         color: Theme.gold
-                        font.family: Theme.sans; font.pixelSize: 13; font.weight: Font.DemiBold
+                        font.family: Theme.sans; font.pixelSize: 14; font.weight: Font.DemiBold
                     }
                     GemButton {
                         id: buy
-                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 14 }
-                        implicitWidth: 140
-                        height: 36
+                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 16 }
+                        implicitWidth: parent.width - 36
+                        height: 40
                         kind: modelData.mode === "draw" ? "gold" : (modelData.mode === "owned" ? "ghost" : "violet")
                         icon: modelData.mode === "draw" ? "cards" : (modelData.mode === "owned" ? "check" : "shopping-bag")
                         text: modelData.buttonText
@@ -48,7 +71,7 @@ Page {
             }
         }
 
-        Text { text: bridge.tr("shop_wish"); color: Theme.ink; font.family: Theme.serif; font.pixelSize: 17; font.weight: Font.Bold }
+        SectionTitle { key: "shop_wish" }
         Item {                                           // The wishing banner.
             Layout.fillWidth: true
             Layout.preferredHeight: 210
@@ -84,7 +107,7 @@ Page {
                     spacing: 14
                     Text { text: bridge.tr("wardrobe_wish_title"); color: Theme.ink; font.family: Theme.serif; font.pixelSize: 26; font.weight: Font.Black
                            style: Text.Raised; styleColor: "#80080616" }
-                    Text { text: bridge.pityText; color: Theme.inkSoft; font.family: Theme.sans; font.pixelSize: 13 }
+                    Text { text: bridge.pityText; color: Theme.inkSoft; font.family: Theme.sans; font.pixelSize: 14 }
                     Row {
                         spacing: 12
                         GemButton { height: 44; fontSize: 15; icon: "sparkle"; text: bridge.wishOneText; enabled: bridge.canWishOne; onClicked: bridge.wish(1) }

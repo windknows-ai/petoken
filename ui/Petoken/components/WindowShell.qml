@@ -17,7 +17,7 @@ Item {
     Rectangle {
         id: shadowShape
         anchors { fill: body; margins: 6 }
-        radius: Theme.radius + 6
+        radius: Theme.windowRadius
         color: "#000000"
         visible: false
     }
@@ -42,7 +42,7 @@ Item {
         Rectangle {
             id: surface
             anchors.fill: parent
-            radius: Theme.radius + 6
+            radius: Theme.windowRadius
             gradient: Gradient {
                 GradientStop { position: 0; color: "#16113A" }
                 GradientStop { position: 0.55; color: "#120D30" }
@@ -78,35 +78,41 @@ Item {
                 onPressed: bridge.startMove()
                 onDoubleClicked: bridge.toggleMaximized()
             }
-            Image {
+            Row {                                        // Title: a round gem badge and the name.
                 id: plaque
-                x: 14; anchors.verticalCenter: parent.verticalCenter
-                height: 52; width: height * 640 / 110
-                source: bridge.wardrobeUrl("header_plaque")
-                sourceSize: Qt.size(width * 2, height * 2)
-            }
-            Text {
-                anchors.centerIn: plaque
-                text: root.title
-                color: Theme.ink
-                font.family: Theme.serif
-                font.pixelSize: 20
-                font.weight: Font.Bold
-                style: Text.Raised
-                styleColor: "#80080616"
+                x: 22; anchors.verticalCenter: parent.verticalCenter
+                spacing: 12
+                Rectangle {
+                    width: 38; height: 38; radius: 19
+                    anchors.verticalCenter: parent.verticalCenter
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: "#7A63E8" }
+                        GradientStop { position: 1; color: "#3B2C8E" }
+                    }
+                    border.color: "#66FFFFFF"
+                    Icon { anchors.centerIn: parent; name: "sparkle"; filled: true; size: 20; color: Theme.gold }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.title
+                    color: Theme.ink
+                    font.family: Theme.serif
+                    font.pixelSize: 21
+                    font.weight: Font.Bold
+                }
             }
             Row {
                 id: extras
-                anchors { left: plaque.right; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                anchors { left: plaque.right; leftMargin: 22; verticalCenter: parent.verticalCenter }
                 spacing: 10
             }
             Row {
-                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
-                spacing: 4
+                anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
+                spacing: 8
                 Repeater {
                     model: [ { icon: "minus", act: "min" }, { icon: "x", act: "close" } ]
                     delegate: Rectangle {
-                        width: 36; height: 32; radius: 10
+                        width: 34; height: 34; radius: 17
                         color: hover.containsMouse ? (modelData.act === "close" ? "#C0E0507A" : "#26FFFFFF") : "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.quick } }
                         Icon { anchors.centerIn: parent; name: modelData.icon; size: 16; color: Theme.inkSoft }

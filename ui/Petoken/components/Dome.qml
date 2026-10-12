@@ -14,6 +14,7 @@ Item {
     height: 144
 
     readonly property bool hot: mouse.containsMouse
+    z: hot ? 6 : (chosen ? 5 : 0)
     readonly property color tone: Theme.rarity(item.rarity || "")
 
     opacity: 0
@@ -31,7 +32,7 @@ Item {
     Item {
         id: body
         anchors.fill: parent
-        y: root.hot ? -6 : 0
+        y: root.hot || root.chosen ? -6 : 0
         Behavior on y { NumberAnimation { duration: Theme.quick; easing.type: Easing.OutCubic } }
 
         Rectangle {                                      // Light pooled on the shelf under it.
@@ -66,45 +67,46 @@ Item {
             sourceSize: Qt.size(width * 2, height * 2)
             smooth: true
         }
-        Rectangle {
-            visible: root.chosen
-            anchors { fill: parent; margins: -3 }
-            radius: 16
-            color: "transparent"
-            border.width: 2
-            border.color: Theme.gold
-            opacity: 0.9
-        }
-        Text {                                           // Name on the dome's base.
-            anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 18 }
-            width: parent.width - 12
-            horizontalAlignment: Text.AlignHCenter
-            elide: Text.ElideRight
-            text: root.item.name || ""
-            color: root.item.owned ? Theme.ink : Theme.inkSoft
-            font.family: Theme.sans
-            font.pixelSize: 11
-            font.weight: Font.DemiBold
-            style: Text.Outline
-            styleColor: "#C0080616"
-        }
-        Rectangle {                                      // Worn / price / wish only.
+        Rectangle {                                      // Its price (or "worn") on the dome's base.
             visible: (root.item.badge || "") !== ""
-            anchors { top: parent.top; topMargin: 2; horizontalCenter: parent.horizontalCenter }
-            height: 18
-            width: badge.implicitWidth + 14
-            radius: 9
-            color: root.item.worn ? "#E07BE0B0" : "#D0110C2E"
-            border.color: root.item.worn ? "#B0FFFFFF" : "#66F3C96B"
+            anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: parent.height * 0.075 }
+            height: 22
+            width: badge.implicitWidth + 20
+            radius: 11
+            color: root.item.worn ? "#E85BC99A" : "#E6140F36"
+            border.color: root.item.worn ? "#B0FFFFFF" : "#80F3C96B"
             Text {
                 id: badge
                 anchors.centerIn: parent
                 text: root.item.badge || ""
-                color: root.item.worn ? "#0E2A1C" : Theme.gold
+                color: root.item.worn ? "#0B2418" : Theme.gold
                 font.family: Theme.sans
-                font.pixelSize: 10
+                font.pixelSize: 12
                 font.weight: Font.Bold
             }
+        }
+    }
+    Rectangle {                                          // Its name, floating up under the pointer.
+        id: nameTag
+        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.top; bottomMargin: root.hot || root.chosen ? 2 : -6 }
+        z: 10
+        height: 28
+        width: nameText.implicitWidth + 26
+        radius: 14
+        color: "#F2201848"
+        border.color: Qt.lighter(root.tone, 1.1)
+        opacity: root.hot || root.chosen ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: Theme.quick } }
+        Behavior on anchors.bottomMargin { NumberAnimation { duration: Theme.quick; easing.type: Easing.OutCubic } }
+        Text {
+            id: nameText
+            anchors.centerIn: parent
+            text: root.item.name || ""
+            color: Theme.ink
+            font.family: Theme.sans
+            font.pixelSize: 13
+            font.weight: Font.DemiBold
         }
     }
     MouseArea {

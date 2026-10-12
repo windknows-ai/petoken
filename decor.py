@@ -38,17 +38,23 @@ FRONT = ('buddy', 'head', 'weapon')
 # turn (degrees) and, for clips and flowers, 'side' (pinned at the side of her head, not on top).
 # Checked one by one on her idle, wave, typing and thinking poses.
 FIT = {
-    'head_cloud_beret': dict(scale=1.2, dy=.075), 'head_moon_sleepcap': dict(scale=1.22, dy=.085),
-    'head_celestial_beret': dict(scale=1.18, dy=.075, angle=-6), 'head_moon_rabbit_hat': dict(scale=1.15, dy=.08),
-    'head_prism_crown': dict(dy=.04), 'head_lunar_tiara': dict(dy=.045), 'head_crystal_circlet': dict(dy=.04),
-    'head_pearl_tiara': dict(dy=.045), 'head_orbit_halo': dict(dy=-.015), 'head_lavender_wreath': dict(scale=1.05, dy=.05),
-    'head_frost_cat_ears': dict(dy=.055), 'head_lilac_rabbit_ears': dict(dy=.05), 'head_aurora_antlers': dict(dy=.045),
+    'head_orbit_halo': dict(dy=-.015),
     'head_star_bow': dict(dx=-.07, dy=.085, angle=-12, scale=.82), 'head_butterfly_ribbon': dict(dx=-.07, dy=.08, angle=-10, scale=.82),
     'head_crescent_clip': dict(side=True, scale=.62, angle=-30), 'head_pearl_flower': dict(side=True, scale=.6, angle=-20),
     'head_crystal_sprout': dict(side=True, scale=.62, angle=-28),
     'back_cloud_wings': dict(scale=1.5, dy=-.05), 'back_butterfly_wings': dict(scale=1.42, dy=-.04),
     'back_moon_ribbon': dict(scale=1.55, dy=-.02), 'back_crystal_wings': dict(scale=1.18, dy=-.04),
     'ground_lavender_garden': dict(scale=1.18), 'ground_star_disc': dict(scale=1.22), 'ground_moon_ripple': dict(scale=1.1),
+}
+# Pieces worn ON her head rest their lowest band (a crown's rim, a beret's brim, the ears' headband)
+# on her hair: sunk ``depth`` head-widths below the top of her hair, as wide as ``cover`` of her hair
+# there. So they sit on her in every pose and outfit instead of floating at a fixed point.
+WORN = {
+    'head_prism_crown': (.3, .86), 'head_pearl_tiara': (.3, .84), 'head_lunar_tiara': (.42, 1.0),
+    'head_crystal_circlet': (.4, 1.0), 'head_lavender_wreath': (.3, 1.0), 'head_aurora_antlers': (.26, .8),
+    'head_frost_cat_ears': (.4, 1.02), 'head_lilac_rabbit_ears': (.44, .97),
+    'head_cloud_beret': (.42, 1.08), 'head_celestial_beret': (.42, 1.08), 'head_moon_rabbit_hat': (.42, 1.08),
+    'head_moon_sleepcap': (.44, 1.1),
 }
 # Bulky weapons drawn smaller so they never hide her face.
 WEAPON_SCALE = dict(sakura_fan=.6, crystal_orb=.6, star_shield=.55, star_harp=.62, small_umbrella=.68,
@@ -149,6 +155,97 @@ def head_top(pixmap):
     """(x, y) fractions of ``pixmap`` where the top of her head is."""
     x, y, _ = head_box(pixmap)
     return x, y
+
+
+_PROFILES = {}
+_BANDS = {}
+
+
+def _alpha_rows(image):
+    """The alpha bytes of each row of a 32-bit image."""
+    image = image.convertToFormat(QImage.Format_ARGB32)
+    data = bytes(image.constBits())
+    stride = image.bytesPerLine()
+    return image.width(), image.height(), [data[y * stride + 3:y * stride + image.width() * 4:4]
+                                           for y in range(image.height())]
+
+
+def _widest(row, low, high, threshold):
+    """(left, right) of the widest unbroken opaque run in ``row[low:high]``, or None."""
+    best, start = None, None
+    for x in range(low, high + 1):
+        solid = x < high and row[x] > threshold
+        if solid and start is None:
+            start = x
+        elif not solid and start is not None:
+            if best is None or x - 1 - start > best[1] - best[0]:
+                best = (start, x - 1)
+            start = None
+    return best
+
+
+def head_profile(pixmap):
+    """Her hair's outline from the top of her head down: [(y, left, right)] as fractions of ``pixmap``,
+    the widest run of hair in each row (her feather is a run of its own), over the top fifth."""
+    key = pixmap.cacheKey()
+    if key not in _PROFILES:
+        source = pixmap.toImage() if hasattr(pixmap, 'toImage') else pixmap
+        w, h, rows = _alpha_rows(source.scaledToWidth(256, Qt.SmoothTransformation))
+        _, top, _ = head_box(pixmap)
+        out = []
+        for y in range(int(top * h), min(h, int(top * h + h * .3))):
+            run = _widest(rows[y], int(w * .1), int(w * .9), 140)
+            if run:
+                out.append((y / h, run[0] / w, (run[1] + 1) / w))
+        if len(_PROFILES) > 256:
+            _PROFILES.clear()
+        _PROFILES[key] = out
+    return _PROFILES[key]
+
+
+def art_band(art):
+    """(centre x, bottom y, width) in ``art``'s pixels of the band a head piece rests on: its widest
+    row low down, and the lowest row still nearly that wide (so a pendant hanging below the rim, or
+    the tips of a bow, never count as where it touches her)."""
+    key = art.cacheKey()
+    if key not in _BANDS:
+        k = 256 / max(1, art.width())
+        w, h, rows = _alpha_rows(art.toImage().scaledToWidth(256, Qt.SmoothTransformation))
+        runs = []                                           # Each row's opaque extent (an arc counts whole).
+        for r in rows:
+            xs = [x for x in range(w) if r[x] > 100]
+            runs.append((xs[0], xs[-1]) if len(xs) >= 3 else None)
+        solid = [y for y, r in enumerate(runs) if r and r[1] - r[0] >= 2]
+        found = (art.width() / 2, art.height(), art.width())
+        if solid:
+            first, last = solid[0], solid[-1]
+            low = [y for y in solid if y >= last - (last - first) * .35]
+            widest = max(low, key=lambda y: runs[y][1] - runs[y][0])
+            span = runs[widest][1] - runs[widest][0]
+            bottom = max(y for y in low if y >= widest and runs[y][1] - runs[y][0] >= span * .7)
+            left, right = runs[widest]
+            found = ((left + right + 1) / 2 / k, (bottom + 1) / k, (right - left + 1) / k)
+        _BANDS[key] = found
+    return _BANDS[key]
+
+
+def worn_on_head(pixmap, rect, art, item_name, base):
+    """(point, anchor, scale) placing a WORN head piece's band on her hair, or None to use its anchor."""
+    fit = WORN.get(item_name)
+    profile = head_profile(pixmap) if fit else None
+    if not profile:
+        return None
+    depth, cover = fit
+    _, _, head = head_box(pixmap)
+    y = profile[0][0] + depth * head * rect.width() / max(1.0, rect.height())
+    row = min(profile, key=lambda r: abs(r[0] - y))
+    bx, by, bw = art_band(art)
+    centre, _, _ = head_box(pixmap)                         # Lower down her feather joins the hair on one
+    half = min(centre - row[1], row[2] - centre)            # side: the other side gives the width.
+    hair = 2 * half * rect.width()
+    scale = max(base * .6, min(base * 1.9, cover * hair / max(1.0, bw)))
+    point = QPointF(rect.x() + centre * rect.width(), rect.y() + row[0] * rect.height())
+    return point, (bx, by), scale
 
 
 def worn_items(panel):
@@ -349,6 +446,12 @@ class Decor:
                 self._draw(p, art, point, (ax, ay), rect.width() / 1254 * grow * WEAPON_SCALE.get(item['name'], 1.0),
                            turn_to)
                 continue
+            if slot == 'head' and item['name'] in WORN:
+                placed = worn_on_head(pixmap, rect, art, item['name'], size)
+                if placed is not None:
+                    point, anchor, size = placed
+                    self._draw(p, art, point + nudge, anchor, size, turn)
+                    continue
             if slot == 'head':
                 fx, fy, fw = head_box(pixmap)
                 size *= max(.85, min(1.2, fw / .5))         # As wide as her head is in this pose.

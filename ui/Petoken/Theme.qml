@@ -30,7 +30,8 @@ QtObject {
     readonly property string serif: "Noto Serif SC"
 
     // Shape and motion
-    readonly property int radius: 18
+    readonly property int radius: 22                       // Panels and cards: soft, app-like corners.
+    readonly property int windowRadius: 30
     readonly property int quick: 160
     readonly property int smooth: 320
     readonly property int slow: 620

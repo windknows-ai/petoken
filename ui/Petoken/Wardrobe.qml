@@ -45,7 +45,7 @@ Item {
                     Layout.maximumWidth: Math.min(430, app.width * 0.33)
                     Layout.fillWidth: false
                     Layout.fillHeight: true
-                    spacing: 10
+                    spacing: 12
                     Mirror {
                         id: mirror
                         Layout.fillWidth: true
@@ -60,9 +60,9 @@ Item {
                             model: bridge.poses
                             delegate: GemButton {
                                 kind: "ghost"
-                                height: 32
-                                fontSize: 12
-                                implicitWidth: 64
+                                height: 36
+                                fontSize: 14
+                                implicitWidth: 72
                                 checked: modelData.key === bridge.pose
                                 text: modelData.label
                                 onClicked: bridge.setPose(modelData.key)
@@ -72,9 +72,9 @@ Item {
                     Row {
                         Layout.alignment: Qt.AlignHCenter
                         spacing: 6
-                        GemButton { kind: "ghost"; height: 34; fontSize: 12; icon: "floppy-disk"; text: bridge.tr("wardrobe_save_outfit"); onClicked: bridge.saveOutfit() }
-                        GemButton { kind: "ghost"; height: 34; fontSize: 12; icon: "t-shirt"; text: bridge.tr("wardrobe_wear_outfit"); enabled: bridge.outfits.length > 0; onClicked: bridge.wearOutfit() }
-                        GemButton { kind: "ghost"; height: 34; fontSize: 12; icon: "arrow-counter-clockwise"; text: bridge.tr("wardrobe_take_all"); onClicked: bridge.takeAll() }
+                        GemButton { kind: "ghost"; height: 38; fontSize: 13; icon: "floppy-disk"; text: bridge.tr("wardrobe_save_outfit"); onClicked: bridge.saveOutfit() }
+                        GemButton { kind: "ghost"; height: 38; fontSize: 13; icon: "t-shirt"; text: bridge.tr("wardrobe_wear_outfit"); enabled: bridge.outfits.length > 0; onClicked: bridge.wearOutfit() }
+                        GemButton { kind: "ghost"; height: 38; fontSize: 13; icon: "arrow-counter-clockwise"; text: bridge.tr("wardrobe_take_all"); onClicked: bridge.takeAll() }
                     }
                     Text {
                         Layout.fillWidth: true
@@ -82,7 +82,7 @@ Item {
                         text: bridge.bonusText
                         color: Theme.gold
                         font.family: Theme.sans
-                        font.pixelSize: 12
+                        font.pixelSize: 13
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                     }
@@ -119,5 +119,5 @@ Item {
         }
     }
     Rectangle { id: doorMask; anchors { fill: parent; margins: shell.margin + 1 }
-    radius: Theme.radius + 5; visible: false; layer.enabled: true }
+    radius: Theme.windowRadius - 1; visible: false; layer.enabled: true }
 }

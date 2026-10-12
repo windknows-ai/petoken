@@ -88,6 +88,32 @@ class DecorTests(unittest.TestCase):
         self.assertAlmostEqual(fx, .5, delta=.06)
         self.assertAlmostEqual(fy, .25, delta=.05)
 
+    def test_worn_pieces_rest_their_band_on_her_hair(self):
+        image = QImage(200, 200, QImage.Format_ARGB32)
+        image.fill(QColor(0, 0, 0, 0))
+        p = QPainter(image)
+        p.setBrush(QColor('white'))
+        p.drawEllipse(QPointF(100, 110), 60, 60)                # Her head, top at y = 50.
+        p.end()
+        art = QImage(120, 80, QImage.Format_ARGB32)              # A crown: points above a rim 100 wide.
+        art.fill(QColor(0, 0, 0, 0))
+        p = QPainter(art)
+        p.fillRect(10, 60, 100, 12, QColor('gold'))
+        p.fillRect(55, 0, 10, 60, QColor('gold'))
+        p.fillRect(57, 72, 6, 8, QColor('gold'))                 # A pendant under the rim does not count.
+        p.end()
+        cx, bottom, width = decor.art_band(QPixmap.fromImage(art))
+        self.assertAlmostEqual(cx, 60, delta=2)
+        self.assertAlmostEqual(bottom, 72, delta=2)
+        self.assertAlmostEqual(width, 100, delta=3)
+        rect = QRectF(0, 0, 200, 200)
+        point, anchor, scale = decor.worn_on_head(QPixmap.fromImage(image), rect, QPixmap.fromImage(art),
+                                                  'head_prism_crown', 1.0)
+        self.assertAlmostEqual(point.x(), 100, delta=4)
+        self.assertGreater(point.y(), 55)                       # Sunk into her hair, not perched on top,
+        self.assertLess(point.y(), 110)                         # and still on her head.
+        self.assertGreater(image.pixelColor(int(point.x()), int(point.y())).alpha(), 0)
+
     def test_worn_items_only_owned_drawn_pieces_and_star_style(self):
         worn = {'head': 'decor.head_star_bow', 'outfit': 'outfit.moon_dress', 'star': 'decor.star_paw'}
         items = decor.worn_items(FakePanel(worn))

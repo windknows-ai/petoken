@@ -121,16 +121,26 @@ Item {
             sourceSize: Qt.size(width * Screen.devicePixelRatio, height * Screen.devicePixelRatio)
             smooth: true
         }
-        Rectangle {
+        Rectangle {                                      // "Trying on": click to go back to what she wears.
             visible: root.trying
-            anchors { top: parent.top; left: parent.left; topMargin: 6; leftMargin: 6 }
-            height: 26; width: tryLabel.implicitWidth + 22; radius: 13
+            anchors { bottom: glass.bottom; horizontalCenter: glass.horizontalCenter; bottomMargin: 14 }
+            height: 30; width: tryRow.implicitWidth + 24; radius: 15
+            scale: tryMouse.pressed ? 0.95 : (tryMouse.containsMouse ? 1.04 : 1)
+            Behavior on scale { NumberAnimation { duration: Theme.quick; easing.type: Easing.OutBack } }
             gradient: Gradient {
                 GradientStop { position: 0; color: "#FFE7AA" }
                 GradientStop { position: 1; color: "#D9922F" }
             }
-            Text { id: tryLabel; anchors.centerIn: parent; text: bridge.tr("wardrobe_trying"); color: "#2B1806"
-                   font.family: Theme.sans; font.pixelSize: 12; font.weight: Font.Bold }
+            Row {
+                id: tryRow
+                anchors.centerIn: parent
+                spacing: 6
+                Text { text: bridge.tr("wardrobe_trying"); color: "#2B1806"; anchors.verticalCenter: parent.verticalCenter
+                       font.family: Theme.sans; font.pixelSize: 13; font.weight: Font.Bold }
+                Icon { name: "x"; size: 13; color: "#2B1806"; anchors.verticalCenter: parent.verticalCenter }
+            }
+            MouseArea { id: tryMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: bridge.clearFitting() }
         }
     }
 }

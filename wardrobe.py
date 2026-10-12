@@ -16,7 +16,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QPoint, QRectF, Qt, QUrl, Signal, Slot
 from PySide6.QtGui import QFontDatabase, QImage, QPainter, QRegion, QTransform
-from PySide6.QtQuick import QQuickImageProvider
+from PySide6.QtQuick import QQuickImageProvider, QQuickWindow
 from PySide6.QtQuickWidgets import QQuickWidget
 from PySide6.QtWidgets import QWidget
 
@@ -115,6 +115,56 @@ def portrait(panel, items, pose, width, height):
     return image
 
 
+class _Ring:
+    """What collection_view.SkinCard's ring painters read: its width and which skin."""
+    W = 148
+
+    def __init__(self, choice):
+        self.choice = choice
+
+
+_SKINS = {}
+
+
+def skin_scene(choice, width, height):
+    """A ring skin's preview (her with that star ring around her) drawn at ``width`` x ``height``
+    pixels on transparency: the ring painted at that size, her from her full-size picture."""
+    from collection_view import SkinCard
+    key = (choice, int(width), int(height))
+    if key in _SKINS:
+        return _SKINS[key]
+    width, height = max(32, int(width)), max(24, int(height))
+    image = QImage(width, height, QImage.Format_ARGB32_Premultiplied)
+    image.fill(Qt.transparent)
+    p = QPainter(image)
+    p.setRenderHint(QPainter.Antialiasing)
+    p.setRenderHint(QPainter.SmoothPixmapTransform)
+    k = min(width / 148, height / 108)                      # The card's scene is 148 x 108.
+    p.translate((width - 148 * k) / 2, (height - 108 * k) / 2)
+    p.scale(k, k)
+    ring = _Ring(choice)
+    if choice == 'meteor':
+        SkinCard._shooting_stars(ring, p)
+    elif choice == 'aurora':
+        SkinCard._curtains(ring, p)
+    SkinCard._ring(ring, p, False)
+    pose = 'star_idle' if choice == 'starsea' and pet_assets.has_own_art('star_idle') else 'idle'
+    path = decor.frame_file(pose, 0) or decor.frame_file('idle', 0)
+    her = QImage(str(pet_assets._file(path))) if path else QImage()
+    if not her.isNull():
+        side = 92 * k                                       # Scaled once, straight from the big picture.
+        her = her.scaled(int(side * her.width() / max(1, her.height())), int(side), Qt.KeepAspectRatio,
+                         Qt.SmoothTransformation)
+        size_w, size_h = her.width() / k, her.height() / k
+        p.drawImage(QRectF((148 - size_w) / 2, 100 - size_h, size_w, size_h), her, QRectF(her.rect()))
+    SkinCard._ring(ring, p, True)
+    p.end()
+    if len(_SKINS) > 16:
+        _SKINS.clear()
+    _SKINS[key] = image
+    return image
+
+
 class Pictures(QQuickImageProvider):
     """image://petoken/mirror/<n> (her in the mirror) and image://petoken/skin/<key>/<n>."""
 
@@ -129,7 +179,7 @@ class Pictures(QQuickImageProvider):
         if kind == 'mirror':
             return portrait(self.bridge.panel, self.bridge.preview_items(), self.bridge._pose, w, h)
         if kind == 'skin':
-            return self.bridge.skin_image(rest.split('/')[0])
+            return skin_scene(rest.split('/')[0], w, h)
         return QImage(1, 1, QImage.Format_ARGB32_Premultiplied)
 
 
@@ -147,8 +197,8 @@ class WardrobeBridge(QObject):
         self._shelf = 0
         self._pose = 'idle'
         self._chosen = None
+        self._fitting = {}               # slot -> the piece tried on there (kept while others are tried).
         self._serial = 0
-        self._skin_images = {}
         from wish_sound import Sounds
         self.sounds = Sounds(bool(panel.prefs.get('wish_sound', True)))
 
@@ -175,8 +225,9 @@ class WardrobeBridge(QObject):
         worn = self.shop.equipped().get('outfit')
         if worn in shop.BY_ID and shop.BY_ID[worn].get('art') and worn in self.shop.owned():
             items['outfit'] = shop.BY_ID[worn]
-        if self._chosen is not None and self._chosen.get('art'):
-            items[self._chosen['slot']] = self._chosen
+        for slot, item in self._fitting.items():
+            if item.get('art'):
+                items[slot] = item
         return items
 
     def _item(self, item):
@@ -196,6 +247,13 @@ class WardrobeBridge(QObject):
     def tr(self, key):
         if key == 'wardrobe_title_plain':
             return self._t('wardrobe_title').replace('✦', '').strip()
+        base, _, part = key.partition('@')                  # 'shop_featured@title' / '@note': a heading
+        if part:                                            # and its bracketed aside, shown apart.
+            import re
+            found = re.match(r'^(.*?)\s*[（(](.*)[）)]\s*$', self._t(base))
+            if found is None:
+                return self._t(base) if part == 'title' else ''
+            return found.group(1) if part == 'title' else found.group(2)
         return self._t(key)
 
     @Slot(str, bool, result=str)
@@ -300,7 +358,8 @@ class WardrobeBridge(QObject):
 
     @Property(bool, notify=changed)
     def trying(self):
-        return self._chosen is not None and self._chosen['id'] not in self.shop.owned()
+        owned = self.shop.owned()
+        return any(item['id'] not in owned for item in self._fitting.values())
 
     @Property(str, notify=changed)
     def portrait(self):
@@ -330,16 +389,18 @@ class WardrobeBridge(QObject):
         for item, discount in self.shop.featured():
             entry = self._item(item)
             price = self.shop.price(item['id'])
+            off_text = ''
             if entry['owned']:
                 mode, label, ok, price_text = 'owned', self._t('wardrobe_owned'), False, ''
             elif discount is None:
                 mode, label, ok = 'draw', self._t('shop_draw_discount'), True
                 price_text = f'✦ {item["price"]}' if item.get('price') else ''
-            else:
+            else:                                           # The price says it all; the button just buys.
                 mode, ok = 'buy', self.shop.spendable() >= price
-                label = self._t('wardrobe_buy_discount', price=price, off=discount_text(discount))
-                price_text = f'<s style="color:#9289C4">✦ {item["price"]}</s>&nbsp; ✦ {price}'
-            entry.update(mode=mode, buttonText=label, enabled=ok, priceText=price_text, badge='')
+                label = self._t('wardrobe_buy_now')
+                off_text = self._t('wardrobe_off', off=discount_text(discount))
+                price_text = f'<s style="color:#8C84BC">{item["price"]}</s>&nbsp;&nbsp;✦ {price}'
+            entry.update(mode=mode, buttonText=label, enabled=ok, priceText=price_text, offText=off_text, badge='')
             out.append(entry)
         return out
 
@@ -373,7 +434,15 @@ class WardrobeBridge(QObject):
         return dict(totalText=self._t('stardust_total', points=total), fraction=min(1.0, total / max(1, goal)),
                     nextText=(self._t('stardust_next', left=coming[1], name=self._t(f'stardust_name_{coming[0]}'))
                               if coming else self._t('stardust_all')),
-                    earnText=self._t('stardust_earn'))
+                    earnText=self._t('stardust_earn'), **self._earn_parts())
+
+    def _earn_parts(self):
+        """'How to earn it: a · b · c' as a heading and its ways, each shown on its own."""
+        import re
+        whole = self._t('stardust_earn').rstrip('。.')
+        found = re.match(r'^(.*?)[：:]\s*(.*)$', whole)
+        head, rest = (found.group(1), found.group(2)) if found else ('', whole)
+        return dict(earnTitle=head.strip(), earnWays=[w.strip() for w in rest.split('·') if w.strip()])
 
     def skin_states(self):
         from stardust import UNLOCKS, unlocked
@@ -400,17 +469,6 @@ class WardrobeBridge(QObject):
     @Property('QVariant', notify=changed)
     def skins(self):
         return self.skin_states()
-
-    def skin_image(self, choice):
-        if choice not in self._skin_images:
-            from collection_view import SkinCard
-            card = SkinCard(choice, lambda _: None)
-            card.set_state('', '', True, False)
-            card.resize(SkinCard.W, SkinCard.H)
-            image = card.grab().toImage()
-            card.deleteLater()
-            self._skin_images[choice] = image.copy(0, 0, image.width(), int(image.height() * 108 / SkinCard.H))
-        return self._skin_images[choice]
 
     @Property('QVariant', notify=changed)
     def book(self):
@@ -444,6 +502,8 @@ class WardrobeBridge(QObject):
     @Slot(str)
     def choose(self, item_id):
         self._chosen = shop.BY_ID.get(item_id)
+        if self._chosen is not None:                        # Tried on with whatever else is being tried.
+            self._fitting[self._chosen['slot']] = self._chosen
         self.sparkle.emit(False)
         self.touch(True)
 
@@ -463,6 +523,7 @@ class WardrobeBridge(QObject):
             return
         if store.equipped().get(item['slot']) == item['id']:
             store.unequip(item['slot'])
+            self._fitting.pop(item['slot'], None)
         elif item['id'] in store.owned():
             store.equip(item['id'])
             self.sparkle.emit(True)
@@ -470,6 +531,13 @@ class WardrobeBridge(QObject):
             store.equip(item['id'])
             self.sparkle.emit(True)
             self.sounds.play('discount')
+        self.touch(True)
+
+    @Slot()
+    def clearFitting(self):
+        """Back to what she really wears."""
+        self._fitting = {}
+        self._chosen = None
         self.touch(True)
 
     @Slot()
@@ -522,6 +590,7 @@ class WardrobeBridge(QObject):
         if presets:
             self.shop.wear_outfit(presets[-1]['name'])
             self._chosen = None
+            self._fitting = {}
             self.touch(True)
 
     @Slot()
@@ -529,6 +598,7 @@ class WardrobeBridge(QObject):
         for slot in list(self.shop.equipped()):
             self.shop.unequip(slot)
         self._chosen = None
+        self._fitting = {}
         self.touch(True)
 
     @Slot()
@@ -564,6 +634,9 @@ class Wardrobe(QWidget):
     def __init__(self, panel):
         super().__init__(None, Qt.Window | Qt.FramelessWindowHint)
         load_fonts()
+        # Words drawn by the system's font renderer (hinted, ClearType-sharp), not scaled glyph
+        # textures, which look soft at the small sizes of Chinese labels.
+        QQuickWindow.setTextRenderType(QQuickWindow.TextRenderType.NativeTextRendering)
         self.panel = panel
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setWindowTitle(text('wardrobe_open', panel.prefs.get('language', 'zh_CN')))
@@ -571,7 +644,6 @@ class Wardrobe(QWidget):
         self.setMinimumSize(1060, 720)
         self.bridge = WardrobeBridge(self, panel)
         self.view = QQuickWidget(self)
-        self.view.setAttribute(Qt.WA_AlwaysStackOnTop)
         self.view.setClearColor(Qt.transparent)
         self.view.setResizeMode(QQuickWidget.SizeRootObjectToView)
         engine = self.view.engine()
@@ -611,7 +683,7 @@ class Wardrobe(QWidget):
         return self.rect().adjusted(MARGIN + 1, MARGIN + 1, -MARGIN - 1, -MARGIN - 1)
 
     @staticmethod
-    def overlay_mask(size, radius=23):
+    def overlay_mask(size, radius=29):
         w, h = size.width(), size.height()
         region = QRegion(radius, 0, w - 2 * radius, h).united(QRegion(0, radius, w, h - 2 * radius))
         for x, y in ((0, 0), (w - 2 * radius, 0), (0, h - 2 * radius), (w - 2 * radius, h - 2 * radius)):

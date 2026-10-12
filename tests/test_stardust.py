@@ -92,7 +92,10 @@ class StardustTests(unittest.TestCase):
         self.assertEqual(self.panel.prefs['ring_skin'], 'meteor')
         self.panel.apply_ring_skin.assert_called()
         self.assertTrue({c['key']: c for c in bridge.skins}['meteor']['current'])
-        self.assertFalse(bridge.skin_image('meteor').isNull())
+        import wardrobe
+        picture = wardrobe.skin_scene('meteor', 444, 324)
+        self.assertEqual((picture.width(), picture.height()), (444, 324))
+        self.assertGreater(picture.pixelColor(222, 200).alpha(), 0)
         page.deleteLater()
 
 

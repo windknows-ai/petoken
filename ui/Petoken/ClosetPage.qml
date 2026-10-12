@@ -14,19 +14,22 @@ Page {
         Column {                                         // Kinds.
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 8
-            spacing: 6
+            spacing: 8
             Repeater {
                 model: bridge.kinds
                 delegate: Rectangle {
-                    width: 150; height: 44; radius: 14
+                    width: 156; height: 46; radius: 23
                     readonly property bool current: modelData.key === bridge.kind
-                    color: current ? "#4A3A9C" : (hover.containsMouse ? "#2A2270" : "#1A1446")
-                    border.color: current ? Theme.gold : Theme.glassEdge
-                    border.width: current ? 1.4 : 1
-                    Behavior on color { ColorAnimation { duration: Theme.quick } }
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0; color: current ? "#6A52D6" : (hover.containsMouse ? "#2C2472" : "#1B1548") }
+                        GradientStop { position: 1; color: current ? "#4636A6" : (hover.containsMouse ? "#241D60" : "#161140") }
+                    }
+                    border.color: current ? "#B9A8FF" : Theme.glassEdge
+                    border.width: 1
                     Image {
                         id: kindIcon
-                        x: 12; anchors.verticalCenter: parent.verticalCenter
+                        x: 14; anchors.verticalCenter: parent.verticalCenter
                         width: 26; height: 26
                         source: bridge.wardrobeUrl("icon_" + modelData.key)
                         sourceSize: Qt.size(52, 52)
@@ -42,7 +45,7 @@ Page {
                         anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
                         text: modelData.have + "/" + modelData.total
                         color: current ? Theme.gold : Theme.muted
-                        font.family: Theme.sans; font.pixelSize: 12
+                        font.family: Theme.sans; font.pixelSize: 13
                     }
                     MouseArea { id: hover; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 onClicked: bridge.setKind(modelData.key) }
@@ -113,29 +116,31 @@ Page {
 
             GlassPanel {                                 // What is chosen.
                 Layout.fillWidth: true
-                Layout.preferredHeight: 70
+                Layout.preferredHeight: 78
                 Text {
                     visible: bridge.chosenId === ""
                     anchors.centerIn: parent
                     text: bridge.tr("wardrobe_pick_hint")
                     color: Theme.muted
-                    font.family: Theme.sans; font.pixelSize: 13
+                    font.family: Theme.sans; font.pixelSize: 14
                 }
                 Column {
                     visible: bridge.chosenId !== ""
-                    anchors { left: parent.left; leftMargin: 18; verticalCenter: parent.verticalCenter }
-                    spacing: 3
+                    anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                    spacing: 5
                     Row {
                         spacing: 10
                         Text { text: bridge.chosen.name || ""; color: Theme.ink; font.family: Theme.serif; font.pixelSize: 18; font.weight: Font.Bold }
                         Text { text: bridge.chosen.rarityLabel || ""; color: Theme.rarity(bridge.chosen.rarity || ""); font.family: Theme.sans
                                font.pixelSize: 13; font.weight: Font.DemiBold; anchors.baseline: parent.children[0].baseline }
                     }
-                    Text { text: bridge.chosen.detail || ""; color: Theme.muted; font.family: Theme.sans; font.pixelSize: 12 }
+                    Text { text: bridge.chosen.detail || ""; color: Theme.muted; font.family: Theme.sans; font.pixelSize: 13 }
                 }
                 GemButton {
                     visible: bridge.chosenId !== ""
-                    anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
+                    anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
+                    height: 44
+                    fontSize: 15
                     kind: bridge.chosen.actionKind || "violet"
                     icon: bridge.chosen.actionIcon || ""
                     text: bridge.chosen.actionText || ""

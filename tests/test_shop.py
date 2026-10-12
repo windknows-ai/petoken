@@ -164,6 +164,16 @@ class ShopTests(unittest.TestCase):
         self.assertEqual(self.shop.equipped()['head'], crown['id'])
         w._act()                                                  # Take it off again.
         self.assertNotIn('head', self.shop.equipped())
+        coat = next(i for i in shop.CATALOG if i['slot'] == 'outfit' and i['id'] not in self.shop.owned())
+        w.bridge.tryOn(coat['id'])                                  # An outfit tried on stays on while
+        w.choose(shop.BY_ID['decor.head_cloud_beret'])              # a hat is tried with it.
+        tried = w.preview_items()
+        self.assertIs(tried['outfit'], coat)
+        self.assertEqual(tried['head']['id'], 'decor.head_cloud_beret')
+        self.assertTrue(w.bridge.trying)
+        w.bridge.clearFitting()
+        self.assertNotIn('outfit', w.preview_items())
+        self.assertFalse(w.bridge.trying)
         self.assertEqual(w.errors, [])                              # The Qt Quick page loads cleanly.
         bridge = w.bridge
         for kind in ('weapon', 'back', 'star', 'outfit'):
