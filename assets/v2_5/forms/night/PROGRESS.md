@@ -32,3 +32,9 @@
 - Metadata script initially failed on Windows GBK default decoding; rerun with explicit UTF-8 reads/writes succeeded.
 - sleep_1 retains the source pillow dark bow/crystal prop; review night-form consistency during final acceptance.
 - Exact next step after quota reset: cheer_1/clap_1/peek_1/grievance_1, then the other nine remaining masters; derive blinks and finish moving variants. Preserve curious head repair and replay symbol cleanup if bases are recomposed.
+
+## User-selected waiting state
+- User explicitly chose to wait for built-in quota restoration instead of paid API on 2026-10-12/13. Resume native generation after 2026-10-13 17:20:37 America/Toronto; no API/CLI authorization.
+- Last verified art checkpoint: ffc02abd4d10daa5aa321232512fc018331c41dd, 40/96 candidates, clean worktree immediately after that commit. Still incomplete.
+- Further inspection: all 23 missing nonblink variants whose masters exist include hand/foot/sleeve changes. No purely facial/prop-only safe variants found in that group. Premultiplied-visible-pixel delta report and four comparison sheets saved externally as variant-delta-report.json and variant-deltas-1..4.png; do not count transparent RGB differences as pose changes.
+- Ready-to-resume next step remains the 13 missing masters, starting cheer/clap/peek/grievance, followed by eye-only blinks and moving variants. No new images generated during quota wait.
