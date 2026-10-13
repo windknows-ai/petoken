@@ -1,0 +1,497 @@
+[
+  {
+    "name": "typing_1",
+    "face_box": [
+      630.9936305732484,
+      718.8535031847134,
+      934.5095541401274,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1221,
+    "registration": [
+      5.574439525604248,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-typing_1.png"
+  },
+  {
+    "name": "typing_2",
+    "face_box": [
+      479.2356687898089,
+      646.968152866242,
+      822.687898089172,
+      798.7261146496816
+    ],
+    "foot_anchor_y": 1231,
+    "registration": [
+      16.923664093017578,
+      1.03,
+      2.0,
+      8.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-typing_2.png"
+  },
+  {
+    "name": "microphone_1",
+    "face_box": [
+      615.0191082802547,
+      670.9299363057324,
+      918.5350318471337,
+      750.8025477707006
+    ],
+    "foot_anchor_y": 1228,
+    "registration": [
+      11.636019706726074,
+      1.03,
+      0.0,
+      -24.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-microphone_1.png"
+  },
+  {
+    "name": "guitar_1",
+    "face_box": [
+      543.1337579617834,
+      678.9171974522293,
+      854.6369426751593,
+      766.7770700636943
+    ],
+    "foot_anchor_y": 1237,
+    "registration": [
+      5.499059677124023,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-guitar_1.png"
+  },
+  {
+    "name": "idle_1",
+    "face_box": [
+      575.0828025477707,
+      702.8789808917197,
+      886.5859872611464,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      1.7414875030517578,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "D:\\Documents\\ChatGPT\\petoken-forms-night\\assets\\v2_3\\night_change_3.png",
+    "source_reuse": "assets/v2_3/night_change_3.png",
+    "regular_idle": "retain_existing_sleepy_eyes"
+  },
+  {
+    "name": "codex_working_1",
+    "face_box": [
+      591.0573248407643,
+      710.8662420382166,
+      894.5732484076433,
+      774.7643312101911
+    ],
+    "foot_anchor_y": 1248,
+    "registration": [
+      6.806728363037109,
+      1.0,
+      1.0,
+      -32.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-codex_working_1.png"
+  },
+  {
+    "name": "music_1",
+    "face_box": [
+      575.0828025477707,
+      670.9299363057324,
+      854.6369426751593,
+      774.7643312101911
+    ],
+    "foot_anchor_y": 1202,
+    "registration": [
+      12.791123390197754,
+      1.03,
+      3.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-music_1.png"
+  },
+  {
+    "name": "sad_1",
+    "face_box": [
+      599.0445859872611,
+      742.8152866242038,
+      886.5859872611464,
+      814.7006369426751
+    ],
+    "foot_anchor_y": 1216,
+    "registration": [
+      4.741674900054932,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-sad_1.png"
+  },
+  {
+    "name": "wave_1",
+    "face_box": [
+      551.1210191082803,
+      638.9808917197453,
+      870.6114649681529,
+      766.7770700636943
+    ],
+    "foot_anchor_y": 1235,
+    "registration": [
+      9.757452964782715,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-wave_1.png"
+  },
+  {
+    "name": "celebrate_1",
+    "face_box": [
+      583.0700636942676,
+      583.0700636942676,
+      894.5732484076433,
+      678.9171974522293
+    ],
+    "foot_anchor_y": 1223,
+    "registration": [
+      18.790742874145508,
+      1.01,
+      1.0,
+      -18.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-celebrate_1.png"
+  },
+  {
+    "name": "headpat_happy_1",
+    "face_box": [
+      575.0828025477707,
+      678.9171974522293,
+      910.547770700637,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      9.051610946655273,
+      1.03,
+      -1.0,
+      -9.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-headpat_happy_1.png"
+  },
+  {
+    "name": "coquettish_1",
+    "face_box": [
+      575.0828025477707,
+      694.891719745223,
+      886.5859872611464,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      12.719198226928711,
+      1.03,
+      -4.0,
+      -22.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-coquettish_1.png"
+  },
+  {
+    "name": "sleep_1",
+    "face_box": [
+      383.38853503184714,
+      814.7006369426751,
+      678.9171974522293,
+      910.547770700637
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      17.330564498901367,
+      1.03,
+      23.0,
+      -45.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-sleep_1.png"
+  },
+  {
+    "name": "bored_1",
+    "face_box": [
+      750.8025477707006,
+      838.6624203821656,
+      1062.3057324840765,
+      926.5222929936306
+    ],
+    "foot_anchor_y": 1200,
+    "registration": [
+      14.03303337097168,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-bored_1.png"
+  },
+  {
+    "name": "yawn_1",
+    "face_box": [
+      583.0700636942676,
+      630.9936305732484,
+      886.5859872611464,
+      758.7898089171974
+    ],
+    "foot_anchor_y": 1205,
+    "registration": [
+      22.595746994018555,
+      1.03,
+      -19.0,
+      4.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-yawn_1.png"
+  },
+  {
+    "name": "wake_stretch_1",
+    "face_box": [
+      559.108280254777,
+      543.1337579617834,
+      806.7133757961783,
+      638.9808917197453
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      17.040990829467773,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-wake_stretch_1.png"
+  },
+  {
+    "name": "curious_1",
+    "face_box": [
+      495.21019108280257,
+      646.968152866242,
+      838.6624203821656,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1214,
+    "registration": [
+      16.481765747070312,
+      1.03,
+      -4.0,
+      -7.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-curious_1.png"
+  },
+  {
+    "name": "thinking_1",
+    "face_box": [
+      583.0700636942676,
+      646.968152866242,
+      902.5605095541401,
+      750.8025477707006
+    ],
+    "foot_anchor_y": 1196,
+    "registration": [
+      15.573943138122559,
+      1.03,
+      25.0,
+      -17.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-thinking_1.png"
+  },
+  {
+    "name": "dragged_1",
+    "face_box": [
+      551.1210191082803,
+      567.0955414012739,
+      846.6496815286624,
+      670.9299363057324
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      26.142087936401367,
+      1.03,
+      -7.0,
+      23.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-dragged_1.png"
+  },
+  {
+    "name": "greet_morning_1",
+    "face_box": [
+      543.1337579617834,
+      615.0191082802547,
+      822.687898089172,
+      702.8789808917197
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      23.37942886352539,
+      1.03,
+      1.0,
+      -10.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-greet_morning_1.png"
+  },
+  {
+    "name": "greet_night_1",
+    "face_box": [
+      575.0828025477707,
+      599.0445859872611,
+      846.6496815286624,
+      670.9299363057324
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      15.85717487335205,
+      1.03,
+      0.0,
+      -15.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-greet_night_1.png"
+  },
+  {
+    "name": "heart_1",
+    "face_box": [
+      519.171974522293,
+      551.1210191082803,
+      806.7133757961783,
+      654.9554140127389
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      19.91672134399414,
+      1.03,
+      2.0,
+      14.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-heart_1.png"
+  },
+  {
+    "name": "hug_1",
+    "face_box": [
+      495.21019108280257,
+      535.1464968152866,
+      822.687898089172,
+      646.968152866242
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      23.613718032836914,
+      1.03,
+      9.0,
+      22.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-hug_1.png"
+  },
+  {
+    "name": "landing_1",
+    "face_box": [
+      607.031847133758,
+      742.8152866242038,
+      910.547770700637,
+      822.687898089172
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      10.881488800048828,
+      1.03,
+      5.0,
+      -26.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-landing_1.png"
+  },
+  {
+    "name": "poked_1",
+    "face_box": [
+      439.29936305732485,
+      583.0700636942676,
+      718.8535031847134,
+      710.8662420382166
+    ],
+    "foot_anchor_y": 1164,
+    "registration": [
+      19.78291893005371,
+      1.03,
+      11.0,
+      -3.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-poked_1.png"
+  },
+  {
+    "name": "pout_1",
+    "face_box": [
+      567.0955414012739,
+      567.0955414012739,
+      838.6624203821656,
+      654.9554140127389
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      22.682971954345703,
+      1.03,
+      -1.0,
+      -3.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-pout_1.png"
+  },
+  {
+    "name": "shy_1",
+    "face_box": [
+      742.8152866242038,
+      471.2484076433121,
+      846.6496815286624,
+      535.1464968152866
+    ],
+    "foot_anchor_y": 1123,
+    "registration": [
+      21.43239974975586,
+      1.03,
+      9.0,
+      23.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-shy_1.png"
+  },
+  {
+    "name": "surprised_1",
+    "face_box": [
+      551.1210191082803,
+      575.0828025477707,
+      854.6369426751593,
+      678.9171974522293
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      13.251238822937012,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-surprised_1.png"
+  },
+  {
+    "name": "thumbs_up_1",
+    "face_box": [
+      567.0955414012739,
+      567.0955414012739,
+      862.624203821656,
+      678.9171974522293
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      18.097003936767578,
+      1.03,
+      -1.0,
+      16.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-thumbs_up_1.png"
+  }
+]
