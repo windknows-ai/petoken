@@ -75,19 +75,19 @@
     "action": "撒娇",
     "name": "coquettish_2",
     "ref": "assets/v2_0/coquettish_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "撒娇",
     "name": "coquettish_3",
     "ref": "assets/v2_0/coquettish_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "撒娇",
     "name": "coquettish_4",
     "ref": "assets/v2_0/coquettish_4.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "撒娇",
@@ -105,19 +105,19 @@
     "action": "被摸头",
     "name": "headpat_happy_2",
     "ref": "assets/v2_0/headpat_happy_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "被摸头",
     "name": "headpat_happy_3",
     "ref": "assets/v2_0/headpat_happy_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "被摸头",
     "name": "headpat_happy_4",
     "ref": "assets/v2_0/headpat_happy_4.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "被摸头",
@@ -135,13 +135,13 @@
     "action": "趴着睡",
     "name": "sleep_2",
     "ref": "assets/v2_0/sleep_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "趴着睡",
     "name": "sleep_3",
     "ref": "assets/v2_0/sleep_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "无聊趴着",
@@ -153,13 +153,13 @@
     "action": "无聊趴着",
     "name": "bored_2",
     "ref": "assets/v2_0/bored_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "无聊趴着",
     "name": "bored_3",
     "ref": "assets/v2_0/bored_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "无聊趴着",
@@ -177,7 +177,7 @@
     "action": "打哈欠",
     "name": "yawn_2",
     "ref": "assets/v2_0/yawn_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "打哈欠",
@@ -381,7 +381,7 @@
     "action": "加油",
     "name": "cheer_1",
     "ref": "assets/v2_0/cheer_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "加油",
@@ -393,13 +393,13 @@
     "action": "加油",
     "name": "cheer_blink",
     "ref": "assets/v2_0/cheer_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "鼓掌",
     "name": "clap_1",
     "ref": "assets/v2_0/clap_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "鼓掌",
@@ -417,13 +417,13 @@
     "action": "鼓掌",
     "name": "clap_blink",
     "ref": "assets/v2_0/clap_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "躲着偷看你",
     "name": "peek_1",
     "ref": "assets/v2_0/peek_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "躲着偷看你",
@@ -435,19 +435,19 @@
     "action": "委屈",
     "name": "grievance_1",
     "ref": "assets/v2_0/grievance_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "委屈",
     "name": "grievance_2",
     "ref": "assets/v2_0/grievance_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "陪你看书",
     "name": "focus_read_1",
     "ref": "assets/v2_0/focus_read_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "陪你看书",
@@ -465,19 +465,19 @@
     "action": "陪你看书",
     "name": "focus_read_4",
     "ref": "assets/v2_0/focus_read_4.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "陪你看书",
     "name": "focus_read_blink",
     "ref": "assets/v2_0/focus_read_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "喝茶休息",
     "name": "focus_tea_1",
     "ref": "assets/v2_0/focus_tea_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "喝茶休息",
@@ -489,19 +489,19 @@
     "action": "专注完成",
     "name": "focus_done_1",
     "ref": "assets/v2_0/focus_done_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "专注完成",
     "name": "focus_done_blink",
     "ref": "assets/v2_0/focus_done_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "起来活动",
     "name": "stretch_break_1",
     "ref": "assets/v2_0/stretch_break_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "起来活动",
@@ -513,66 +513,66 @@
     "action": "起来活动",
     "name": "stretch_break_blink",
     "ref": "assets/v2_0/stretch_break_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "举着卡片",
     "name": "hold_card_1",
     "ref": "assets/v2_0/hold_card_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "举着卡片",
     "name": "hold_card_blink",
     "ref": "assets/v2_0/hold_card_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "收拾东西",
     "name": "packing_1",
     "ref": "assets/v2_0/packing_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "收拾东西",
     "name": "packing_blink",
     "ref": "assets/v2_0/packing_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "出发",
     "name": "ready_go_1",
     "ref": "assets/v2_0/ready_go_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "出发",
     "name": "ready_go_blink",
     "ref": "assets/v2_0/ready_go_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "担心",
     "name": "worried_1",
     "ref": "assets/v2_0/worried_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "担心",
     "name": "worried_2",
     "ref": "assets/v2_0/worried_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "担心",
     "name": "worried_blink",
     "ref": "assets/v2_0/worried_blink.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "得意",
     "name": "proud_1",
     "ref": "assets/v2_0/proud_1.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   }
 ]
