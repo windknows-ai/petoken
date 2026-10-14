@@ -1,0 +1,9 @@
+# Frost coat step 2: mingyue complete
+
+- Completed on 2026-10-14 America/Toronto, on codex/outfits-frost-coat. Fanxing completion commit: 0cae5cd. No push or merge.
+- Mingyue now has all 83 additions: 64 directly redrawn clothing masters and 19 eyes-only blink variants, covering all 41 action families / 96 exact table filenames. Existing step-1 and earlier checkpoint files remain unchanged.
+- Preserved the accepted ice-blue/silver/pearl coat, two scalloped hem layers and short silver mantle. Used table default references for poses, expressions, props, size and placement. Four local imagegen corrections retained the original dark navy gloved hands where fur cuffs obscured them; their source generations remain recorded in metadata.
+- Static visual review covered all six contact sheets and corrected hand details. Published verification passed: 83 additions at 1254x1254 RGBA with transparent borders, 19 blink alpha/outside-eye-mask checks, 96/96 table filenames present, and all 154 files existing before this resumed session retain their hashes. No runtime animation acceptance claimed.
+- Review: mingyue/STEP2_20261014_PREVIEW_01.png through 06.png. Provenance: mingyue/GENERATION_STEP2_20261014.json. Checks: mingyue/VALIDATION_STEP2_20261014.json.
+- Remaining work: haori, currently partial. Imagegen has again reported usage_limit_reached; reported reset 2026-10-15 02:02:27 UTC / 2026-10-14 22:02:27 America/Toronto. Preserve completed work and wait for quota as previously chosen by the user; do not switch to a paid API or synthesize garments from parts.
+- Recovery: D:\Documents\ChatGPT\petoken-takeover-backups\frost-coat-step2. Use the pinned current spec/mapping; finish-v2.ps1 emits versioned snapshots, verify-snapshot.ps1 verifies published assets. Only add new files under this outfit folder. No code or root handoff changes, no push.

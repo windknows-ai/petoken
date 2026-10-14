@@ -1,0 +1,1029 @@
+{
+    "validation":  "mingyue-validation.txt",
+    "tool":  "built-in imagegen",
+    "branch":  "codex/outfits-frost-coat",
+    "base":  "8eee7f5",
+    "complete":  true,
+    "task":  "41 action families /96 exact table filenames;83 new files per tier",
+    "tier":  "mingyue",
+    "pending":  [
+
+                ],
+    "immutable_step1_files":  72,
+    "recovery":  "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\frost-coat-step2",
+    "requested_additions":  83,
+    "spec_source":  "petoken-claude/docs/form_art/FORM_ART_4_FROST_COAT.md as inspected after28d3619 merge",
+    "completed":  [
+                      "codex_working_1",
+                      "microphone_1",
+                      "music_1",
+                      "guitar_1",
+                      "coquettish_1",
+                      "coquettish_2",
+                      "coquettish_3",
+                      "coquettish_4",
+                      "coquettish_blink",
+                      "headpat_happy_1",
+                      "headpat_happy_2",
+                      "headpat_happy_3",
+                      "headpat_happy_4",
+                      "headpat_happy_blink",
+                      "sleep_3",
+                      "bored_1",
+                      "bored_2",
+                      "bored_3",
+                      "bored_blink",
+                      "yawn_1",
+                      "yawn_2",
+                      "yawn_3",
+                      "wake_stretch_1",
+                      "wake_stretch_2",
+                      "curious_1",
+                      "curious_2",
+                      "curious_blink",
+                      "thinking_blink",
+                      "shy_1",
+                      "shy_2",
+                      "pout_1",
+                      "pout_2",
+                      "pout_blink",
+                      "dragged_2",
+                      "dragged_3",
+                      "dragged_4",
+                      "landing_1",
+                      "landing_blink",
+                      "hug_1",
+                      "hug_2",
+                      "hug_blink",
+                      "heart_1",
+                      "greet_morning_1",
+                      "greet_morning_2",
+                      "greet_morning_blink",
+                      "greet_night_1",
+                      "greet_night_2",
+                      "surprised_1",
+                      "thumbs_up_1",
+                      "thumbs_up_blink",
+                      "cheer_1",
+                      "cheer_2",
+                      "cheer_blink",
+                      "clap_1",
+                      "clap_2",
+                      "clap_3",
+                      "clap_blink",
+                      "peek_1",
+                      "peek_2",
+                      "grievance_1",
+                      "grievance_2",
+                      "focus_read_1",
+                      "focus_read_2",
+                      "focus_read_3",
+                      "focus_read_4",
+                      "focus_read_blink",
+                      "focus_tea_1",
+                      "focus_tea_2",
+                      "focus_done_1",
+                      "focus_done_blink",
+                      "stretch_break_1",
+                      "stretch_break_2",
+                      "stretch_break_blink",
+                      "hold_card_1",
+                      "hold_card_blink",
+                      "packing_1",
+                      "packing_blink",
+                      "ready_go_1",
+                      "ready_go_blink",
+                      "worried_1",
+                      "worried_2",
+                      "worried_blink",
+                      "proud_1"
+                  ],
+    "blink_records":  [
+                          {
+                              "reference":  "assets/v2_0/coquettish_blink.png",
+                              "parent":  "coquettish_1",
+                              "boxes":  [
+                                            523,
+                                            573,
+                                            746,
+                                            737,
+                                            802,
+                                            617,
+                                            955,
+                                            753
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "coquettish_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/headpat_happy_blink.png",
+                              "parent":  "headpat_happy_1",
+                              "boxes":  [
+                                            527,
+                                            625,
+                                            724,
+                                            729,
+                                            803,
+                                            666,
+                                            947,
+                                            757
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "headpat_happy_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/bored_blink.png",
+                              "parent":  "bored_1",
+                              "boxes":  [
+                                            722,
+                                            763,
+                                            924,
+                                            895,
+                                            973,
+                                            714,
+                                            1143,
+                                            878
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "bored_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/curious_blink.png",
+                              "parent":  "curious_1",
+                              "boxes":  [
+                                            455,
+                                            497,
+                                            653,
+                                            654,
+                                            722,
+                                            637,
+                                            910,
+                                            764
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "curious_blink"
+                          },
+                          {
+                              "method":  "generated closed-eyelid donor on accepted parent; non-eye pixels and alpha retained",
+                              "frame":  "thinking_blink",
+                              "reference":  "assets/v2_0/thinking_blink.png",
+                              "boxes":  [
+                                            522,
+                                            540,
+                                            725,
+                                            679,
+                                            783,
+                                            584,
+                                            956,
+                                            726
+                                        ],
+                              "parent":  "thinking_1",
+                              "edit":  {
+                                           "tier":  "mingyue",
+                                           "frame":  "thinking_blink",
+                                           "reference":  "assets/v2_0/thinking_blink.png",
+                                           "action":  "盘腿思考",
+                                           "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-cdac8d37-6298-4169-ad6d-bbe2fa2b3cd4.png",
+                                           "prompt":  "Use case: precise-object-edit. Image1 is the EDIT TARGET, accepted MINGYUE thinking_1 frost coat sprite. Image2 is ONLY a reference for closed relaxed eyelids; ignore its costume, head shape, body and pose. Change ONLY image1\u0027s two open eyes into peacefully closed eyelids at their same exact positions and centers. Preserve image1 smile, cheeks, eyebrows, face geometry, hair/ornaments, pearl silver ice-blue coat, brooch, hand against cheek, other hand, legs/boots, pose, effects and ALL non-eye pixels. Original1254x1254 RGBA transparent square, identical canvas placement/scale. No extra elements or text.",
+                                           "eyes_only":  true
+                                       }
+                          },
+                          {
+                              "reference":  "assets/v2_0/pout_blink.png",
+                              "parent":  "pout_1",
+                              "boxes":  [
+                                            498,
+                                            442,
+                                            726,
+                                            603,
+                                            766,
+                                            493,
+                                            930,
+                                            627
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "pout_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/landing_blink.png",
+                              "parent":  "landing_1",
+                              "boxes":  [
+                                            549,
+                                            616,
+                                            774,
+                                            771,
+                                            787,
+                                            630,
+                                            980,
+                                            786
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "landing_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/hug_blink.png",
+                              "parent":  "hug_1",
+                              "boxes":  [
+                                            428,
+                                            411,
+                                            657,
+                                            583,
+                                            699,
+                                            471,
+                                            905,
+                                            628
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "hug_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/greet_morning_blink.png",
+                              "parent":  "greet_morning_1",
+                              "boxes":  [
+                                            719,
+                                            526,
+                                            896,
+                                            660
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "greet_morning_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/thumbs_up_blink.png",
+                              "parent":  "thumbs_up_1",
+                              "boxes":  [
+                                            531,
+                                            439,
+                                            730,
+                                            588,
+                                            760,
+                                            532,
+                                            932,
+                                            677
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "thumbs_up_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/cheer_blink.png",
+                              "parent":  "cheer_1",
+                              "boxes":  [
+                                            492,
+                                            457,
+                                            702,
+                                            607,
+                                            749,
+                                            526,
+                                            936,
+                                            672
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "cheer_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/clap_blink.png",
+                              "parent":  "clap_1",
+                              "boxes":  [
+                                            468,
+                                            499,
+                                            660,
+                                            627,
+                                            713,
+                                            510,
+                                            887,
+                                            652
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "clap_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/focus_read_blink.png",
+                              "parent":  "focus_read_1",
+                              "boxes":  [
+                                            523,
+                                            601,
+                                            718,
+                                            726,
+                                            777,
+                                            622,
+                                            941,
+                                            750
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "focus_read_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/focus_done_blink.png",
+                              "parent":  "focus_done_1",
+                              "boxes":  [
+                                            493,
+                                            439,
+                                            677,
+                                            579,
+                                            706,
+                                            498,
+                                            876,
+                                            629
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "focus_done_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/stretch_break_blink.png",
+                              "parent":  "stretch_break_1",
+                              "boxes":  [
+                                            593,
+                                            380,
+                                            753,
+                                            513,
+                                            762,
+                                            484,
+                                            914,
+                                            627
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "stretch_break_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/hold_card_blink.png",
+                              "parent":  "hold_card_1",
+                              "boxes":  [
+                                            449,
+                                            477,
+                                            664,
+                                            626,
+                                            715,
+                                            514,
+                                            892,
+                                            653
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "hold_card_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/packing_blink.png",
+                              "parent":  "packing_1",
+                              "boxes":  [
+                                            446,
+                                            468,
+                                            608,
+                                            586,
+                                            697,
+                                            530,
+                                            863,
+                                            646
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "packing_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/ready_go_blink.png",
+                              "parent":  "ready_go_1",
+                              "boxes":  [
+                                            477,
+                                            457,
+                                            712,
+                                            628,
+                                            744,
+                                            537,
+                                            914,
+                                            679
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "ready_go_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/worried_blink.png",
+                              "parent":  "worried_1",
+                              "boxes":  [
+                                            521,
+                                            487,
+                                            714,
+                                            603,
+                                            755,
+                                            526,
+                                            911,
+                                            645
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "worried_blink"
+                          }
+                      ],
+    "direct_redraws":  [
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "bored_1",
+                               "reference":  "assets/v2_0/bored_1.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9facdb91-b1c8-454a-bcf8-a3d6b89da31d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/bored_1.png animation frame bored_1 for action \"无聊趴着\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "bored_2",
+                               "reference":  "assets/v2_0/bored_2.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-094dc67c-ce87-4187-9468-04cb84f1533c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/bored_2.png animation frame bored_2 for action \"无聊趴着\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "bored_3",
+                               "reference":  "assets/v2_0/bored_3.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a51b92ff-7524-4086-afd0-3f11c3346e13.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/bored_3.png animation frame bored_3 for action \"无聊趴着\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "cheer_1",
+                               "reference":  "assets/v2_0/cheer_1.png",
+                               "action":  "加油",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a1888765-9f8b-40fd-a460-5154d92c5672.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/cheer_1.png animation frame cheer_1 for action \"加油\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "cheer_2",
+                               "reference":  "assets/v2_0/cheer_2.png",
+                               "action":  "加油",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-908c031e-ebbc-4f9c-9308-5d4fbc185655.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/cheer_2.png animation frame cheer_2 for action \"加油\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "clap_1",
+                               "reference":  "assets/v2_0/clap_1.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-6682fbf4-f1cd-4895-ab3c-bc1a8ba3966c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/clap_1.png animation frame clap_1 for action \"鼓掌\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "clap_2",
+                               "reference":  "assets/v2_0/clap_2.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7f057481-466a-460f-ba11-215da834d7a0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/clap_2.png animation frame clap_2 for action \"鼓掌\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "clap_3",
+                               "reference":  "assets/v2_0/clap_3.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-93fbf6c1-66ce-4bf4-8421-309897136778.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/clap_3.png animation frame clap_3 for action \"鼓掌\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "codex_working_1",
+                               "reference":  "assets/v1_1/working.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8f66a49e-dfcf-4c06-b6c1-63ef3f7f3119.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT working animation frame with holographic screen and laptop. Image2 is accepted MINGYUE frost coat CLOTHING REFERENCE ONLY. Change ONLY the clothing in image1 to exactly this same cool ice-blue winter coat, pearl-silver piping, two scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflake decoration, white fur collar/cuffs/hem, a small silver snowflake brooch at the center and restrained pearl chains. Cold blue/silver palette, brighter and more layered than a plain gray coat; no gold, champagne or garment glow. Adapt sleeves/hem to image1\u0027s exact pose. Fully clothed torso and arms. Remove old purple armor and moon/star costume waist panels wherever the coat covers them. Lock image1 head, hair/ornaments, face/expression/eyes, original gloved hands, arms/legs, dark boots and foot positions. Preserve laptop/holographic screens/props and existing effects unchanged in the same positions. Do not copy image2\u0027s pose, head or boots. Original 1254x1254 RGBA square, true transparent background, original size/placement. Clean navy outlines and soft anime chibi cel shading matching accepted coat. No crop, rescale, reposition, new text, watermark, background, ground, halo or added particles."
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "coquettish_1",
+                               "reference":  "assets/v2_0/coquettish_1.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a1a7885d-3090-4c11-8255-3148c898c34f.png",
+                               "prompt":  "Use case: precise-object-edit. Image1 is EDIT TARGET: current MINGYUE frost coat coquettish_1 sprite. Image2 is the default same animation frame ONLY as HAND/GESTURE reference. Fix ONLY the central gloved hands and the immediately adjacent white fur cuff rims: the TWO original dark navy gloved fists clasped together underneath the chin must be fully visible at image2\u0027s exact hand positions and size. Both hands are gloves, never fuzzy mittens. Fur cuffs stop at wrists; they must not cover or replace hands or fingers. Preserve image1 face/expression, head/hair, eyes/mouth, exact pose, arm positions, pearl-silver ice-blue mantle/coat, TWO scalloped hem layers, brooch/pearls, body/legs/boots/foot positions and transparency. Do not restore image2\u0027s purple armor. This correction must keep the existing winter outfit and only reveal the two original navy gloved hands. No added fingers, hand or body part. Original1254x1254 RGBA true transparent square, same placement/scale, clean anime cel-shading. No text/background/ground/new effects.",
+                               "eyes_only":  false,
+                               "prior_generation":  {
+                                                        "tier":  "mingyue",
+                                                        "frame":  "coquettish_1",
+                                                        "reference":  "assets/v2_0/coquettish_1.png",
+                                                        "action":  "撒娇",
+                                                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b317c4f1-83fb-425f-b373-38b32c33ba0c.png",
+                                                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/coquettish_1.png animation frame coquettish_1 for action \"撒娇\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                                                        "eyes_only":  false
+                                                    },
+                               "correction":  "Keep both navy gloved fists visible; fur cuffs end at wrists"
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "coquettish_2",
+                               "reference":  "assets/v2_0/coquettish_2.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-5daa280a-a486-454a-82da-70690ca79b4c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/coquettish_2.png animation frame coquettish_2 for action \"撒娇\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "coquettish_3",
+                               "reference":  "assets/v2_0/coquettish_3.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-62bb7c0e-2edd-40d5-b8b3-22fffde1a23e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/coquettish_3.png animation frame coquettish_3 for action \"撒娇\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "coquettish_4",
+                               "reference":  "assets/v2_0/coquettish_4.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7159b13e-8d20-4da7-9b07-f43c8a06cf66.png",
+                               "prompt":  "Use case: precise-object-edit. Image1 is EDIT TARGET, current MINGYUE coquettish_4 winter coat sprite. Image2 is the default same animation frame as exact HAND/GESTURE reference only. Correct only the two hands and adjacent cuff edges: restore the TWO original DARK NAVY GLOVED hands/fingers visible in image2, at image2\u0027s exact coordinates, size and gesture. The hands must never be white furry mittens. White fur belongs only to cuffs ending at wrists. Keep image1 cool ice-blue pearl/silver TWO-layer scalloped coat, mantle, embroidery, brooch, hair, head, face/expression/eyes/mouth, body/pose, arms/legs, boots/foot positions, emotional symbols and transparent background unchanged. Do not restore original armor or costume panels. Change no other feature. 1254x1254 RGBA transparent square, same framing/scale/position. No added hands/fingers/effects/text.",
+                               "eyes_only":  false,
+                               "prior_generation":  {
+                                                        "tier":  "mingyue",
+                                                        "frame":  "coquettish_4",
+                                                        "reference":  "assets/v2_0/coquettish_4.png",
+                                                        "action":  "撒娇",
+                                                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-deba6b5f-8ae7-4e1c-bc37-ea4e459d0463.png",
+                                                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/coquettish_4.png animation frame coquettish_4 for action \"撒娇\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                                                        "eyes_only":  false
+                                                    },
+                               "correction":  "Retain both dark navy gloved hands; fur cuffs end at wrists"
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "curious_1",
+                               "reference":  "assets/v2_0/curious_1.png",
+                               "action":  "好奇凑近",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-301fb068-300c-48e3-82df-d40927a1db83.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/curious_1.png animation frame curious_1 for action \"好奇凑近\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "curious_2",
+                               "reference":  "assets/v2_0/curious_2.png",
+                               "action":  "好奇凑近",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-d12d283a-7c51-4640-b785-21f148d7ddf9.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/curious_2.png animation frame curious_2 for action \"好奇凑近\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "dragged_2",
+                               "reference":  "assets/v2_0/dragged_2.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b613fc70-ab02-469b-886b-d73c70d46552.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/dragged_2.png animation frame dragged_2 for action \"被拎起来\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "dragged_3",
+                               "reference":  "assets/v2_0/dragged_3.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9cac655b-cc51-4447-a452-df12d30d1e27.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/dragged_3.png animation frame dragged_3 for action \"被拎起来\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "dragged_4",
+                               "reference":  "assets/v2_0/dragged_4.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-0605d10e-c2f6-4a83-bfcf-dcadb0e05c37.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/dragged_4.png animation frame dragged_4 for action \"被拎起来\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "focus_done_1",
+                               "reference":  "assets/v2_0/focus_done_1.png",
+                               "action":  "专注完成",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-dfa7da69-c1dc-4436-b59c-2b979b14e08b.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_done_1.png animation frame focus_done_1 for action \"专注完成\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "focus_read_1",
+                               "reference":  "assets/v2_0/focus_read_1.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-528cd399-1ec0-45ae-8e4f-0628f80419ad.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_1.png animation frame focus_read_1 for action \"陪你看书\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "focus_read_2",
+                               "reference":  "assets/v2_0/focus_read_2.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-16cddf5e-c67a-4ccc-99b5-22b4a4e10fb4.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_2.png animation frame focus_read_2 for action \"陪你看书\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "focus_read_3",
+                               "reference":  "assets/v2_0/focus_read_3.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-45d011a4-b3d8-411c-b269-198ae33cc684.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_3.png animation frame focus_read_3 for action \"陪你看书\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "focus_read_4",
+                               "reference":  "assets/v2_0/focus_read_4.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-58b339ab-d5a2-4e95-9265-a1aa399adf18.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_4.png animation frame focus_read_4 for action \"陪你看书\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "focus_tea_1",
+                               "reference":  "assets/v2_0/focus_tea_1.png",
+                               "action":  "喝茶休息",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-d1325f40-8bf5-44ca-85c6-f89e8b2fff8f.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_tea_1.png animation frame focus_tea_1 for action \"喝茶休息\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "focus_tea_2",
+                               "reference":  "assets/v2_0/focus_tea_2.png",
+                               "action":  "喝茶休息",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-82a27d91-5da6-4db7-a562-8405877ae8f2.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_tea_2.png animation frame focus_tea_2 for action \"喝茶休息\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "greet_morning_1",
+                               "reference":  "assets/v2_0/greet_morning_1.png",
+                               "action":  "早安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-07d3f4b5-f06c-4e57-81bc-732bad914a63.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_morning_1.png animation frame greet_morning_1 for action \"早安\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "greet_morning_2",
+                               "reference":  "assets/v2_0/greet_morning_2.png",
+                               "action":  "早安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7603fc6f-61b5-48a8-b860-11c311dc9c24.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_morning_2.png animation frame greet_morning_2 for action \"早安\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "greet_night_1",
+                               "reference":  "assets/v2_0/greet_night_1.png",
+                               "action":  "晚安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-5b3c0847-b4dd-4646-9923-6b2ea48c25cd.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_night_1.png animation frame greet_night_1 for action \"晚安\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "greet_night_2",
+                               "reference":  "assets/v2_0/greet_night_2.png",
+                               "action":  "晚安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8710dcca-eb5c-4f84-afe8-0efc90c47ee0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_night_2.png animation frame greet_night_2 for action \"晚安\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "grievance_1",
+                               "reference":  "assets/v2_0/grievance_1.png",
+                               "action":  "委屈",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8063b478-ca1d-4c7c-9be2-f723a65ccc48.png",
+                               "prompt":  "Use case: precise-object-edit. Image1 is EDIT TARGET, current MINGYUE grievance_1 winter coat sprite. Image2 is the default same animation frame as exact HAND/GESTURE reference only. Correct only the two hands and adjacent cuff edges: restore the TWO original DARK NAVY GLOVED hands/fingers visible in image2, at image2\u0027s exact coordinates, size and gesture. The hands must never be white furry mittens. White fur belongs only to cuffs ending at wrists. Keep image1 cool ice-blue pearl/silver TWO-layer scalloped coat, mantle, embroidery, brooch, hair, head, face/expression/eyes/mouth, body/pose, arms/legs, boots/foot positions, emotional symbols and transparent background unchanged. Do not restore original armor or costume panels. Change no other feature. 1254x1254 RGBA transparent square, same framing/scale/position. No added hands/fingers/effects/text.",
+                               "eyes_only":  false,
+                               "prior_generation":  {
+                                                        "tier":  "mingyue",
+                                                        "frame":  "grievance_1",
+                                                        "reference":  "assets/v2_0/grievance_1.png",
+                                                        "action":  "委屈",
+                                                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c5212d36-4401-48d7-a098-21a76d5dcc8f.png",
+                                                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/grievance_1.png animation frame grievance_1 for action \"委屈\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                                                        "eyes_only":  false
+                                                    },
+                               "correction":  "Retain both dark navy gloved hands; fur cuffs end at wrists"
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "grievance_2",
+                               "reference":  "assets/v2_0/grievance_2.png",
+                               "action":  "委屈",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e0b7aa83-a4dc-416f-9442-9b4d17a92ebd.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/grievance_2.png animation frame grievance_2 for action \"委屈\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "guitar_1",
+                               "reference":  "assets/v1_1/guitar.png",
+                               "action":  "弹吉他",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-45ad2c8f-04a8-47bc-a344-8b2c5fd526e9.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v1_1/guitar.png animation frame guitar_1 for action \"弹吉他\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "headpat_happy_1",
+                               "reference":  "assets/v2_0/headpat_happy_1.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9c0ab87b-1d8a-4dc0-8b0d-a86ec9d94ef0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/headpat_happy_1.png animation frame headpat_happy_1 for action \"被摸头\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "headpat_happy_2",
+                               "reference":  "assets/v2_0/headpat_happy_2.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2b1fb731-391b-4e21-bb4d-8b69df1c303e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/headpat_happy_2.png animation frame headpat_happy_2 for action \"被摸头\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "headpat_happy_3",
+                               "reference":  "assets/v2_0/headpat_happy_3.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ff6fc449-96ff-47bf-bba8-64e2374d9eb3.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/headpat_happy_3.png animation frame headpat_happy_3 for action \"被摸头\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "headpat_happy_4",
+                               "reference":  "assets/v2_0/headpat_happy_4.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-f012852c-bceb-4fbc-938b-a572d56e6122.png",
+                               "prompt":  "Use case: precise-object-edit. Image1 is EDIT TARGET: current MINGYUE frost coat headpat_happy_4 sprite. Image2 is the default same animation frame ONLY as HAND/GESTURE reference. Fix ONLY the central gloved hands and the immediately adjacent white fur cuff rims: the TWO original dark navy gloved fists clasped together underneath the chin must be fully visible at image2\u0027s exact hand positions and size. Both hands are gloves, never fuzzy mittens. Fur cuffs stop at wrists; they must not cover or replace hands or fingers. Preserve image1 face/expression, head/hair, eyes/mouth, exact pose, arm positions, pearl-silver ice-blue mantle/coat, TWO scalloped hem layers, brooch/pearls, body/legs/boots/foot positions and transparency. Do not restore image2\u0027s purple armor. This correction must keep the existing winter outfit and only reveal the two original navy gloved hands. No added fingers, hand or body part. Original1254x1254 RGBA true transparent square, same placement/scale, clean anime cel-shading. No text/background/ground/new effects.",
+                               "eyes_only":  false,
+                               "prior_generation":  {
+                                                        "tier":  "mingyue",
+                                                        "frame":  "headpat_happy_4",
+                                                        "reference":  "assets/v2_0/headpat_happy_4.png",
+                                                        "action":  "被摸头",
+                                                        "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-06c454a0-83ad-4c77-b748-7ee79daf909a.png",
+                                                        "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/headpat_happy_4.png animation frame headpat_happy_4 for action \"被摸头\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                                                        "eyes_only":  false
+                                                    },
+                               "correction":  "Keep both navy gloved fists visible; fur cuffs end at wrists"
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "heart_1",
+                               "reference":  "assets/v2_0/heart_1.png",
+                               "action":  "比心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a6933559-74e0-42dc-af63-f4f3241fff87.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/heart_1.png animation frame heart_1 for action \"比心\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "hold_card_1",
+                               "reference":  "assets/v2_0/hold_card_1.png",
+                               "action":  "举着卡片",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2106726b-b17c-44fa-811a-c728804b97f6.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/hold_card_1.png animation frame hold_card_1 for action \"举着卡片\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "hug_1",
+                               "reference":  "assets/v2_0/hug_1.png",
+                               "action":  "欢迎回来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-61c177f5-c0ed-47aa-a8b9-b474a3573482.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/hug_1.png animation frame hug_1 for action \"欢迎回来\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "hug_2",
+                               "reference":  "assets/v2_0/hug_2.png",
+                               "action":  "欢迎回来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-d573fa1e-82fd-4be1-a711-d1b2886d74e8.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/hug_2.png animation frame hug_2 for action \"欢迎回来\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "landing_1",
+                               "reference":  "assets/v2_0/landing_1.png",
+                               "action":  "落地",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ba1f9018-a06f-4532-a023-4494133504e5.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/landing_1.png animation frame landing_1 for action \"落地\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "microphone_1",
+                               "reference":  "assets/v1_1/microphone.png",
+                               "action":  "说话",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ea31354d-0b34-4b2c-84da-2fd00fb0545d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v1_1/microphone.png animation frame microphone_1 for action \"说话\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "music_1",
+                               "reference":  "assets/v1_1/music.png",
+                               "action":  "听歌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-dbfca606-13c8-4469-b678-be2d3144857a.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v1_1/music.png animation frame music_1 for action \"听歌\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "packing_1",
+                               "reference":  "assets/v2_0/packing_1.png",
+                               "action":  "收拾东西",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-56a01f5c-b5c6-4614-bdf5-9d52a0e232b3.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/packing_1.png animation frame packing_1 for action \"收拾东西\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "peek_1",
+                               "reference":  "assets/v2_0/peek_1.png",
+                               "action":  "躲着偷看你",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-cf2cd8a4-4652-498d-b558-e6cf1072c3a6.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/peek_1.png animation frame peek_1 for action \"躲着偷看你\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "peek_2",
+                               "reference":  "assets/v2_0/peek_2.png",
+                               "action":  "躲着偷看你",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-37af6eac-9558-4194-946f-435be8c271c0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/peek_2.png animation frame peek_2 for action \"躲着偷看你\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "pout_1",
+                               "reference":  "assets/v2_0/pout_1.png",
+                               "action":  "鼓脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-f507dfe5-1e96-4ba7-b4fe-e64c5c3efbdf.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/pout_1.png animation frame pout_1 for action \"鼓脸\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "pout_2",
+                               "reference":  "assets/v2_0/pout_2.png",
+                               "action":  "鼓脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a08b9cad-92f9-49ba-bdb6-68cfe2123bde.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/pout_2.png animation frame pout_2 for action \"鼓脸\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "proud_1",
+                               "reference":  "assets/v2_0/proud_1.png",
+                               "action":  "得意",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9d0afeee-6318-48de-be09-20db7737fd0d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/proud_1.png animation frame proud_1 for action \"得意\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "ready_go_1",
+                               "reference":  "assets/v2_0/ready_go_1.png",
+                               "action":  "出发",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-3af40232-00bb-4f41-bd4d-d518d847cac0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/ready_go_1.png animation frame ready_go_1 for action \"出发\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "shy_1",
+                               "reference":  "assets/v2_0/shy_1.png",
+                               "action":  "害羞捂脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-67420487-2aee-4d9f-bc19-5e44f01e6af7.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/shy_1.png animation frame shy_1 for action \"害羞捂脸\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "shy_2",
+                               "reference":  "assets/v2_0/shy_2.png",
+                               "action":  "害羞捂脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b6b04176-ed82-42dd-a3ea-9073540f9c80.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/shy_2.png animation frame shy_2 for action \"害羞捂脸\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "sleep_3",
+                               "reference":  "assets/v2_0/sleep_3.png",
+                               "action":  "趴着睡",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-66333389-9f36-4e84-9d9f-8f3676beed0b.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/sleep_3.png animation frame sleep_3 for action \"趴着睡\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "stretch_break_1",
+                               "reference":  "assets/v2_0/stretch_break_1.png",
+                               "action":  "起来活动",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c93d3491-4d14-4aa4-bd33-64ff6a95e6b2.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/stretch_break_1.png animation frame stretch_break_1 for action \"起来活动\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "stretch_break_2",
+                               "reference":  "assets/v2_0/stretch_break_2.png",
+                               "action":  "起来活动",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-0ea64296-d6f9-4eeb-bc71-4ecb49cb8587.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/stretch_break_2.png animation frame stretch_break_2 for action \"起来活动\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "surprised_1",
+                               "reference":  "assets/v2_0/surprised_1.png",
+                               "action":  "吓一跳",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-fccb0961-b741-4c86-994a-ec722bfec28f.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/surprised_1.png animation frame surprised_1 for action \"吓一跳\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "thumbs_up_1",
+                               "reference":  "assets/v2_0/thumbs_up_1.png",
+                               "action":  "点赞",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-fad55a92-5191-4cbc-9234-33217b13a181.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/thumbs_up_1.png animation frame thumbs_up_1 for action \"点赞\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "wake_stretch_1",
+                               "reference":  "assets/v2_0/wake_stretch_1.png",
+                               "action":  "醒来伸懒腰",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7d342ba6-fc11-40cd-9e28-5d825b771821.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/wake_stretch_1.png animation frame wake_stretch_1 for action \"醒来伸懒腰\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "wake_stretch_2",
+                               "reference":  "assets/v2_0/wake_stretch_2.png",
+                               "action":  "醒来伸懒腰",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8465d8d9-83f1-4848-874e-c25c896aa36d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/wake_stretch_2.png animation frame wake_stretch_2 for action \"醒来伸懒腰\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "worried_1",
+                               "reference":  "assets/v2_0/worried_1.png",
+                               "action":  "担心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c34f57f8-7066-46ce-b843-86608aa47308.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/worried_1.png animation frame worried_1 for action \"担心\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "worried_2",
+                               "reference":  "assets/v2_0/worried_2.png",
+                               "action":  "担心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-36115684-9c80-4d26-a492-c5e4075138f7.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/worried_2.png animation frame worried_2 for action \"担心\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "yawn_1",
+                               "reference":  "assets/v2_0/yawn_1.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-081a0143-8f0c-4e00-9560-a2eeb70210e9.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/yawn_1.png animation frame yawn_1 for action \"打哈欠\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "yawn_2",
+                               "reference":  "assets/v2_0/yawn_2.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-27a3dcf9-e239-4fa2-abfd-8d9d140b722a.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/yawn_2.png animation frame yawn_2 for action \"打哈欠\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "mingyue",
+                               "frame":  "yawn_3",
+                               "reference":  "assets/v2_0/yawn_3.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-38bf89d9-4b5c-496d-a933-3262d8fc49c8.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/yawn_3.png animation frame yawn_3 for action \"打哈欠\". Image2 is user-accepted MINGYUE frost coat CLOTHING reference ONLY. REDRAW ONLY clothing in image1 into the exact same cool ice-blue winter coat as image2: pearl-silver piping, TWO scalloped hem layers, restrained pale silver short shoulder mantle with delicate snowflakes, white fluffy collar/cuffs/hem, small silver snowflake brooch at center and restrained pearl chains. Cold blue/silver, clearly brighter and more layered than plain gray; no gold/champagne/garment glow. Adapt long winter sleeves/hem to image1 EXACT pose, fully covering torso and arms. Remove old purple armor, original star/moon costume hardware and navy waist panels wherever clothing covers them. Lock image1 head/hair silhouette and ornaments, face/expression, eye open/closed state, mouth, gloved hands, all arms/legs and exact gestures, dark boots and foot positions/baseline. KEEP all original props, objects and emotional symbols in unchanged positions. Do not copy image2 pose/head/face/boots. Do not add/remove hands/body parts/props. Polished anime chibi clean navy outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/reposition/rescale, text/watermark/ground/halo/new effects. Original notes/hearts/check marks may remain; no new writing. Sibling frames keep identical garment design with only original subtle motion/expression.",
+                               "eyes_only":  false
+                           }
+                       ],
+    "completed_additions":  83
+}
