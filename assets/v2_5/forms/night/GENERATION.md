@@ -1,28 +1,17 @@
-# Moon-night form partial checkpoint
+# Moon-night form generation record
 
-Status: 76/96 candidate frames, all 41 action masters. Incomplete; no final overview.
+All 41 actions / 96 candidate sprite PNGs and FORMS_NIGHT_PREVIEW.png are present. Generation is complete; exact anatomical-anchor acceptance remains unverified. See PROGRESS.md and VALIDATION.json for the distinction.
 
-## Sources and mode
-- Built-in imagegen redraws the wardrobe from the exact default reference in FRAME_MANIFEST.json. idle_1 reuses assets/v2_3/night_change_3.png with its sleepy eyes and local registration. User approved Pillow masked composition/alignment.
-- Use the updated 96-frame manifest or D:/Documents/ChatGPT/petoken-claude/docs/form_art/FORM_ART_1_NIGHT.md. Worktree spec is the obsolete 119-frame version.
-- Costume references: assets/v2_3/night_idle_1.png; later batches also assets/v2_3/night_change_3.png for the closed collar. Latest prompt is saved in the production cache's prompt.txt.
+Built-in imagegen edited the exact default-pose references listed in FRAME_MANIFEST.json. Costume references were assets/v2_3/night_idle_1.png and night_change_3.png. idle_1 reuses the existing knees-up night_change_3 artwork with sleepy eyes. User authorized Pillow local composition and pixel alignment. No paid API/backend switch was used.
 
-## Prompt and local edits
-Preserve source pose, head/face/hair placement and scale, hands, feet, expression, props and action marks. Replace dark costume, gloves, stockings and head crystal with lavender long-sleeved pajamas, fully closed fluffy collar, neck bow, matching pants, white fluffy socks, bare hands and moon clip. Do not copy reference pose/pillow. Canvas 1254x1254 RGBA, real transparency; no lettering/background/ground/watermark.
+Prompt intent: retain pose, head/face/hair placement, scale, hands, feet, expression, props and action marks; replace armor, gloves and stockings with lavender long-sleeved pajamas, closed fluffy white collar, bow, matching pants, fluffy white socks, bare hands and crescent clip. Transparent 1254x1254 canvas; no lettering/background/watermark.
 
-Generated hair/face is registered against source pixels. Original expression is restored locally, excluding hands to avoid old glove pixels. Lower-body adjustment and source alpha contact band are applied. COMPOSITION.json records available registration/raw provenance; independent masks/records remain in scratch. These checks do not prove exact full pose alignment.
+Native redraws were registered and locally composed. Facial restoration excludes hands/neck to avoid bringing back gloves/armor. Final small-motion frames use either the original-variant-first method or a Night-base-first edit localized to source-motion masks. The latter repaired greeting ghosting and kept unchanged hair/props stable. Curious and worried have specific repair pipelines described in PROGRESS.md; preserve them when replaying.
 
-Twenty blinks retain exact pixels outside local masks. Nineteen use original source eye changes; worried uses a native closed-eye redraw because source-face compositing caused visible seams. idle uses separate eye regions. Thinking/poked punctuation was replaced with local nontext twinkles; thinking blink regenerated afterward. All masks/pre-edit images and cleanup_symbols.py remain in scratch.
+Twenty blink outputs retain exact pixels outside local masks; worried uses a native eye-only redraw and the other blinks use source-eye changes/local patches. Thirty-four other variants also pass outside-mask equality. Available raw paths, transforms and composition records are in COMPOSITION.json; exact working masks/raws remain in external scratch.
 
-Curious neckline was redrawn; redraw introduced a silver horn. The earlier correct registered head was composed above y798 with a 5px feather. Do not recompose from raw-curious_1.png without replaying mask-curious-head-repair.png using exec-2a4e19df-63af-424f-b148-57178c785bd1.png. Current curious base/blink include the repair.
+The original lower-alpha-band enforcement introduced pale fragments where original costumes protruded beyond pajamas. Final FOOTER_CLEANUP.json and ALPHA_CLEANUP.json record their removal and low-alpha fringe cleanup. Original alpha-band equality is therefore not a final acceptance test. The full preview and validation hashes were refreshed after cleanup.
 
-## Validation and limits
-VALIDATION.json covers all 76: dimensions/alpha, 76 distinct hashes, 20 blink and 14 localized-variant outside-mask checks, 121 unchanged old assets. Exact head/limb/foot coordinates, seams, costume accessories and animation continuity still require final acceptance. sleep_1 retains a dark bow/crystal pillow prop; review night-form consistency. Runtime integration untested. The only current overview is partial-76.png in external scratch, not a complete delivery overview.
+Validation confirms completeness, dimensions, RGBA, transparency, unique hashes, fixed regions and unchanged original images. All source/Night pairs were visually reviewed. Exploratory head contour checks in HEAD_CHECK.json have nonzero optima and are not anatomical-anchor measurements. Exact head/limb/foot equality and runtime accessory attachment alignment have not been certified; do not describe this package as having passed that strict requirement.
 
-## Current quota block
-Third quota block returned HTTP 429 usage_limit_reached for yawn_3, wake_stretch_2, curious_2, thinking_2. No images returned. Reset 1792029747 = 2026-10-14 22:02:27 America/Toronto. User selected native-quota waiting; no CLI/API authorization. 20 frames remain. No final overview or full pose acceptance yet.
-
-## Latest continuation methods
-13 additional action masters were drawn, with 9 added blinks. Three inspected noncostume deltas (grievance_2, worried_2, focus_read_4) and 11 moving wardrobe variants bring 40 to 76. The moving frames use a native redraw, registration, then a local mask derived from visible source-frame differences; pixels outside it remain exactly the action base. Component bounding rectangles avoid changing distant hair or marks. COMPOSITION.json and external record/mask/raw files preserve available provenance.
-
-Worried uses a registered native face with source sweat-mark composition; rectangular source-face copying was disabled after seam failures. Its blink was natively redrawn against night base, then only local eye regions retained. Hold-card face ROI is manually corrected because paper was misclassified as skin. Cheer/yawn/stretch neckline and hand exclusions prevent legacy glove/armor restoration. See PROGRESS.md for exact replay steps and final review concerns.
+No external code or libraries were added to the repository. Existing game-form registration records were inspected only as a diagnostic reference; their validation results were not reused for Night. No code, original assets or files outside assets/v2_5/forms/night/ changed. Local branch only; no push/merge/publication.

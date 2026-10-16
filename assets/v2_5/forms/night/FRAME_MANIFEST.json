@@ -183,7 +183,7 @@
     "action": "打哈欠",
     "name": "yawn_3",
     "ref": "assets/v2_0/yawn_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "醒来伸懒腰",
@@ -195,7 +195,7 @@
     "action": "醒来伸懒腰",
     "name": "wake_stretch_2",
     "ref": "assets/v2_0/wake_stretch_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "好奇凑近",
@@ -207,7 +207,7 @@
     "action": "好奇凑近",
     "name": "curious_2",
     "ref": "assets/v2_0/curious_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "好奇凑近",
@@ -225,7 +225,7 @@
     "action": "盘腿思考",
     "name": "thinking_2",
     "ref": "assets/v2_0/thinking_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "盘腿思考",
@@ -243,7 +243,7 @@
     "action": "害羞捂脸",
     "name": "shy_2",
     "ref": "assets/v2_0/shy_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "鼓脸",
@@ -255,7 +255,7 @@
     "action": "鼓脸",
     "name": "pout_2",
     "ref": "assets/v2_0/pout_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "鼓脸",
@@ -279,19 +279,19 @@
     "action": "被拎起来",
     "name": "dragged_2",
     "ref": "assets/v2_0/dragged_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "被拎起来",
     "name": "dragged_3",
     "ref": "assets/v2_0/dragged_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "被拎起来",
     "name": "dragged_4",
     "ref": "assets/v2_0/dragged_4.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "落地",
@@ -315,7 +315,7 @@
     "action": "欢迎回来",
     "name": "hug_2",
     "ref": "assets/v2_0/hug_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "欢迎回来",
@@ -339,7 +339,7 @@
     "action": "早安",
     "name": "greet_morning_2",
     "ref": "assets/v2_0/greet_morning_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "早安",
@@ -357,7 +357,7 @@
     "action": "晚安",
     "name": "greet_night_2",
     "ref": "assets/v2_0/greet_night_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "吓一跳",
@@ -387,7 +387,7 @@
     "action": "加油",
     "name": "cheer_2",
     "ref": "assets/v2_0/cheer_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "加油",
@@ -405,13 +405,13 @@
     "action": "鼓掌",
     "name": "clap_2",
     "ref": "assets/v2_0/clap_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "鼓掌",
     "name": "clap_3",
     "ref": "assets/v2_0/clap_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "鼓掌",
@@ -429,7 +429,7 @@
     "action": "躲着偷看你",
     "name": "peek_2",
     "ref": "assets/v2_0/peek_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "委屈",
@@ -453,13 +453,13 @@
     "action": "陪你看书",
     "name": "focus_read_2",
     "ref": "assets/v2_0/focus_read_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "陪你看书",
     "name": "focus_read_3",
     "ref": "assets/v2_0/focus_read_3.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "陪你看书",
@@ -483,7 +483,7 @@
     "action": "喝茶休息",
     "name": "focus_tea_2",
     "ref": "assets/v2_0/focus_tea_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "专注完成",
@@ -507,7 +507,7 @@
     "action": "起来活动",
     "name": "stretch_break_2",
     "ref": "assets/v2_0/stretch_break_2.png",
-    "status": "not_generated"
+    "status": "candidate_saved"
   },
   {
     "action": "起来活动",

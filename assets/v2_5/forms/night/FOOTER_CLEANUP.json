@@ -1,0 +1,937 @@
+{
+  "method": "Remove small disconnected alpha>8 components below y1100 that do not reach y1100 AND have over 60% exact fallback-fill RGB (231,224,249), with a two-pixel fringe. These are pale legacy-band fragments. Connected socks, hair and ground puffs retained. Original pre-cleanup files backed up outside repo.",
+  "frames": [
+    {
+      "frame": "idle_1",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "idle_blink",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "typing_1",
+      "removed_components": [
+        {
+          "area": 98,
+          "bbox": [
+            425,
+            1215,
+            443,
+            1223
+          ]
+        },
+        {
+          "area": 108,
+          "bbox": [
+            530,
+            1215,
+            547,
+            1225
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "typing_2",
+      "removed_components": []
+    },
+    {
+      "frame": "codex_working_1",
+      "removed_components": []
+    },
+    {
+      "frame": "microphone_1",
+      "removed_components": []
+    },
+    {
+      "frame": "music_1",
+      "removed_components": [
+        {
+          "area": 635,
+          "bbox": [
+            482,
+            1196,
+            522,
+            1224
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "guitar_1",
+      "removed_components": [
+        {
+          "area": 74,
+          "bbox": [
+            505,
+            1231,
+            519,
+            1238
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "celebrate_1",
+      "removed_components": []
+    },
+    {
+      "frame": "sad_1",
+      "removed_components": [
+        {
+          "area": 721,
+          "bbox": [
+            450,
+            1210,
+            494,
+            1239
+          ]
+        },
+        {
+          "area": 72,
+          "bbox": [
+            573,
+            1210,
+            587,
+            1218
+          ]
+        },
+        {
+          "area": 13,
+          "bbox": [
+            765,
+            1210,
+            771,
+            1213
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "wave_1",
+      "removed_components": []
+    },
+    {
+      "frame": "coquettish_1",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "coquettish_2",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "coquettish_3",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "coquettish_4",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "coquettish_blink",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "headpat_happy_1",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "headpat_happy_2",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "headpat_happy_3",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "headpat_happy_4",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "headpat_happy_blink",
+      "removed_components": [
+        {
+          "area": 31,
+          "bbox": [
+            571,
+            1211,
+            581,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "sleep_1",
+      "removed_components": []
+    },
+    {
+      "frame": "sleep_2",
+      "removed_components": []
+    },
+    {
+      "frame": "sleep_3",
+      "removed_components": []
+    },
+    {
+      "frame": "bored_1",
+      "removed_components": [
+        {
+          "area": 24,
+          "bbox": [
+            466,
+            1194,
+            474,
+            1198
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "bored_2",
+      "removed_components": [
+        {
+          "area": 24,
+          "bbox": [
+            466,
+            1194,
+            474,
+            1198
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "bored_3",
+      "removed_components": [
+        {
+          "area": 24,
+          "bbox": [
+            466,
+            1194,
+            474,
+            1198
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "bored_blink",
+      "removed_components": [
+        {
+          "area": 24,
+          "bbox": [
+            466,
+            1194,
+            474,
+            1198
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "yawn_1",
+      "removed_components": [
+        {
+          "area": 373,
+          "bbox": [
+            457,
+            1199,
+            490,
+            1219
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "yawn_2",
+      "removed_components": [
+        {
+          "area": 373,
+          "bbox": [
+            457,
+            1199,
+            490,
+            1219
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "yawn_3",
+      "removed_components": [
+        {
+          "area": 373,
+          "bbox": [
+            457,
+            1199,
+            490,
+            1219
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "wake_stretch_1",
+      "removed_components": []
+    },
+    {
+      "frame": "wake_stretch_2",
+      "removed_components": []
+    },
+    {
+      "frame": "curious_1",
+      "removed_components": [
+        {
+          "area": 27,
+          "bbox": [
+            403,
+            1208,
+            419,
+            1210
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "curious_2",
+      "removed_components": [
+        {
+          "area": 212,
+          "bbox": [
+            842,
+            1195,
+            877,
+            1203
+          ]
+        },
+        {
+          "area": 47,
+          "bbox": [
+            920,
+            1195,
+            942,
+            1198
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "curious_blink",
+      "removed_components": [
+        {
+          "area": 27,
+          "bbox": [
+            403,
+            1208,
+            419,
+            1210
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "thinking_1",
+      "removed_components": [
+        {
+          "area": 803,
+          "bbox": [
+            430,
+            1190,
+            478,
+            1219
+          ]
+        },
+        {
+          "area": 101,
+          "bbox": [
+            642,
+            1190,
+            664,
+            1198
+          ]
+        },
+        {
+          "area": 27,
+          "bbox": [
+            719,
+            1190,
+            730,
+            1194
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "thinking_2",
+      "removed_components": [
+        {
+          "area": 803,
+          "bbox": [
+            430,
+            1190,
+            478,
+            1219
+          ]
+        },
+        {
+          "area": 101,
+          "bbox": [
+            642,
+            1190,
+            664,
+            1198
+          ]
+        },
+        {
+          "area": 27,
+          "bbox": [
+            719,
+            1190,
+            730,
+            1194
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "thinking_blink",
+      "removed_components": [
+        {
+          "area": 803,
+          "bbox": [
+            430,
+            1190,
+            478,
+            1219
+          ]
+        },
+        {
+          "area": 101,
+          "bbox": [
+            642,
+            1190,
+            664,
+            1198
+          ]
+        },
+        {
+          "area": 27,
+          "bbox": [
+            719,
+            1190,
+            730,
+            1194
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "shy_1",
+      "removed_components": []
+    },
+    {
+      "frame": "shy_2",
+      "removed_components": []
+    },
+    {
+      "frame": "pout_1",
+      "removed_components": []
+    },
+    {
+      "frame": "pout_2",
+      "removed_components": []
+    },
+    {
+      "frame": "pout_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "poked_1",
+      "removed_components": []
+    },
+    {
+      "frame": "dragged_1",
+      "removed_components": []
+    },
+    {
+      "frame": "dragged_2",
+      "removed_components": []
+    },
+    {
+      "frame": "dragged_3",
+      "removed_components": [
+        {
+          "area": 66,
+          "bbox": [
+            666,
+            1215,
+            687,
+            1219
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "dragged_4",
+      "removed_components": []
+    },
+    {
+      "frame": "landing_1",
+      "removed_components": []
+    },
+    {
+      "frame": "landing_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "hug_1",
+      "removed_components": []
+    },
+    {
+      "frame": "hug_2",
+      "removed_components": []
+    },
+    {
+      "frame": "hug_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "heart_1",
+      "removed_components": []
+    },
+    {
+      "frame": "greet_morning_1",
+      "removed_components": []
+    },
+    {
+      "frame": "greet_morning_2",
+      "removed_components": []
+    },
+    {
+      "frame": "greet_morning_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "greet_night_1",
+      "removed_components": []
+    },
+    {
+      "frame": "greet_night_2",
+      "removed_components": []
+    },
+    {
+      "frame": "surprised_1",
+      "removed_components": []
+    },
+    {
+      "frame": "thumbs_up_1",
+      "removed_components": []
+    },
+    {
+      "frame": "thumbs_up_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "cheer_1",
+      "removed_components": []
+    },
+    {
+      "frame": "cheer_2",
+      "removed_components": []
+    },
+    {
+      "frame": "cheer_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "clap_1",
+      "removed_components": []
+    },
+    {
+      "frame": "clap_2",
+      "removed_components": []
+    },
+    {
+      "frame": "clap_3",
+      "removed_components": []
+    },
+    {
+      "frame": "clap_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "peek_1",
+      "removed_components": []
+    },
+    {
+      "frame": "peek_2",
+      "removed_components": []
+    },
+    {
+      "frame": "grievance_1",
+      "removed_components": []
+    },
+    {
+      "frame": "grievance_2",
+      "removed_components": []
+    },
+    {
+      "frame": "focus_read_1",
+      "removed_components": [
+        {
+          "area": 11,
+          "bbox": [
+            946,
+            1211,
+            957,
+            1212
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_read_2",
+      "removed_components": [
+        {
+          "area": 11,
+          "bbox": [
+            946,
+            1211,
+            957,
+            1212
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_read_3",
+      "removed_components": [
+        {
+          "area": 11,
+          "bbox": [
+            946,
+            1211,
+            957,
+            1212
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_read_4",
+      "removed_components": [
+        {
+          "area": 11,
+          "bbox": [
+            946,
+            1211,
+            957,
+            1212
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_read_blink",
+      "removed_components": [
+        {
+          "area": 11,
+          "bbox": [
+            946,
+            1211,
+            957,
+            1212
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_tea_1",
+      "removed_components": [
+        {
+          "area": 99,
+          "bbox": [
+            479,
+            1210,
+            497,
+            1219
+          ]
+        },
+        {
+          "area": 248,
+          "bbox": [
+            775,
+            1210,
+            825,
+            1217
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_tea_2",
+      "removed_components": [
+        {
+          "area": 99,
+          "bbox": [
+            479,
+            1210,
+            497,
+            1219
+          ]
+        },
+        {
+          "area": 248,
+          "bbox": [
+            775,
+            1210,
+            825,
+            1217
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_done_1",
+      "removed_components": [
+        {
+          "area": 58,
+          "bbox": [
+            560,
+            1211,
+            584,
+            1214
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "focus_done_blink",
+      "removed_components": [
+        {
+          "area": 58,
+          "bbox": [
+            560,
+            1211,
+            584,
+            1214
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "stretch_break_1",
+      "removed_components": []
+    },
+    {
+      "frame": "stretch_break_2",
+      "removed_components": []
+    },
+    {
+      "frame": "stretch_break_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "hold_card_1",
+      "removed_components": [
+        {
+          "area": 58,
+          "bbox": [
+            604,
+            1212,
+            629,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "hold_card_blink",
+      "removed_components": [
+        {
+          "area": 58,
+          "bbox": [
+            604,
+            1212,
+            629,
+            1215
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "packing_1",
+      "removed_components": []
+    },
+    {
+      "frame": "packing_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "ready_go_1",
+      "removed_components": []
+    },
+    {
+      "frame": "ready_go_blink",
+      "removed_components": []
+    },
+    {
+      "frame": "worried_1",
+      "removed_components": [
+        {
+          "area": 116,
+          "bbox": [
+            625,
+            1211,
+            655,
+            1216
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "worried_2",
+      "removed_components": [
+        {
+          "area": 116,
+          "bbox": [
+            625,
+            1211,
+            655,
+            1216
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "worried_blink",
+      "removed_components": [
+        {
+          "area": 116,
+          "bbox": [
+            625,
+            1211,
+            655,
+            1216
+          ]
+        }
+      ]
+    },
+    {
+      "frame": "proud_1",
+      "removed_components": []
+    }
+  ]
+}
