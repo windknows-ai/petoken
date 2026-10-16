@@ -1,0 +1,1044 @@
+{
+    "step2_additions":  249,
+    "action_families_per_tier":  41,
+    "complete":  true,
+    "tiers":  [
+                  {
+                      "generation_metadata":  "fanxing/GENERATION_STEP2_20261013.json",
+                      "validation_evidence":  "fanxing/VALIDATION_STEP2_20261013.json",
+                      "blink_checks":  19,
+                      "table_filenames_present":  96,
+                      "action_families":  41,
+                      "tier":  "fanxing",
+                      "step2_additions":  83,
+                      "legacy_and_table_sprites":  105
+                  },
+                  {
+                      "generation_metadata":  "mingyue/GENERATION_STEP2_20261014.json",
+                      "validation_evidence":  "mingyue/VALIDATION_STEP2_20261014.json",
+                      "blink_checks":  19,
+                      "table_filenames_present":  96,
+                      "action_families":  41,
+                      "tier":  "mingyue",
+                      "step2_additions":  83,
+                      "legacy_and_table_sprites":  105
+                  },
+                  {
+                      "generation_metadata":  "haori/GENERATION_STEP2_20261016.json",
+                      "validation_evidence":  "haori/VALIDATION_STEP2_20261016.json",
+                      "blink_checks":  19,
+                      "table_filenames_present":  96,
+                      "action_families":  41,
+                      "tier":  "haori",
+                      "step2_additions":  83,
+                      "legacy_and_table_sprites":  105
+                  }
+              ],
+    "earlier_tiers":  "Previously validated fanxing/mingyue outputs and evidence protected by SHA256",
+    "immutable_checkpoint":  "092f3f7",
+    "total_sprites_including_preserved_legacy":  315,
+    "fresh_haori_checks":  "83 RGBA 1254x1254 sprite checks; 19 alpha-exact eyes-only blink checks; published outputs match reviewed files",
+    "table_filenames_per_tier":  96,
+    "runtime_animation_acceptance":  false,
+    "checked_at_utc":  "2026-10-16T06:13:54.2692570Z",
+    "total_table_files":  288,
+    "new_sprite_manifest":  [
+                                {
+                                    "sha256":  "2E494EF1B2EDDF492CB8BA22CC0A5099F2B72783B18436EBF8513A15FA931284",
+                                    "path":  "fanxing/codex_working_1.png"
+                                },
+                                {
+                                    "sha256":  "A0F9878A00E68FF21E9B88B7EA42662FCF712395D6374C3B7E07F80C04D9734B",
+                                    "path":  "fanxing/microphone_1.png"
+                                },
+                                {
+                                    "sha256":  "CEDA0B68E830872E0E14BA8D59F982BCE41FEC98223BD288F5536658FD2B120F",
+                                    "path":  "fanxing/music_1.png"
+                                },
+                                {
+                                    "sha256":  "BC0EE8E9DCD910C684E7D7381AF4449AF874927CA1B2ACC447CC116C50B46C77",
+                                    "path":  "fanxing/guitar_1.png"
+                                },
+                                {
+                                    "sha256":  "AE1235DF87962F48838749302BC1C2222330D5A9ADDB90833C02C86816B82204",
+                                    "path":  "fanxing/coquettish_1.png"
+                                },
+                                {
+                                    "sha256":  "F3037FE38272325319B4E4EB785D90229C54AE07E3C96564A79660801592C8DC",
+                                    "path":  "fanxing/coquettish_2.png"
+                                },
+                                {
+                                    "sha256":  "754B9A7911B1FD4D8D25D57C8ACFC71D09BE7387CE756AA384D3D3B21B132A39",
+                                    "path":  "fanxing/coquettish_3.png"
+                                },
+                                {
+                                    "sha256":  "2921DB14364AC94F089960D066D50EE918AEF15FC11504168F150D84EABF6923",
+                                    "path":  "fanxing/coquettish_4.png"
+                                },
+                                {
+                                    "sha256":  "C716DFB99CF29B3664C1B151A388EA78325A9C2230DE62C288619DEE77F7D95A",
+                                    "path":  "fanxing/coquettish_blink.png"
+                                },
+                                {
+                                    "sha256":  "8BA8B8A9AF4B11B2611E17CBCCE1901BBA1F1224B427A3BCF460D00938E3C92E",
+                                    "path":  "fanxing/headpat_happy_1.png"
+                                },
+                                {
+                                    "sha256":  "1864D74A60B3B9F739C33630B916EE329D6F25AF032775E31CB8B4AB78E67E9F",
+                                    "path":  "fanxing/headpat_happy_2.png"
+                                },
+                                {
+                                    "sha256":  "1C67176FF019D8E897C685CC39DF8B8E71B07B0A99005DB59F88AB851A6F06F7",
+                                    "path":  "fanxing/headpat_happy_3.png"
+                                },
+                                {
+                                    "sha256":  "E217087DBD970632BC785FBB056E66CFC36F931F83D0194A342973FA8CDFBCD5",
+                                    "path":  "fanxing/headpat_happy_4.png"
+                                },
+                                {
+                                    "sha256":  "519F0AD18597F2D81FF1EA03B46413AFFEF75BD17A41D38DDB05C9EF0CE55C77",
+                                    "path":  "fanxing/headpat_happy_blink.png"
+                                },
+                                {
+                                    "sha256":  "A5775703FFB7ADD06471EF59A94E68E6F3161443A2B651A3E67B517B67D441A4",
+                                    "path":  "fanxing/sleep_3.png"
+                                },
+                                {
+                                    "sha256":  "B2C3CE2DF84EAE0AF3248A841424A519F6CA29E9BE26695B67E08437574E9DCB",
+                                    "path":  "fanxing/bored_1.png"
+                                },
+                                {
+                                    "sha256":  "1AC15F129A3101DAEA7984356F515825D67C9C411514B2A138781F8870BF44CE",
+                                    "path":  "fanxing/bored_2.png"
+                                },
+                                {
+                                    "sha256":  "D4A9848E6675997A9DDF62D121F16A004CD6BF73B28176D28DE2B809FC48163A",
+                                    "path":  "fanxing/bored_3.png"
+                                },
+                                {
+                                    "sha256":  "9D92B7FB9FC97B46419D463B7BC22EF42516EE91ADDEDF2F04138282710C8339",
+                                    "path":  "fanxing/bored_blink.png"
+                                },
+                                {
+                                    "sha256":  "F84D35FCF99EE40474F1F0D5236EF7ADEF1B8B323C5433486EDE7E4A467E214B",
+                                    "path":  "fanxing/yawn_1.png"
+                                },
+                                {
+                                    "sha256":  "ED77525860D2FE603DCFD793193B6ED9FC88001865B144F1F77F4A61959ECABE",
+                                    "path":  "fanxing/yawn_2.png"
+                                },
+                                {
+                                    "sha256":  "F3A6921D818165B5F2DE3F4BD1680A7167815DB3F2A061830CD9ED7A177C7F11",
+                                    "path":  "fanxing/yawn_3.png"
+                                },
+                                {
+                                    "sha256":  "4DE75299647724D2D43016EB73AA183668ED98057486EB25B4BB60D4CA3A051C",
+                                    "path":  "fanxing/wake_stretch_1.png"
+                                },
+                                {
+                                    "sha256":  "A1AF64546D03ECA7C138AE41CFE7F5DC7A9AAC42DA5C6CCE89528B9EDA2D2046",
+                                    "path":  "fanxing/wake_stretch_2.png"
+                                },
+                                {
+                                    "sha256":  "F7B38C465A53348A5D9C6B3F3D94D2F4F4BFB42E1F91FF88DACC47CC365C52BE",
+                                    "path":  "fanxing/curious_1.png"
+                                },
+                                {
+                                    "sha256":  "8965D4FD8C87B040B8E7194651C647AB7F71BAFBA12EE494E9820084C2FC86DD",
+                                    "path":  "fanxing/curious_2.png"
+                                },
+                                {
+                                    "sha256":  "5A35A319B9FDBC2B0DB53B53135D4C2593CF3D346815DF9C1B721C8D95BD629F",
+                                    "path":  "fanxing/curious_blink.png"
+                                },
+                                {
+                                    "sha256":  "404C53423265F87C458CDD6E833468308D3ECBAFDD36733C61FE3392C24E29E4",
+                                    "path":  "fanxing/thinking_blink.png"
+                                },
+                                {
+                                    "sha256":  "84BB87850C3C1F9C2703B610A4B409D4C7AEEF01D8B5CF4D63B449CA318C597E",
+                                    "path":  "fanxing/shy_1.png"
+                                },
+                                {
+                                    "sha256":  "42D1FBB7A3E8E5C43CF377D735D70A13E75BDF2C60569E65D8D45B1A214464B0",
+                                    "path":  "fanxing/shy_2.png"
+                                },
+                                {
+                                    "sha256":  "435B9681687161FD7FC247433B136D9BED6D3C216D3CA614B7CB7B046B86FB41",
+                                    "path":  "fanxing/pout_1.png"
+                                },
+                                {
+                                    "sha256":  "5F57F3A2A50A9AB6A4A10634F5B68A4D1A460CF424C28350303A9E2088D61DFF",
+                                    "path":  "fanxing/pout_2.png"
+                                },
+                                {
+                                    "sha256":  "8A9E2DA5C4BB844226072BF63079DBD1098A03F517F9650C24984727771B55C3",
+                                    "path":  "fanxing/pout_blink.png"
+                                },
+                                {
+                                    "sha256":  "D0A4BFC660C0B888C34AF13BEFF8E80DD64CB0478AAEB6F0CC8A63BA3B781342",
+                                    "path":  "fanxing/dragged_2.png"
+                                },
+                                {
+                                    "sha256":  "3B933BEBD92D8C7BF7406A22D9158B2E008DF5AAC0E2F1E59E4ECB9B9946D32C",
+                                    "path":  "fanxing/dragged_3.png"
+                                },
+                                {
+                                    "sha256":  "4248A9DE284E941A9C74E3D143BF603467F36CCF52008CCC1F3DDEFD6FEDC178",
+                                    "path":  "fanxing/dragged_4.png"
+                                },
+                                {
+                                    "sha256":  "962823286E44048A89F438CFEEF365D2DA18A0DE74543F00503EC1169D305EB3",
+                                    "path":  "fanxing/landing_1.png"
+                                },
+                                {
+                                    "sha256":  "29EE64609A17434C3B98DA3ED81732080FB3FFF49D1E7421C6B12E746919A705",
+                                    "path":  "fanxing/landing_blink.png"
+                                },
+                                {
+                                    "sha256":  "62832D03F5CDD75E80334E4C66F1887F23B10926B77F7BC8AC89012889E6C488",
+                                    "path":  "fanxing/hug_1.png"
+                                },
+                                {
+                                    "sha256":  "FE0EE98A97FD4493AE2F6ADC338B6A382CB9F11B25C050493F2354DE3B5E2889",
+                                    "path":  "fanxing/hug_2.png"
+                                },
+                                {
+                                    "sha256":  "1C4464D847C60A8D031DF018A40133674B297A9F82DDBAC1332B2F8C74A580A3",
+                                    "path":  "fanxing/hug_blink.png"
+                                },
+                                {
+                                    "sha256":  "080B4554976A36F76204672520A6874CBCBE1AEDC826B900FE70F523DCEC13C4",
+                                    "path":  "fanxing/heart_1.png"
+                                },
+                                {
+                                    "sha256":  "7AAB17FCCECDC716F3F9793A3C1A5F0AAD34F3181729E576209749163ED0F3C2",
+                                    "path":  "fanxing/greet_morning_1.png"
+                                },
+                                {
+                                    "sha256":  "147AC80A09D1D10940DA83A638F5F7664565675CD0FFD2C4B3D0EAB49A18D354",
+                                    "path":  "fanxing/greet_morning_2.png"
+                                },
+                                {
+                                    "sha256":  "27BDC13EC91372A1AD93579625C7BC3C1615830058ACD15263B4CAF40CD82FD2",
+                                    "path":  "fanxing/greet_morning_blink.png"
+                                },
+                                {
+                                    "sha256":  "76649FD1E2E8AA37AD2166C40262DCBB119063FABA3D613A5395995AF7FBD006",
+                                    "path":  "fanxing/greet_night_1.png"
+                                },
+                                {
+                                    "sha256":  "81BE19C27B714E8E412A96933B8B3C03D960B1127195B16292987D1A502DEEBD",
+                                    "path":  "fanxing/greet_night_2.png"
+                                },
+                                {
+                                    "sha256":  "AFD12575175C895AF3A9CB5CAC289F49AF8DF38F1CC69AEEB97EC9C8ED853DB9",
+                                    "path":  "fanxing/surprised_1.png"
+                                },
+                                {
+                                    "sha256":  "E2246591AF1F93A41A5A620B6E1E7D9E0EDE6382B98AFDEED8D9DAFB4636BE34",
+                                    "path":  "fanxing/thumbs_up_1.png"
+                                },
+                                {
+                                    "sha256":  "A6657BA4A14BB08F56161FF288A28B0AAA7C611A774F4A1AC1130CF9A86817C1",
+                                    "path":  "fanxing/thumbs_up_blink.png"
+                                },
+                                {
+                                    "sha256":  "80579D4D945532FCEC17EABF1B9D2DBF7809C0F9DEFEC2B45B06DBD6FF3F83DC",
+                                    "path":  "fanxing/cheer_1.png"
+                                },
+                                {
+                                    "sha256":  "C2BB7904EAE101580FC17A831E4B04803A1425E67BE17C93800A9A39D1EDBC30",
+                                    "path":  "fanxing/cheer_2.png"
+                                },
+                                {
+                                    "sha256":  "F87907A66F8AA78E16C9E1B2889FDDC23604AB844AC702309D363A1BA2CD465B",
+                                    "path":  "fanxing/cheer_blink.png"
+                                },
+                                {
+                                    "sha256":  "46C7E6E6F38927E0708100455EEA500DADAEF07A35337493ADFCB365F154042D",
+                                    "path":  "fanxing/clap_1.png"
+                                },
+                                {
+                                    "sha256":  "7857D03BCEA19CAAB87EF86BC6C8126AFBFDD8266FAEF9A24D061BA4F7151DC3",
+                                    "path":  "fanxing/clap_2.png"
+                                },
+                                {
+                                    "sha256":  "B1DF1278A83ED89F0108A2445849E896EB2A131B546E795F5127F347BC249A04",
+                                    "path":  "fanxing/clap_3.png"
+                                },
+                                {
+                                    "sha256":  "AAA101D7A944F5A2019991AB5B76C9A2FDE4C3E7D9140EDBC6A9685E99C3E6E8",
+                                    "path":  "fanxing/clap_blink.png"
+                                },
+                                {
+                                    "sha256":  "C1DF7BFADB587576A3C99959E09FA710FE9C7B72C75D399531FE63972DEDBD3E",
+                                    "path":  "fanxing/peek_1.png"
+                                },
+                                {
+                                    "sha256":  "326C581D56890B6991AFBEE45A5AACCC64455B174320E6CF4F02996B94B5C2B9",
+                                    "path":  "fanxing/peek_2.png"
+                                },
+                                {
+                                    "sha256":  "E149933BBA6DACCBAC4D67C56604ADF35F6DD3816D9A77A719CCDB71256F592D",
+                                    "path":  "fanxing/grievance_1.png"
+                                },
+                                {
+                                    "sha256":  "4E807273426C6A93DF75347A18068C08670CD506C749CBA5E4F97D5C395747DA",
+                                    "path":  "fanxing/grievance_2.png"
+                                },
+                                {
+                                    "sha256":  "E594CBB866B185DB59D7253F25EEB03F4A133FE7F50CE7812796B93333A398F2",
+                                    "path":  "fanxing/focus_read_1.png"
+                                },
+                                {
+                                    "sha256":  "C1B655C8572DDB99B95A52A9FA5B78DBBE32AF3F5C19EB54E062261A45CD8070",
+                                    "path":  "fanxing/focus_read_2.png"
+                                },
+                                {
+                                    "sha256":  "3933B1F8DD994F16416BC61E2381127DECE58919981CD1C1A97CFF09239C2E26",
+                                    "path":  "fanxing/focus_read_3.png"
+                                },
+                                {
+                                    "sha256":  "DB57BFBF9FA54FD8F784FC19DE5E1B885E65CD18A1F293E5F09F43FFD7A35377",
+                                    "path":  "fanxing/focus_read_4.png"
+                                },
+                                {
+                                    "sha256":  "7902AF8598A89C4E53E420E18035469AECDA013B5AC6CC2BAA3F9EC88912E979",
+                                    "path":  "fanxing/focus_read_blink.png"
+                                },
+                                {
+                                    "sha256":  "828B074CFDD39715618FDD2DFABF7707A4A8F99E238F134528504D881C05EEBE",
+                                    "path":  "fanxing/focus_tea_1.png"
+                                },
+                                {
+                                    "sha256":  "D676FD14725E064E09F760EEF6C1A54F6026ACBF331AC0BB4237D425689292CB",
+                                    "path":  "fanxing/focus_tea_2.png"
+                                },
+                                {
+                                    "sha256":  "C43ECA299F3A7C17F2C5ACE8711B5DABE6C99BEB91EF18E045D6AEA753D809C6",
+                                    "path":  "fanxing/focus_done_1.png"
+                                },
+                                {
+                                    "sha256":  "82C16570C41560097ABCB8BC6B3903B3FC30B561E86D8FDFF0121E03AE3AE18C",
+                                    "path":  "fanxing/focus_done_blink.png"
+                                },
+                                {
+                                    "sha256":  "234458365A17D89F7C40D349CEFE2B98487D001D125A1439ACB932B99462E928",
+                                    "path":  "fanxing/stretch_break_1.png"
+                                },
+                                {
+                                    "sha256":  "F78F3028A50EE8ED54231EE926DC40E5C5650E78044B8F4528871C50EBB034F7",
+                                    "path":  "fanxing/stretch_break_2.png"
+                                },
+                                {
+                                    "sha256":  "74BFC7360528CCA124E54C12CA02D2FF1512DFC405AF213D9045A437EC88F9DB",
+                                    "path":  "fanxing/stretch_break_blink.png"
+                                },
+                                {
+                                    "sha256":  "AE80542978F8CD5498A400FF19913D67E89210F7B17BA6FDE995D0DAE33B3C80",
+                                    "path":  "fanxing/hold_card_1.png"
+                                },
+                                {
+                                    "sha256":  "7B862007D3622DD0C088BE5B737DEDC5D7F411C5ECDB4CAD2512C3B4D99B9D52",
+                                    "path":  "fanxing/hold_card_blink.png"
+                                },
+                                {
+                                    "sha256":  "D036250DC312BFC10670A278DCDBA3E5DAD7D49627902692FD9602ABCD22D90F",
+                                    "path":  "fanxing/packing_1.png"
+                                },
+                                {
+                                    "sha256":  "C9C998F899B53DF7C142DBFE429C9C67B75EAFF016F9F760D2870AAF7A6732BF",
+                                    "path":  "fanxing/packing_blink.png"
+                                },
+                                {
+                                    "sha256":  "81B9937CF3A667A0072E113EC305DF3931B5820D89D02BF63BEB73E50DED8EFB",
+                                    "path":  "fanxing/ready_go_1.png"
+                                },
+                                {
+                                    "sha256":  "3F9E778EE01E3D7C20C9CED44BD58F8020B0C6CA2EB7455AE92D61ABD164F188",
+                                    "path":  "fanxing/ready_go_blink.png"
+                                },
+                                {
+                                    "sha256":  "BF3712C4C1DC2CB3EA57376BA245BEBA80A92B31194B07B9639F69AF56788888",
+                                    "path":  "fanxing/worried_1.png"
+                                },
+                                {
+                                    "sha256":  "3D42F3CA12E30B49233888DED6637801E0BE9323D52169700AD5446E22933D74",
+                                    "path":  "fanxing/worried_2.png"
+                                },
+                                {
+                                    "sha256":  "C84F05D3122271BAF20A73C185F6FC26332B0A4B7CB57296DB6102D719C99571",
+                                    "path":  "fanxing/worried_blink.png"
+                                },
+                                {
+                                    "sha256":  "0DA00076560B50F1AC31796307659E821295EC4BDA4A41D55A165315245667A9",
+                                    "path":  "fanxing/proud_1.png"
+                                },
+                                {
+                                    "sha256":  "8A9B4D12C8F42658163C8DB1BE49AB06DD3B62F14B1B89C85389DA234B398758",
+                                    "path":  "mingyue/codex_working_1.png"
+                                },
+                                {
+                                    "sha256":  "B625CE8257D25383CBF8FD9A7E79957AC0AE430E02869B8CBAE62BB43AFFCD9C",
+                                    "path":  "mingyue/microphone_1.png"
+                                },
+                                {
+                                    "sha256":  "B3094726DD5A7F0A8B3FD05669AA8A1512F1A8B1F385153E880B688932C68FC2",
+                                    "path":  "mingyue/music_1.png"
+                                },
+                                {
+                                    "sha256":  "CA80CD77EBB66938B840861FE61AA9D20B98C28239B11605DB5BFA3AD05E1CF9",
+                                    "path":  "mingyue/guitar_1.png"
+                                },
+                                {
+                                    "sha256":  "F114EC769E8F8D2DC5EC7C6894A5D4CCFB07979DA9297C1C9528FC5AE1877044",
+                                    "path":  "mingyue/coquettish_1.png"
+                                },
+                                {
+                                    "sha256":  "FD0C52715589CDCFEDCF586562C8EB29938E1AA22276DDCE87C56D0D35EEC68B",
+                                    "path":  "mingyue/coquettish_2.png"
+                                },
+                                {
+                                    "sha256":  "48F63377A5BC163053879B05BE50A388C236BD71421C2427A6BB0FE1C4CD89E3",
+                                    "path":  "mingyue/coquettish_3.png"
+                                },
+                                {
+                                    "sha256":  "0064E5C94137A7EA7C2E9D61E4FB1EC0961090F61B3AD781E11D30E78AB81BE6",
+                                    "path":  "mingyue/coquettish_4.png"
+                                },
+                                {
+                                    "sha256":  "4D9D69D231D4430722AE1DC14B232755A9074A77696801AF160A7472EA06F97F",
+                                    "path":  "mingyue/coquettish_blink.png"
+                                },
+                                {
+                                    "sha256":  "F856A7A443B6A135140A7F7E9D6AAAC9B4CDFC605419E796FE3EDF5FB3D6060A",
+                                    "path":  "mingyue/headpat_happy_1.png"
+                                },
+                                {
+                                    "sha256":  "2697398FF00BB319BFBBFA646FAB4FCD5E5176842B5D3AE3D8DA3C37B7442930",
+                                    "path":  "mingyue/headpat_happy_2.png"
+                                },
+                                {
+                                    "sha256":  "263B2557AAEAD62F86096A14AF16567D7E1B5BE0E70A09BE1D4E2BED8F629834",
+                                    "path":  "mingyue/headpat_happy_3.png"
+                                },
+                                {
+                                    "sha256":  "A716EA9A6AB47B7844A9AE125F0F312CC686E33603103C1B52CE15E429FCEA6D",
+                                    "path":  "mingyue/headpat_happy_4.png"
+                                },
+                                {
+                                    "sha256":  "D2F25DD1918AE2655D6627399D9ED8F664D9648B43B15A18065430063829D926",
+                                    "path":  "mingyue/headpat_happy_blink.png"
+                                },
+                                {
+                                    "sha256":  "2D4D45ACCEC8AA9A477EB7123981888AFCF0A47A747A51827B4FF84D0972EB79",
+                                    "path":  "mingyue/sleep_3.png"
+                                },
+                                {
+                                    "sha256":  "5D7280FB54EDFA0302F5227C17B256A12B1C8B0C33F0773D16BBCAB0C9A191A5",
+                                    "path":  "mingyue/bored_1.png"
+                                },
+                                {
+                                    "sha256":  "226E6AF134AF5E809EB3327EA51F51C8DF2E7F41D8CF72721EE5EC5018A9A205",
+                                    "path":  "mingyue/bored_2.png"
+                                },
+                                {
+                                    "sha256":  "478ECDEB2EE13FC4A608FF20C28EB5219C21FE54C995854202FF297A0ED69495",
+                                    "path":  "mingyue/bored_3.png"
+                                },
+                                {
+                                    "sha256":  "25018585027BECF87C8E86DBAF852ACF91D2D99A1A4E0EFFB49484791B4C409B",
+                                    "path":  "mingyue/bored_blink.png"
+                                },
+                                {
+                                    "sha256":  "D4498B8B1B9DD070648E2156661443DB74E44535F92A2B8A1C3FAD0F053D364C",
+                                    "path":  "mingyue/yawn_1.png"
+                                },
+                                {
+                                    "sha256":  "DFF5407930EE5B3382E9B60CBF822531473019C0CF277B97E464E857CE3358BB",
+                                    "path":  "mingyue/yawn_2.png"
+                                },
+                                {
+                                    "sha256":  "274550CA7A9EA7E1864807D0E77DFA988E3353E28A3241C49CD968313F454BCD",
+                                    "path":  "mingyue/yawn_3.png"
+                                },
+                                {
+                                    "sha256":  "3085DE8975859A2A2BBF61112B8CB7215E4E25DF436172444236798A01C6BA27",
+                                    "path":  "mingyue/wake_stretch_1.png"
+                                },
+                                {
+                                    "sha256":  "43938B365EC1925C26765F18CD99AA9C59777CFB28BB5D90A95F3E6ABFBB86A8",
+                                    "path":  "mingyue/wake_stretch_2.png"
+                                },
+                                {
+                                    "sha256":  "3557234AE2D6B39468F3570E842C36B79D223EE534DD39683C400F29E24920E5",
+                                    "path":  "mingyue/curious_1.png"
+                                },
+                                {
+                                    "sha256":  "0A65481907B1149A3BFB28D518516FF7CAFD1378BBDBE95E43FB7440BA0B2357",
+                                    "path":  "mingyue/curious_2.png"
+                                },
+                                {
+                                    "sha256":  "4AFAE2FD42419332C57A938823E7E96DA45636F53490AD07A4672DE0098CB1C6",
+                                    "path":  "mingyue/curious_blink.png"
+                                },
+                                {
+                                    "sha256":  "07BDD81914DCBBE93B4856B8A6813DC66891B04D937D4FA9884854BED935290D",
+                                    "path":  "mingyue/thinking_blink.png"
+                                },
+                                {
+                                    "sha256":  "DE42B71153B4ECE5F5CEC147ABDA7E67B1AA6BEAADA7C39F8D042EE892A244A4",
+                                    "path":  "mingyue/shy_1.png"
+                                },
+                                {
+                                    "sha256":  "CE3FB28FE0B37BA10BE80819747BD7712B7EFA6188A168927A9151C4CA8CF342",
+                                    "path":  "mingyue/shy_2.png"
+                                },
+                                {
+                                    "sha256":  "F32E09AD903336882FED4D4ABC2769356758EF56387E025C90183ADA14E8CCC5",
+                                    "path":  "mingyue/pout_1.png"
+                                },
+                                {
+                                    "sha256":  "60B0FE407ED66BC76BBC5C21D2B880FC18E6E97104E5C889F987F06A5B52AC23",
+                                    "path":  "mingyue/pout_2.png"
+                                },
+                                {
+                                    "sha256":  "285E134F303E60177BC1C68AA7E8BDDA0B43531FDC0C051C9E779C809458DD27",
+                                    "path":  "mingyue/pout_blink.png"
+                                },
+                                {
+                                    "sha256":  "882698EF9A35ADA5D3578B8203A9BC4F38D71CB501C8F1F741EF4762406B37D5",
+                                    "path":  "mingyue/dragged_2.png"
+                                },
+                                {
+                                    "sha256":  "360A17F0B60B0927B54D4B285F4CDD885B877ABF336EA3113919159539749636",
+                                    "path":  "mingyue/dragged_3.png"
+                                },
+                                {
+                                    "sha256":  "22AA61D392918B26B63E3292211C4BB513820C82443878AFDBA9D392EE325268",
+                                    "path":  "mingyue/dragged_4.png"
+                                },
+                                {
+                                    "sha256":  "0A7E1502D8C48ACDAE03CFB9ECA331A944B73337CBE728CC8142A00967792EAA",
+                                    "path":  "mingyue/landing_1.png"
+                                },
+                                {
+                                    "sha256":  "947852760B5FD63FBD8A73618F13D2FF62138117CAAACB80681BEC1082C09AAF",
+                                    "path":  "mingyue/landing_blink.png"
+                                },
+                                {
+                                    "sha256":  "720226AC4FDEB93E9F772217CA646847AF7F6B000E625FD18DB5128FB6EE7BFE",
+                                    "path":  "mingyue/hug_1.png"
+                                },
+                                {
+                                    "sha256":  "19D6E24FF5247E24D2FD4F372D404B13D6D01B9A5962B148E9E1D3189F8ED33C",
+                                    "path":  "mingyue/hug_2.png"
+                                },
+                                {
+                                    "sha256":  "7CD3485828EA68519208390DFD738AC1587C39562D37418D1B2DB5A5F2DCC77C",
+                                    "path":  "mingyue/hug_blink.png"
+                                },
+                                {
+                                    "sha256":  "FDF80479DC3C5CE6FD6B9A46691302C461F96D15370E757C64A3F51E0E4EC798",
+                                    "path":  "mingyue/heart_1.png"
+                                },
+                                {
+                                    "sha256":  "4A1AE2A622DC0124A027872D9D5F4D7B1DCDE0A26FAB9433F8D73D19E849D91B",
+                                    "path":  "mingyue/greet_morning_1.png"
+                                },
+                                {
+                                    "sha256":  "8263E83407552A1357AD4C112562B3BAF7315B7F49CE4629734B7687A51839A3",
+                                    "path":  "mingyue/greet_morning_2.png"
+                                },
+                                {
+                                    "sha256":  "8B9F1B87511FFF37CB669B03F07F63EA83600275DE084B87BED4C3EA8B283668",
+                                    "path":  "mingyue/greet_morning_blink.png"
+                                },
+                                {
+                                    "sha256":  "44E90C7CF5F436A4B74A7485A4EE16634A7CE0AD2392780366059F5BF3CE2053",
+                                    "path":  "mingyue/greet_night_1.png"
+                                },
+                                {
+                                    "sha256":  "AD35C951E8BF680849024DD9B1FD762016F8D4CEF81DD029815579D43607376A",
+                                    "path":  "mingyue/greet_night_2.png"
+                                },
+                                {
+                                    "sha256":  "795A891CC899A64466EED299ECC8B43DA95F496725213BD662F21192551E67EE",
+                                    "path":  "mingyue/surprised_1.png"
+                                },
+                                {
+                                    "sha256":  "FAA87E839FA8C9D089E67C41BF8B370F18A27F9DA21023DD1D65FF25A6B8CC88",
+                                    "path":  "mingyue/thumbs_up_1.png"
+                                },
+                                {
+                                    "sha256":  "412675B258C20F81BAFCF286E88D261542C64CA2F978B43C2A4E285285DC8C30",
+                                    "path":  "mingyue/thumbs_up_blink.png"
+                                },
+                                {
+                                    "sha256":  "5D1B7071B788BCB65D9CD8D024A1A7237F1267A316750ECD6F6267A5BCD470FF",
+                                    "path":  "mingyue/cheer_1.png"
+                                },
+                                {
+                                    "sha256":  "79EC72041AFD7059D06A0829AC31FC3AB6C21B0D666F9CBE18355F88E4D90ADD",
+                                    "path":  "mingyue/cheer_2.png"
+                                },
+                                {
+                                    "sha256":  "719B401443CB572DB205519169152BD55372B9EB405A4A2D3FB89DE628344775",
+                                    "path":  "mingyue/cheer_blink.png"
+                                },
+                                {
+                                    "sha256":  "C4110C144604B0078D77512C2BC91709E8175EF52587B51F8D9BBE3121E20DC3",
+                                    "path":  "mingyue/clap_1.png"
+                                },
+                                {
+                                    "sha256":  "35D9FA7AB89857FFE2E8959D81C8B0A88AF54CA2A41112EBF1975A8946A645AF",
+                                    "path":  "mingyue/clap_2.png"
+                                },
+                                {
+                                    "sha256":  "AC739AF3C4E704B48E8216C3712E7788FC157216F6D2CC206172E36DCF11DAEA",
+                                    "path":  "mingyue/clap_3.png"
+                                },
+                                {
+                                    "sha256":  "63ED34F6BB0B29CD58860801FF04A1433F6FC8AA90079ABFC9AE747A72DA7D40",
+                                    "path":  "mingyue/clap_blink.png"
+                                },
+                                {
+                                    "sha256":  "5EABC300286967E875A2A488EBBEB9F3AFA660E93F662CA86D2DD2B91EF439AD",
+                                    "path":  "mingyue/peek_1.png"
+                                },
+                                {
+                                    "sha256":  "F76C7445F6D62FA78988D2AAE03D4AB6F130834B3D21F66D47DD2E55BA38A755",
+                                    "path":  "mingyue/peek_2.png"
+                                },
+                                {
+                                    "sha256":  "1B5E1C351A25CE1E12C4F42CE1C46F53CB4CAFCD0C08023BB4FC8508B99DA737",
+                                    "path":  "mingyue/grievance_1.png"
+                                },
+                                {
+                                    "sha256":  "940C3404FA58CC2897C606C2D0114951A4F4A1F2554C20577913BEC541E2590C",
+                                    "path":  "mingyue/grievance_2.png"
+                                },
+                                {
+                                    "sha256":  "92AAF5F517B033B649A484262085A347EAAF650E0140FBBB278F61882D6AE7A0",
+                                    "path":  "mingyue/focus_read_1.png"
+                                },
+                                {
+                                    "sha256":  "33CC3434B4B2C617579B5F7F8CEE397F7D03F8BFAEEB7FDAA48D7C52D8F8E612",
+                                    "path":  "mingyue/focus_read_2.png"
+                                },
+                                {
+                                    "sha256":  "7D204C98BE361D5210E634A698753E9B6D21CBC5C304F909268A05632AD95C82",
+                                    "path":  "mingyue/focus_read_3.png"
+                                },
+                                {
+                                    "sha256":  "23F9C7360EBB7BA7ADA6EFC160DA4702E788344129F1C6D63DB48601AFD65A40",
+                                    "path":  "mingyue/focus_read_4.png"
+                                },
+                                {
+                                    "sha256":  "04EE3535FD90EA611217637038B3759DC10512E95C8FC623B2684F98D743DA3D",
+                                    "path":  "mingyue/focus_read_blink.png"
+                                },
+                                {
+                                    "sha256":  "81EA67DF1E33D1E501C991F8E750959A00682ED43CF2D8CBE5275BAEF1A190CF",
+                                    "path":  "mingyue/focus_tea_1.png"
+                                },
+                                {
+                                    "sha256":  "65946633A4B65E138949CF653C22419554B706B01D85286CDD4F35C53BD9AF2A",
+                                    "path":  "mingyue/focus_tea_2.png"
+                                },
+                                {
+                                    "sha256":  "FB7DA52A8AB8EF92AF686EE32984308AD75125A26EBBAF8411D84C166A16ED6C",
+                                    "path":  "mingyue/focus_done_1.png"
+                                },
+                                {
+                                    "sha256":  "313B29C97B4615B08F6C8B333F49F0E93EC17DA12C74CF1ADBC7562E2C57D51D",
+                                    "path":  "mingyue/focus_done_blink.png"
+                                },
+                                {
+                                    "sha256":  "4A8D901734FF197C34B68944D337CD9A5110987D9932843572FF11DE9FCB4A97",
+                                    "path":  "mingyue/stretch_break_1.png"
+                                },
+                                {
+                                    "sha256":  "818F8F60DF3E83393967C80BB48FEAAE6E4CE3C4D60661D60FE964FE5125B823",
+                                    "path":  "mingyue/stretch_break_2.png"
+                                },
+                                {
+                                    "sha256":  "53C52B79C50A2224625CD3BDF18CA88065B04AF64989DD2AA5DD2747C6658DA8",
+                                    "path":  "mingyue/stretch_break_blink.png"
+                                },
+                                {
+                                    "sha256":  "B240B1CC746B8FB7D64A2DD0515D473B0C18692AF402DB799B55AFC06D5B1B45",
+                                    "path":  "mingyue/hold_card_1.png"
+                                },
+                                {
+                                    "sha256":  "7EC8A661CF5D137D1804C37BE41E9B370355B2E9272BA44DCF5D65310EADB7CA",
+                                    "path":  "mingyue/hold_card_blink.png"
+                                },
+                                {
+                                    "sha256":  "6E13B86912E141741AAC0090345D1993407D1B4EFAEE80EE37E61C500218AA4F",
+                                    "path":  "mingyue/packing_1.png"
+                                },
+                                {
+                                    "sha256":  "3B119D1B5D5361F9E7AE3040CFCCAE9050A519932A36ABD498359D5D4CEF7FAB",
+                                    "path":  "mingyue/packing_blink.png"
+                                },
+                                {
+                                    "sha256":  "72243AEAA6E3AC9FA9E46D7D83A81BF67D430298F0B3BCCA8A43C58FB66C2CA5",
+                                    "path":  "mingyue/ready_go_1.png"
+                                },
+                                {
+                                    "sha256":  "8CAB52F89CA74CD68C460056BE47C91D316EE622F8193E523395236C4B59BB88",
+                                    "path":  "mingyue/ready_go_blink.png"
+                                },
+                                {
+                                    "sha256":  "9019D0461216EEEC6EAF0AB4D8E4005D52A809236861C0D71D665FDAB1581940",
+                                    "path":  "mingyue/worried_1.png"
+                                },
+                                {
+                                    "sha256":  "EB83B8620141F59E8E996DC090AC601EEA0236BAC903988C2658D09A287D0827",
+                                    "path":  "mingyue/worried_2.png"
+                                },
+                                {
+                                    "sha256":  "A2FA91AB07D10A5E23FFDF340FE651F11AB4C91DC8AFB2D1F89E9017CB0DDEFA",
+                                    "path":  "mingyue/worried_blink.png"
+                                },
+                                {
+                                    "sha256":  "B8ED8E5F23B11265BC2A8366BB61F5875C9805360C1D5E86128589C320F54CBB",
+                                    "path":  "mingyue/proud_1.png"
+                                },
+                                {
+                                    "sha256":  "D0E20D4FC80B34B32144BDCAF58FC706A96A2B077A2E992554A9945799A002F0",
+                                    "path":  "haori/codex_working_1.png"
+                                },
+                                {
+                                    "sha256":  "E43A007880710CAE6DD94B1AFF3783757D2E95574651F3BBE9077A335658BC70",
+                                    "path":  "haori/microphone_1.png"
+                                },
+                                {
+                                    "sha256":  "BAE00A30DF1598AF7FDAB46188FAA4FD3788970EABB34F648A47EE175FD51E3A",
+                                    "path":  "haori/music_1.png"
+                                },
+                                {
+                                    "sha256":  "8815241C434A634DA06803FEF5504EB350BC77277D3E76CEB4CE4ED2DFC7355C",
+                                    "path":  "haori/guitar_1.png"
+                                },
+                                {
+                                    "sha256":  "45CF2675C5BAC8ACC1344DA4E4F37EDA2D0206031400525B095536E244C3AE65",
+                                    "path":  "haori/coquettish_1.png"
+                                },
+                                {
+                                    "sha256":  "22DEED25ADAF20B8C27EA7264BF8F7CF7B721262945C8AB01CFC35385CA2700F",
+                                    "path":  "haori/coquettish_2.png"
+                                },
+                                {
+                                    "sha256":  "D45DCF3287CFCD71D4BD0083EF3B947F981AF1818CFA5859DDB04B96B8532407",
+                                    "path":  "haori/coquettish_3.png"
+                                },
+                                {
+                                    "sha256":  "BCEA4E71E1290EAB0082500C46AD022A037A05F44B99B27F6AA98B1AB8D79061",
+                                    "path":  "haori/coquettish_4.png"
+                                },
+                                {
+                                    "sha256":  "C570E69D0E9A34DE873C14D191BE4D7FF4937D680782F8B39B4163FB8112D149",
+                                    "path":  "haori/coquettish_blink.png"
+                                },
+                                {
+                                    "sha256":  "9F36381138CCC3E928891D11137B9D62F049840AE68770FD7CA18742B29374C5",
+                                    "path":  "haori/headpat_happy_1.png"
+                                },
+                                {
+                                    "sha256":  "0BF321E0990598824953D412D66EB08C61D6F3C8D13C3FD9FAE04FBD63F8E15C",
+                                    "path":  "haori/headpat_happy_2.png"
+                                },
+                                {
+                                    "sha256":  "733AF5645DCA55301F5ED47E8329181D02F19EB576DFDC2B5BB6454833343D37",
+                                    "path":  "haori/headpat_happy_3.png"
+                                },
+                                {
+                                    "sha256":  "A04A7EC590723EF8F085F73B5A5CB1672E6BF120CBC7145AC08C2ACF732BDA04",
+                                    "path":  "haori/headpat_happy_4.png"
+                                },
+                                {
+                                    "sha256":  "F4232E81972582D66A0F2913FE7A218752614B73CF25ADAC79DED91104EDB5C5",
+                                    "path":  "haori/headpat_happy_blink.png"
+                                },
+                                {
+                                    "sha256":  "6A1EB2CF362088717B08999F16C7FE2E0905891428B3650078A4161824E6148E",
+                                    "path":  "haori/sleep_3.png"
+                                },
+                                {
+                                    "sha256":  "99B30D8CA59E4F1D64A04AC1F62769CDFFD80CF55B134526092D7DE0DC222411",
+                                    "path":  "haori/bored_1.png"
+                                },
+                                {
+                                    "sha256":  "FF916C9F2A14AD25AF311D330986AD7F23FFC4387C23A4B3FE327AE0F4864417",
+                                    "path":  "haori/bored_2.png"
+                                },
+                                {
+                                    "sha256":  "FC01E5989241C6507C03C59A71C886C74DF804A25D1AD3D7DA8A79F8F0172E2C",
+                                    "path":  "haori/bored_3.png"
+                                },
+                                {
+                                    "sha256":  "20EFFE787D8C97B05A9E13DCFB96B3D2462DF842E3F069BAF36FCA598D0AE7B6",
+                                    "path":  "haori/bored_blink.png"
+                                },
+                                {
+                                    "sha256":  "0089322FB1A60FEF12796011574F5BC3B93E65FF77F9DD31909CD29AC3DB5D2B",
+                                    "path":  "haori/yawn_1.png"
+                                },
+                                {
+                                    "sha256":  "C3F7A0016932212C6722DED290A807146E5E4D99702F638CDF8D0A3C84ABC312",
+                                    "path":  "haori/yawn_2.png"
+                                },
+                                {
+                                    "sha256":  "68EED1BD6362DDFC56B3F37D525BC8BC86A70BBC4ABD8521CE530255A8D1E9FB",
+                                    "path":  "haori/yawn_3.png"
+                                },
+                                {
+                                    "sha256":  "ECE40B90002FC08F6736E30573F09B704232A28643D828F9F6A533202C10B4B7",
+                                    "path":  "haori/wake_stretch_1.png"
+                                },
+                                {
+                                    "sha256":  "742304258BC51597CB447A5801AD2785E2361E705DF5A7F2C9445ADFAC1AE092",
+                                    "path":  "haori/wake_stretch_2.png"
+                                },
+                                {
+                                    "sha256":  "64591066A96D3581FBED64030B08E62905E6C71BE2B2DDE4513784DD87AF192B",
+                                    "path":  "haori/curious_1.png"
+                                },
+                                {
+                                    "sha256":  "D37ACC3A353C00322D5DD213F388EAC557D2D464CE2AD7486FF98D2334DB00FF",
+                                    "path":  "haori/curious_2.png"
+                                },
+                                {
+                                    "sha256":  "B8B976080F9CC4C99E46313A15EC94A8F763AC9068F29BEA7F435BAB375A8FEA",
+                                    "path":  "haori/curious_blink.png"
+                                },
+                                {
+                                    "sha256":  "46296B717A00A16E163144F08EBDE7B647B1D40A1F2A00973589CEC47BF36814",
+                                    "path":  "haori/thinking_blink.png"
+                                },
+                                {
+                                    "sha256":  "C5A18B33B5AF1FBC50A8ACE7C813FDBDCE7507BA661EEFFEDD0EAF9106E2604A",
+                                    "path":  "haori/shy_1.png"
+                                },
+                                {
+                                    "sha256":  "93049FBBC4EF2E7BBB5730B4CDF53A9E348B23A7CACA1EA2E82FCABA30AB15A6",
+                                    "path":  "haori/shy_2.png"
+                                },
+                                {
+                                    "sha256":  "4BCB05163FC75A9B45C28CF7A9EA6B68CEBF01E0785AE611036F668BB2EA9750",
+                                    "path":  "haori/pout_1.png"
+                                },
+                                {
+                                    "sha256":  "56CEE470BF6E1DE9EE0500F118927788BF8DADE2C4658B5ED2654EBF3204F9D9",
+                                    "path":  "haori/pout_2.png"
+                                },
+                                {
+                                    "sha256":  "E509FE73D13986538AB55ADFBF5B9C8F62E83EE430B88D22117B99F2D3C95006",
+                                    "path":  "haori/pout_blink.png"
+                                },
+                                {
+                                    "sha256":  "F5DCBE8EC9B529F09667AF387B9EC34609EAC292ED464105327D26B5EF6CAD6C",
+                                    "path":  "haori/dragged_2.png"
+                                },
+                                {
+                                    "sha256":  "2F5A6D1DF648812F723B04B7AF70EBCBFC4F8E176114B89A692FB746A197A6B6",
+                                    "path":  "haori/dragged_3.png"
+                                },
+                                {
+                                    "sha256":  "3009E486A9959A342E707B8E4DD9B8A901A1270CE4FB8F860EFEF0E71AD6C291",
+                                    "path":  "haori/dragged_4.png"
+                                },
+                                {
+                                    "sha256":  "A9C05217AB5B0841CFE88D7A692BCA60EA766175EA066D2C6BB741DB510C00CD",
+                                    "path":  "haori/landing_1.png"
+                                },
+                                {
+                                    "sha256":  "472B2D58F22AC5401E3FCB09BAF07C252B10B04D6B46D412547A45BBB4737CA3",
+                                    "path":  "haori/landing_blink.png"
+                                },
+                                {
+                                    "sha256":  "440AAC108F0FF1B961F138C8A064A562830430221F84798BD338BF0FA931804F",
+                                    "path":  "haori/hug_1.png"
+                                },
+                                {
+                                    "sha256":  "E9DF5440190DE61FAC887871B34B55D59987751EE5BA05CAF8797C440E7B6B56",
+                                    "path":  "haori/hug_2.png"
+                                },
+                                {
+                                    "sha256":  "204D4F7DAA052D6AA84C4116A9C7C016A7FD9E0C6D99B61F7436C4C6B5EBFDBF",
+                                    "path":  "haori/hug_blink.png"
+                                },
+                                {
+                                    "sha256":  "EEEA226A7AD8E65471DD11EB68B7299F3894C74920C076C574AB3DAD33EC3481",
+                                    "path":  "haori/heart_1.png"
+                                },
+                                {
+                                    "sha256":  "1AD508B1CE8C00339CD2D2232076EEFF3468B9E93D67B30A062A112943188BD7",
+                                    "path":  "haori/greet_morning_1.png"
+                                },
+                                {
+                                    "sha256":  "D46773139B770BAF3A92F853A4D6E78741227631FEA907CC596FAC2F5B5EB81A",
+                                    "path":  "haori/greet_morning_2.png"
+                                },
+                                {
+                                    "sha256":  "454F853CE89348BA3D1B141A2571B1C65A078EF26BB18869187E39F81B402B65",
+                                    "path":  "haori/greet_morning_blink.png"
+                                },
+                                {
+                                    "sha256":  "A1131223D72DCD879B625FE8DDA2BE42A7C05E3EA6DBA5D6D7ACE9683BA8F076",
+                                    "path":  "haori/greet_night_1.png"
+                                },
+                                {
+                                    "sha256":  "F9734CE62E34F2C6B26BE7849AA151CA05EA61FD3F385DF87D2A87312001E0DB",
+                                    "path":  "haori/greet_night_2.png"
+                                },
+                                {
+                                    "sha256":  "7BAC6919B75419EA12C66A98C592E667384BC6864E2E8EFD506890E29752BFC2",
+                                    "path":  "haori/surprised_1.png"
+                                },
+                                {
+                                    "sha256":  "97E81E7274E32BFA26F55242DA6B3F81CC4DB9E36BE099EB0100F41DEC4A30AA",
+                                    "path":  "haori/thumbs_up_1.png"
+                                },
+                                {
+                                    "sha256":  "F90A75E422AD63AC3EF6A8B5FCFE4D97BD6FE934733DDE6B2CA10F43E8A1F409",
+                                    "path":  "haori/thumbs_up_blink.png"
+                                },
+                                {
+                                    "sha256":  "8AEFBB37386EF92EBAE2B99A5A8F1319AD11ADF0AD3C0101D263290DE61DC975",
+                                    "path":  "haori/cheer_1.png"
+                                },
+                                {
+                                    "sha256":  "31A08DD6A5676C064C6FA9ECA206AF8895ADB958E04FD2DF73C15B1A50D1BC01",
+                                    "path":  "haori/cheer_2.png"
+                                },
+                                {
+                                    "sha256":  "200C032E4AEEAA450B314446E3FE2D0938FC7FC5BC98B6A9A217EB23D4535A60",
+                                    "path":  "haori/cheer_blink.png"
+                                },
+                                {
+                                    "sha256":  "D4521C241A8F08C1E57CBB3873D708E92574B3F26FC9FB42C7051E8143187F04",
+                                    "path":  "haori/clap_1.png"
+                                },
+                                {
+                                    "sha256":  "E9F622B311FF990BA8863C8441D426D4116808C1C1600CB2247D98BB5F9234E1",
+                                    "path":  "haori/clap_2.png"
+                                },
+                                {
+                                    "sha256":  "4F96CBF0F598755856BBE28C9B9EA5CBB9D0556CCC4249F59C5096FAEDF6E279",
+                                    "path":  "haori/clap_3.png"
+                                },
+                                {
+                                    "sha256":  "696B26436693A70644D8BC089A87E7F9F00048B11B4640B6763FC48B7C4B8965",
+                                    "path":  "haori/clap_blink.png"
+                                },
+                                {
+                                    "sha256":  "6BF3D2761EDADE890658031860882E826543054F88857666D406CD4B152E9440",
+                                    "path":  "haori/peek_1.png"
+                                },
+                                {
+                                    "sha256":  "F654D60C0A285A51A25C07C4D3EA1935B681ED957F2E4F3FDC650731D51DB736",
+                                    "path":  "haori/peek_2.png"
+                                },
+                                {
+                                    "sha256":  "F3DA83E4A2708EA768D664ED2FA37A6359B526A018EF91542746B47092508372",
+                                    "path":  "haori/grievance_1.png"
+                                },
+                                {
+                                    "sha256":  "D5F6FC4F3BBD4A2B62CE07D1045F2BC9154AD6AFBACA6E00C91682B4C19DDC4E",
+                                    "path":  "haori/grievance_2.png"
+                                },
+                                {
+                                    "sha256":  "84F4DC61B3B661551CF0CB9BD5E651237F8E6DA45A4BD8B2F822D01C6E45164F",
+                                    "path":  "haori/focus_read_1.png"
+                                },
+                                {
+                                    "sha256":  "02FC7E1232E54EEC5B75B96D32923290FA618C4982863FAA64E0631B13934255",
+                                    "path":  "haori/focus_read_2.png"
+                                },
+                                {
+                                    "sha256":  "206418334B86C2534C84CAC58634F55242901A3A9566912F8A421871CCD60EF0",
+                                    "path":  "haori/focus_read_3.png"
+                                },
+                                {
+                                    "sha256":  "63A6D42ABA3429FEBE1DB40438065041C037266C55F99FEB42EB585D30AEC215",
+                                    "path":  "haori/focus_read_4.png"
+                                },
+                                {
+                                    "sha256":  "071D25912698CFDEBC33904B9338153680157BB313DDD57E0CBBD4787FA8798C",
+                                    "path":  "haori/focus_read_blink.png"
+                                },
+                                {
+                                    "sha256":  "34D6C38C3D775FE93B58B16B17A04A84CB954B85F7F12BA9B2E3761341A1D595",
+                                    "path":  "haori/focus_tea_1.png"
+                                },
+                                {
+                                    "sha256":  "E4800C030BCEB47327FFCA034173C9F153C17E07492CA78DDE9A693C023DEF15",
+                                    "path":  "haori/focus_tea_2.png"
+                                },
+                                {
+                                    "sha256":  "AAB42A84D911F9E8847DD3CAA62FFDDA07768131D69EF7ACABFF1329D99205F4",
+                                    "path":  "haori/focus_done_1.png"
+                                },
+                                {
+                                    "sha256":  "A705EB47ED7F0F6396C57776A69AEF1CA20C1013F963DBDEEE9E67E209A38F09",
+                                    "path":  "haori/focus_done_blink.png"
+                                },
+                                {
+                                    "sha256":  "A2571ED5E09FC375F4502CA2CA63349821935D2ACCE525E179B510BB19279951",
+                                    "path":  "haori/stretch_break_1.png"
+                                },
+                                {
+                                    "sha256":  "0957D09140037B17EB6F0D76399B898CF5629CEB1F0F338DAB562E700F07822A",
+                                    "path":  "haori/stretch_break_2.png"
+                                },
+                                {
+                                    "sha256":  "E2CF42589B13C7CD134DA6D510EC9E0F249DBAC4FC37B80A45F106204DF82CEA",
+                                    "path":  "haori/stretch_break_blink.png"
+                                },
+                                {
+                                    "sha256":  "54B5F503EDD0F9C61DF3003E0C03D4DE6719AD962A1FB3D29E136EAD81B8FD8F",
+                                    "path":  "haori/hold_card_1.png"
+                                },
+                                {
+                                    "sha256":  "A68F969CF116FBF83220596637A9E6B220B77D3B56B857319CF88C0E31352BCA",
+                                    "path":  "haori/hold_card_blink.png"
+                                },
+                                {
+                                    "sha256":  "4E905EDBF91079BEA6DDFC1A3D1D4B52FDC5CE5B9D725CB2F86C59FFE461034B",
+                                    "path":  "haori/packing_1.png"
+                                },
+                                {
+                                    "sha256":  "2DA16143119983C7BFC5454493AAD555E48016CD4E75712B9D341550A2270774",
+                                    "path":  "haori/packing_blink.png"
+                                },
+                                {
+                                    "sha256":  "69A2ECA7136CCBA907EFCA2C162454DFE4864710B2BD567C4EABA0BD69205F76",
+                                    "path":  "haori/ready_go_1.png"
+                                },
+                                {
+                                    "sha256":  "FE139B596486CC7D54AD96981E73EB57C584FD336C448F5076A5CEB8FCBD6EAB",
+                                    "path":  "haori/ready_go_blink.png"
+                                },
+                                {
+                                    "sha256":  "8E3AF7961C4B0D10C30C44DE979D6344F98FB72947A7B4F20DB639EFB0D5D6F3",
+                                    "path":  "haori/worried_1.png"
+                                },
+                                {
+                                    "sha256":  "1D5238D6684203F3555417D4670835E738F92DE26A65B7311808D06A35816C55",
+                                    "path":  "haori/worried_2.png"
+                                },
+                                {
+                                    "sha256":  "7387CC90EF44761A46873250F0547D47917547A198A2503ADC52A4C2430AEB79",
+                                    "path":  "haori/worried_blink.png"
+                                },
+                                {
+                                    "sha256":  "56022F9B1F6F168B6B56B434FCF7403788E0A63A38BD593C3759167F3F239B96",
+                                    "path":  "haori/proud_1.png"
+                                }
+                            ],
+    "immutable_files_verified":  289
+}

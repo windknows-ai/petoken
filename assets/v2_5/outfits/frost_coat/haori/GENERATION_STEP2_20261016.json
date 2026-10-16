@@ -1,0 +1,989 @@
+{
+    "validation":  "haori-validation.txt",
+    "tool":  "built-in imagegen",
+    "branch":  "codex/outfits-frost-coat",
+    "base":  "8eee7f5",
+    "complete":  true,
+    "task":  "41 action families /96 exact table filenames;83 new files per tier",
+    "tier":  "haori",
+    "pending":  [
+
+                ],
+    "immutable_step1_files":  72,
+    "recovery":  "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\frost-coat-step2",
+    "requested_additions":  83,
+    "spec_source":  "petoken-claude/docs/form_art/FORM_ART_4_FROST_COAT.md as inspected after28d3619 merge",
+    "completed":  [
+                      "codex_working_1",
+                      "microphone_1",
+                      "music_1",
+                      "guitar_1",
+                      "coquettish_1",
+                      "coquettish_2",
+                      "coquettish_3",
+                      "coquettish_4",
+                      "coquettish_blink",
+                      "headpat_happy_1",
+                      "headpat_happy_2",
+                      "headpat_happy_3",
+                      "headpat_happy_4",
+                      "headpat_happy_blink",
+                      "sleep_3",
+                      "bored_1",
+                      "bored_2",
+                      "bored_3",
+                      "bored_blink",
+                      "yawn_1",
+                      "yawn_2",
+                      "yawn_3",
+                      "wake_stretch_1",
+                      "wake_stretch_2",
+                      "curious_1",
+                      "curious_2",
+                      "curious_blink",
+                      "thinking_blink",
+                      "shy_1",
+                      "shy_2",
+                      "pout_1",
+                      "pout_2",
+                      "pout_blink",
+                      "dragged_2",
+                      "dragged_3",
+                      "dragged_4",
+                      "landing_1",
+                      "landing_blink",
+                      "hug_1",
+                      "hug_2",
+                      "hug_blink",
+                      "heart_1",
+                      "greet_morning_1",
+                      "greet_morning_2",
+                      "greet_morning_blink",
+                      "greet_night_1",
+                      "greet_night_2",
+                      "surprised_1",
+                      "thumbs_up_1",
+                      "thumbs_up_blink",
+                      "cheer_1",
+                      "cheer_2",
+                      "cheer_blink",
+                      "clap_1",
+                      "clap_2",
+                      "clap_3",
+                      "clap_blink",
+                      "peek_1",
+                      "peek_2",
+                      "grievance_1",
+                      "grievance_2",
+                      "focus_read_1",
+                      "focus_read_2",
+                      "focus_read_3",
+                      "focus_read_4",
+                      "focus_read_blink",
+                      "focus_tea_1",
+                      "focus_tea_2",
+                      "focus_done_1",
+                      "focus_done_blink",
+                      "stretch_break_1",
+                      "stretch_break_2",
+                      "stretch_break_blink",
+                      "hold_card_1",
+                      "hold_card_blink",
+                      "packing_1",
+                      "packing_blink",
+                      "ready_go_1",
+                      "ready_go_blink",
+                      "worried_1",
+                      "worried_2",
+                      "worried_blink",
+                      "proud_1"
+                  ],
+    "blink_records":  [
+                          {
+                              "reference":  "assets/v2_0/coquettish_blink.png",
+                              "parent":  "coquettish_1",
+                              "boxes":  [
+                                            523,
+                                            573,
+                                            746,
+                                            737,
+                                            802,
+                                            617,
+                                            955,
+                                            753
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "coquettish_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/headpat_happy_blink.png",
+                              "parent":  "headpat_happy_1",
+                              "boxes":  [
+                                            527,
+                                            625,
+                                            724,
+                                            729,
+                                            803,
+                                            666,
+                                            947,
+                                            757
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "headpat_happy_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/bored_blink.png",
+                              "parent":  "bored_1",
+                              "boxes":  [
+                                            722,
+                                            763,
+                                            924,
+                                            895,
+                                            973,
+                                            714,
+                                            1143,
+                                            878
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "bored_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/curious_blink.png",
+                              "parent":  "curious_1",
+                              "boxes":  [
+                                            455,
+                                            497,
+                                            653,
+                                            654,
+                                            722,
+                                            637,
+                                            910,
+                                            764
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "curious_blink"
+                          },
+                          {
+                              "method":  "generated closed-eyelid donor on accepted parent; non-eye pixels and alpha retained",
+                              "frame":  "thinking_blink",
+                              "reference":  "assets/v2_0/thinking_blink.png",
+                              "boxes":  [
+                                            522,
+                                            540,
+                                            725,
+                                            679,
+                                            783,
+                                            584,
+                                            956,
+                                            726
+                                        ],
+                              "parent":  "thinking_1",
+                              "edit":  {
+                                           "tier":  "haori",
+                                           "frame":  "thinking_blink",
+                                           "reference":  "assets/v2_0/thinking_blink.png",
+                                           "action":  "盘腿思考",
+                                           "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9e28baf0-267e-4293-b0c0-b4445df11367.png",
+                                           "prompt":  "Use case: precise-object-edit. Image1 is EDIT TARGET, accepted HAORI thinking_1 frost coat sprite. Image2 is ONLY an example of closed relaxed eyelids; ignore its head/body/pose/costume. Change ONLY image1\u0027s two open eyes to peacefully closed eyelids at the same exact positions and centers. Preserve its smile, face geometry, eyebrows/cheeks, hair/ornaments, warm ivory/gold coat, broad short cape, gold embroidery/clasp, hand against cheek, arms, legs/boots, seated pose, effects and ALL non-eye pixels. 1254x1254 RGBA transparent square, same canvas placement/scale/outline. No new effects/text/elements.",
+                                           "eyes_only":  true
+                                       }
+                          },
+                          {
+                              "reference":  "assets/v2_0/pout_blink.png",
+                              "parent":  "pout_1",
+                              "boxes":  [
+                                            498,
+                                            442,
+                                            726,
+                                            603,
+                                            766,
+                                            493,
+                                            930,
+                                            627
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "pout_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/landing_blink.png",
+                              "parent":  "landing_1",
+                              "boxes":  [
+                                            549,
+                                            616,
+                                            774,
+                                            771,
+                                            787,
+                                            630,
+                                            980,
+                                            786
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "landing_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/hug_blink.png",
+                              "parent":  "hug_1",
+                              "boxes":  [
+                                            428,
+                                            411,
+                                            657,
+                                            583,
+                                            699,
+                                            471,
+                                            905,
+                                            628
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "hug_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/greet_morning_blink.png",
+                              "parent":  "greet_morning_1",
+                              "boxes":  [
+                                            719,
+                                            526,
+                                            896,
+                                            660
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "greet_morning_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/thumbs_up_blink.png",
+                              "parent":  "thumbs_up_1",
+                              "boxes":  [
+                                            531,
+                                            439,
+                                            730,
+                                            588,
+                                            760,
+                                            532,
+                                            932,
+                                            677
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "thumbs_up_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/cheer_blink.png",
+                              "parent":  "cheer_1",
+                              "boxes":  [
+                                            492,
+                                            457,
+                                            702,
+                                            607,
+                                            749,
+                                            526,
+                                            936,
+                                            672
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "cheer_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/clap_blink.png",
+                              "parent":  "clap_1",
+                              "boxes":  [
+                                            468,
+                                            499,
+                                            660,
+                                            627,
+                                            713,
+                                            510,
+                                            887,
+                                            652
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "clap_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/focus_read_blink.png",
+                              "parent":  "focus_read_1",
+                              "boxes":  [
+                                            523,
+                                            601,
+                                            718,
+                                            726,
+                                            777,
+                                            622,
+                                            941,
+                                            750
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "focus_read_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/focus_done_blink.png",
+                              "parent":  "focus_done_1",
+                              "boxes":  [
+                                            493,
+                                            439,
+                                            677,
+                                            579,
+                                            706,
+                                            498,
+                                            876,
+                                            629
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "focus_done_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/stretch_break_blink.png",
+                              "parent":  "stretch_break_1",
+                              "boxes":  [
+                                            593,
+                                            380,
+                                            753,
+                                            513,
+                                            762,
+                                            484,
+                                            914,
+                                            627
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "stretch_break_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/hold_card_blink.png",
+                              "parent":  "hold_card_1",
+                              "boxes":  [
+                                            449,
+                                            477,
+                                            664,
+                                            626,
+                                            715,
+                                            514,
+                                            892,
+                                            653
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "hold_card_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/packing_blink.png",
+                              "parent":  "packing_1",
+                              "boxes":  [
+                                            446,
+                                            468,
+                                            608,
+                                            586,
+                                            697,
+                                            530,
+                                            863,
+                                            646
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "packing_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/ready_go_blink.png",
+                              "parent":  "ready_go_1",
+                              "boxes":  [
+                                            477,
+                                            457,
+                                            712,
+                                            628,
+                                            744,
+                                            537,
+                                            914,
+                                            679
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "ready_go_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/worried_blink.png",
+                              "parent":  "worried_1",
+                              "boxes":  [
+                                            521,
+                                            487,
+                                            714,
+                                            603,
+                                            755,
+                                            526,
+                                            911,
+                                            645
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "worried_blink"
+                          }
+                      ],
+    "direct_redraws":  [
+                           {
+                               "tier":  "haori",
+                               "frame":  "bored_1",
+                               "reference":  "assets/v2_0/bored_1.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-893f026a-79d0-4767-95ce-baedacc96fc7.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/bored_1.png animation frame bored_1 for action \"无聊趴着\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "bored_2",
+                               "reference":  "assets/v2_0/bored_2.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8843b20b-8cf7-4c94-af5e-0b7ef8abc7c7.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/bored_2.png animation frame bored_2 for action \"无聊趴着\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "bored_3",
+                               "reference":  "assets/v2_0/bored_3.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-001805ac-158d-4092-b7f4-97c935f4e1f1.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/bored_3.png animation frame bored_3 for action \"无聊趴着\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "cheer_1",
+                               "reference":  "assets/v2_0/cheer_1.png",
+                               "action":  "加油",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-12cc253f-7612-440d-9995-0e24c244cf1c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/cheer_1.png animation frame cheer_1 for action \"加油\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "cheer_2",
+                               "reference":  "assets/v2_0/cheer_2.png",
+                               "action":  "加油",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-4937b1d6-8654-4529-a032-c528511bae4e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/cheer_2.png animation frame cheer_2 for action \"加油\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "clap_1",
+                               "reference":  "assets/v2_0/clap_1.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-6e894c96-b23a-4fab-89a7-ded67954c553.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/clap_1.png animation frame clap_1 for action \"鼓掌\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "clap_2",
+                               "reference":  "assets/v2_0/clap_2.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ed3598bc-0790-430a-bd7c-9ea8578077a6.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/clap_2.png animation frame clap_2 for action \"鼓掌\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "clap_3",
+                               "reference":  "assets/v2_0/clap_3.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-bb8bb522-30de-4a6b-9040-81dc164bb5b2.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/clap_3.png animation frame clap_3 for action \"鼓掌\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "codex_working_1",
+                               "reference":  "assets/v1_1/working.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-0fbaa869-922e-4e45-9f50-7afdce7e0604.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact default working frame with floating screens/book/laptop. Image2 is accepted HAORI frost coat CLOTHING reference ONLY. Redraw ONLY the outfit in image1 into the exact warm ivory/champagne-gold winter coat of image2: a BROAD SHORT shoulder cape with pointed tails to the elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Warm bright ivory and champagne gold must dominate the garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. No halo, wings, crown or new particles. Adapt sleeves/cape/hem to original pose and fully cover torso/arms. Keep original dark navy gloved hands/fingers fully visible; fur cuffs stop at wrists and never replace gloves with mittens. Remove old navy armor and moon/star costume panels where coat covers them. Lock image1 exact head/hair ornaments, face/expression/eyes, all hands/arm/leg gestures, dark boots, foot positions, props and existing floating-screen effects. Do not copy image2\u0027s head or pose. Original1254x1254 RGBA, TRUE transparent background, unchanged size/canvas position, no rescale/crop/reposition. Polished clean navy anime chibi outlines and soft cel shading match accepted coat. No text, watermark, background, ground or added symbols."
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "coquettish_1",
+                               "reference":  "assets/v2_0/coquettish_1.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-97c2c623-2975-479e-a711-abe590dd60dd.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_1.png animation frame coquettish_1 for action \"撒娇\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "coquettish_2",
+                               "reference":  "assets/v2_0/coquettish_2.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-4e2845aa-bbf9-40e5-82b7-05e19407cd71.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_2.png animation frame coquettish_2 for action \"撒娇\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "coquettish_3",
+                               "reference":  "assets/v2_0/coquettish_3.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-edcea929-e0ee-48cd-a183-22b3f36c14ec.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_3.png animation frame coquettish_3 for action \"撒娇\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "coquettish_4",
+                               "reference":  "assets/v2_0/coquettish_4.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7a6df569-c79c-4fc9-99da-604161792d7e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_4.png animation frame coquettish_4 for action \"撒娇\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "curious_1",
+                               "reference":  "assets/v2_0/curious_1.png",
+                               "action":  "好奇凑近",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-d360e139-40b7-4280-9a66-af61e1eba524.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/curious_1.png animation frame curious_1 for action \"好奇凑近\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "curious_2",
+                               "reference":  "assets/v2_0/curious_2.png",
+                               "action":  "好奇凑近",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-89929b68-2b96-4261-bd54-228635271579.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/curious_2.png animation frame curious_2 for action \"好奇凑近\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "dragged_2",
+                               "reference":  "assets/v2_0/dragged_2.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-6295893b-fc1c-4d4a-b12c-ff8ef4bd3a66.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/dragged_2.png animation frame dragged_2 for action \"被拎起来\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "dragged_3",
+                               "reference":  "assets/v2_0/dragged_3.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-f35f3663-1b42-4f7b-884c-6712f04224e8.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/dragged_3.png animation frame dragged_3 for action \"被拎起来\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "dragged_4",
+                               "reference":  "assets/v2_0/dragged_4.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-64a19d69-9aff-4041-b08d-91956b1c50b4.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/dragged_4.png animation frame dragged_4 for action \"被拎起来\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "focus_done_1",
+                               "reference":  "assets/v2_0/focus_done_1.png",
+                               "action":  "专注完成",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a94f8ce6-fdb3-49c6-a3c0-d9bf45e86a12.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_done_1.png animation frame focus_done_1 for action \"专注完成\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "focus_read_1",
+                               "reference":  "assets/v2_0/focus_read_1.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-d8c9cfed-5bff-4311-96f1-3edaab7d5411.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_1.png animation frame focus_read_1 for action \"陪你看书\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "focus_read_2",
+                               "reference":  "assets/v2_0/focus_read_2.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-1a426aee-dffb-48bd-809b-734a5dcb9505.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_2.png animation frame focus_read_2 for action \"陪你看书\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "focus_read_3",
+                               "reference":  "assets/v2_0/focus_read_3.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-07e1c4f9-cac1-4b19-a672-d020a780b80b.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_3.png animation frame focus_read_3 for action \"陪你看书\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "focus_read_4",
+                               "reference":  "assets/v2_0/focus_read_4.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2d30949c-26ff-40a8-97f1-8699c92bef0c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_read_4.png animation frame focus_read_4 for action \"陪你看书\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "focus_tea_1",
+                               "reference":  "assets/v2_0/focus_tea_1.png",
+                               "action":  "喝茶休息",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-1ad3e30c-e3dc-49dd-bfee-0e508eb1086d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_tea_1.png animation frame focus_tea_1 for action \"喝茶休息\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "focus_tea_2",
+                               "reference":  "assets/v2_0/focus_tea_2.png",
+                               "action":  "喝茶休息",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-1a0aa7fc-4311-4078-a64e-42272086af69.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/focus_tea_2.png animation frame focus_tea_2 for action \"喝茶休息\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "greet_morning_1",
+                               "reference":  "assets/v2_0/greet_morning_1.png",
+                               "action":  "早安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-91efc6a2-64aa-4590-94ae-c5c4b57c5a1a.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_morning_1.png animation frame greet_morning_1 for action \"早安\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "greet_morning_2",
+                               "reference":  "assets/v2_0/greet_morning_2.png",
+                               "action":  "早安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-956cd483-083e-45bb-920d-7c7eb420c351.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_morning_2.png animation frame greet_morning_2 for action \"早安\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "greet_night_1",
+                               "reference":  "assets/v2_0/greet_night_1.png",
+                               "action":  "晚安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-5e46fae0-bef3-4e79-954b-398db9ce45b1.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_night_1.png animation frame greet_night_1 for action \"晚安\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "greet_night_2",
+                               "reference":  "assets/v2_0/greet_night_2.png",
+                               "action":  "晚安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e998e412-73ea-471d-85f8-fb789f9d5baa.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/greet_night_2.png animation frame greet_night_2 for action \"晚安\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "grievance_1",
+                               "reference":  "assets/v2_0/grievance_1.png",
+                               "action":  "委屈",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-eaaf74a2-41be-4712-949f-9c044d3bafc8.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/grievance_1.png animation frame grievance_1 for action \"委屈\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "grievance_2",
+                               "reference":  "assets/v2_0/grievance_2.png",
+                               "action":  "委屈",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2dc094a1-a82d-48fc-9269-a8aa575318fc.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/grievance_2.png animation frame grievance_2 for action \"委屈\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "guitar_1",
+                               "reference":  "assets/v1_1/guitar.png",
+                               "action":  "弹吉他",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c500ddcd-ec2f-4aeb-9ae8-225bf704d82a.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v1_1/guitar.png animation frame guitar_1 for action \"弹吉他\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "headpat_happy_1",
+                               "reference":  "assets/v2_0/headpat_happy_1.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c549e9e1-ac8a-40f5-92a8-a5ee9feedfb7.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/headpat_happy_1.png animation frame headpat_happy_1 for action \"被摸头\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "headpat_happy_2",
+                               "reference":  "assets/v2_0/headpat_happy_2.png",
+                               "action":  "摸头开心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-638fd8ee-dba9-4923-a201-f49c3cb0802d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT headpat_happy_2 animation frame. Image2 is CLOTHING REFERENCE ONLY, accepted HAORI frost coat in a nearby sibling pose. Replace ONLY image1\u0027s old clothing with image2\u0027s identical warm ivory/champagne-gold winter coat: broad SHORT shoulder cape to elbows, gold snowflake embroidery and clasp, cream fluffy collar/cuffs/hem, amber lining and short gold/ivory side ribbons. Fur cuffs end at wrists; KEEP both original dark navy gloved hands/fingers visible at their EXACT original locations. Preserve every head/face/hair pixel of image1: do NOT redraw, move, rotate, resize or reinterpret the head, bangs, eyelashes, cheek outline, hair strands, ornaments, mouth or eyes. Keep the two existing pink hearts unchanged. Image1\u0027s exact pose, body placement, boots, feet and leg positions are locked. Do not copy image2\u0027s head, face, pose or body scale. Remove original purple armor/costume moon panels only where covered by the new coat. All clothing fully covers torso/arms. Clean navy outlines and soft anime chibi cel shading match accepted coat. EXACT original 1254x1254 RGBA square and true transparent background. No cropping, repositioning, rescaling, text, ground, watermark, halo, crown, wings or added particles. This is a precise clothing-only edit; all head/hair/face geometry must stay image1\u0027s original.",
+                               "retry_note":  "Fresh direct redraw replacing the excluded 20261014 generation; no rectangular upper-head patch."
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "headpat_happy_3",
+                               "reference":  "assets/v2_0/headpat_happy_3.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c3b000c5-52a5-4674-91dd-27bdc86dd9b8.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/headpat_happy_3.png animation frame headpat_happy_3 for action \"被摸头\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "headpat_happy_4",
+                               "reference":  "assets/v2_0/headpat_happy_4.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e6b333a5-f211-4bfe-bd76-ae3d15d0b971.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/headpat_happy_4.png animation frame headpat_happy_4 for action \"被摸头\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "heart_1",
+                               "reference":  "assets/v2_0/heart_1.png",
+                               "action":  "比心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a0e40f93-08f3-4628-b520-335a79fe818f.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/heart_1.png animation frame heart_1 for action \"比心\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "hold_card_1",
+                               "reference":  "assets/v2_0/hold_card_1.png",
+                               "action":  "举着卡片",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c8cc08bd-340a-4620-9712-e93779a58e1e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/hold_card_1.png animation frame hold_card_1 for action \"举着卡片\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "hug_1",
+                               "reference":  "assets/v2_0/hug_1.png",
+                               "action":  "欢迎回来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-08601c0a-248c-4637-87db-311baff07d41.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/hug_1.png animation frame hug_1 for action \"欢迎回来\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "hug_2",
+                               "reference":  "assets/v2_0/hug_2.png",
+                               "action":  "欢迎回来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-5d166104-2046-4759-b7c6-e67ae616d66a.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/hug_2.png animation frame hug_2 for action \"欢迎回来\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "landing_1",
+                               "reference":  "assets/v2_0/landing_1.png",
+                               "action":  "落地",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b22254f5-1eea-4a2e-b8b1-02af53b8a57e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/landing_1.png animation frame landing_1 for action \"落地\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "microphone_1",
+                               "reference":  "assets/v1_1/microphone.png",
+                               "action":  "说话",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-da85506a-124e-44a8-8d22-68b50114ef94.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v1_1/microphone.png animation frame microphone_1 for action \"说话\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "music_1",
+                               "reference":  "assets/v1_1/music.png",
+                               "action":  "听歌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-102e37c0-ea4b-43cf-8ab6-b07f4980100a.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v1_1/music.png animation frame music_1 for action \"听歌\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY image1 clothing into the exact same warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails to elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, amber lining and short ivory/gold side ribbons. Bright warm ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than gray/ice-blue tiers. Adapt winter sleeves/cape/hem to image1 EXACT pose, fully covering torso and arms. Original DARK NAVY GLOVED hands and fingers remain fully visible in EXACT original positions and gestures: DO NOT recolor gloves; fur cuffs stop at wrists and MUST NOT cover/replace gloved hands with white/cream mittens. Remove old purple armor and original navy moon/star costume panels wherever new coat covers them. Lock image1 head/hair silhouette/ornaments, face/expression, eye open/closed state, mouth, all original hands/body parts, arm/leg positions, original dark boots and EXACT foot positions/baseline. KEEP all original objects/props/emotional symbols in their original positions. Do not copy image2 pose/head/boots/face. Clean navy anime chibi outlines and soft cel shading match accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no crop/rescale/reposition/text/watermark/ground. No halo/wings/crown/new particles or effects. Original musical notes/hearts/check marks remain. Sibling frames keep identical garment design and only original subtle pose/expression movements.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "packing_1",
+                               "reference":  "assets/v2_0/packing_1.png",
+                               "action":  "收拾东西",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-17bf6b6b-0900-40d3-9c6a-cf2d3e048921.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/packing_1.png animation frame packing_1 for action \"收拾东西\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "peek_1",
+                               "reference":  "assets/v2_0/peek_1.png",
+                               "action":  "躲着偷看你",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-bdaa974d-c393-423a-a815-f6e42a22a1a4.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/peek_1.png animation frame peek_1 for action \"躲着偷看你\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "peek_2",
+                               "reference":  "assets/v2_0/peek_2.png",
+                               "action":  "躲着偷看你",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b4e09773-25ea-4be9-9e72-bf012b6f5d8e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/peek_2.png animation frame peek_2 for action \"躲着偷看你\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "pout_1",
+                               "reference":  "assets/v2_0/pout_1.png",
+                               "action":  "鼓脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-4e49aa5f-dc9a-4d34-a8cc-fa6796d4bf34.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/pout_1.png animation frame pout_1 for action \"鼓脸\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "pout_2",
+                               "reference":  "assets/v2_0/pout_2.png",
+                               "action":  "鼓脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9a1c9617-8893-4770-861b-c61b76093164.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/pout_2.png animation frame pout_2 for action \"鼓脸\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "proud_1",
+                               "reference":  "assets/v2_0/proud_1.png",
+                               "action":  "得意",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-f6f86f65-bcc7-4da0-b427-503167142cbb.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/proud_1.png animation frame proud_1 for action \"得意\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "ready_go_1",
+                               "reference":  "assets/v2_0/ready_go_1.png",
+                               "action":  "出发",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-dbe09c9f-0e26-48f1-9156-7d3eb5a5ce77.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/ready_go_1.png animation frame ready_go_1 for action \"出发\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "shy_1",
+                               "reference":  "assets/v2_0/shy_1.png",
+                               "action":  "害羞捂脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a18add98-0650-4da2-bebd-ad56d38bbc49.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/shy_1.png animation frame shy_1 for action \"害羞捂脸\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "shy_2",
+                               "reference":  "assets/v2_0/shy_2.png",
+                               "action":  "害羞捂脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8ee43279-0d91-4cc9-8018-aaf6fef8df0b.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/shy_2.png animation frame shy_2 for action \"害羞捂脸\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "sleep_3",
+                               "reference":  "assets/v2_0/sleep_3.png",
+                               "action":  "趴着睡",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2875db37-2bf1-4bcc-832b-93e5a1c24ae5.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/sleep_3.png animation frame sleep_3 for action \"趴着睡\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "stretch_break_1",
+                               "reference":  "assets/v2_0/stretch_break_1.png",
+                               "action":  "起来活动",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-541a66eb-94c0-4aa5-9b64-9adf422b939c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/stretch_break_1.png animation frame stretch_break_1 for action \"起来活动\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "stretch_break_2",
+                               "reference":  "assets/v2_0/stretch_break_2.png",
+                               "action":  "起来活动",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e40e51e1-335c-4c7b-87c4-42fdd4e7d77d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/stretch_break_2.png animation frame stretch_break_2 for action \"起来活动\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "surprised_1",
+                               "reference":  "assets/v2_0/surprised_1.png",
+                               "action":  "吓一跳",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-bd6f1756-34fc-435a-8b3b-7776f41ceaf4.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/surprised_1.png animation frame surprised_1 for action \"吓一跳\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "thumbs_up_1",
+                               "reference":  "assets/v2_0/thumbs_up_1.png",
+                               "action":  "点赞",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b7cd0559-d584-419f-a7e5-c8d612364819.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/thumbs_up_1.png animation frame thumbs_up_1 for action \"点赞\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "wake_stretch_1",
+                               "reference":  "assets/v2_0/wake_stretch_1.png",
+                               "action":  "醒来伸懒腰",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-065214f6-2c98-472e-86c1-e685a77c9bbc.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/wake_stretch_1.png animation frame wake_stretch_1 for action \"醒来伸懒腰\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "wake_stretch_2",
+                               "reference":  "assets/v2_0/wake_stretch_2.png",
+                               "action":  "醒来伸懒腰",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-086df429-7e8f-46e4-9ac6-a69e829d7a1c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/wake_stretch_2.png animation frame wake_stretch_2 for action \"醒来伸懒腰\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "worried_1",
+                               "reference":  "assets/v2_0/worried_1.png",
+                               "action":  "担心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2dcd3e02-f29c-47b3-bb20-e9a8840b9467.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/worried_1.png animation frame worried_1 for action \"担心\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "worried_2",
+                               "reference":  "assets/v2_0/worried_2.png",
+                               "action":  "担心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-5bb120ae-4a72-4c02-b5f4-9ab7c239009e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/worried_2.png animation frame worried_2 for action \"担心\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "yawn_1",
+                               "reference":  "assets/v2_0/yawn_1.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ebe636ae-48f0-4d9c-b2f5-dab13a7d3882.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/yawn_1.png animation frame yawn_1 for action \"打哈欠\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "yawn_2",
+                               "reference":  "assets/v2_0/yawn_2.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-39c546d6-2b86-455b-b821-bad1b6c98106.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/yawn_2.png animation frame yawn_2 for action \"打哈欠\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           },
+                           {
+                               "tier":  "haori",
+                               "frame":  "yawn_3",
+                               "reference":  "assets/v2_0/yawn_3.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-630f67b0-40ed-49b2-8b7a-5f75860cf22e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: exact DEFAULT assets/v2_0/yawn_3.png animation frame yawn_3 for action \"打哈欠\". Image2 is user-accepted HAORI frost coat CLOTHING REFERENCE ONLY. REDRAW ONLY clothing in image1 into this identical warm bright ivory/champagne-gold winter coat: BROAD SHORT shoulder cape with pointed tails ending at elbows, gold snowflake embroidery and gold metal clasp, fluffy cream collar/cuffs/hem, warm amber lining and short ivory/gold side ribbons. Ivory/gold must dominate garment; broad luxurious shoulder silhouette distinctly wider than plain gray/ice-blue tiers. Adapt winter sleeves/cape/hem naturally to image1 EXACT pose, fully covering torso and arms. Keep original DARK NAVY GLOVED hands and fingers fully visible at EXACT original coordinates and gestures. DO NOT recolor gloves; cream fur cuffs end at wrists and NEVER cover/replace hands with mittens. Remove old purple armor and original moon/star costume waist panels wherever coat covers them. Preserve image1 head/hair/face pixels and geometry: do NOT redraw, rotate, resize or shift head, bangs, hair outline/ornaments, eyes/mouth/expression, cheeks or neck outline. All original hands, body parts, arms/legs, dark boots and exact foot positions/baseline stay locked. KEEP every original object/prop/emotional symbol in the same place. Do not copy image2 pose/head/face/boots or expression. Original1254x1254 RGBA square, TRUE transparent background, no cropping/rescaling/repositioning. Clean navy outlines and soft anime chibi cel shading match accepted coat. No text/watermark/ground/halo/wings/crown/added particles/effects. Original notes/hearts/check marks may remain, no new writing. Sibling frames keep the identical garment with only original subtle pose/expression movement.",
+                               "session_snapshot":  "20261016"
+                           }
+                       ],
+    "completed_additions":  83
+}
