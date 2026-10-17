@@ -1,0 +1,666 @@
+{
+  "status": "COMPLETE",
+  "artwork_review": "All 41 master body crops, all normal sequences and 20 blink pairs reviewed; targeted full-size seam repairs checked.",
+  "quota_recovered_utc": "2026-10-16T04:47:00Z",
+  "drawing_backend": "built-in imagegen",
+  "composition": "User-authorized Pillow masks and registration",
+  "final_visual_acceptance": true,
+  "required_frames": 96,
+  "available_candidates": 96,
+  "missing": [],
+  "original_references_sha256_unchanged": 96,
+  "checks": [
+    {
+      "name": "idle_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "03a8d33fae6afae605e96f51d6b2c380dd8f2aae4ae6822987049bb76cf78259"
+    },
+    {
+      "name": "idle_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "a99c3246b3f717555930c6289d17b8307287847169831828da5b30156acd7ab9"
+    },
+    {
+      "name": "typing_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "4fd2fa5b1943066bb88c897b37971ca3c78ac4f10276297e8c4c363cb322c029"
+    },
+    {
+      "name": "typing_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "20ee473dbe532b90b7788b4c60d263364fe5ae4f435388f099cd884daa3c4a9f"
+    },
+    {
+      "name": "codex_working_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "231b2b5fe12e19e71cd8666c0eb83a9f92223a69fc4bb5fd2e689810e20831c3"
+    },
+    {
+      "name": "microphone_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "53d80049189c4ab5051693909cf1cf73461cbef178f3c5f5ea7bbef3affeccab"
+    },
+    {
+      "name": "music_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "e3387eb42b445276e572b103e7b07a824dd1002f813ae63f3ac829c72dc70ee3"
+    },
+    {
+      "name": "guitar_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "fb1e574d3c161335feeff2b3dee1c424fa8ebdf7d2eaf34792200f7375b50c6d"
+    },
+    {
+      "name": "celebrate_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "a0dbcd74f66d392ee53310796651af9339e9b896bbdc9c93df9a8373cf6c14fc"
+    },
+    {
+      "name": "sad_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "f14fa9235228d96014cced8d34830e9e74a32ce7e806a896e8b63607d7cbb895"
+    },
+    {
+      "name": "wave_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "ff946fd696c96b718fef94b0864df1cf1189b83f5a7ec7b56eeabf9b651bffd6"
+    },
+    {
+      "name": "coquettish_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "cdac5a973f0190dde0edf98b80a4b6a156632d7ef2f8986de0f50e71ec515423"
+    },
+    {
+      "name": "coquettish_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "e54b686358c1f01ca3bdc4d642dad65d64a3a890eb78ecbc84a5f8e44d86c9a5"
+    },
+    {
+      "name": "coquettish_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "027f1f11894d4ba0ddc286172670cdec4f09097e3560cde3665ff32d108939c6"
+    },
+    {
+      "name": "coquettish_4",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "9e76323ceeb66e05d22df0ca90e41d176864a2666c240375f6bf902f685b52be"
+    },
+    {
+      "name": "coquettish_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "a706520287fc9b22711f527ab0a8e8da944843d092a776cf22e00d474c2b4f08"
+    },
+    {
+      "name": "headpat_happy_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "129584f3293fce8a75468887be2e0eaf8174d865b9aac5ab8fc6b2d174dd0e51"
+    },
+    {
+      "name": "headpat_happy_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "75b90b68993ca96ebe0b15bdca653ba35811eae105ee32691a8caa0203793371"
+    },
+    {
+      "name": "headpat_happy_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "aed547cf5069b8b1f6ef4b1c0729b5ab8a98cef93f81fcd27c233d818533a54d"
+    },
+    {
+      "name": "headpat_happy_4",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "408b3473a5c23941eb25d6992280e2ef00fff1e1e8b8e0252c63178d51e4d47c"
+    },
+    {
+      "name": "headpat_happy_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "029825b7b7383ee308b0cf93b4eca2eed2e70e676a3d562c3268ee7f4ea73019"
+    },
+    {
+      "name": "sleep_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "2e2b84e873f61d7f0b94567eaf167845ed3b44172814b037f9731027d60840ae"
+    },
+    {
+      "name": "sleep_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "c40b9837c642f25dbd8f7b48bcf22916b20110f22aec9bee7a7af6e48e94afed"
+    },
+    {
+      "name": "sleep_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "546439c25027afed71a24498bb74e66e9efcf7705d8bd5c72d7f1b0a0785dac4"
+    },
+    {
+      "name": "bored_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "2e52efec786875139f6557d579cf3abd14b0c6e58c3598e76ae4eb9cbbe7490e"
+    },
+    {
+      "name": "bored_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "21632b2d96dde57cda38dc26e086e81579787e3ff0086f416c20e5c63f10ea37"
+    },
+    {
+      "name": "bored_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "34f6c97ea7bef1d9480c832ad4f1a726c7ec31257bda83a2c09bbd697d29e051"
+    },
+    {
+      "name": "bored_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "71dc2420918993d1a2651bf9282b30780d12b47d909ad87ebdb90a784da73cf4"
+    },
+    {
+      "name": "yawn_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "c8c8a0c165877bdebbff7f8ff05645fa0da12ba0487a1918b1baef577fe664a8"
+    },
+    {
+      "name": "yawn_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "988d406a277dd5b3ab0579cec3d63e82701e725e6991aae22292204a9fc18f02"
+    },
+    {
+      "name": "yawn_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "bb105bc61dd19e30b5bbf4041dfe2230ffa25de30f5713339d6d200faf7c5971"
+    },
+    {
+      "name": "wake_stretch_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "0ba7689ebf2ec38551f451283b135e678d36e60ed2e8a0f0ad14796cb7335895"
+    },
+    {
+      "name": "wake_stretch_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "f97b1061ee1339866c6fd0e3cdc5627a824ecf28352209df579e374963feec92"
+    },
+    {
+      "name": "curious_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "81a251b9e31fb53f29ad988397ecf71f25dde67eee36ddb8981ba32dab34e823"
+    },
+    {
+      "name": "curious_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "a13e4b0debfb4151e8143aab0249e31ebb448872bdaae2314f19922260534a0b"
+    },
+    {
+      "name": "curious_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "f0389e6b314c9f8c9ba177b7e061c876182a24ac1f4d1b325e6a723ed26f6c4f"
+    },
+    {
+      "name": "thinking_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "4e7185ae4bfdfc01fa1a7174463828d18c3d9ea3144e8e9248a79800117bf9c1"
+    },
+    {
+      "name": "thinking_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "3e8f9a86651ae675950710ede20328d048e0b789281e8ef36955c0ec477631d7"
+    },
+    {
+      "name": "thinking_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "3dcda57fd1eae54d2971319755c5715359a7789945a406a270da936058a63801"
+    },
+    {
+      "name": "shy_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "122104adfd06f2a449ef79ad1422d20c3e1dc509634144ee8ea8bb3e0d5840ee"
+    },
+    {
+      "name": "shy_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "8e15778ef30337a0c10a0e31f96df1f0225f7b9b4ac313c01b26a82092fc33e6"
+    },
+    {
+      "name": "pout_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "14c65ccf054a445ebe469c34c960bc50a8f3f4e47aa57c69d9e9c0a6fd64a755"
+    },
+    {
+      "name": "pout_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "673d60e02e3e02612c70f69956777489ea3cbc54b5e98e7a5b05eb5479050c0b"
+    },
+    {
+      "name": "pout_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "4b5f7b60596be3da63d23be8df4aa7b78cf8b89ac3e93bbe2024468af4167cf7"
+    },
+    {
+      "name": "poked_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "8f2cb20ee913c348babb1b1bd057c4ba949149b375680c376ece451e0c431706"
+    },
+    {
+      "name": "dragged_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "e438de57e350c37842c1b9c4ce016aa2aeefb1c843a1c561eb8c6f10e4b0cf8b"
+    },
+    {
+      "name": "dragged_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "0047d94c39978ca3c9946133efe00a78620e8bbbde5152b579d2e4ab1a5dcca7"
+    },
+    {
+      "name": "dragged_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "50ac75ffe9b845307308a1991dbd18ef6f9d25d483f2fcf0dc7269cd6cb3c2cd"
+    },
+    {
+      "name": "dragged_4",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "724299fcee86a2d5948273fcf3d786c8fbba402389675e34a75188b711892b37"
+    },
+    {
+      "name": "landing_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "44da0ce939f8ab6c21467f914742a2771b80b1671ee9938e2a8a23dc9ceeb6b2"
+    },
+    {
+      "name": "landing_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "ff670351e916177e9545cfdad969bf875fb2a6b6d7f2e14e1bcf6f910c95bb3e"
+    },
+    {
+      "name": "hug_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "fb18c53ebc231a387134d7867f258f5ea9c84c7e952714d96539ff9c240d9248"
+    },
+    {
+      "name": "hug_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "256696e83ef0a73e27421449f279ab0db8a40c0f567bf46276eecc0319bc716e"
+    },
+    {
+      "name": "hug_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "a8ae57bb6e5a88876b5738d37758b1a451eee7b7a418a7dcb4fc2b3eb3f7cc69"
+    },
+    {
+      "name": "heart_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "12efffe232f9a03ced011573aa7d42a7cbb1c6e981fff2416cb30814aaabd07e"
+    },
+    {
+      "name": "greet_morning_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "4d2075eb765d980dfd59917a4734873bb632c22ca1bdfd285b10d1e98b23b4d1"
+    },
+    {
+      "name": "greet_morning_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "dede85ad675c7c2e259f6f048f95b66ac911faa9c594071126b6b5fa7c626195"
+    },
+    {
+      "name": "greet_morning_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "3286a45bc2e0f8d5daa76249e44b966c96b846e49a96193e064a5928ec36227c"
+    },
+    {
+      "name": "greet_night_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "0863be02d44765afb6bbc076488990f33ff4180979d0b45f308b22b3b72099dc"
+    },
+    {
+      "name": "greet_night_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "16d244567865f9d4f3f9abe4ee21e787151f97b12fc845884316a46d168b6570"
+    },
+    {
+      "name": "surprised_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "803137837828a980bd233d87a3b39bb11fa2053b0cbd87aa3b42f1336ba86d12"
+    },
+    {
+      "name": "thumbs_up_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "4978e0f61a89aa96d47b1bc024a430cf8eedca0f7c9071a85462138cb3a98d44"
+    },
+    {
+      "name": "thumbs_up_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "472c6239a7dfca5576ef3789a3faecb4b0c8c3fbbee6530743fa68614d4d743b"
+    },
+    {
+      "name": "cheer_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "dea5d86e2528cc6b453a2a96b760182c3e4a60258a8da5822af62ef420d79081"
+    },
+    {
+      "name": "cheer_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "8083ff5b7defc2f8d4e660f0446d5a80aaf62a0cd5a536c851113b2f6bd8eb86"
+    },
+    {
+      "name": "cheer_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "04292f686047dac120747eb7d97f212e33c5446426ad28e79e6d71f20a70cd89"
+    },
+    {
+      "name": "clap_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "4f9193b724ad7c5edb297a0135af5473c13ca5ffe8e6bae920abeeb4cb7a8f5e"
+    },
+    {
+      "name": "clap_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "4c5eb7e73eb8776aa40645bb6666e3291355a658aa4f4e63cd637ddde9ddc228"
+    },
+    {
+      "name": "clap_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "0a055b8d0a1a15a8c31960f50ed31ccf028e0cc9b6dfe768b7ea1d4c68438a5b"
+    },
+    {
+      "name": "clap_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "0d4b91a7cddf63a9915a66e6e7c4cc1054b2f457084a611da1129a4875ffa6b3"
+    },
+    {
+      "name": "peek_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "f7a666955e32b9823f42722113e9c72c8242c4a99b38e2326cb29e77a6aff112"
+    },
+    {
+      "name": "peek_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "df9bf24975b8db1272fe569fd77d2f734ffe2e8c2f3a2d842436bd1c9f50a7e0"
+    },
+    {
+      "name": "grievance_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "709a27500e0fdb1a55d5da832299eaf5828227bcd3f27813097adeda94d03591"
+    },
+    {
+      "name": "grievance_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_motion_alpha_exact": true,
+      "sha256": "d6b025f079b37f55dc57906ae034167f014e0559eab6628f1be2739bfec764c4"
+    },
+    {
+      "name": "focus_read_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "47eb93092d59e2ba6ef43fff7f66576436dbc34e1bf88eea687664b905c8b61d"
+    },
+    {
+      "name": "focus_read_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "6729ec867f525876ea3a06465de40d4d48599e0dd27d70fe545704bb810b0500"
+    },
+    {
+      "name": "focus_read_3",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "406ca4fcf0a42258e11a8d752530b6ceb1fa990d7f9a6257748409c6151e3ba7"
+    },
+    {
+      "name": "focus_read_4",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_motion_alpha_exact": true,
+      "sha256": "580189e7f6ca8c2aec93df666797239dbf6b2e6e1b69b1fc621c4ecc60249cd6"
+    },
+    {
+      "name": "focus_read_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "8ae76791fd5accc66243338bf583ed8d36d3301359b473fd271df54bf7335bc9"
+    },
+    {
+      "name": "focus_tea_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "ab0e5cd2e148a8f61720f8ab6771abf56ae0e953f88fefadf2b340617d744b50"
+    },
+    {
+      "name": "focus_tea_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_motion_alpha_exact": true,
+      "sha256": "2a86487cc1eaa585fb6276deef17b140934401827259acdf5ca4ff70464b0699"
+    },
+    {
+      "name": "focus_done_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "b816b726ac9a735571a597af065928444d5842b473a56427c45bdae4796434e8"
+    },
+    {
+      "name": "focus_done_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "61e2f074c34a39c97435f578dfa2c42b1306ffe26921e59a9e27ecc28322c10b"
+    },
+    {
+      "name": "stretch_break_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "d71c4a01f6a4231922b8ffeb9cdeb4b09b2740f55c088f8464278fb60a3dbd51"
+    },
+    {
+      "name": "stretch_break_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_foot_alpha_exact": true,
+      "sha256": "fe75164255957c67b8aa46a5688b5c19075e5409b173aaf2f85a499750359208"
+    },
+    {
+      "name": "stretch_break_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "b7ca6213779c2d1787e58f7aaa89bcfe2759dc4dc9cb4ca7d9b9eeb716cd6736"
+    },
+    {
+      "name": "hold_card_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "0e0f4978e60ac74a3c4261c424022db7e5cc6e025d65ea46b66423d0218c37bd"
+    },
+    {
+      "name": "hold_card_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "23949cac292f177023b37f90c47433150cef336d8139dc0f2b2db65f06fc17e3"
+    },
+    {
+      "name": "packing_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "240b61f721052157c61643035ba5cd35a2aeaa8a65ccfb351a2624155f1b0400"
+    },
+    {
+      "name": "packing_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "337900bd237e06a2c40c47126370bde720a287218206265d9e0bb7a585c17639"
+    },
+    {
+      "name": "ready_go_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "96579966cf353770d705cb0db07e21d4a6fc52174c3eee353f1c0ded6c9f4e7c"
+    },
+    {
+      "name": "ready_go_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "38a4e7bf1d1a0dad1dbac7fe1bc7b0678e61f61ad0fb4cf2bfb6212067f05723"
+    },
+    {
+      "name": "worried_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "15060239cdf9f10e925a5c7392c70e7136ce284169735212d5e018282660c2ee"
+    },
+    {
+      "name": "worried_2",
+      "canvas_rgba": true,
+      "outside_motion_exact": true,
+      "target_motion_alpha_exact": true,
+      "sha256": "fd642476337afbde82bcb98817584491ad336c006d0e86e3847e8e520992868f"
+    },
+    {
+      "name": "worried_blink",
+      "canvas_rgba": true,
+      "eyes_only_exact": true,
+      "sha256": "937b46761dc91f37520e8e8e4c7d128232cbf628c413a21b69b5588f17877533"
+    },
+    {
+      "name": "proud_1",
+      "canvas_rgba": true,
+      "visible_pixels_outside_mask_exact": true,
+      "positive_reference_foot_alpha_exact": true,
+      "sha256": "020f20c12cfdbd56d9560b8a364540adf5d5c15a2a123b2f1d3b27e487b59b60"
+    }
+  ]
+}
