@@ -1,0 +1,866 @@
+[
+  {
+    "file": "idle_1.png",
+    "offset_x": 2,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4409,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "idle_blink.png",
+    "offset_x": 2,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4385,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "typing_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4550,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "typing_2.png",
+    "offset_x": -1,
+    "offset_y": 1,
+    "matched_hair_contour_samples": 4676,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "codex_working_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5583,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "microphone_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4387,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "music_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5549,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "guitar_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5054,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "celebrate_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5935,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "sad_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4631,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "wave_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4979,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "coquettish_1.png",
+    "offset_x": 1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4446,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "coquettish_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4453,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "coquettish_3.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4424,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "coquettish_4.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4433,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "coquettish_blink.png",
+    "offset_x": 1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4238,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "headpat_happy_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4413,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "headpat_happy_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4437,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "headpat_happy_3.png",
+    "offset_x": 5,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4422,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "headpat_happy_4.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4396,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "headpat_happy_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4385,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "sleep_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 3023,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "sleep_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 2998,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "sleep_3.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 3027,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "bored_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 3717,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "bored_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 3729,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "bored_3.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 3704,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "bored_blink.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 3584,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "yawn_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4614,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "yawn_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4559,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "yawn_3.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4577,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "wake_stretch_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4579,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "wake_stretch_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4565,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "curious_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5076,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "curious_2.png",
+    "offset_x": -3,
+    "offset_y": 2,
+    "matched_hair_contour_samples": 4957,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "curious_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4868,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "thinking_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4769,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "thinking_2.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4751,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "thinking_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4549,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "shy_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4593,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "shy_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4575,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "pout_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5045,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "pout_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4961,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "pout_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4857,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "poked_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5123,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "dragged_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5152,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "dragged_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5113,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "dragged_3.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5069,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "dragged_4.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5002,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "landing_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4748,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "landing_blink.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4519,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "hug_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5913,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "hug_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5912,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "hug_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5690,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "heart_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5323,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "greet_morning_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5207,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "greet_morning_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5200,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "greet_morning_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5117,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "greet_night_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4957,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "greet_night_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4982,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "surprised_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5677,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "thumbs_up_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5261,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "thumbs_up_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5115,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "cheer_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5610,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "cheer_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5657,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "cheer_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5427,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "clap_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4907,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "clap_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4924,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "clap_3.png",
+    "offset_x": -4,
+    "offset_y": 1,
+    "matched_hair_contour_samples": 4844,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "clap_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4726,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "peek_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5066,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "peek_2.png",
+    "offset_x": 1,
+    "offset_y": 2,
+    "matched_hair_contour_samples": 4891,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "grievance_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4676,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "grievance_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4686,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_read_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4804,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_read_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4729,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_read_3.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4742,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_read_4.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4778,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_read_blink.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4627,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_tea_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4717,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_tea_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4760,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_done_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5012,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "focus_done_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4833,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "stretch_break_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5395,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "stretch_break_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4855,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "stretch_break_blink.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5257,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "hold_card_1.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4703,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "hold_card_blink.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4508,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "packing_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5488,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "packing_blink.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5323,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "ready_go_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5236,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "ready_go_blink.png",
+    "offset_x": -1,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5026,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "worried_1.png",
+    "offset_x": 2,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4632,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "worried_2.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4631,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "worried_blink.png",
+    "offset_x": 2,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 4476,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  },
+  {
+    "file": "proud_1.png",
+    "offset_x": 0,
+    "offset_y": 0,
+    "matched_hair_contour_samples": 5026,
+    "remaining_offset_x": 0,
+    "remaining_offset_y": 0,
+    "method": "Match bright hair contour edges above y=850 against exact default reference; integer-pixel translation only."
+  }
+]

@@ -1,0 +1,1706 @@
+[
+  {
+    "file": "idle_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 695343,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      77,
+      7,
+      1156,
+      1234
+    ],
+    "bbox_delta": [
+      -3,
+      1,
+      0,
+      15
+    ]
+  },
+  {
+    "file": "typing_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 699753,
+    "source_bbox": [
+      88,
+      2,
+      1204,
+      1225
+    ],
+    "final_bbox": [
+      88,
+      2,
+      1205,
+      1241
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      16
+    ]
+  },
+  {
+    "file": "typing_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 726513,
+    "source_bbox": [
+      141,
+      3,
+      1180,
+      1232
+    ],
+    "final_bbox": [
+      138,
+      1,
+      1187,
+      1237
+    ],
+    "bbox_delta": [
+      -3,
+      -2,
+      7,
+      5
+    ]
+  },
+  {
+    "file": "codex_working_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 604454,
+    "source_bbox": [
+      47,
+      0,
+      1206,
+      1250
+    ],
+    "final_bbox": [
+      47,
+      5,
+      1214,
+      1248
+    ],
+    "bbox_delta": [
+      0,
+      5,
+      8,
+      -2
+    ]
+  },
+  {
+    "file": "microphone_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 720888,
+    "source_bbox": [
+      80,
+      10,
+      1185,
+      1230
+    ],
+    "final_bbox": [
+      80,
+      10,
+      1187,
+      1247
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      2,
+      17
+    ]
+  },
+  {
+    "file": "music_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 631550,
+    "source_bbox": [
+      62,
+      8,
+      1184,
+      1224
+    ],
+    "final_bbox": [
+      61,
+      8,
+      1187,
+      1226
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      3,
+      2
+    ]
+  },
+  {
+    "file": "guitar_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 602218,
+    "source_bbox": [
+      44,
+      1,
+      1230,
+      1239
+    ],
+    "final_bbox": [
+      43,
+      1,
+      1233,
+      1250
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      3,
+      11
+    ]
+  },
+  {
+    "file": "celebrate_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 645393,
+    "source_bbox": [
+      22,
+      12,
+      1230,
+      1225
+    ],
+    "final_bbox": [
+      22,
+      12,
+      1230,
+      1239
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      0,
+      14
+    ]
+  },
+  {
+    "file": "sad_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 589013,
+    "source_bbox": [
+      51,
+      16,
+      1230,
+      1239
+    ],
+    "final_bbox": [
+      51,
+      17,
+      1231,
+      1243
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      1,
+      4
+    ]
+  },
+  {
+    "file": "wave_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 572106,
+    "source_bbox": [
+      24,
+      18,
+      1231,
+      1236
+    ],
+    "final_bbox": [
+      24,
+      19,
+      1232,
+      1247
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      1,
+      11
+    ]
+  },
+  {
+    "file": "coquettish_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 693923,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      80,
+      5,
+      1159,
+      1247
+    ],
+    "bbox_delta": [
+      0,
+      -1,
+      3,
+      28
+    ]
+  },
+  {
+    "file": "coquettish_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 701277,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      80,
+      5,
+      1156,
+      1220
+    ],
+    "bbox_delta": [
+      0,
+      -1,
+      0,
+      1
+    ]
+  },
+  {
+    "file": "coquettish_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 701573,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      81,
+      11,
+      1158,
+      1233
+    ],
+    "bbox_delta": [
+      1,
+      5,
+      2,
+      14
+    ]
+  },
+  {
+    "file": "coquettish_4.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 697341,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      6,
+      1157,
+      1221
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      1,
+      2
+    ]
+  },
+  {
+    "file": "headpat_happy_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 689911,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      6,
+      1158,
+      1234
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      2,
+      15
+    ]
+  },
+  {
+    "file": "headpat_happy_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 679849,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      4,
+      1158,
+      1241
+    ],
+    "bbox_delta": [
+      -1,
+      -2,
+      2,
+      22
+    ]
+  },
+  {
+    "file": "headpat_happy_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 687612,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      77,
+      5,
+      1153,
+      1228
+    ],
+    "bbox_delta": [
+      -3,
+      -1,
+      -3,
+      9
+    ]
+  },
+  {
+    "file": "headpat_happy_4.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 685938,
+    "source_bbox": [
+      80,
+      6,
+      1156,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      3,
+      1157,
+      1221
+    ],
+    "bbox_delta": [
+      -1,
+      -3,
+      1,
+      2
+    ]
+  },
+  {
+    "file": "sleep_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 868968,
+    "source_bbox": [
+      40,
+      287,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      40,
+      286,
+      1215,
+      1220
+    ],
+    "bbox_delta": [
+      0,
+      -1,
+      1,
+      1
+    ]
+  },
+  {
+    "file": "sleep_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 870795,
+    "source_bbox": [
+      40,
+      287,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      41,
+      287,
+      1215,
+      1219
+    ],
+    "bbox_delta": [
+      1,
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "file": "sleep_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 869356,
+    "source_bbox": [
+      40,
+      287,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      39,
+      288,
+      1215,
+      1219
+    ],
+    "bbox_delta": [
+      -1,
+      1,
+      1,
+      0
+    ]
+  },
+  {
+    "file": "bored_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 801180,
+    "source_bbox": [
+      40,
+      180,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      38,
+      179,
+      1218,
+      1205
+    ],
+    "bbox_delta": [
+      -2,
+      -1,
+      4,
+      -14
+    ]
+  },
+  {
+    "file": "bored_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 788468,
+    "source_bbox": [
+      40,
+      180,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      40,
+      176,
+      1215,
+      1219
+    ],
+    "bbox_delta": [
+      0,
+      -4,
+      1,
+      0
+    ]
+  },
+  {
+    "file": "bored_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 813012,
+    "source_bbox": [
+      40,
+      180,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      41,
+      183,
+      1215,
+      1210
+    ],
+    "bbox_delta": [
+      1,
+      3,
+      1,
+      -9
+    ]
+  },
+  {
+    "file": "yawn_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 733365,
+    "source_bbox": [
+      103,
+      24,
+      1150,
+      1219
+    ],
+    "final_bbox": [
+      102,
+      26,
+      1151,
+      1223
+    ],
+    "bbox_delta": [
+      -1,
+      2,
+      1,
+      4
+    ]
+  },
+  {
+    "file": "yawn_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 727028,
+    "source_bbox": [
+      103,
+      24,
+      1150,
+      1219
+    ],
+    "final_bbox": [
+      102,
+      25,
+      1151,
+      1212
+    ],
+    "bbox_delta": [
+      -1,
+      1,
+      1,
+      -7
+    ]
+  },
+  {
+    "file": "yawn_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 737627,
+    "source_bbox": [
+      103,
+      24,
+      1150,
+      1219
+    ],
+    "final_bbox": [
+      102,
+      27,
+      1151,
+      1226
+    ],
+    "bbox_delta": [
+      -1,
+      3,
+      1,
+      7
+    ]
+  },
+  {
+    "file": "wake_stretch_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 796039,
+    "source_bbox": [
+      147,
+      40,
+      1106,
+      1219
+    ],
+    "final_bbox": [
+      147,
+      40,
+      1107,
+      1219
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "file": "wake_stretch_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 791556,
+    "source_bbox": [
+      147,
+      40,
+      1106,
+      1219
+    ],
+    "final_bbox": [
+      147,
+      39,
+      1107,
+      1220
+    ],
+    "bbox_delta": [
+      0,
+      -1,
+      1,
+      1
+    ]
+  },
+  {
+    "file": "curious_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 684496,
+    "source_bbox": [
+      66,
+      24,
+      1188,
+      1219
+    ],
+    "final_bbox": [
+      65,
+      22,
+      1189,
+      1220
+    ],
+    "bbox_delta": [
+      -1,
+      -2,
+      1,
+      1
+    ]
+  },
+  {
+    "file": "curious_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 663632,
+    "source_bbox": [
+      67,
+      19,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      64,
+      15,
+      1219,
+      1219
+    ],
+    "bbox_delta": [
+      -3,
+      -4,
+      5,
+      0
+    ]
+  },
+  {
+    "file": "thinking_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 707323,
+    "source_bbox": [
+      93,
+      24,
+      1161,
+      1219
+    ],
+    "final_bbox": [
+      92,
+      24,
+      1162,
+      1214
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      1,
+      -5
+    ]
+  },
+  {
+    "file": "thinking_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 720372,
+    "source_bbox": [
+      93,
+      24,
+      1161,
+      1219
+    ],
+    "final_bbox": [
+      92,
+      23,
+      1153,
+      1221
+    ],
+    "bbox_delta": [
+      -1,
+      -1,
+      -8,
+      2
+    ]
+  },
+  {
+    "file": "shy_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 884760,
+    "source_bbox": [
+      170,
+      24,
+      1084,
+      1219
+    ],
+    "final_bbox": [
+      170,
+      22,
+      1085,
+      1234
+    ],
+    "bbox_delta": [
+      0,
+      -2,
+      1,
+      15
+    ]
+  },
+  {
+    "file": "shy_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 883922,
+    "source_bbox": [
+      170,
+      24,
+      1084,
+      1219
+    ],
+    "final_bbox": [
+      170,
+      24,
+      1085,
+      1222
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      3
+    ]
+  },
+  {
+    "file": "pout_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 841657,
+    "source_bbox": [
+      132,
+      24,
+      1122,
+      1219
+    ],
+    "final_bbox": [
+      131,
+      24,
+      1123,
+      1220
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      1,
+      1
+    ]
+  },
+  {
+    "file": "pout_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 803888,
+    "source_bbox": [
+      132,
+      24,
+      1122,
+      1219
+    ],
+    "final_bbox": [
+      133,
+      24,
+      1123,
+      1224
+    ],
+    "bbox_delta": [
+      1,
+      0,
+      1,
+      5
+    ]
+  },
+  {
+    "file": "poked_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 776456,
+    "source_bbox": [
+      84,
+      24,
+      1170,
+      1219
+    ],
+    "final_bbox": [
+      80,
+      21,
+      1172,
+      1234
+    ],
+    "bbox_delta": [
+      -4,
+      -3,
+      2,
+      15
+    ]
+  },
+  {
+    "file": "dragged_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 863784,
+    "source_bbox": [
+      153,
+      24,
+      1100,
+      1219
+    ],
+    "final_bbox": [
+      152,
+      22,
+      1101,
+      1241
+    ],
+    "bbox_delta": [
+      -1,
+      -2,
+      1,
+      22
+    ]
+  },
+  {
+    "file": "dragged_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 866878,
+    "source_bbox": [
+      153,
+      24,
+      1100,
+      1219
+    ],
+    "final_bbox": [
+      152,
+      25,
+      1100,
+      1222
+    ],
+    "bbox_delta": [
+      -1,
+      1,
+      0,
+      3
+    ]
+  },
+  {
+    "file": "dragged_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 864847,
+    "source_bbox": [
+      153,
+      24,
+      1100,
+      1219
+    ],
+    "final_bbox": [
+      153,
+      25,
+      1100,
+      1223
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      0,
+      4
+    ]
+  },
+  {
+    "file": "dragged_4.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 876175,
+    "source_bbox": [
+      153,
+      24,
+      1100,
+      1219
+    ],
+    "final_bbox": [
+      153,
+      25,
+      1100,
+      1219
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "landing_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 697991,
+    "source_bbox": [
+      40,
+      33,
+      1214,
+      1219
+    ],
+    "final_bbox": [
+      40,
+      33,
+      1214,
+      1223
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      0,
+      4
+    ]
+  },
+  {
+    "file": "hug_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 731935,
+    "source_bbox": [
+      106,
+      24,
+      1148,
+      1219
+    ],
+    "final_bbox": [
+      106,
+      22,
+      1149,
+      1223
+    ],
+    "bbox_delta": [
+      0,
+      -2,
+      1,
+      4
+    ]
+  },
+  {
+    "file": "hug_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 720009,
+    "source_bbox": [
+      105,
+      24,
+      1179,
+      1219
+    ],
+    "final_bbox": [
+      106,
+      25,
+      1179,
+      1219
+    ],
+    "bbox_delta": [
+      1,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "heart_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 781877,
+    "source_bbox": [
+      130,
+      24,
+      1123,
+      1219
+    ],
+    "final_bbox": [
+      129,
+      23,
+      1124,
+      1241
+    ],
+    "bbox_delta": [
+      -1,
+      -1,
+      1,
+      22
+    ]
+  },
+  {
+    "file": "greet_morning_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 783029,
+    "source_bbox": [
+      113,
+      24,
+      1140,
+      1219
+    ],
+    "final_bbox": [
+      113,
+      25,
+      1141,
+      1235
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      1,
+      16
+    ]
+  },
+  {
+    "file": "greet_morning_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 781953,
+    "source_bbox": [
+      113,
+      24,
+      1140,
+      1219
+    ],
+    "final_bbox": [
+      113,
+      23,
+      1141,
+      1226
+    ],
+    "bbox_delta": [
+      0,
+      -1,
+      1,
+      7
+    ]
+  },
+  {
+    "file": "greet_night_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 772717,
+    "source_bbox": [
+      103,
+      24,
+      1150,
+      1219
+    ],
+    "final_bbox": [
+      102,
+      24,
+      1151,
+      1231
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      1,
+      12
+    ]
+  },
+  {
+    "file": "greet_night_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 771297,
+    "source_bbox": [
+      103,
+      24,
+      1150,
+      1219
+    ],
+    "final_bbox": [
+      103,
+      24,
+      1151,
+      1249
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      30
+    ]
+  },
+  {
+    "file": "surprised_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 754982,
+    "source_bbox": [
+      70,
+      24,
+      1183,
+      1219
+    ],
+    "final_bbox": [
+      69,
+      24,
+      1184,
+      1226
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      1,
+      7
+    ]
+  },
+  {
+    "file": "thumbs_up_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 754291,
+    "source_bbox": [
+      101,
+      24,
+      1152,
+      1219
+    ],
+    "final_bbox": [
+      101,
+      24,
+      1153,
+      1226
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      7
+    ]
+  },
+  {
+    "file": "cheer_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 717216,
+    "source_bbox": [
+      72,
+      24,
+      1182,
+      1219
+    ],
+    "final_bbox": [
+      71,
+      23,
+      1182,
+      1228
+    ],
+    "bbox_delta": [
+      -1,
+      -1,
+      0,
+      9
+    ]
+  },
+  {
+    "file": "cheer_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 703162,
+    "source_bbox": [
+      72,
+      24,
+      1182,
+      1219
+    ],
+    "final_bbox": [
+      71,
+      24,
+      1182,
+      1225
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      0,
+      6
+    ]
+  },
+  {
+    "file": "clap_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 840630,
+    "source_bbox": [
+      147,
+      24,
+      1107,
+      1219
+    ],
+    "final_bbox": [
+      147,
+      23,
+      1108,
+      1231
+    ],
+    "bbox_delta": [
+      0,
+      -1,
+      1,
+      12
+    ]
+  },
+  {
+    "file": "clap_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 818044,
+    "source_bbox": [
+      147,
+      24,
+      1107,
+      1219
+    ],
+    "final_bbox": [
+      146,
+      25,
+      1108,
+      1233
+    ],
+    "bbox_delta": [
+      -1,
+      1,
+      1,
+      14
+    ]
+  },
+  {
+    "file": "clap_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 812037,
+    "source_bbox": [
+      147,
+      24,
+      1107,
+      1219
+    ],
+    "final_bbox": [
+      147,
+      24,
+      1112,
+      1233
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      5,
+      14
+    ]
+  },
+  {
+    "file": "peek_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 630092,
+    "source_bbox": [
+      51,
+      24,
+      1203,
+      1219
+    ],
+    "final_bbox": [
+      51,
+      25,
+      1205,
+      1220
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      2,
+      1
+    ]
+  },
+  {
+    "file": "peek_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 608171,
+    "source_bbox": [
+      51,
+      15,
+      1203,
+      1219
+    ],
+    "final_bbox": [
+      47,
+      11,
+      1206,
+      1220
+    ],
+    "bbox_delta": [
+      -4,
+      -4,
+      3,
+      1
+    ]
+  },
+  {
+    "file": "grievance_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 685420,
+    "source_bbox": [
+      75,
+      24,
+      1179,
+      1219
+    ],
+    "final_bbox": [
+      75,
+      24,
+      1179,
+      1223
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      0,
+      4
+    ]
+  },
+  {
+    "file": "grievance_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 686293,
+    "source_bbox": [
+      75,
+      24,
+      1179,
+      1219
+    ],
+    "final_bbox": [
+      75,
+      23,
+      1180,
+      1221
+    ],
+    "bbox_delta": [
+      0,
+      -1,
+      1,
+      2
+    ]
+  },
+  {
+    "file": "focus_read_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 667673,
+    "source_bbox": [
+      79,
+      24,
+      1174,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      24,
+      1175,
+      1221
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      2
+    ]
+  },
+  {
+    "file": "focus_read_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 666430,
+    "source_bbox": [
+      79,
+      24,
+      1174,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      24,
+      1175,
+      1220
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      1
+    ]
+  },
+  {
+    "file": "focus_read_3.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 669740,
+    "source_bbox": [
+      79,
+      24,
+      1174,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      25,
+      1175,
+      1219
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      1,
+      0
+    ]
+  },
+  {
+    "file": "focus_read_4.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 668872,
+    "source_bbox": [
+      79,
+      24,
+      1174,
+      1219
+    ],
+    "final_bbox": [
+      79,
+      25,
+      1175,
+      1220
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "file": "focus_tea_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 702189,
+    "source_bbox": [
+      92,
+      24,
+      1162,
+      1219
+    ],
+    "final_bbox": [
+      91,
+      24,
+      1163,
+      1236
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      1,
+      17
+    ]
+  },
+  {
+    "file": "focus_tea_2.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 699681,
+    "source_bbox": [
+      92,
+      24,
+      1162,
+      1219
+    ],
+    "final_bbox": [
+      91,
+      24,
+      1163,
+      1227
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      1,
+      8
+    ]
+  },
+  {
+    "file": "hold_card_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 767108,
+    "source_bbox": [
+      120,
+      24,
+      1134,
+      1219
+    ],
+    "final_bbox": [
+      119,
+      24,
+      1136,
+      1230
+    ],
+    "bbox_delta": [
+      -1,
+      0,
+      2,
+      11
+    ]
+  },
+  {
+    "file": "packing_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 765704,
+    "source_bbox": [
+      78,
+      24,
+      1176,
+      1219
+    ],
+    "final_bbox": [
+      78,
+      24,
+      1177,
+      1244
+    ],
+    "bbox_delta": [
+      0,
+      0,
+      1,
+      25
+    ]
+  },
+  {
+    "file": "ready_go_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 797007,
+    "source_bbox": [
+      106,
+      24,
+      1147,
+      1219
+    ],
+    "final_bbox": [
+      106,
+      25,
+      1148,
+      1220
+    ],
+    "bbox_delta": [
+      0,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "file": "worried_1.png",
+    "width": 1254,
+    "height": 1254,
+    "clear_pixels": 831851,
+    "source_bbox": [
+      156,
+      24,
+      1098,
+      1219
+    ],
+    "final_bbox": [
+      154,
+      22,
+      1101,
+      1225
+    ],
+    "bbox_delta": [
+      -2,
+      -2,
+      3,
+      6
+    ]
+  }
+]
