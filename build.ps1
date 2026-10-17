@@ -91,6 +91,15 @@ foreach ($sheet in 'EQUIPPED_PREVIEW.png', 'WEAPONS_PREVIEW.png') {
     $path = Join-Path $internal (Join-Path 'assets' (Join-Path 'v2_5' (Join-Path 'weapons' $sheet)))
     if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Force }
 }
+# The forms' and outfits' drawing records and contact sheets stay in the repository.
+foreach ($folder in 'assets2_5orms', 'assets2_5\outfits') {
+    $root = Join-Path $internal $folder
+    if (Test-Path -LiteralPath $root) {
+        Get-ChildItem -LiteralPath $root -Recurse -File | Where-Object {
+            $_.Extension -in '.json', '.md' -or $_.Name -like '*PREVIEW*'
+        } | Remove-Item -Force
+    }
+}
 Copy-Item -LiteralPath (Join-Path $repo 'README.md') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'LICENSE') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'THIRD_PARTY_NOTICES.md') -Destination $app -Force
