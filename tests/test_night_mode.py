@@ -88,15 +88,19 @@ class NightModeTest(unittest.TestCase):
     def test_pose_only_when_the_night_art_exists(self):
         night = NightMode(FakePanel())
         night.poll(at(1))
-        with mock.patch('pet_assets.has_own_art', return_value=False):
+        with mock.patch('pet_assets.has_own_art', return_value=False),                 mock.patch('pet_assets.full_set', return_value=None):
             self.assertEqual(night.pose('idle'), 'idle')
-        with mock.patch('pet_assets.has_own_art', return_value=True):
+        with mock.patch('pet_assets.has_own_art', return_value=True),                 mock.patch('pet_assets.full_set', return_value=None):  # Only the first pajama pictures.
             self.assertEqual(night.pose('idle'), 'night_idle')
             self.assertEqual(night.pose('sleep'), 'night_sleep')
             self.assertEqual(night.pose('typing'), 'night_read')       # An AI at work: she reads along.
             self.assertEqual(night.pose('celebrate'), 'night_goodnight')
             self.assertEqual(night.pose('sad'), 'night_idle')           # No pajama version: the pillow.
             self.assertEqual(night.pose('night_change_2'), 'night_change_2')
+        with mock.patch('pet_assets.has_own_art', return_value=True):   # With the full pajama set (2.5):
+            self.assertEqual(night.pose('idle'), 'night_idle')          # the first picture of the same action,
+            self.assertEqual(night.pose('typing'), 'night:typing')      # every other action its own picture.
+            self.assertEqual(night.pose('sad'), 'night:sad')
         night.poll(at(12))
         with mock.patch('pet_assets.has_own_art', return_value=True):
             self.assertEqual(night.pose('idle'), 'idle')
@@ -230,7 +234,7 @@ class PanelRestTest(PanelCase):
         self.panel.night_mode._set(True)
         with mock.patch.object(type(self.panel.activity.state), 'state', return_value='typing'):
             self.pet.update_activity()
-        self.assertEqual(self.pet.current_state, 'night_read')
+        self.assertEqual(self.pet.current_state, 'night:typing')    # Her pajama picture of typing along.
 
     def test_sit_reminder_makes_her_stretch(self):
         self.pet.show()

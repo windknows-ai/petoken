@@ -23,6 +23,8 @@ from PySide6.QtCore import QObject, QTimer, Signal
 
 # Night versions of her poses: shown instead of these while it is night;
 # any other pose becomes night_idle.
+# The pajama pictures drawn first that show the very same action (kept over the full set).
+SAME_ACTION = frozenset({'idle', 'sleep', 'yawn', 'greet_night', 'wake_stretch'})
 NIGHT_POSES = {'idle': 'night_idle', 'sleep': 'night_sleep', 'yawn': 'night_yawn', 'greet_night': 'night_goodnight',
                'wake_stretch': 'night_wake', 'bored': 'night_read', 'peek': 'night_milk', 'focus_tea': 'night_milk'}
 # An AI at work: she reads along under her blanket.
@@ -123,6 +125,9 @@ class NightMode(QObject):
         if pose.startswith(('night_', 'night:')):
             return pose
         import pet_assets
+        own = NIGHT_POSES.get(pose)
+        if pose in SAME_ACTION and pet_assets.has_own_art(own):
+            return own                                      # The first pajama pictures of this very action.
         full = pet_assets.full_set('night', pose)           # Its own pajama picture of this action.
         if full:
             return full

@@ -47,8 +47,8 @@ class DecorTests(unittest.TestCase):
         drawn = [i for i in shop.CATALOG if i['set'] == 'outfit']
         self.assertEqual(Counter(i['series'] for i in drawn), Counter(starsea_gown=5, frost_coat=3))
         coat = shop.BY_ID['outfit.frost_coat_haori']
-        self.assertTrue(outfits.frame_path(coat, 'cheer').endswith('frost_coat/haori/celebrate_1.png'))
-        self.assertTrue(outfits.frame_path(coat, 'greet_morning', 1).endswith('wave_2.png'))
+        self.assertTrue(outfits.frame_path(coat, 'cheer').endswith('frost_coat/haori/cheer_1.png'))  # Its own picture.
+        self.assertTrue(outfits.frame_path(coat, 'greet_morning', 1).endswith('greet_morning_2.png'))
         self.assertTrue(outfits.frame_path(coat, 'idle', 0, blink=True).endswith('idle_blink.png'))
         self.assertTrue(outfits.frame_path(coat, 'some_new_pose').endswith('idle_1.png'))
         for own in ('star_idle', 'night_idle', 'game_cheer', 'form2_idle'):
@@ -195,8 +195,7 @@ class OwnFitAndFullSetTests(unittest.TestCase):
         pet_assets._FULL_CACHE['night:typing'] = True
         pet_assets._FULL_CACHE['star:hug'] = True
         self.assertEqual(pet_assets.full_set('night', 'typing'), 'night:typing')
-        self.assertIsNone(pet_assets.full_set('night', 'hug') if not pet_assets._file(
-            pet_assets._FORM_ENTRIES['night:hug'].path).is_file() else None)
+        self.assertIsNone(pet_assets.full_set('night', 'no_such_action'))
         from night_mode import NightMode
         night = NightMode.__new__(NightMode)
         night.active = True

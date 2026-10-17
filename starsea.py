@@ -69,6 +69,9 @@ class StarseaForm:
         if not self.active or pose.startswith(OTHER_FORMS):
             return pose
         import pet_assets
+        own = f'star_{pose}'
+        if own in STAR_POSES.values() and pet_assets.has_own_art(own):
+            return own                                       # The first Starsea pictures of this very action.
         full = pet_assets.full_set('star', pose)             # Its own Starsea picture of this action.
         if full:
             return full
