@@ -1,0 +1,925 @@
+{
+    "validation":  "fanxing-validation.txt",
+    "tool":  "built-in imagegen",
+    "branch":  "codex/outfits-frost-coat",
+    "base":  "8eee7f5",
+    "complete":  true,
+    "task":  "41 action families /96 exact table filenames;83 new files per tier",
+    "tier":  "fanxing",
+    "pending":  [
+
+                ],
+    "immutable_step1_files":  72,
+    "recovery":  "D:\\Documents\\ChatGPT\\petoken-takeover-backups\\frost-coat-step2",
+    "requested_additions":  83,
+    "spec_source":  "petoken-claude/docs/form_art/FORM_ART_4_FROST_COAT.md as inspected after28d3619 merge",
+    "completed":  [
+                      "codex_working_1",
+                      "microphone_1",
+                      "music_1",
+                      "guitar_1",
+                      "coquettish_1",
+                      "coquettish_2",
+                      "coquettish_3",
+                      "coquettish_4",
+                      "coquettish_blink",
+                      "headpat_happy_1",
+                      "headpat_happy_2",
+                      "headpat_happy_3",
+                      "headpat_happy_4",
+                      "headpat_happy_blink",
+                      "sleep_3",
+                      "bored_1",
+                      "bored_2",
+                      "bored_3",
+                      "bored_blink",
+                      "yawn_1",
+                      "yawn_2",
+                      "yawn_3",
+                      "wake_stretch_1",
+                      "wake_stretch_2",
+                      "curious_1",
+                      "curious_2",
+                      "curious_blink",
+                      "thinking_blink",
+                      "shy_1",
+                      "shy_2",
+                      "pout_1",
+                      "pout_2",
+                      "pout_blink",
+                      "dragged_2",
+                      "dragged_3",
+                      "dragged_4",
+                      "landing_1",
+                      "landing_blink",
+                      "hug_1",
+                      "hug_2",
+                      "hug_blink",
+                      "heart_1",
+                      "greet_morning_1",
+                      "greet_morning_2",
+                      "greet_morning_blink",
+                      "greet_night_1",
+                      "greet_night_2",
+                      "surprised_1",
+                      "thumbs_up_1",
+                      "thumbs_up_blink",
+                      "cheer_1",
+                      "cheer_2",
+                      "cheer_blink",
+                      "clap_1",
+                      "clap_2",
+                      "clap_3",
+                      "clap_blink",
+                      "peek_1",
+                      "peek_2",
+                      "grievance_1",
+                      "grievance_2",
+                      "focus_read_1",
+                      "focus_read_2",
+                      "focus_read_3",
+                      "focus_read_4",
+                      "focus_read_blink",
+                      "focus_tea_1",
+                      "focus_tea_2",
+                      "focus_done_1",
+                      "focus_done_blink",
+                      "stretch_break_1",
+                      "stretch_break_2",
+                      "stretch_break_blink",
+                      "hold_card_1",
+                      "hold_card_blink",
+                      "packing_1",
+                      "packing_blink",
+                      "ready_go_1",
+                      "ready_go_blink",
+                      "worried_1",
+                      "worried_2",
+                      "worried_blink",
+                      "proud_1"
+                  ],
+    "blink_records":  [
+                          {
+                              "reference":  "assets/v2_0/coquettish_blink.png",
+                              "parent":  "coquettish_1",
+                              "boxes":  [
+                                            523,
+                                            573,
+                                            746,
+                                            737,
+                                            802,
+                                            617,
+                                            955,
+                                            753
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "coquettish_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/headpat_happy_blink.png",
+                              "parent":  "headpat_happy_1",
+                              "boxes":  [
+                                            527,
+                                            625,
+                                            724,
+                                            729,
+                                            803,
+                                            666,
+                                            947,
+                                            757
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "headpat_happy_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/bored_blink.png",
+                              "parent":  "bored_1",
+                              "boxes":  [
+                                            722,
+                                            763,
+                                            924,
+                                            895,
+                                            973,
+                                            714,
+                                            1143,
+                                            878
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "bored_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/curious_blink.png",
+                              "parent":  "curious_1",
+                              "boxes":  [
+                                            455,
+                                            497,
+                                            653,
+                                            654,
+                                            722,
+                                            637,
+                                            910,
+                                            764
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "curious_blink"
+                          },
+                          {
+                              "method":  "generated closed-eyelid donor on accepted parent; non-eye pixels and alpha retained",
+                              "frame":  "thinking_blink",
+                              "reference":  "assets/v2_0/thinking_blink.png",
+                              "boxes":  [
+                                            522,
+                                            540,
+                                            725,
+                                            679,
+                                            783,
+                                            584,
+                                            956,
+                                            726
+                                        ],
+                              "parent":  "thinking_1",
+                              "edit":  {
+                                           "tier":  "fanxing",
+                                           "frame":  "thinking_blink",
+                                           "reference":  "assets/v2_0/thinking_blink.png",
+                                           "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-957feae7-49c1-4f80-81b0-240c7b8560da.png",
+                                           "prompt":  "Use case: precise-object-edit. Image1 is the EDIT TARGET, accepted FANXING thinking_1 winter-coat sprite. Image2 is ONLY an example of peacefully closed eyelids from the default thinking_blink; ignore its head, body, pose and costume. Change ONLY image1\u0027s two open eyes to closed relaxed eyelids, preserving its exact eyelid centers and face geometry. Preserve the smile, eyebrows, cheeks, hair, hair ornaments, coat, seated pose, hand against cheek, boots, all effects and every non-eye pixel. No other change. Original 1254x1254 RGBA square, transparent background, identical scale/placement and outline. No text or added elements. This is an eyes-only animation sibling of image1.",
+                                           "eyes_only":  true
+                                       }
+                          },
+                          {
+                              "reference":  "assets/v2_0/pout_blink.png",
+                              "parent":  "pout_1",
+                              "boxes":  [
+                                            498,
+                                            442,
+                                            726,
+                                            603,
+                                            766,
+                                            493,
+                                            930,
+                                            627
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "pout_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/landing_blink.png",
+                              "parent":  "landing_1",
+                              "boxes":  [
+                                            549,
+                                            616,
+                                            774,
+                                            771,
+                                            787,
+                                            630,
+                                            980,
+                                            786
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "landing_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/hug_blink.png",
+                              "parent":  "hug_1",
+                              "boxes":  [
+                                            428,
+                                            411,
+                                            657,
+                                            583,
+                                            699,
+                                            471,
+                                            905,
+                                            628
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "hug_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/greet_morning_blink.png",
+                              "parent":  "greet_morning_1",
+                              "boxes":  [
+                                            719,
+                                            526,
+                                            896,
+                                            660
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "greet_morning_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/thumbs_up_blink.png",
+                              "parent":  "thumbs_up_1",
+                              "boxes":  [
+                                            531,
+                                            439,
+                                            730,
+                                            588,
+                                            760,
+                                            532,
+                                            932,
+                                            677
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "thumbs_up_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/cheer_blink.png",
+                              "parent":  "cheer_1",
+                              "boxes":  [
+                                            492,
+                                            457,
+                                            702,
+                                            607,
+                                            749,
+                                            526,
+                                            936,
+                                            672
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "cheer_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/clap_blink.png",
+                              "parent":  "clap_1",
+                              "boxes":  [
+                                            468,
+                                            499,
+                                            660,
+                                            627,
+                                            713,
+                                            510,
+                                            887,
+                                            652
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "clap_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/focus_read_blink.png",
+                              "parent":  "focus_read_1",
+                              "boxes":  [
+                                            523,
+                                            601,
+                                            718,
+                                            726,
+                                            777,
+                                            622,
+                                            941,
+                                            750
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "focus_read_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/focus_done_blink.png",
+                              "parent":  "focus_done_1",
+                              "boxes":  [
+                                            493,
+                                            439,
+                                            677,
+                                            579,
+                                            706,
+                                            498,
+                                            876,
+                                            629
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "focus_done_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/stretch_break_blink.png",
+                              "parent":  "stretch_break_1",
+                              "boxes":  [
+                                            593,
+                                            380,
+                                            753,
+                                            513,
+                                            762,
+                                            484,
+                                            914,
+                                            627
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "stretch_break_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/hold_card_blink.png",
+                              "parent":  "hold_card_1",
+                              "boxes":  [
+                                            449,
+                                            477,
+                                            664,
+                                            626,
+                                            715,
+                                            514,
+                                            892,
+                                            653
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "hold_card_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/packing_blink.png",
+                              "parent":  "packing_1",
+                              "boxes":  [
+                                            446,
+                                            468,
+                                            608,
+                                            586,
+                                            697,
+                                            530,
+                                            863,
+                                            646
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "packing_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/ready_go_blink.png",
+                              "parent":  "ready_go_1",
+                              "boxes":  [
+                                            477,
+                                            457,
+                                            712,
+                                            628,
+                                            744,
+                                            537,
+                                            914,
+                                            679
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "ready_go_blink"
+                          },
+                          {
+                              "reference":  "assets/v2_0/worried_blink.png",
+                              "parent":  "worried_1",
+                              "boxes":  [
+                                            521,
+                                            487,
+                                            714,
+                                            603,
+                                            755,
+                                            526,
+                                            911,
+                                            645
+                                        ],
+                              "method":  "exact default eye-mask RGB differences; new parent alpha retained",
+                              "frame":  "worried_blink"
+                          }
+                      ],
+    "direct_redraws":  [
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "bored_1",
+                               "reference":  "assets/v2_0/bored_1.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7c3cd05a-7940-445b-bfbe-4faa313df6dc.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/bored_1.png animation frame bored_1 for action \"无聊趴着\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "bored_2",
+                               "reference":  "assets/v2_0/bored_2.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-8de8e6cc-9bac-44d3-a7b1-4a72e56c9853.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/bored_2.png animation frame bored_2 for action \"无聊趴着\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "bored_3",
+                               "reference":  "assets/v2_0/bored_3.png",
+                               "action":  "无聊趴着",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ea789fd0-8596-43a0-bb41-fec5aaf4ed6e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/bored_3.png animation frame bored_3 for action \"无聊趴着\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "cheer_1",
+                               "reference":  "assets/v2_0/cheer_1.png",
+                               "action":  "加油",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9fb343da-586b-484e-8756-81c53b3a7ad8.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/cheer_1.png animation frame cheer_1 for action \"加油\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "cheer_2",
+                               "reference":  "assets/v2_0/cheer_2.png",
+                               "action":  "加油",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-55a6bdf4-8823-4bbe-b985-96914f6f3451.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/cheer_2.png animation frame cheer_2 for action \"加油\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "clap_1",
+                               "reference":  "assets/v2_0/clap_1.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2acd9298-a619-40fa-b76d-8248a55c4017.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/clap_1.png animation frame clap_1 for action \"鼓掌\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "clap_2",
+                               "reference":  "assets/v2_0/clap_2.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-f768b79c-540f-40a8-9008-b59dd450e970.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/clap_2.png animation frame clap_2 for action \"鼓掌\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "clap_3",
+                               "reference":  "assets/v2_0/clap_3.png",
+                               "action":  "鼓掌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-574e8c47-605c-44fc-b075-fee157a847ee.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/clap_3.png animation frame clap_3 for action \"鼓掌\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "codex_working_1",
+                               "reference":  "assets/v1_1/working.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7ba8533f-d9bb-4163-b82d-fc865987ddab.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET: canonical default working.png, sitting and writing with a feather quill while looking at an open book. Image2 is CLOTHING DESIGN reference only: accepted FANXING frost coat. Replace ONLY image1\u0027s outfit with the same plain dark desaturated slate gray-blue wool winter coat and gray-white fluffy collar/cuffs/hem, single layer, two plain cloth buttons, no gold/silver/pearl trim, no embroidery, cape or garment glow. Adapt the winter coat to the EXACT pose from image1. Preserve EXACT original head/face/hair shapes and ornaments, focused half-open eyes, expression, feather quill, gloved hand, open book and holographic symbolic pages, other hand and bare knees, navy boots and their tilted position/baseline. Keep every body anchor at the same coordinates; do NOT copy image2\u0027s head or pose or add its moon hair clip. Retain original book shapes/props but replace any letter-like marks with abstract simple geometric symbols: no readable words/letters/numbers. Polished anime chibi navy lineart and cel shading matching accepted artwork. Original1254x1254 RGBA canvas, true transparency, no background, ground shadow, text or crop. Change clothing only, original framing and scale must stay exact."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "coquettish_1",
+                               "reference":  "assets/v2_0/coquettish_1.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b15240e0-595b-4548-8f30-a8c820b1e61b.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_1.png animation frame coquettish_1 for action \"撒娇\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "coquettish_2",
+                               "reference":  "assets/v2_0/coquettish_2.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e52f27a4-f096-4095-8184-e007f63bd625.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_2.png animation frame coquettish_2 for action \"撒娇\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "coquettish_3",
+                               "reference":  "assets/v2_0/coquettish_3.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9bd325cf-5cf9-4794-82a1-55a617083145.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_3.png animation frame coquettish_3 for action \"撒娇\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "coquettish_4",
+                               "reference":  "assets/v2_0/coquettish_4.png",
+                               "action":  "撒娇",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-5b5598e2-014d-4c42-84ad-490ae487afb5.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/coquettish_4.png animation frame coquettish_4 for action \"撒娇\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "curious_1",
+                               "reference":  "assets/v2_0/curious_1.png",
+                               "action":  "好奇凑近",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-d724a84c-fc6a-42ea-95fe-9e7657ad6aee.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/curious_1.png animation frame curious_1 for action \"好奇凑近\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "curious_2",
+                               "reference":  "assets/v2_0/curious_2.png",
+                               "action":  "好奇凑近",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-61e1c4ed-7db8-41d1-8c5a-b277715e5568.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/curious_2.png animation frame curious_2 for action \"好奇凑近\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "dragged_2",
+                               "reference":  "assets/v2_0/dragged_2.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b659d844-ee42-4efe-8387-72a263ffa0ad.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/dragged_2.png animation frame dragged_2 for action \"被拎起来\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "dragged_3",
+                               "reference":  "assets/v2_0/dragged_3.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7b18d054-f162-4b1c-b5c5-755d913bdaca.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/dragged_3.png animation frame dragged_3 for action \"被拎起来\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "dragged_4",
+                               "reference":  "assets/v2_0/dragged_4.png",
+                               "action":  "被拎起来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9a581f35-76be-405f-9f9a-5ce83aa33ff4.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/dragged_4.png animation frame dragged_4 for action \"被拎起来\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "focus_done_1",
+                               "reference":  "assets/v2_0/focus_done_1.png",
+                               "action":  "专注完成",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-6ab5371b-ea2f-4b9c-b288-1fd39237be2e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/focus_done_1.png animation frame focus_done_1 for action \"专注完成\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "focus_read_1",
+                               "reference":  "assets/v2_0/focus_read_1.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-080c1cc7-8273-41bb-9270-f962cceefddd.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/focus_read_1.png animation frame focus_read_1 for action \"陪你看书\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "focus_read_2",
+                               "reference":  "assets/v2_0/focus_read_2.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7b05906f-7c10-47b6-9479-71858fda4bf0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/focus_read_2.png animation frame focus_read_2 for action \"陪你看书\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "focus_read_3",
+                               "reference":  "assets/v2_0/focus_read_3.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-4652156b-c310-40f4-a8d0-195b452340dd.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/focus_read_3.png animation frame focus_read_3 for action \"陪你看书\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "focus_read_4",
+                               "reference":  "assets/v2_0/focus_read_4.png",
+                               "action":  "陪你看书",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-acdfbcc4-e722-4ccc-819a-2f48c39b5612.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/focus_read_4.png animation frame focus_read_4 for action \"陪你看书\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "focus_tea_1",
+                               "reference":  "assets/v2_0/focus_tea_1.png",
+                               "action":  "喝茶休息",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-ba83c3bd-dd57-45e3-8de7-176b014fab4c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/focus_tea_1.png animation frame focus_tea_1 for action \"喝茶休息\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "focus_tea_2",
+                               "reference":  "assets/v2_0/focus_tea_2.png",
+                               "action":  "喝茶休息",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-2cd7bf30-5d41-4512-a5a4-ed76d6ecdd52.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/focus_tea_2.png animation frame focus_tea_2 for action \"喝茶休息\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "greet_morning_1",
+                               "reference":  "assets/v2_0/greet_morning_1.png",
+                               "action":  "早安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-674c3ffa-eddf-4da2-812d-c302ae3e4a68.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/greet_morning_1.png animation frame greet_morning_1 for action \"早安\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "greet_morning_2",
+                               "reference":  "assets/v2_0/greet_morning_2.png",
+                               "action":  "早安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-274c4e2e-f57a-4803-acd8-52ac8c4d0a99.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/greet_morning_2.png animation frame greet_morning_2 for action \"早安\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "greet_night_1",
+                               "reference":  "assets/v2_0/greet_night_1.png",
+                               "action":  "晚安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9551f70f-46f9-4cba-8583-408316cfdca4.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/greet_night_1.png animation frame greet_night_1 for action \"晚安\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "greet_night_2",
+                               "reference":  "assets/v2_0/greet_night_2.png",
+                               "action":  "晚安",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-6721d13a-f2d7-4e73-801e-e753ef924e84.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/greet_night_2.png animation frame greet_night_2 for action \"晚安\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "grievance_1",
+                               "reference":  "assets/v2_0/grievance_1.png",
+                               "action":  "委屈",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e205fa82-04b2-4200-a2d3-9014cecf5901.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/grievance_1.png animation frame grievance_1 for action \"委屈\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "grievance_2",
+                               "reference":  "assets/v2_0/grievance_2.png",
+                               "action":  "委屈",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-9096fc0c-cc5f-4575-a72b-29b641f717b1.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/grievance_2.png animation frame grievance_2 for action \"委屈\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "guitar_1",
+                               "reference":  "assets/v1_1/guitar.png",
+                               "action":  "弹吉他",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-531d129e-bf28-40b3-b4ec-ec3a85d1cdea.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v1_1/guitar.png animation frame guitar_1 for action \"弹吉他\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "headpat_happy_1",
+                               "reference":  "assets/v2_0/headpat_happy_1.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-b4e1f44b-ec57-47cd-ba74-210e2628437d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/headpat_happy_1.png animation frame headpat_happy_1 for action \"被摸头\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "headpat_happy_2",
+                               "reference":  "assets/v2_0/headpat_happy_2.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-f786ff70-d58d-4cc4-b4b5-f8390ccda6d5.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/headpat_happy_2.png animation frame headpat_happy_2 for action \"被摸头\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "headpat_happy_3",
+                               "reference":  "assets/v2_0/headpat_happy_3.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a6149745-5454-4c6d-9fdb-7be013fe8551.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/headpat_happy_3.png animation frame headpat_happy_3 for action \"被摸头\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "headpat_happy_4",
+                               "reference":  "assets/v2_0/headpat_happy_4.png",
+                               "action":  "被摸头",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-530caf88-4a23-45b6-b643-db45bbe183d8.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/headpat_happy_4.png animation frame headpat_happy_4 for action \"被摸头\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "heart_1",
+                               "reference":  "assets/v2_0/heart_1.png",
+                               "action":  "比心",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-1b766ba8-b08d-41ab-b125-914b84359805.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/heart_1.png animation frame heart_1 for action \"比心\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "hold_card_1",
+                               "reference":  "assets/v2_0/hold_card_1.png",
+                               "action":  "举着卡片",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e62de16c-ba3b-4014-8608-bb4c01c717eb.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/hold_card_1.png animation frame hold_card_1 for action \"举着卡片\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "hug_1",
+                               "reference":  "assets/v2_0/hug_1.png",
+                               "action":  "欢迎回来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-f290a4e5-afed-4d39-a985-65672546a68c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/hug_1.png animation frame hug_1 for action \"欢迎回来\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "hug_2",
+                               "reference":  "assets/v2_0/hug_2.png",
+                               "action":  "欢迎回来",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e9f773b5-3c21-4d2d-b32c-77100c04fd2a.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/hug_2.png animation frame hug_2 for action \"欢迎回来\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "landing_1",
+                               "reference":  "assets/v2_0/landing_1.png",
+                               "action":  "落地",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-bb894717-eca9-407c-ad30-01d3d7cd91a0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/landing_1.png animation frame landing_1 for action \"落地\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "microphone_1",
+                               "reference":  "assets/v1_1/microphone.png",
+                               "action":  "说话",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-7336b880-9a27-4fc7-a2a6-9196797cf23b.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v1_1/microphone.png animation frame microphone_1 for action \"说话\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "music_1",
+                               "reference":  "assets/v1_1/music.png",
+                               "action":  "听歌",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-20cee0a7-dbdb-404b-8c23-d9175a778dac.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v1_1/music.png animation frame music_1 for action \"听歌\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "packing_1",
+                               "reference":  "assets/v2_0/packing_1.png",
+                               "action":  "收拾东西",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-38887391-1280-43d5-9a6e-e35b26cf0eea.png",
+                               "prompt":  "Use case: identity-preserve. Image 1 is EDIT TARGET: default animation frame packing_1, packing documents. Image 2 is CLOTHING STYLE ONLY: accepted FANXING frost coat. Redraw ONLY the outfit in image 1 into the same plain matte dark desaturated slate gray-blue wool coat: single layer, compact shoulders, simple flared hem, gray-white fluffy collar/cuffs/hem, two plain cloth-covered buttons. Keep the person fully clothed in a modest winter coat. Remove old ornate navy armor, stars and moon hardware wherever covered by the coat. No silver/gold/pearls/embroidery/cape/ribbons or garment glow. Preserve image 1 exactly for head, hair, hair ornaments, face/expression, eyes, gloved hands, paper documents, arm and leg positions, dark boots, foot positions, size and canvas placement. Do not copy image 2 pose or head. Original 1254x1254 RGBA square, transparent background, unchanged framing with no crop or rescale. Clean navy outlines and soft anime chibi cel shading matching image 2. No added text, watermark, ground, halo or particles."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "peek_1",
+                               "reference":  "assets/v2_0/peek_1.png",
+                               "action":  "躲着偷看你",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-e06d3602-67dd-45c9-8428-5f90bbf01bc9.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/peek_1.png animation frame peek_1 for action \"躲着偷看你\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "peek_2",
+                               "reference":  "assets/v2_0/peek_2.png",
+                               "action":  "躲着偷看你",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-5a2d419b-5bfc-408e-bd84-807ec02ae1d6.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/peek_2.png animation frame peek_2 for action \"躲着偷看你\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "pout_1",
+                               "reference":  "assets/v2_0/pout_1.png",
+                               "action":  "鼓脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-032c1a3b-b1ed-4d99-b791-7c9686118968.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/pout_1.png animation frame pout_1 for action \"鼓脸\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "pout_2",
+                               "reference":  "assets/v2_0/pout_2.png",
+                               "action":  "鼓脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-651ee1bd-779d-4581-ba63-faa001a89762.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/pout_2.png animation frame pout_2 for action \"鼓脸\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "proud_1",
+                               "reference":  "assets/v2_0/proud_1.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-85f1d1dd-bd9d-4f2f-9646-d358fd1c5920.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/proud_1.png animation frame. Image2 is accepted FANXING frost coat CLOTHING reference ONLY. Change ONLY the outfit in image1 to image2\u0027s same plain matte dark desaturated slate gray-blue wool winter coat, SINGLE layer, compact shoulder silhouette, simple flared hem, gray-white fluffy collar/cuffs/hem, two plain cloth-covered buttons. The new winter coat is fully covering torso and arms, with long sleeves to the cuffs. Naturally adapt it to image1\u0027s exact pose. Remove old navy armor, moon/star costume hardware and purple waist panels where covered. No metal trim, pearls, embroidery, cape, ribbons, extra layers or garment glow. Preserve image1 exactly: head/hair silhouette and ornaments, facial expression/eyes/mouth, original hands and gestures, all arm/leg positions, boots and foot positions, props and emotional symbols. No new symbols. Keep original 1254x1254 RGBA canvas, scale, placement and transparent background; no crop/rescale/reposition. Anime chibi clean navy outlines and soft cel shading match accepted garment. No text/watermark/background/ground/halo. Do not copy image2\u0027s head, face or pose.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "ready_go_1",
+                               "reference":  "assets/v2_0/ready_go_1.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c3c4dc5e-f314-49a7-8499-cd13508feb86.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/ready_go_1.png animation frame. Image2 is accepted FANXING frost coat CLOTHING reference ONLY. Change ONLY the outfit in image1 to image2\u0027s same plain matte dark desaturated slate gray-blue wool winter coat, SINGLE layer, compact shoulder silhouette, simple flared hem, gray-white fluffy collar/cuffs/hem, two plain cloth-covered buttons. The new winter coat is fully covering torso and arms, with long sleeves to the cuffs. Naturally adapt it to image1\u0027s exact pose. Remove old navy armor, moon/star costume hardware and purple waist panels where covered. No metal trim, pearls, embroidery, cape, ribbons, extra layers or garment glow. Preserve image1 exactly: head/hair silhouette and ornaments, facial expression/eyes/mouth, original hands and gestures, all arm/leg positions, boots and foot positions, props and emotional symbols. No new symbols. Keep original 1254x1254 RGBA canvas, scale, placement and transparent background; no crop/rescale/reposition. Anime chibi clean navy outlines and soft cel shading match accepted garment. No text/watermark/background/ground/halo. Do not copy image2\u0027s head, face or pose.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "shy_1",
+                               "reference":  "assets/v2_0/shy_1.png",
+                               "action":  "害羞捂脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-58eb1e1d-f11f-4d2d-8920-a457002c4bdd.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/shy_1.png animation frame shy_1 for action \"害羞捂脸\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "shy_2",
+                               "reference":  "assets/v2_0/shy_2.png",
+                               "action":  "害羞捂脸",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-494050e4-2c11-446f-9e94-4c96cde76bc0.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/shy_2.png animation frame shy_2 for action \"害羞捂脸\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "sleep_3",
+                               "reference":  "assets/v2_0/sleep_3.png",
+                               "action":  "趴着睡",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-76e4527d-ca42-4520-9524-71eaee7e0e68.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/sleep_3.png animation frame sleep_3 for action \"趴着睡\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "stretch_break_1",
+                               "reference":  "assets/v2_0/stretch_break_1.png",
+                               "action":  "起来活动",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-521d05c8-9058-4e1b-b404-d25527e086ca.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/stretch_break_1.png animation frame stretch_break_1 for action \"起来活动\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "stretch_break_2",
+                               "reference":  "assets/v2_0/stretch_break_2.png",
+                               "action":  "起来活动",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-4be37b4a-6e71-4b3b-bbc5-5b55626eacf7.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/stretch_break_2.png animation frame stretch_break_2 for action \"起来活动\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "surprised_1",
+                               "reference":  "assets/v2_0/surprised_1.png",
+                               "action":  "吓一跳",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-737e88cd-fdd4-4673-9aea-407b71b9ee96.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/surprised_1.png animation frame surprised_1 for action \"吓一跳\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "thumbs_up_1",
+                               "reference":  "assets/v2_0/thumbs_up_1.png",
+                               "action":  "点赞",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-a9056f43-5149-4d5c-b4ae-e954ef71f834.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/thumbs_up_1.png animation frame thumbs_up_1 for action \"点赞\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "wake_stretch_1",
+                               "reference":  "assets/v2_0/wake_stretch_1.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-c0a7fda2-106d-4107-b2b9-b0e7587c6776.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/wake_stretch_1.png animation frame. Image2 is accepted FANXING frost coat CLOTHING reference ONLY. Change ONLY the outfit in image1 to image2\u0027s same plain matte dark desaturated slate gray-blue wool winter coat, SINGLE layer, compact shoulder silhouette, simple flared hem, gray-white fluffy collar/cuffs/hem, two plain cloth-covered buttons. The new winter coat is fully covering torso and arms, with long sleeves to the cuffs. Naturally adapt it to image1\u0027s exact pose. Remove old navy armor, moon/star costume hardware and purple waist panels where covered. No metal trim, pearls, embroidery, cape, ribbons, extra layers or garment glow. Preserve image1 exactly: head/hair silhouette and ornaments, facial expression/eyes/mouth, original hands and gestures, all arm/leg positions, boots and foot positions, props and emotional symbols. No new symbols. Keep original 1254x1254 RGBA canvas, scale, placement and transparent background; no crop/rescale/reposition. Anime chibi clean navy outlines and soft cel shading match accepted garment. No text/watermark/background/ground/halo. Do not copy image2\u0027s head, face or pose.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "wake_stretch_2",
+                               "reference":  "assets/v2_0/wake_stretch_2.png",
+                               "action":  "醒来伸懒腰",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-0a4a8a7a-246a-43a0-a740-4a8f80df2409.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/wake_stretch_2.png animation frame wake_stretch_2 for action \"醒来伸懒腰\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "worried_1",
+                               "reference":  "assets/v2_0/worried_1.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-782c1084-f5c4-4e11-b524-af943211dc1d.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/worried_1.png animation frame. Image2 is accepted FANXING frost coat CLOTHING reference ONLY. Change ONLY the outfit in image1 to image2\u0027s same plain matte dark desaturated slate gray-blue wool winter coat, SINGLE layer, compact shoulder silhouette, simple flared hem, gray-white fluffy collar/cuffs/hem, two plain cloth-covered buttons. The new winter coat is fully covering torso and arms, with long sleeves to the cuffs. Naturally adapt it to image1\u0027s exact pose. Remove old navy armor, moon/star costume hardware and purple waist panels where covered. No metal trim, pearls, embroidery, cape, ribbons, extra layers or garment glow. Preserve image1 exactly: head/hair silhouette and ornaments, facial expression/eyes/mouth, original hands and gestures, all arm/leg positions, boots and foot positions, props and emotional symbols. No new symbols. Keep original 1254x1254 RGBA canvas, scale, placement and transparent background; no crop/rescale/reposition. Anime chibi clean navy outlines and soft cel shading match accepted garment. No text/watermark/background/ground/halo. Do not copy image2\u0027s head, face or pose.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "worried_2",
+                               "reference":  "assets/v2_0/worried_2.png",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-76f9e6d2-469e-453b-88a1-6403084bfd0f.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/worried_2.png animation frame. Image2 is accepted FANXING frost coat CLOTHING reference ONLY. Change ONLY the outfit in image1 to image2\u0027s same plain matte dark desaturated slate gray-blue wool winter coat, SINGLE layer, compact shoulder silhouette, simple flared hem, gray-white fluffy collar/cuffs/hem, two plain cloth-covered buttons. The new winter coat is fully covering torso and arms, with long sleeves to the cuffs. Naturally adapt it to image1\u0027s exact pose. Remove old navy armor, moon/star costume hardware and purple waist panels where covered. No metal trim, pearls, embroidery, cape, ribbons, extra layers or garment glow. Preserve image1 exactly: head/hair silhouette and ornaments, facial expression/eyes/mouth, original hands and gestures, all arm/leg positions, boots and foot positions, props and emotional symbols. No new symbols. Keep original 1254x1254 RGBA canvas, scale, placement and transparent background; no crop/rescale/reposition. Anime chibi clean navy outlines and soft cel shading match accepted garment. No text/watermark/background/ground/halo. Do not copy image2\u0027s head, face or pose.",
+                               "eyes_only":  false
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "yawn_1",
+                               "reference":  "assets/v2_0/yawn_1.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-22d762de-e03b-40d3-aec7-52757ecffa1c.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/yawn_1.png animation frame yawn_1 for action \"打哈欠\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "yawn_2",
+                               "reference":  "assets/v2_0/yawn_2.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-20050040-b504-4ef4-b5c8-d9a739308f54.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/yawn_2.png animation frame yawn_2 for action \"打哈欠\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           },
+                           {
+                               "tier":  "fanxing",
+                               "frame":  "yawn_3",
+                               "reference":  "assets/v2_0/yawn_3.png",
+                               "action":  "打哈欠",
+                               "raw":  "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-cbc4-7b90-a363-2964a4618f6c\\exec-bcc171fc-5fce-4faf-949d-417f25d8949e.png",
+                               "prompt":  "Use case: identity-preserve. Image1 is EDIT TARGET, exact DEFAULT assets/v2_0/yawn_3.png animation frame yawn_3 for action \"打哈欠\". Image2 is the user-accepted FANXING frost coat CLOTHING reference ONLY. REDRAW ONLY the clothing in image1 to the winter outfit of image2, naturally adapting sleeves/hem to image1\u0027s EXACT pose. Outfit: Same accepted plain dark desaturated slate gray-blue wool coat, SINGLE fabric layer and simple flared hem, modest gray-white fluffy collar/cuffs/hem, TWO plain cloth-covered buttons; no gold/silver/pearl trim, embroidery, cape, ribbons or garment glow. Minimal compact shoulder silhouette. Do not add layers. Lock image1\u0027s framing, full body size and position, head/hair outline and ornaments, original face/expression, eye open/closed state, all hand/arm/leg positions and gloved hands, exposed skin, dark boots and exact foot positions/baseline. KEEP original objects, props and emotional symbols in the same positions. Do not copy image2\u0027s pose, expression, boots, moon clip or head. Do not add or remove a hand, body part or prop. Under the coat remove the original armor/dress decorations wherever covered; don\u0027t keep purple armor at shoulders/waist. Polished anime chibi clean navy outlines and soft cel-shading consistent with accepted coat. Original1254x1254 RGBA square, TRUE transparent background, no text, watermark, ground or added effects. Original drawn symbols/music notes/heart/check-mark may remain; no new writing. No repositioning, rescaling or cropping. Sibling frames must keep the same garment design; only the subtle original pose/expression movements change."
+                           }
+                       ],
+    "completed_additions":  83
+}
