@@ -204,3 +204,17 @@ class OwnFitAndFullSetTests(unittest.TestCase):
         sea.__dict__['active'] = True
         self.assertEqual(sea.pose('hug'), 'star:hug')
         self.assertEqual(sea.pose('night:typing'), 'night:typing')   # Another form's picture stays.
+
+    def test_full_sets_load_from_webp_in_the_package(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        import pet_assets
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / 'assets'
+            (root / 'v2_5' / 'forms' / 'game').mkdir(parents=True)
+            (root / 'v2_5' / 'forms' / 'game' / 'hug_1.webp').write_bytes(b'x')
+            with mock.patch.object(pet_assets, 'ASSETS_DIR', root):
+                found = pet_assets._file('assets/v2_5/forms/game/hug_1.png')
+                self.assertEqual(found.suffix, '.webp')
+                self.assertEqual(pet_assets._file('assets/v2_0/idle_1.png').suffix, '.png')

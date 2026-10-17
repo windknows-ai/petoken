@@ -75,7 +75,12 @@ def _file(path):
             other = os.environ.get(env)
             if other:
                 return Path(other) / path[len(f"assets/{folder}/"):]
-    return ASSETS_DIR.parent / path
+    file = ASSETS_DIR.parent / path
+    if path.startswith('assets/v2_5/forms/') and path.endswith('.png') and not file.is_file():
+        webp = file.with_suffix('.webp')                  # The package carries the full sets as WebP.
+        if webp.is_file():
+            return webp
+    return file
 
 
 REGISTRY = (

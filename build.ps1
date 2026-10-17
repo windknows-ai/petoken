@@ -67,6 +67,11 @@ foreach ($folder in 'v2_3', 'v2_4') {
         & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" (Join-Path $internal "assets\$folder")
     }
 }
+# The forms' full sets (night, game, Starsea) too, as WebP (pet_assets._file reads either).
+foreach ($form in Get-ChildItem -Directory -Path (Join-Path $internal 'assets/v2_5/forms') -ErrorAction SilentlyContinue) {
+    & $python -c "import sys; sys.path.insert(0, r'$repo'); from tools.shrink_art import main; main(sys.argv[1])" $form.FullName
+    & $python (Join-Path $repo 'tools/to_webp.py') $form.FullName
+}
 # Outfit frames are her poses too: carried at the same 768 px.
 foreach ($folder in Get-ChildItem -Directory -Path (Join-Path $internal 'assets\v2_5\outfits') -ErrorAction SilentlyContinue) {
     foreach ($tier in Get-ChildItem -Directory -Path $folder.FullName) {
