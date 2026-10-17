@@ -1,0 +1,485 @@
+{
+  "method": "After FOOTER_CLEANUP, erase exact artificial fallback-fill RGB(231,224,249) below y1100, including fragments attached to socks; erase alpha1..3 fringe pixels over the whole frame. This removes invented contact-band pixels and low-alpha color speckles. No original assets changed.",
+  "frames": [
+    {
+      "frame": "idle_1",
+      "fallback_pixels_removed": 310,
+      "near_transparent_pixels_removed": 7961
+    },
+    {
+      "frame": "idle_blink",
+      "fallback_pixels_removed": 310,
+      "near_transparent_pixels_removed": 7961
+    },
+    {
+      "frame": "typing_1",
+      "fallback_pixels_removed": 150,
+      "near_transparent_pixels_removed": 8873
+    },
+    {
+      "frame": "typing_2",
+      "fallback_pixels_removed": 415,
+      "near_transparent_pixels_removed": 5199
+    },
+    {
+      "frame": "codex_working_1",
+      "fallback_pixels_removed": 132,
+      "near_transparent_pixels_removed": 12750
+    },
+    {
+      "frame": "microphone_1",
+      "fallback_pixels_removed": 139,
+      "near_transparent_pixels_removed": 5594
+    },
+    {
+      "frame": "music_1",
+      "fallback_pixels_removed": 937,
+      "near_transparent_pixels_removed": 9022
+    },
+    {
+      "frame": "guitar_1",
+      "fallback_pixels_removed": 127,
+      "near_transparent_pixels_removed": 10412
+    },
+    {
+      "frame": "celebrate_1",
+      "fallback_pixels_removed": 280,
+      "near_transparent_pixels_removed": 9246
+    },
+    {
+      "frame": "sad_1",
+      "fallback_pixels_removed": 282,
+      "near_transparent_pixels_removed": 9258
+    },
+    {
+      "frame": "wave_1",
+      "fallback_pixels_removed": 67,
+      "near_transparent_pixels_removed": 11073
+    },
+    {
+      "frame": "coquettish_1",
+      "fallback_pixels_removed": 465,
+      "near_transparent_pixels_removed": 5698
+    },
+    {
+      "frame": "coquettish_2",
+      "fallback_pixels_removed": 465,
+      "near_transparent_pixels_removed": 5698
+    },
+    {
+      "frame": "coquettish_3",
+      "fallback_pixels_removed": 465,
+      "near_transparent_pixels_removed": 5698
+    },
+    {
+      "frame": "coquettish_4",
+      "fallback_pixels_removed": 465,
+      "near_transparent_pixels_removed": 5698
+    },
+    {
+      "frame": "coquettish_blink",
+      "fallback_pixels_removed": 465,
+      "near_transparent_pixels_removed": 5698
+    },
+    {
+      "frame": "headpat_happy_1",
+      "fallback_pixels_removed": 488,
+      "near_transparent_pixels_removed": 7790
+    },
+    {
+      "frame": "headpat_happy_2",
+      "fallback_pixels_removed": 488,
+      "near_transparent_pixels_removed": 8014
+    },
+    {
+      "frame": "headpat_happy_3",
+      "fallback_pixels_removed": 488,
+      "near_transparent_pixels_removed": 8045
+    },
+    {
+      "frame": "headpat_happy_4",
+      "fallback_pixels_removed": 488,
+      "near_transparent_pixels_removed": 7973
+    },
+    {
+      "frame": "headpat_happy_blink",
+      "fallback_pixels_removed": 488,
+      "near_transparent_pixels_removed": 7790
+    },
+    {
+      "frame": "sleep_1",
+      "fallback_pixels_removed": 53,
+      "near_transparent_pixels_removed": 6622
+    },
+    {
+      "frame": "sleep_2",
+      "fallback_pixels_removed": 53,
+      "near_transparent_pixels_removed": 6441
+    },
+    {
+      "frame": "sleep_3",
+      "fallback_pixels_removed": 53,
+      "near_transparent_pixels_removed": 6603
+    },
+    {
+      "frame": "bored_1",
+      "fallback_pixels_removed": 1947,
+      "near_transparent_pixels_removed": 8208
+    },
+    {
+      "frame": "bored_2",
+      "fallback_pixels_removed": 1947,
+      "near_transparent_pixels_removed": 8465
+    },
+    {
+      "frame": "bored_3",
+      "fallback_pixels_removed": 1947,
+      "near_transparent_pixels_removed": 7896
+    },
+    {
+      "frame": "bored_blink",
+      "fallback_pixels_removed": 1947,
+      "near_transparent_pixels_removed": 8208
+    },
+    {
+      "frame": "yawn_1",
+      "fallback_pixels_removed": 123,
+      "near_transparent_pixels_removed": 5941
+    },
+    {
+      "frame": "yawn_2",
+      "fallback_pixels_removed": 123,
+      "near_transparent_pixels_removed": 5945
+    },
+    {
+      "frame": "yawn_3",
+      "fallback_pixels_removed": 123,
+      "near_transparent_pixels_removed": 5830
+    },
+    {
+      "frame": "wake_stretch_1",
+      "fallback_pixels_removed": 155,
+      "near_transparent_pixels_removed": 11525
+    },
+    {
+      "frame": "wake_stretch_2",
+      "fallback_pixels_removed": 155,
+      "near_transparent_pixels_removed": 11522
+    },
+    {
+      "frame": "curious_1",
+      "fallback_pixels_removed": 185,
+      "near_transparent_pixels_removed": 7234
+    },
+    {
+      "frame": "curious_2",
+      "fallback_pixels_removed": 915,
+      "near_transparent_pixels_removed": 12355
+    },
+    {
+      "frame": "curious_blink",
+      "fallback_pixels_removed": 185,
+      "near_transparent_pixels_removed": 7234
+    },
+    {
+      "frame": "thinking_1",
+      "fallback_pixels_removed": 64,
+      "near_transparent_pixels_removed": 5592
+    },
+    {
+      "frame": "thinking_2",
+      "fallback_pixels_removed": 64,
+      "near_transparent_pixels_removed": 5829
+    },
+    {
+      "frame": "thinking_blink",
+      "fallback_pixels_removed": 64,
+      "near_transparent_pixels_removed": 5592
+    },
+    {
+      "frame": "shy_1",
+      "fallback_pixels_removed": 7188,
+      "near_transparent_pixels_removed": 5321
+    },
+    {
+      "frame": "shy_2",
+      "fallback_pixels_removed": 7188,
+      "near_transparent_pixels_removed": 5297
+    },
+    {
+      "frame": "pout_1",
+      "fallback_pixels_removed": 195,
+      "near_transparent_pixels_removed": 7022
+    },
+    {
+      "frame": "pout_2",
+      "fallback_pixels_removed": 449,
+      "near_transparent_pixels_removed": 7008
+    },
+    {
+      "frame": "pout_blink",
+      "fallback_pixels_removed": 195,
+      "near_transparent_pixels_removed": 7022
+    },
+    {
+      "frame": "poked_1",
+      "fallback_pixels_removed": 1958,
+      "near_transparent_pixels_removed": 7155
+    },
+    {
+      "frame": "dragged_1",
+      "fallback_pixels_removed": 130,
+      "near_transparent_pixels_removed": 7752
+    },
+    {
+      "frame": "dragged_2",
+      "fallback_pixels_removed": 59,
+      "near_transparent_pixels_removed": 6934
+    },
+    {
+      "frame": "dragged_3",
+      "fallback_pixels_removed": 155,
+      "near_transparent_pixels_removed": 6316
+    },
+    {
+      "frame": "dragged_4",
+      "fallback_pixels_removed": 213,
+      "near_transparent_pixels_removed": 6338
+    },
+    {
+      "frame": "landing_1",
+      "fallback_pixels_removed": 139,
+      "near_transparent_pixels_removed": 7979
+    },
+    {
+      "frame": "landing_blink",
+      "fallback_pixels_removed": 139,
+      "near_transparent_pixels_removed": 7979
+    },
+    {
+      "frame": "hug_1",
+      "fallback_pixels_removed": 50,
+      "near_transparent_pixels_removed": 7045
+    },
+    {
+      "frame": "hug_2",
+      "fallback_pixels_removed": 50,
+      "near_transparent_pixels_removed": 8298
+    },
+    {
+      "frame": "hug_blink",
+      "fallback_pixels_removed": 50,
+      "near_transparent_pixels_removed": 7045
+    },
+    {
+      "frame": "heart_1",
+      "fallback_pixels_removed": 155,
+      "near_transparent_pixels_removed": 6664
+    },
+    {
+      "frame": "greet_morning_1",
+      "fallback_pixels_removed": 159,
+      "near_transparent_pixels_removed": 7895
+    },
+    {
+      "frame": "greet_morning_2",
+      "fallback_pixels_removed": 159,
+      "near_transparent_pixels_removed": 8333
+    },
+    {
+      "frame": "greet_morning_blink",
+      "fallback_pixels_removed": 159,
+      "near_transparent_pixels_removed": 7895
+    },
+    {
+      "frame": "greet_night_1",
+      "fallback_pixels_removed": 84,
+      "near_transparent_pixels_removed": 7423
+    },
+    {
+      "frame": "greet_night_2",
+      "fallback_pixels_removed": 84,
+      "near_transparent_pixels_removed": 7485
+    },
+    {
+      "frame": "surprised_1",
+      "fallback_pixels_removed": 53,
+      "near_transparent_pixels_removed": 11039
+    },
+    {
+      "frame": "thumbs_up_1",
+      "fallback_pixels_removed": 333,
+      "near_transparent_pixels_removed": 6091
+    },
+    {
+      "frame": "thumbs_up_blink",
+      "fallback_pixels_removed": 333,
+      "near_transparent_pixels_removed": 6091
+    },
+    {
+      "frame": "cheer_1",
+      "fallback_pixels_removed": 646,
+      "near_transparent_pixels_removed": 11437
+    },
+    {
+      "frame": "cheer_2",
+      "fallback_pixels_removed": 646,
+      "near_transparent_pixels_removed": 10565
+    },
+    {
+      "frame": "cheer_blink",
+      "fallback_pixels_removed": 646,
+      "near_transparent_pixels_removed": 11437
+    },
+    {
+      "frame": "clap_1",
+      "fallback_pixels_removed": 258,
+      "near_transparent_pixels_removed": 10792
+    },
+    {
+      "frame": "clap_2",
+      "fallback_pixels_removed": 258,
+      "near_transparent_pixels_removed": 10792
+    },
+    {
+      "frame": "clap_3",
+      "fallback_pixels_removed": 258,
+      "near_transparent_pixels_removed": 10784
+    },
+    {
+      "frame": "clap_blink",
+      "fallback_pixels_removed": 258,
+      "near_transparent_pixels_removed": 10792
+    },
+    {
+      "frame": "peek_1",
+      "fallback_pixels_removed": 473,
+      "near_transparent_pixels_removed": 5998
+    },
+    {
+      "frame": "peek_2",
+      "fallback_pixels_removed": 473,
+      "near_transparent_pixels_removed": 6142
+    },
+    {
+      "frame": "grievance_1",
+      "fallback_pixels_removed": 20,
+      "near_transparent_pixels_removed": 6107
+    },
+    {
+      "frame": "grievance_2",
+      "fallback_pixels_removed": 20,
+      "near_transparent_pixels_removed": 6107
+    },
+    {
+      "frame": "focus_read_1",
+      "fallback_pixels_removed": 1190,
+      "near_transparent_pixels_removed": 6442
+    },
+    {
+      "frame": "focus_read_2",
+      "fallback_pixels_removed": 1190,
+      "near_transparent_pixels_removed": 6305
+    },
+    {
+      "frame": "focus_read_3",
+      "fallback_pixels_removed": 1190,
+      "near_transparent_pixels_removed": 6442
+    },
+    {
+      "frame": "focus_read_4",
+      "fallback_pixels_removed": 1190,
+      "near_transparent_pixels_removed": 6442
+    },
+    {
+      "frame": "focus_read_blink",
+      "fallback_pixels_removed": 1190,
+      "near_transparent_pixels_removed": 6442
+    },
+    {
+      "frame": "focus_tea_1",
+      "fallback_pixels_removed": 64,
+      "near_transparent_pixels_removed": 5563
+    },
+    {
+      "frame": "focus_tea_2",
+      "fallback_pixels_removed": 64,
+      "near_transparent_pixels_removed": 5921
+    },
+    {
+      "frame": "focus_done_1",
+      "fallback_pixels_removed": 288,
+      "near_transparent_pixels_removed": 7151
+    },
+    {
+      "frame": "focus_done_blink",
+      "fallback_pixels_removed": 288,
+      "near_transparent_pixels_removed": 7151
+    },
+    {
+      "frame": "stretch_break_1",
+      "fallback_pixels_removed": 98,
+      "near_transparent_pixels_removed": 15316
+    },
+    {
+      "frame": "stretch_break_2",
+      "fallback_pixels_removed": 253,
+      "near_transparent_pixels_removed": 7222
+    },
+    {
+      "frame": "stretch_break_blink",
+      "fallback_pixels_removed": 98,
+      "near_transparent_pixels_removed": 15316
+    },
+    {
+      "frame": "hold_card_1",
+      "fallback_pixels_removed": 74,
+      "near_transparent_pixels_removed": 8996
+    },
+    {
+      "frame": "hold_card_blink",
+      "fallback_pixels_removed": 74,
+      "near_transparent_pixels_removed": 8996
+    },
+    {
+      "frame": "packing_1",
+      "fallback_pixels_removed": 220,
+      "near_transparent_pixels_removed": 6905
+    },
+    {
+      "frame": "packing_blink",
+      "fallback_pixels_removed": 220,
+      "near_transparent_pixels_removed": 6905
+    },
+    {
+      "frame": "ready_go_1",
+      "fallback_pixels_removed": 107,
+      "near_transparent_pixels_removed": 5297
+    },
+    {
+      "frame": "ready_go_blink",
+      "fallback_pixels_removed": 107,
+      "near_transparent_pixels_removed": 5297
+    },
+    {
+      "frame": "worried_1",
+      "fallback_pixels_removed": 205,
+      "near_transparent_pixels_removed": 7318
+    },
+    {
+      "frame": "worried_2",
+      "fallback_pixels_removed": 205,
+      "near_transparent_pixels_removed": 7472
+    },
+    {
+      "frame": "worried_blink",
+      "fallback_pixels_removed": 205,
+      "near_transparent_pixels_removed": 7318
+    },
+    {
+      "frame": "proud_1",
+      "fallback_pixels_removed": 139,
+      "near_transparent_pixels_removed": 6964
+    }
+  ]
+}

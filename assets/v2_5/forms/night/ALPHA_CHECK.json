@@ -1,0 +1,869 @@
+{
+  "method": "All four 16x16 corner blocks have exactly zero alpha. FOOTER_CLEANUP.json and ALPHA_CLEANUP.json record cleanup; source contact-band alpha equality is no longer an acceptance condition after removing fabricated fallback pixels.",
+  "frames": [
+    {
+      "frame": "idle_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "idle_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "typing_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "typing_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "codex_working_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "microphone_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "music_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "guitar_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "celebrate_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "sad_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "wave_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "coquettish_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "coquettish_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "coquettish_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "coquettish_4",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "coquettish_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "headpat_happy_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "headpat_happy_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "headpat_happy_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "headpat_happy_4",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "headpat_happy_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "sleep_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "sleep_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "sleep_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "bored_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "bored_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "bored_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "bored_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "yawn_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "yawn_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "yawn_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "wake_stretch_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "wake_stretch_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "curious_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "curious_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "curious_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "thinking_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "thinking_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "thinking_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "shy_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "shy_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "pout_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "pout_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "pout_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "poked_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "dragged_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "dragged_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "dragged_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "dragged_4",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "landing_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "landing_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "hug_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "hug_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "hug_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "heart_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "greet_morning_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "greet_morning_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "greet_morning_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "greet_night_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "greet_night_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "surprised_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "thumbs_up_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "thumbs_up_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "cheer_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "cheer_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "cheer_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "clap_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "clap_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "clap_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "clap_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "peek_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "peek_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "grievance_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "grievance_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_read_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_read_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_read_3",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_read_4",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_read_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_tea_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_tea_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_done_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "focus_done_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "stretch_break_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "stretch_break_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "stretch_break_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "hold_card_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "hold_card_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "packing_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "packing_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "ready_go_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "ready_go_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "worried_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "worried_2",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "worried_blink",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "frame": "proud_1",
+      "corners_alpha_max": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

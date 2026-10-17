@@ -1,0 +1,1618 @@
+[
+  {
+    "name": "typing_1",
+    "face_box": [
+      630.9936305732484,
+      718.8535031847134,
+      934.5095541401274,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1221,
+    "registration": [
+      5.574439525604248,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-typing_1.png"
+  },
+  {
+    "name": "typing_2",
+    "face_box": [
+      479.2356687898089,
+      646.968152866242,
+      822.687898089172,
+      798.7261146496816
+    ],
+    "foot_anchor_y": 1231,
+    "registration": [
+      16.923664093017578,
+      1.03,
+      2.0,
+      8.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-typing_2.png"
+  },
+  {
+    "name": "microphone_1",
+    "face_box": [
+      615.0191082802547,
+      670.9299363057324,
+      918.5350318471337,
+      750.8025477707006
+    ],
+    "foot_anchor_y": 1228,
+    "registration": [
+      11.636019706726074,
+      1.03,
+      0.0,
+      -24.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-microphone_1.png"
+  },
+  {
+    "name": "guitar_1",
+    "face_box": [
+      543.1337579617834,
+      678.9171974522293,
+      854.6369426751593,
+      766.7770700636943
+    ],
+    "foot_anchor_y": 1237,
+    "registration": [
+      5.499059677124023,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\initial-guitar_1.png"
+  },
+  {
+    "name": "idle_1",
+    "face_box": [
+      575.0828025477707,
+      702.8789808917197,
+      886.5859872611464,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      1.7414875030517578,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "D:\\Documents\\ChatGPT\\petoken-forms-night\\assets\\v2_3\\night_change_3.png",
+    "source_reuse": "assets/v2_3/night_change_3.png",
+    "regular_idle": "retain_existing_sleepy_eyes"
+  },
+  {
+    "name": "codex_working_1",
+    "face_box": [
+      591.0573248407643,
+      710.8662420382166,
+      894.5732484076433,
+      774.7643312101911
+    ],
+    "foot_anchor_y": 1248,
+    "registration": [
+      6.806728363037109,
+      1.0,
+      1.0,
+      -32.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-codex_working_1.png"
+  },
+  {
+    "name": "music_1",
+    "face_box": [
+      575.0828025477707,
+      670.9299363057324,
+      854.6369426751593,
+      774.7643312101911
+    ],
+    "foot_anchor_y": 1202,
+    "registration": [
+      12.791123390197754,
+      1.03,
+      3.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-music_1.png"
+  },
+  {
+    "name": "sad_1",
+    "face_box": [
+      599.0445859872611,
+      742.8152866242038,
+      886.5859872611464,
+      814.7006369426751
+    ],
+    "foot_anchor_y": 1216,
+    "registration": [
+      4.741674900054932,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-sad_1.png"
+  },
+  {
+    "name": "wave_1",
+    "face_box": [
+      551.1210191082803,
+      638.9808917197453,
+      870.6114649681529,
+      766.7770700636943
+    ],
+    "foot_anchor_y": 1235,
+    "registration": [
+      9.757452964782715,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-wave_1.png"
+  },
+  {
+    "name": "celebrate_1",
+    "face_box": [
+      583.0700636942676,
+      583.0700636942676,
+      894.5732484076433,
+      678.9171974522293
+    ],
+    "foot_anchor_y": 1223,
+    "registration": [
+      18.790742874145508,
+      1.01,
+      1.0,
+      -18.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-celebrate_1.png"
+  },
+  {
+    "name": "headpat_happy_1",
+    "face_box": [
+      575.0828025477707,
+      678.9171974522293,
+      910.547770700637,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      9.051610946655273,
+      1.03,
+      -1.0,
+      -9.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-headpat_happy_1.png"
+  },
+  {
+    "name": "coquettish_1",
+    "face_box": [
+      575.0828025477707,
+      694.891719745223,
+      886.5859872611464,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      12.719198226928711,
+      1.03,
+      -4.0,
+      -22.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-coquettish_1.png"
+  },
+  {
+    "name": "sleep_1",
+    "face_box": [
+      383.38853503184714,
+      814.7006369426751,
+      678.9171974522293,
+      910.547770700637
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      17.330564498901367,
+      1.03,
+      23.0,
+      -45.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-sleep_1.png"
+  },
+  {
+    "name": "bored_1",
+    "face_box": [
+      750.8025477707006,
+      838.6624203821656,
+      1062.3057324840765,
+      926.5222929936306
+    ],
+    "foot_anchor_y": 1200,
+    "registration": [
+      14.03303337097168,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-bored_1.png"
+  },
+  {
+    "name": "yawn_1",
+    "face_box": [
+      583.0700636942676,
+      630.9936305732484,
+      886.5859872611464,
+      758.7898089171974
+    ],
+    "foot_anchor_y": 1205,
+    "registration": [
+      22.595746994018555,
+      1.03,
+      -19.0,
+      4.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-yawn_1.png"
+  },
+  {
+    "name": "wake_stretch_1",
+    "face_box": [
+      559.108280254777,
+      543.1337579617834,
+      806.7133757961783,
+      638.9808917197453
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      17.040990829467773,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-wake_stretch_1.png"
+  },
+  {
+    "name": "curious_1",
+    "face_box": [
+      495.21019108280257,
+      646.968152866242,
+      838.6624203821656,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1214,
+    "registration": [
+      16.481765747070312,
+      1.03,
+      -4.0,
+      -7.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-curious_1.png"
+  },
+  {
+    "name": "thinking_1",
+    "face_box": [
+      583.0700636942676,
+      646.968152866242,
+      902.5605095541401,
+      750.8025477707006
+    ],
+    "foot_anchor_y": 1196,
+    "registration": [
+      15.573943138122559,
+      1.03,
+      25.0,
+      -17.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-thinking_1.png"
+  },
+  {
+    "name": "bored_2",
+    "face_box": [
+      750.8025477707006,
+      838.6624203821656,
+      1062.3057324840765,
+      926.5222929936306
+    ],
+    "foot_anchor_y": 1200,
+    "registration": [
+      14.300370216369629,
+      1.0,
+      0.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-bored_2.png",
+    "base": "bored_1",
+    "localized_boxes": [
+      [
+        15,
+        447,
+        576,
+        1111
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-bored_2.png"
+  },
+  {
+    "name": "bored_3",
+    "face_box": [
+      750.8025477707006,
+      838.6624203821656,
+      1062.3057324840765,
+      926.5222929936306
+    ],
+    "foot_anchor_y": 1200,
+    "registration": [
+      12.826269149780273,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-bored_3.png",
+    "base": "bored_1",
+    "localized_boxes": [
+      [
+        15,
+        439,
+        576,
+        1111
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-bored_3.png"
+  },
+  {
+    "name": "cheer_1",
+    "face_box": [
+      535.1464968152866,
+      583.0700636942676,
+      862.624203821656,
+      702.8789808917197
+    ],
+    "foot_anchor_y": 1208,
+    "registration": [
+      14.75298023223877,
+      1.0,
+      1.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-cheer_1.png"
+  },
+  {
+    "name": "cheer_2",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-cheer_2.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/cheer_2.png",
+    "registration": [
+      9.975069046020508,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": true,
+    "base": "cheer_1",
+    "localized_boxes": [
+      [
+        231,
+        247,
+        616,
+        991
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-cheer_2.png"
+  },
+  {
+    "name": "clap_1",
+    "face_box": [
+      519.171974522293,
+      583.0700636942676,
+      814.7006369426751,
+      678.9171974522293
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      10.462834358215332,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-clap_1.png"
+  },
+  {
+    "name": "clap_2",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-clap_2.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/clap_2.png",
+    "registration": [
+      7.546057224273682,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": false,
+    "base": "clap_1",
+    "localized_boxes": [
+      [
+        495,
+        622,
+        855,
+        887
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-clap_2.png"
+  },
+  {
+    "name": "clap_3",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-clap_3.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/clap_3.png",
+    "registration": [
+      5.420679092407227,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": false,
+    "base": "clap_1",
+    "localized_boxes": [
+      [
+        463,
+        622,
+        887,
+        895
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-clap_3.png"
+  },
+  {
+    "name": "coquettish_2",
+    "face_box": [
+      575.0828025477707,
+      694.891719745223,
+      886.5859872611464,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      6.851702690124512,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-coquettish_2.png",
+    "base": "coquettish_1",
+    "localized_box": [
+      487,
+      743,
+      906,
+      1033
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-coquettish_2.png"
+  },
+  {
+    "name": "coquettish_3",
+    "face_box": [
+      575.0828025477707,
+      694.891719745223,
+      886.5859872611464,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      9.011312484741211,
+      1.01,
+      2.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-coquettish_3.png",
+    "base": "coquettish_1",
+    "localized_box": [
+      487,
+      698,
+      908,
+      1033
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-coquettish_3.png"
+  },
+  {
+    "name": "coquettish_4",
+    "face_box": [
+      575.0828025477707,
+      694.891719745223,
+      886.5859872611464,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      5.693436145782471,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-coquettish_4.png",
+    "base": "coquettish_1",
+    "localized_box": [
+      487,
+      743,
+      908,
+      1033
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-coquettish_4.png"
+  },
+  {
+    "name": "curious_2",
+    "face_box": [
+      599.0445859872611,
+      567.0955414012739,
+      934.5095541401274,
+      758.7898089171974
+    ],
+    "foot_anchor_y": 1201,
+    "registration": [
+      8.42060375213623,
+      1.0,
+      0.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-curious_2.png",
+    "base": "curious_1",
+    "localized_boxes": [
+      [
+        31,
+        0,
+        1247,
+        1254
+      ],
+      [
+        806,
+        1166,
+        911,
+        1239
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-curious_2.png"
+  },
+  {
+    "name": "dragged_1",
+    "face_box": [
+      551.1210191082803,
+      567.0955414012739,
+      846.6496815286624,
+      670.9299363057324
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      26.142087936401367,
+      1.03,
+      -7.0,
+      23.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-dragged_1.png"
+  },
+  {
+    "name": "dragged_2",
+    "face_box": [
+      551.1210191082803,
+      567.0955414012739,
+      846.6496815286624,
+      670.9299363057324
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      23.656604766845703,
+      1.03,
+      6.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-dragged_2.png",
+    "base": "dragged_1",
+    "localized_boxes": [
+      [
+        287,
+        622,
+        1007,
+        1215
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-dragged_2.png"
+  },
+  {
+    "name": "dragged_3",
+    "face_box": [
+      551.1210191082803,
+      567.0955414012739,
+      846.6496815286624,
+      670.9299363057324
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      25.034866333007812,
+      1.03,
+      6.0,
+      4.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-dragged_3.png",
+    "base": "dragged_1",
+    "localized_boxes": [
+      [
+        263,
+        583,
+        999,
+        1254
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-dragged_3.png"
+  },
+  {
+    "name": "dragged_4",
+    "face_box": [
+      551.1210191082803,
+      567.0955414012739,
+      846.6496815286624,
+      670.9299363057324
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      26.498538970947266,
+      1.03,
+      -4.0,
+      11.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-dragged_4.png",
+    "base": "dragged_1",
+    "localized_boxes": [
+      [
+        287,
+        615,
+        1063,
+        1231
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-dragged_4.png"
+  },
+  {
+    "name": "focus_done_1",
+    "face_box": [
+      535.1464968152866,
+      559.108280254777,
+      806.7133757961783,
+      654.9554140127389
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      25.020130157470703,
+      1.03,
+      18.0,
+      -23.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-focus_done_1.png"
+  },
+  {
+    "name": "focus_read_1",
+    "face_box": [
+      575.0828025477707,
+      694.891719745223,
+      870.6114649681529,
+      766.7770700636943
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      10.21163272857666,
+      1.01,
+      4.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-focus_read_1.png"
+  },
+  {
+    "name": "focus_read_2",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-focus_read_2.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/focus_read_2.png",
+    "registration": [
+      10.956748962402344,
+      1.03,
+      7.0,
+      -24.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": true,
+    "base": "focus_read_1",
+    "localized_boxes": [
+      [
+        487,
+        750,
+        1055,
+        991
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-focus_read_2.png"
+  },
+  {
+    "name": "focus_read_3",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-focus_read_3.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/focus_read_3.png",
+    "registration": [
+      9.209250450134277,
+      1.0,
+      2.0,
+      -1.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": false,
+    "base": "focus_read_1",
+    "localized_boxes": [
+      [
+        495,
+        575,
+        743,
+        759
+      ],
+      [
+        750,
+        591,
+        975,
+        783
+      ],
+      [
+        495,
+        790,
+        727,
+        983
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-focus_read_3.png"
+  },
+  {
+    "name": "focus_read_4",
+    "method": "source noncostume local delta",
+    "base": "focus_read_1",
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-focus_read_4.png"
+  },
+  {
+    "name": "focus_tea_1",
+    "face_box": [
+      583.0700636942676,
+      686.9044585987261,
+      886.5859872611464,
+      750.8025477707006
+    ],
+    "foot_anchor_y": 1216,
+    "registration": [
+      10.628003120422363,
+      1.03,
+      -1.0,
+      -1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-focus_tea_1.png"
+  },
+  {
+    "name": "focus_tea_2",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-focus_tea_2.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/focus_tea_2.png",
+    "registration": [
+      5.594192981719971,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": true,
+    "base": "focus_tea_1",
+    "localized_boxes": [
+      [
+        830,
+        591,
+        1055,
+        895
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-focus_tea_2.png"
+  },
+  {
+    "name": "greet_morning_1",
+    "face_box": [
+      543.1337579617834,
+      615.0191082802547,
+      822.687898089172,
+      702.8789808917197
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      23.37942886352539,
+      1.03,
+      1.0,
+      -10.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-greet_morning_1.png"
+  },
+  {
+    "name": "greet_morning_2",
+    "face_box": [
+      543.1337579617834,
+      615.0191082802547,
+      822.687898089172,
+      702.8789808917197
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      22.64651107788086,
+      1.03,
+      4.0,
+      2.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-greet_morning_2.png",
+    "base": "greet_morning_1",
+    "localized_boxes": [
+      [
+        742,
+        583,
+        1175,
+        903
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-greet_morning_2.png"
+  },
+  {
+    "name": "greet_night_1",
+    "face_box": [
+      575.0828025477707,
+      599.0445859872611,
+      846.6496815286624,
+      670.9299363057324
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      15.85717487335205,
+      1.03,
+      0.0,
+      -15.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-greet_night_1.png"
+  },
+  {
+    "name": "greet_night_2",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-greet_night_2.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/greet_night_2.png",
+    "registration": [
+      7.656367778778076,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": true,
+    "manual_motion_roi": [
+      885,
+      565,
+      1090,
+      835
+    ],
+    "protected_face_and_moon": true,
+    "base": "greet_night_1",
+    "localized_boxes": [
+      [
+        790,
+        503,
+        1111,
+        839
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-greet_night_2.png"
+  },
+  {
+    "name": "grievance_1",
+    "face_box": [
+      535.1464968152866,
+      694.891719745223,
+      870.6114649681529,
+      782.7515923566879
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      11.910226821899414,
+      1.03,
+      19.0,
+      -8.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-grievance_1.png"
+  },
+  {
+    "name": "grievance_2",
+    "method": "source noncostume local delta",
+    "base": "grievance_1",
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-grievance_2.png"
+  },
+  {
+    "name": "headpat_happy_2",
+    "face_box": [
+      575.0828025477707,
+      702.8789808917197,
+      894.5732484076433,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      6.648014068603516,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-headpat_happy_2.png",
+    "base": "headpat_happy_1",
+    "localized_boxes": [
+      [
+        143,
+        191,
+        344,
+        440
+      ],
+      [
+        487,
+        591,
+        983,
+        1031
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-headpat_happy_2.png"
+  },
+  {
+    "name": "headpat_happy_3",
+    "face_box": [
+      575.0828025477707,
+      702.8789808917197,
+      894.5732484076433,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      6.2158989906311035,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-headpat_happy_3.png",
+    "base": "headpat_happy_1",
+    "localized_boxes": [
+      [
+        143,
+        183,
+        344,
+        440
+      ],
+      [
+        487,
+        591,
+        983,
+        1031
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-headpat_happy_3.png"
+  },
+  {
+    "name": "headpat_happy_4",
+    "face_box": [
+      575.0828025477707,
+      678.9171974522293,
+      910.547770700637,
+      790.7388535031847
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      7.051661968231201,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-headpat_happy_4.png",
+    "base": "headpat_happy_1",
+    "localized_boxes": [
+      [
+        143,
+        191,
+        344,
+        440
+      ],
+      [
+        487,
+        694,
+        911,
+        1031
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-headpat_happy_4.png"
+  },
+  {
+    "name": "heart_1",
+    "face_box": [
+      519.171974522293,
+      551.1210191082803,
+      806.7133757961783,
+      654.9554140127389
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      19.91672134399414,
+      1.03,
+      2.0,
+      14.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-heart_1.png"
+  },
+  {
+    "name": "hold_card_1",
+    "face_box": [
+      490,
+      515,
+      840,
+      680
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      8.65665340423584,
+      1.0,
+      1.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-hold_card_1.png"
+  },
+  {
+    "name": "hug_1",
+    "face_box": [
+      495.21019108280257,
+      535.1464968152866,
+      822.687898089172,
+      646.968152866242
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      23.613718032836914,
+      1.03,
+      9.0,
+      22.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-hug_1.png"
+  },
+  {
+    "name": "hug_2",
+    "face_box": [
+      495.21019108280257,
+      535.1464968152866,
+      814.7006369426751,
+      646.968152866242
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      19.45450782775879,
+      1.0,
+      1.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-hug_2.png",
+    "base": "hug_1",
+    "localized_boxes": [
+      [
+        71,
+        527,
+        1215,
+        975
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-hug_2.png"
+  },
+  {
+    "name": "landing_1",
+    "face_box": [
+      607.031847133758,
+      742.8152866242038,
+      910.547770700637,
+      822.687898089172
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      10.881488800048828,
+      1.03,
+      5.0,
+      -26.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-landing_1.png"
+  },
+  {
+    "name": "packing_1",
+    "face_box": [
+      511.18471337579615,
+      511.18471337579615,
+      838.6624203821656,
+      662.9426751592357
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      22.377090454101562,
+      1.03,
+      10.0,
+      11.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-packing_1.png"
+  },
+  {
+    "name": "peek_1",
+    "face_box": [
+      798.7261146496816,
+      535.1464968152866,
+      910.547770700637,
+      615.0191082802547
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      10.002686500549316,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-peek_1.png"
+  },
+  {
+    "name": "peek_2",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-edit-peek_2.png",
+    "method": "native night-base edit localized to original source motion",
+    "source_original_pose": "assets/v2_0/peek_2.png",
+    "registration": [
+      5.962789058685303,
+      1.0,
+      1.0,
+      -1.0
+    ],
+    "registration_reference": "night base",
+    "fixed_face_protected": false,
+    "base": "peek_1",
+    "localized_boxes": [
+      [
+        55,
+        0,
+        1223,
+        839
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-peek_2.png"
+  },
+  {
+    "name": "poked_1",
+    "face_box": [
+      439.29936305732485,
+      583.0700636942676,
+      718.8535031847134,
+      710.8662420382166
+    ],
+    "foot_anchor_y": 1164,
+    "registration": [
+      19.78291893005371,
+      1.03,
+      11.0,
+      -3.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-poked_1.png"
+  },
+  {
+    "name": "pout_1",
+    "face_box": [
+      567.0955414012739,
+      567.0955414012739,
+      838.6624203821656,
+      654.9554140127389
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      22.682971954345703,
+      1.03,
+      -1.0,
+      -3.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-pout_1.png"
+  },
+  {
+    "name": "pout_2",
+    "face_box": [
+      575.0828025477707,
+      567.0955414012739,
+      862.624203821656,
+      662.9426751592357
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      20.191823959350586,
+      1.03,
+      7.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-pout_2.png",
+    "base": "pout_1",
+    "localized_boxes": [
+      [
+        511,
+        495,
+        911,
+        735
+      ],
+      [
+        343,
+        742,
+        695,
+        1254
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-pout_2.png"
+  },
+  {
+    "name": "proud_1",
+    "face_box": [
+      575.0828025477707,
+      431.312101910828,
+      886.5859872611464,
+      591.0573248407643
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      16.92938995361328,
+      1.01,
+      9.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-proud_1.png"
+  },
+  {
+    "name": "ready_go_1",
+    "face_box": [
+      543.1337579617834,
+      575.0828025477707,
+      846.6496815286624,
+      686.9044585987261
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      23.61922264099121,
+      1.03,
+      2.0,
+      28.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-ready_go_1.png"
+  },
+  {
+    "name": "shy_1",
+    "face_box": [
+      742.8152866242038,
+      471.2484076433121,
+      846.6496815286624,
+      535.1464968152866
+    ],
+    "foot_anchor_y": 1123,
+    "registration": [
+      21.43239974975586,
+      1.03,
+      9.0,
+      23.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-shy_1.png"
+  },
+  {
+    "name": "shy_2",
+    "face_box": [
+      742.8152866242038,
+      447.28662420382165,
+      846.6496815286624,
+      543.1337579617834
+    ],
+    "foot_anchor_y": 1123,
+    "registration": [
+      23.257238388061523,
+      1.03,
+      3.0,
+      12.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-shy_2.png",
+    "base": "shy_1",
+    "localized_boxes": [
+      [
+        527,
+        423,
+        903,
+        735
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-shy_2.png"
+  },
+  {
+    "name": "sleep_2",
+    "face_box": [
+      383.38853503184714,
+      814.7006369426751,
+      678.9171974522293,
+      910.547770700637
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      14.40605354309082,
+      1.01,
+      1.0,
+      2.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-sleep_2.png",
+    "base": "sleep_1",
+    "localized_boxes": [
+      [
+        95,
+        447,
+        264,
+        687
+      ],
+      [
+        742,
+        742,
+        1127,
+        1031
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-sleep_2.png"
+  },
+  {
+    "name": "sleep_3",
+    "face_box": [
+      383.38853503184714,
+      814.7006369426751,
+      678.9171974522293,
+      910.547770700637
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      21.558507919311523,
+      0.99,
+      -4.0,
+      -52.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-sleep_3.png",
+    "base": "sleep_1",
+    "localized_boxes": [
+      [
+        1062,
+        559,
+        1247,
+        999
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-sleep_3.png"
+  },
+  {
+    "name": "stretch_break_1",
+    "face_box": [
+      591.0573248407643,
+      471.2484076433121,
+      854.6369426751593,
+      630.9936305732484
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      15.242307662963867,
+      1.0,
+      1.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-stretch_break_1.png"
+  },
+  {
+    "name": "stretch_break_2",
+    "face_box": [
+      391.37579617834393,
+      463.2611464968153,
+      615.0191082802547,
+      607.031847133758
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      20.266538619995117,
+      1.03,
+      8.0,
+      -4.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-stretch_break_2.png",
+    "fixed_face_protected": false,
+    "base": "stretch_break_1",
+    "localized_boxes": [
+      [
+        87,
+        0,
+        1183,
+        1254
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-stretch_break_2.png"
+  },
+  {
+    "name": "surprised_1",
+    "face_box": [
+      551.1210191082803,
+      575.0828025477707,
+      854.6369426751593,
+      678.9171974522293
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      13.251238822937012,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-surprised_1.png"
+  },
+  {
+    "name": "thinking_2",
+    "face_box": [
+      583.0700636942676,
+      646.968152866242,
+      902.5605095541401,
+      750.8025477707006
+    ],
+    "foot_anchor_y": 1196,
+    "registration": [
+      16.628433227539062,
+      1.03,
+      -5.0,
+      -22.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-thinking_2.png",
+    "fixed_face_protected": false,
+    "base": "thinking_1",
+    "localized_boxes": [
+      [
+        974,
+        271,
+        1199,
+        512
+      ],
+      [
+        686,
+        654,
+        943,
+        991
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-thinking_2.png"
+  },
+  {
+    "name": "thumbs_up_1",
+    "face_box": [
+      567.0955414012739,
+      567.0955414012739,
+      862.624203821656,
+      678.9171974522293
+    ],
+    "foot_anchor_y": 1218,
+    "registration": [
+      18.097003936767578,
+      1.03,
+      -1.0,
+      16.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-thumbs_up_1.png"
+  },
+  {
+    "name": "wake_stretch_2",
+    "face_box": [
+      559.108280254777,
+      543.1337579617834,
+      806.7133757961783,
+      638.9808917197453
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      17.58872413635254,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-wake_stretch_2.png",
+    "base": "wake_stretch_1",
+    "localized_boxes": [
+      [
+        279,
+        31,
+        783,
+        592
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-wake_stretch_2.png"
+  },
+  {
+    "name": "worried_1",
+    "face_box": [
+      530,
+      495,
+      920,
+      665
+    ],
+    "foot_anchor_y": 1217,
+    "registration": [
+      22.048892974853516,
+      1.03,
+      -13.0,
+      30.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-worried_1.png",
+    "face_restoration": "disabled due rectangular seam; head/hand anchor review pending"
+  },
+  {
+    "name": "worried_2",
+    "method": "source noncostume local delta",
+    "base": "worried_1",
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-worried_2.png"
+  },
+  {
+    "name": "worried_blink",
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\exec-a9d5aae6-40f7-4801-b2aa-63619e46d2f2.png",
+    "registration": [
+      6.171133995056152,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "method": "native closed-eye edit localized over night base"
+  },
+  {
+    "name": "yawn_2",
+    "face_box": [
+      551.1210191082803,
+      630.9936305732484,
+      886.5859872611464,
+      774.7643312101911
+    ],
+    "foot_anchor_y": 1205,
+    "registration": [
+      20.96319580078125,
+      1.03,
+      8.0,
+      3.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-yawn_2.png",
+    "base": "yawn_1",
+    "localized_boxes": [
+      [
+        247,
+        111,
+        815,
+        887
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-yawn_2.png"
+  },
+  {
+    "name": "yawn_3",
+    "face_box": [
+      575.0828025477707,
+      630.9936305732484,
+      886.5859872611464,
+      742.8152866242038
+    ],
+    "foot_anchor_y": 1205,
+    "registration": [
+      19.864437103271484,
+      1.03,
+      9.0,
+      1.0
+    ],
+    "raw": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\raw-yawn_3.png",
+    "base": "yawn_1",
+    "localized_boxes": [
+      [
+        183,
+        247,
+        815,
+        887
+      ]
+    ],
+    "mask": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-f0d4-7e80-b080-5757175f4f88\\night-production\\variant-mask-yawn_3.png"
+  }
+]
