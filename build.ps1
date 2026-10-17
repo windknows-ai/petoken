@@ -92,7 +92,7 @@ foreach ($sheet in 'EQUIPPED_PREVIEW.png', 'WEAPONS_PREVIEW.png') {
     if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Force }
 }
 # The forms' and outfits' drawing records and contact sheets stay in the repository.
-foreach ($folder in 'assets2_5orms', 'assets2_5\outfits') {
+foreach ($folder in 'assets/v2_5/forms', 'assets/v2_5/outfits') {
     $root = Join-Path $internal $folder
     if (Test-Path -LiteralPath $root) {
         Get-ChildItem -LiteralPath $root -Recurse -File | Where-Object {
