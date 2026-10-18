@@ -1,0 +1,9 @@
+{
+  "tier": "mingyue",
+  "frame": "guitar_1.png",
+  "source": "assets/v1_1/guitar.png",
+  "sourceSha256": "9405ad135b3e00aa87b4da4890dddd80c44b41af7b7475a1e54a0447553a08dc",
+  "prompt": "Use case: identity-preserve. Make ONE 1254x1254 RGBA sprite with genuinely transparent background. INPUT 1 is EXACT default action pose/face/head/hair/hand/knee/boot registration and canvas-scale target; trace its silhouette anchors precisely, do not recenter/resize/zoom/shift. INPUT 2 is the user-accepted step-1 MINGYUE costume reference only. Adapt its identical garment, jewelry and boots to INPUT 1's action, never copy its idle gesture. Preserve silver-lavender hair, violet eyes and blue side feather. No text or extra anatomy. Complete garment/props within canvas, no clipping. Keep blank alpha around the sprite.\nAction: Playing guitar with eyes CLOSED, exactly preserve fretting and strumming hands, full guitar across lap, original crossed boots. Silver/icy-blue guitar with modest pearl edging, no legible labels.\nCostume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow.",
+  "status": "CANDIDATE",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-5e3b005a-4edd-4166-a3f4-7fdd567a3f2d.png"
+}

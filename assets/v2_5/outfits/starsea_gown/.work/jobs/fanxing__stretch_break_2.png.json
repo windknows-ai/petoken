@@ -1,0 +1,11 @@
+{
+  "tier": "fanxing",
+  "frame": "stretch_break_2.png",
+  "source": "assets/v2_0/stretch_break_2.png",
+  "sourceSha256": "b464b0402905bb638b8bff6f8165695e6c9cb0fc213f7e21e79b36617370d7c3",
+  "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nFrame stretch_break_2.png: Stretch to OPPOSITE SIDE from first frame: exact tilted torso, head and over-head arm curve, blue side feather now on LEFT due head angle. DO NOT reuse other direction.",
+  "status": "CANDIDATE",
+  "referenceMode": "original-only",
+  "master": null,
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-005fe417-f670-4106-80b4-5cddc719be9a.png"
+}

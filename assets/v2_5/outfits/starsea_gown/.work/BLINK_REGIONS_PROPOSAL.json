@@ -1,0 +1,2204 @@
+[
+  {
+    "tier": "fanxing",
+    "frame": "coquettish_blink.png",
+    "master": "coquettish_1.png",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-a9e395fb-ce97-49db-8b8a-3254974dd9f3.png",
+    "prompt": "Use case: identity-preserve. Exact small eye-only edit of INPUT 1, the finished FANXING coquettish_1 sprite. Close BOTH eyes gently with happy curved closed eyelids, following INPUT 2's closed-eye shapes ONLY. Do not transfer any clothing from INPUT 2. Absolutely preserve INPUT 1's mouth, eyebrows, hair, cheek outline, hands, plain matte gray-blue gown, boots, silhouette, framing, size and all alpha pixels. Output 1254x1254 RGBA genuine transparency. Change only the two small eye regions, nothing else. Keep all fingers/cloth folds identical, no new objects or text. INPUT 1 is the only edit target; INPUT 2 is expression reference.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\coquettish_1.png",
+    "candidates": [
+      {
+        "bbox": [
+          559,
+          571,
+          744,
+          696
+        ],
+        "area": 12305,
+        "density": 0.532
+      },
+      {
+        "bbox": [
+          539,
+          593,
+          579,
+          640
+        ],
+        "area": 779,
+        "density": 0.414
+      },
+      {
+        "bbox": [
+          972,
+          1009,
+          1012,
+          1161
+        ],
+        "area": 777,
+        "density": 0.128
+      },
+      {
+        "bbox": [
+          642,
+          941,
+          709,
+          1004
+        ],
+        "area": 687,
+        "density": 0.163
+      },
+      {
+        "bbox": [
+          1098,
+          864,
+          1151,
+          969
+        ],
+        "area": 685,
+        "density": 0.123
+      },
+      {
+        "bbox": [
+          1052,
+          587,
+          1086,
+          678
+        ],
+        "area": 673,
+        "density": 0.218
+      },
+      {
+        "bbox": [
+          360,
+          1135,
+          424,
+          1171
+        ],
+        "area": 617,
+        "density": 0.268
+      },
+      {
+        "bbox": [
+          1041,
+          706,
+          1075,
+          797
+        ],
+        "area": 581,
+        "density": 0.188
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          539,
+          593,
+          579,
+          640
+        ],
+        "area": 779,
+        "density": 0.414
+      },
+      {
+        "bbox": [
+          559,
+          571,
+          744,
+          696
+        ],
+        "area": 12305,
+        "density": 0.532
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "bored_blink.png",
+    "master": "bored_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\bored_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is bored_blink.png paired with bored_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/bored_blink.png",
+    "sourceSha256": "ce5bfc71a2470397969bcff6bf14b391f3e0412227b514cbf5848c1e436acd45",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-04d6efb1-43df-4da2-b963-022d2e109472.png",
+    "candidates": [
+      {
+        "bbox": [
+          694,
+          728,
+          878,
+          879
+        ],
+        "area": 10973,
+        "density": 0.395
+      },
+      {
+        "bbox": [
+          959,
+          704,
+          1105,
+          837
+        ],
+        "area": 9665,
+        "density": 0.498
+      },
+      {
+        "bbox": [
+          745,
+          717,
+          827,
+          743
+        ],
+        "area": 578,
+        "density": 0.271
+      },
+      {
+        "bbox": [
+          862,
+          737,
+          896,
+          802
+        ],
+        "area": 519,
+        "density": 0.235
+      },
+      {
+        "bbox": [
+          995,
+          681,
+          1035,
+          698
+        ],
+        "area": 401,
+        "density": 0.59
+      },
+      {
+        "bbox": [
+          1091,
+          829,
+          1134,
+          874
+        ],
+        "area": 323,
+        "density": 0.167
+      },
+      {
+        "bbox": [
+          1110,
+          422,
+          1147,
+          493
+        ],
+        "area": 302,
+        "density": 0.115
+      },
+      {
+        "bbox": [
+          324,
+          1149,
+          384,
+          1184
+        ],
+        "area": 266,
+        "density": 0.127
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          694,
+          728,
+          878,
+          879
+        ],
+        "area": 10973,
+        "density": 0.395
+      },
+      {
+        "bbox": [
+          959,
+          704,
+          1105,
+          837
+        ],
+        "area": 9665,
+        "density": 0.498
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "cheer_blink.png",
+    "master": "cheer_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\cheer_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is cheer_blink.png paired with cheer_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/cheer_blink.png",
+    "sourceSha256": "8fbb51f445dfca809c105ce8436210c18025666df2fd17fd8edfaca3c738255c",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-1bb1fd24-1ad4-479b-9e1b-cce067fd58d8.png",
+    "candidates": [
+      {
+        "bbox": [
+          498,
+          413,
+          701,
+          589
+        ],
+        "area": 14447,
+        "density": 0.404
+      },
+      {
+        "bbox": [
+          762,
+          533,
+          913,
+          656
+        ],
+        "area": 10487,
+        "density": 0.565
+      },
+      {
+        "bbox": [
+          785,
+          523,
+          885,
+          559
+        ],
+        "area": 951,
+        "density": 0.264
+      },
+      {
+        "bbox": [
+          572,
+          724,
+          659,
+          771
+        ],
+        "area": 604,
+        "density": 0.148
+      },
+      {
+        "bbox": [
+          811,
+          657,
+          873,
+          704
+        ],
+        "area": 513,
+        "density": 0.176
+      },
+      {
+        "bbox": [
+          814,
+          512,
+          889,
+          531
+        ],
+        "area": 501,
+        "density": 0.352
+      },
+      {
+        "bbox": [
+          949,
+          826,
+          1039,
+          871
+        ],
+        "area": 408,
+        "density": 0.101
+      },
+      {
+        "bbox": [
+          845,
+          657,
+          900,
+          698
+        ],
+        "area": 321,
+        "density": 0.142
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          498,
+          413,
+          701,
+          589
+        ],
+        "area": 14447,
+        "density": 0.404
+      },
+      {
+        "bbox": [
+          762,
+          533,
+          913,
+          656
+        ],
+        "area": 10487,
+        "density": 0.565
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "clap_blink.png",
+    "master": "clap_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\clap_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is clap_blink.png paired with clap_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/clap_blink.png",
+    "sourceSha256": "839cfb5218d58f05ad0e1b773fc9387429a652cbec57a6da5ef1a9aee85d7d90",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-8fece59c-33ca-4ed8-8a02-a5e755445049.png",
+    "candidates": [
+      {
+        "bbox": [
+          476,
+          495,
+          665,
+          604
+        ],
+        "area": 9285,
+        "density": 0.451
+      },
+      {
+        "bbox": [
+          903,
+          239,
+          941,
+          328
+        ],
+        "area": 350,
+        "density": 0.103
+      },
+      {
+        "bbox": [
+          566,
+          463,
+          603,
+          507
+        ],
+        "area": 334,
+        "density": 0.205
+      },
+      {
+        "bbox": [
+          558,
+          443,
+          602,
+          455
+        ],
+        "area": 323,
+        "density": 0.612
+      },
+      {
+        "bbox": [
+          744,
+          525,
+          801,
+          546
+        ],
+        "area": 291,
+        "density": 0.243
+      },
+      {
+        "bbox": [
+          603,
+          446,
+          639,
+          461
+        ],
+        "area": 282,
+        "density": 0.522
+      },
+      {
+        "bbox": [
+          927,
+          337,
+          976,
+          389
+        ],
+        "area": 272,
+        "density": 0.107
+      },
+      {
+        "bbox": [
+          683,
+          335,
+          714,
+          398
+        ],
+        "area": 257,
+        "density": 0.132
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          476,
+          495,
+          665,
+          604
+        ],
+        "area": 9285,
+        "density": 0.451
+      },
+      {
+        "bbox": [
+          903,
+          239,
+          941,
+          328
+        ],
+        "area": 350,
+        "density": 0.103
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "curious_blink.png",
+    "master": "curious_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\curious_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is curious_blink.png paired with curious_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/curious_blink.png",
+    "sourceSha256": "daaccb4e0f165ebc3eaf63a223a2d2e9f7d6d984afa706f9fa073133f4b4433e",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-2648edec-4ae1-4355-8c6b-6a5af7255cac.png",
+    "candidates": [
+      {
+        "bbox": [
+          741,
+          650,
+          891,
+          760
+        ],
+        "area": 9329,
+        "density": 0.565
+      },
+      {
+        "bbox": [
+          839,
+          722,
+          898,
+          760
+        ],
+        "area": 733,
+        "density": 0.327
+      },
+      {
+        "bbox": [
+          190,
+          1096,
+          295,
+          1126
+        ],
+        "area": 393,
+        "density": 0.125
+      },
+      {
+        "bbox": [
+          1012,
+          1121,
+          1081,
+          1145
+        ],
+        "area": 299,
+        "density": 0.181
+      },
+      {
+        "bbox": [
+          181,
+          833,
+          254,
+          865
+        ],
+        "area": 287,
+        "density": 0.123
+      },
+      {
+        "bbox": [
+          874,
+          820,
+          918,
+          851
+        ],
+        "area": 277,
+        "density": 0.203
+      },
+      {
+        "bbox": [
+          930,
+          1034,
+          976,
+          1067
+        ],
+        "area": 256,
+        "density": 0.169
+      },
+      {
+        "bbox": [
+          255,
+          1081,
+          318,
+          1102
+        ],
+        "area": 248,
+        "density": 0.187
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          741,
+          650,
+          891,
+          760
+        ],
+        "area": 9329,
+        "density": 0.565
+      },
+      {
+        "bbox": [
+          839,
+          722,
+          898,
+          760
+        ],
+        "area": 733,
+        "density": 0.327
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "focus_done_blink.png",
+    "master": "focus_done_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\focus_done_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is focus_done_blink.png paired with focus_done_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/focus_done_blink.png",
+    "sourceSha256": "d1aec889f6cb44e6e4a1d98855e165e63a7ebd20689e5cbbd649e1c56734a4ed",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-c7cb62fc-e826-4d3e-89ab-353fc0842332.png",
+    "candidates": [
+      {
+        "bbox": [
+          499,
+          466,
+          643,
+          567
+        ],
+        "area": 8713,
+        "density": 0.599
+      },
+      {
+        "bbox": [
+          718,
+          467,
+          866,
+          616
+        ],
+        "area": 8542,
+        "density": 0.387
+      },
+      {
+        "bbox": [
+          904,
+          297,
+          952,
+          361
+        ],
+        "area": 416,
+        "density": 0.135
+      },
+      {
+        "bbox": [
+          926,
+          794,
+          1006,
+          821
+        ],
+        "area": 367,
+        "density": 0.17
+      },
+      {
+        "bbox": [
+          966,
+          899,
+          995,
+          979
+        ],
+        "area": 341,
+        "density": 0.147
+      },
+      {
+        "bbox": [
+          576,
+          436,
+          618,
+          468
+        ],
+        "area": 276,
+        "density": 0.205
+      },
+      {
+        "bbox": [
+          853,
+          874,
+          888,
+          924
+        ],
+        "area": 252,
+        "density": 0.144
+      },
+      {
+        "bbox": [
+          1030,
+          810,
+          1054,
+          871
+        ],
+        "area": 244,
+        "density": 0.167
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          499,
+          466,
+          643,
+          567
+        ],
+        "area": 8713,
+        "density": 0.599
+      },
+      {
+        "bbox": [
+          718,
+          467,
+          866,
+          616
+        ],
+        "area": 8542,
+        "density": 0.387
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "focus_read_blink.png",
+    "master": "focus_read_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\focus_read_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is focus_read_blink.png paired with focus_read_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/focus_read_blink.png",
+    "sourceSha256": "6962177cb94c8a33af65a337564560b353011fa4018d6fc84c07d7599359383e",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-55a7c8a2-8516-4d12-9ede-3eacf64f997b.png",
+    "candidates": [
+      {
+        "bbox": [
+          523,
+          529,
+          764,
+          705
+        ],
+        "area": 13799,
+        "density": 0.325
+      },
+      {
+        "bbox": [
+          784,
+          633,
+          942,
+          733
+        ],
+        "area": 8548,
+        "density": 0.541
+      },
+      {
+        "bbox": [
+          795,
+          566,
+          914,
+          648
+        ],
+        "area": 994,
+        "density": 0.102
+      },
+      {
+        "bbox": [
+          701,
+          874,
+          840,
+          896
+        ],
+        "area": 800,
+        "density": 0.262
+      },
+      {
+        "bbox": [
+          193,
+          1019,
+          321,
+          1066
+        ],
+        "area": 652,
+        "density": 0.108
+      },
+      {
+        "bbox": [
+          865,
+          872,
+          948,
+          900
+        ],
+        "area": 587,
+        "density": 0.253
+      },
+      {
+        "bbox": [
+          564,
+          694,
+          615,
+          744
+        ],
+        "area": 413,
+        "density": 0.162
+      },
+      {
+        "bbox": [
+          663,
+          853,
+          749,
+          895
+        ],
+        "area": 396,
+        "density": 0.11
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          523,
+          529,
+          764,
+          705
+        ],
+        "area": 13799,
+        "density": 0.325
+      },
+      {
+        "bbox": [
+          784,
+          633,
+          942,
+          733
+        ],
+        "area": 8548,
+        "density": 0.541
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "greet_morning_blink.png",
+    "master": "greet_morning_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\greet_morning_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is greet_morning_blink.png paired with greet_morning_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/greet_morning_blink.png",
+    "sourceSha256": "f97efd254ebb2ec75ca385b8e551eaf259f44d792b18373f3fc4a19d8cf577f7",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-243b1c84-eb47-4c57-b2fe-e61a7d672238.png",
+    "candidates": [
+      {
+        "bbox": [
+          732,
+          489,
+          900,
+          652
+        ],
+        "area": 10204,
+        "density": 0.373
+      },
+      {
+        "bbox": [
+          766,
+          483,
+          844,
+          517
+        ],
+        "area": 751,
+        "density": 0.283
+      },
+      {
+        "bbox": [
+          736,
+          519,
+          807,
+          567
+        ],
+        "area": 511,
+        "density": 0.15
+      },
+      {
+        "bbox": [
+          243,
+          759,
+          299,
+          785
+        ],
+        "area": 296,
+        "density": 0.203
+      },
+      {
+        "bbox": [
+          615,
+          601,
+          669,
+          622
+        ],
+        "area": 285,
+        "density": 0.251
+      },
+      {
+        "bbox": [
+          578,
+          482,
+          626,
+          492
+        ],
+        "area": 263,
+        "density": 0.548
+      },
+      {
+        "bbox": [
+          527,
+          485,
+          561,
+          502
+        ],
+        "area": 243,
+        "density": 0.42
+      },
+      {
+        "bbox": [
+          986,
+          1003,
+          1015,
+          1051
+        ],
+        "area": 200,
+        "density": 0.144
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          732,
+          489,
+          900,
+          652
+        ],
+        "area": 10204,
+        "density": 0.373
+      },
+      {
+        "bbox": [
+          766,
+          483,
+          844,
+          517
+        ],
+        "area": 751,
+        "density": 0.283
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "headpat_happy_blink.png",
+    "master": "headpat_happy_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\headpat_happy_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is headpat_happy_blink.png paired with headpat_happy_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/headpat_happy_blink.png",
+    "sourceSha256": "cbce2fbf961780794ba054ce049c4294c891b26b1c8ec2f64ad07843209ffe51",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-1c44fef9-8cb9-480f-8d6e-c0ffe40122dc.png",
+    "candidates": [
+      {
+        "bbox": [
+          538,
+          631,
+          740,
+          705
+        ],
+        "area": 5696,
+        "density": 0.381
+      },
+      {
+        "bbox": [
+          813,
+          658,
+          929,
+          732
+        ],
+        "area": 2799,
+        "density": 0.326
+      },
+      {
+        "bbox": [
+          862,
+          589,
+          938,
+          627
+        ],
+        "area": 780,
+        "density": 0.27
+      },
+      {
+        "bbox": [
+          894,
+          686,
+          930,
+          737
+        ],
+        "area": 743,
+        "density": 0.405
+      },
+      {
+        "bbox": [
+          683,
+          554,
+          737,
+          574
+        ],
+        "area": 419,
+        "density": 0.388
+      },
+      {
+        "bbox": [
+          1054,
+          570,
+          1085,
+          651
+        ],
+        "area": 415,
+        "density": 0.165
+      },
+      {
+        "bbox": [
+          1037,
+          443,
+          1085,
+          494
+        ],
+        "area": 396,
+        "density": 0.162
+      },
+      {
+        "bbox": [
+          825,
+          665,
+          889,
+          682
+        ],
+        "area": 381,
+        "density": 0.35
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          538,
+          631,
+          740,
+          705
+        ],
+        "area": 5696,
+        "density": 0.381
+      },
+      {
+        "bbox": [
+          813,
+          658,
+          929,
+          732
+        ],
+        "area": 2799,
+        "density": 0.326
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "hold_card_blink.png",
+    "master": "hold_card_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\hold_card_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is hold_card_blink.png paired with hold_card_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/hold_card_blink.png",
+    "sourceSha256": "7631eeed37a8b88aff9cc939d4736d1919e57c0d2da61c4e5be03c6c68491a87",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-4c8c76b7-cdbc-407c-98be-2c8221a03294.png",
+    "candidates": [
+      {
+        "bbox": [
+          457,
+          477,
+          622,
+          590
+        ],
+        "area": 11434,
+        "density": 0.613
+      },
+      {
+        "bbox": [
+          724,
+          520,
+          871,
+          633
+        ],
+        "area": 9937,
+        "density": 0.598
+      },
+      {
+        "bbox": [
+          757,
+          425,
+          853,
+          513
+        ],
+        "area": 1668,
+        "density": 0.197
+      },
+      {
+        "bbox": [
+          865,
+          434,
+          904,
+          592
+        ],
+        "area": 848,
+        "density": 0.138
+      },
+      {
+        "bbox": [
+          534,
+          425,
+          634,
+          447
+        ],
+        "area": 697,
+        "density": 0.317
+      },
+      {
+        "bbox": [
+          536,
+          442,
+          633,
+          461
+        ],
+        "area": 680,
+        "density": 0.369
+      },
+      {
+        "bbox": [
+          825,
+          408,
+          868,
+          511
+        ],
+        "area": 623,
+        "density": 0.141
+      },
+      {
+        "bbox": [
+          902,
+          927,
+          932,
+          1011
+        ],
+        "area": 592,
+        "density": 0.235
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          457,
+          477,
+          622,
+          590
+        ],
+        "area": 11434,
+        "density": 0.613
+      },
+      {
+        "bbox": [
+          724,
+          520,
+          871,
+          633
+        ],
+        "area": 9937,
+        "density": 0.598
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "hug_blink.png",
+    "master": "hug_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\hug_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is hug_blink.png paired with hug_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/hug_blink.png",
+    "sourceSha256": "c479bb533d47315d5988056af5e7790279ab01cafffbf997ec7ee63adf63e5b2",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-2497ae6e-97b3-4bde-9984-7bc0544a0f13.png",
+    "candidates": [
+      {
+        "bbox": [
+          452,
+          373,
+          652,
+          542
+        ],
+        "area": 12812,
+        "density": 0.379
+      },
+      {
+        "bbox": [
+          739,
+          385,
+          836,
+          473
+        ],
+        "area": 1639,
+        "density": 0.192
+      },
+      {
+        "bbox": [
+          1015,
+          593,
+          1082,
+          619
+        ],
+        "area": 373,
+        "density": 0.214
+      },
+      {
+        "bbox": [
+          264,
+          816,
+          323,
+          844
+        ],
+        "area": 354,
+        "density": 0.214
+      },
+      {
+        "bbox": [
+          663,
+          394,
+          681,
+          477
+        ],
+        "area": 323,
+        "density": 0.216
+      },
+      {
+        "bbox": [
+          950,
+          346,
+          1001,
+          384
+        ],
+        "area": 316,
+        "density": 0.163
+      },
+      {
+        "bbox": [
+          253,
+          1012,
+          296,
+          1036
+        ],
+        "area": 285,
+        "density": 0.276
+      },
+      {
+        "bbox": [
+          975,
+          690,
+          1024,
+          726
+        ],
+        "area": 264,
+        "density": 0.15
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          452,
+          373,
+          652,
+          542
+        ],
+        "area": 12812,
+        "density": 0.379
+      },
+      {
+        "bbox": [
+          739,
+          385,
+          836,
+          473
+        ],
+        "area": 1639,
+        "density": 0.192
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "landing_blink.png",
+    "master": "landing_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\landing_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is landing_blink.png paired with landing_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/landing_blink.png",
+    "sourceSha256": "27560ca042789572dc21b5d3152136d7a1522abee1925af9a8326b3608dda3f1",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-a754f5d3-ca8b-4c89-be88-e59032a96cbd.png",
+    "candidates": [
+      {
+        "bbox": [
+          554,
+          571,
+          780,
+          749
+        ],
+        "area": 14721,
+        "density": 0.366
+      },
+      {
+        "bbox": [
+          188,
+          939,
+          380,
+          1040
+        ],
+        "area": 2078,
+        "density": 0.107
+      },
+      {
+        "bbox": [
+          855,
+          856,
+          1048,
+          942
+        ],
+        "area": 1895,
+        "density": 0.114
+      },
+      {
+        "bbox": [
+          854,
+          544,
+          956,
+          648
+        ],
+        "area": 1786,
+        "density": 0.168
+      },
+      {
+        "bbox": [
+          506,
+          788,
+          658,
+          830
+        ],
+        "area": 1461,
+        "density": 0.229
+      },
+      {
+        "bbox": [
+          617,
+          841,
+          784,
+          896
+        ],
+        "area": 1203,
+        "density": 0.131
+      },
+      {
+        "bbox": [
+          159,
+          573,
+          299,
+          627
+        ],
+        "area": 929,
+        "density": 0.123
+      },
+      {
+        "bbox": [
+          1089,
+          1030,
+          1189,
+          1112
+        ],
+        "area": 850,
+        "density": 0.104
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          188,
+          939,
+          380,
+          1040
+        ],
+        "area": 2078,
+        "density": 0.107
+      },
+      {
+        "bbox": [
+          554,
+          571,
+          780,
+          749
+        ],
+        "area": 14721,
+        "density": 0.366
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "packing_blink.png",
+    "master": "packing_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\packing_1.png",
+    "prompt": "Use case: identity-preserve. Close ONLY both eyes of this finished FANXING packing sprite into naturally curved dark closed eyelids, no visible iris. Absolutely preserve original brows, mouth, hair, crossed arms HUGGING STACK OF BOOKS/PAPERS, book positions, plain gray-blue gown, boots, pose, framing and size. Do not move any book/finger or replace books with a bag. ONE 1254x1254 RGBA genuine alpha transparent PNG, no background or text. Eye-only small edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/packing_blink.png",
+    "sourceSha256": "d8f7773292a1c9595d838b4ed1560e4631d86d0c6f0ae5cb98c3d50698d910a8",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-567c98d0-0682-4b0b-8d47-ae8df2e12dae.png",
+    "candidates": [
+      {
+        "bbox": [
+          755,
+          478,
+          831,
+          519
+        ],
+        "area": 497,
+        "density": 0.159
+      },
+      {
+        "bbox": [
+          674,
+          348,
+          703,
+          438
+        ],
+        "area": 458,
+        "density": 0.175
+      },
+      {
+        "bbox": [
+          752,
+          489,
+          822,
+          521
+        ],
+        "area": 427,
+        "density": 0.191
+      },
+      {
+        "bbox": [
+          726,
+          528,
+          781,
+          539
+        ],
+        "area": 275,
+        "density": 0.455
+      },
+      {
+        "bbox": [
+          1055,
+          835,
+          1106,
+          886
+        ],
+        "area": 268,
+        "density": 0.103
+      },
+      {
+        "bbox": [
+          245,
+          843,
+          306,
+          880
+        ],
+        "area": 250,
+        "density": 0.111
+      },
+      {
+        "bbox": [
+          397,
+          420,
+          441,
+          474
+        ],
+        "area": 240,
+        "density": 0.101
+      },
+      {
+        "bbox": [
+          631,
+          717,
+          661,
+          754
+        ],
+        "area": 232,
+        "density": 0.209
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          674,
+          348,
+          703,
+          438
+        ],
+        "area": 458,
+        "density": 0.175
+      },
+      {
+        "bbox": [
+          755,
+          478,
+          831,
+          519
+        ],
+        "area": 497,
+        "density": 0.159
+      }
+    ],
+    "correction": "Fresh blink draft from corrected book-hugging base; previous eye draft/body pairing superseded."
+  },
+  {
+    "tier": "fanxing",
+    "frame": "pout_blink.png",
+    "master": "pout_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\pout_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is pout_blink.png paired with pout_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/pout_blink.png",
+    "sourceSha256": "8b22f371990a041430a4df0f54cd53942394c5a4a35619142d6a4eb10085abc6",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-5b0cfde2-2cc5-46b5-8aac-86bd316c848c.png",
+    "candidates": [
+      {
+        "bbox": [
+          490,
+          442,
+          735,
+          591
+        ],
+        "area": 10993,
+        "density": 0.301
+      },
+      {
+        "bbox": [
+          750,
+          477,
+          922,
+          616
+        ],
+        "area": 8277,
+        "density": 0.346
+      },
+      {
+        "bbox": [
+          535,
+          625,
+          639,
+          676
+        ],
+        "area": 882,
+        "density": 0.166
+      },
+      {
+        "bbox": [
+          299,
+          803,
+          447,
+          832
+        ],
+        "area": 736,
+        "density": 0.171
+      },
+      {
+        "bbox": [
+          295,
+          925,
+          403,
+          970
+        ],
+        "area": 554,
+        "density": 0.114
+      },
+      {
+        "bbox": [
+          439,
+          643,
+          510,
+          677
+        ],
+        "area": 543,
+        "density": 0.225
+      },
+      {
+        "bbox": [
+          868,
+          1062,
+          936,
+          1101
+        ],
+        "area": 536,
+        "density": 0.202
+      },
+      {
+        "bbox": [
+          762,
+          442,
+          819,
+          526
+        ],
+        "area": 496,
+        "density": 0.104
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          490,
+          442,
+          735,
+          591
+        ],
+        "area": 10993,
+        "density": 0.301
+      },
+      {
+        "bbox": [
+          750,
+          477,
+          922,
+          616
+        ],
+        "area": 8277,
+        "density": 0.346
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "ready_go_blink.png",
+    "master": "ready_go_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\ready_go_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is ready_go_blink.png paired with ready_go_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/ready_go_blink.png",
+    "sourceSha256": "34c3637145f83fc5bd4b4c5f6d0505cf46084502cc8e510399c15465503134ad",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-91c773a6-f3f5-46dd-a252-1921ef856d72.png",
+    "candidates": [
+      {
+        "bbox": [
+          759,
+          533,
+          929,
+          646
+        ],
+        "area": 9620,
+        "density": 0.501
+      },
+      {
+        "bbox": [
+          986,
+          383,
+          1045,
+          459
+        ],
+        "area": 573,
+        "density": 0.128
+      },
+      {
+        "bbox": [
+          533,
+          381,
+          584,
+          442
+        ],
+        "area": 433,
+        "density": 0.139
+      },
+      {
+        "bbox": [
+          992,
+          897,
+          1026,
+          979
+        ],
+        "area": 327,
+        "density": 0.117
+      },
+      {
+        "bbox": [
+          317,
+          1025,
+          397,
+          1062
+        ],
+        "area": 311,
+        "density": 0.105
+      },
+      {
+        "bbox": [
+          788,
+          530,
+          854,
+          549
+        ],
+        "area": 299,
+        "density": 0.238
+      },
+      {
+        "bbox": [
+          487,
+          1107,
+          558,
+          1128
+        ],
+        "area": 297,
+        "density": 0.199
+      },
+      {
+        "bbox": [
+          689,
+          690,
+          755,
+          708
+        ],
+        "area": 267,
+        "density": 0.225
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          759,
+          533,
+          929,
+          646
+        ],
+        "area": 9620,
+        "density": 0.501
+      },
+      {
+        "bbox": [
+          986,
+          383,
+          1045,
+          459
+        ],
+        "area": 573,
+        "density": 0.128
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "stretch_break_blink.png",
+    "master": "stretch_break_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\stretch_break_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is stretch_break_blink.png paired with stretch_break_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/stretch_break_blink.png",
+    "sourceSha256": "a8da6b97505e4cdd4d77f3f1bdcb55e4a68ff1e78a0b0cc624e0247c3deda3b2",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-9a70e342-7e10-45d1-9404-23ac1e3a86bf.png",
+    "candidates": [
+      {
+        "bbox": [
+          606,
+          358,
+          781,
+          493
+        ],
+        "area": 10071,
+        "density": 0.426
+      },
+      {
+        "bbox": [
+          780,
+          440,
+          946,
+          620
+        ],
+        "area": 7922,
+        "density": 0.265
+      },
+      {
+        "bbox": [
+          1040,
+          253,
+          1105,
+          395
+        ],
+        "area": 1443,
+        "density": 0.156
+      },
+      {
+        "bbox": [
+          1043,
+          382,
+          1109,
+          480
+        ],
+        "area": 860,
+        "density": 0.133
+      },
+      {
+        "bbox": [
+          1066,
+          491,
+          1110,
+          580
+        ],
+        "area": 539,
+        "density": 0.138
+      },
+      {
+        "bbox": [
+          1021,
+          518,
+          1040,
+          596
+        ],
+        "area": 393,
+        "density": 0.265
+      },
+      {
+        "bbox": [
+          968,
+          961,
+          1019,
+          1010
+        ],
+        "area": 337,
+        "density": 0.135
+      },
+      {
+        "bbox": [
+          1055,
+          843,
+          1078,
+          918
+        ],
+        "area": 321,
+        "density": 0.186
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          606,
+          358,
+          781,
+          493
+        ],
+        "area": 10071,
+        "density": 0.426
+      },
+      {
+        "bbox": [
+          780,
+          440,
+          946,
+          620
+        ],
+        "area": 7922,
+        "density": 0.265
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "thinking_blink.png",
+    "master": "thinking_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\thinking_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is thinking_blink.png paired with thinking_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/thinking_blink.png",
+    "sourceSha256": "cb9af80fae62e81c7507c650ea720b50bdbb180bf02edc8a50cfc3aa70a1511e",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-fdb9a397-328c-475d-b78b-6a4a0a63636e.png",
+    "candidates": [
+      {
+        "bbox": [
+          525,
+          484,
+          732,
+          652
+        ],
+        "area": 11757,
+        "density": 0.338
+      },
+      {
+        "bbox": [
+          793,
+          613,
+          928,
+          701
+        ],
+        "area": 6884,
+        "density": 0.579
+      },
+      {
+        "bbox": [
+          642,
+          493,
+          728,
+          527
+        ],
+        "area": 753,
+        "density": 0.258
+      },
+      {
+        "bbox": [
+          551,
+          720,
+          607,
+          748
+        ],
+        "area": 508,
+        "density": 0.324
+      },
+      {
+        "bbox": [
+          511,
+          701,
+          568,
+          751
+        ],
+        "area": 465,
+        "density": 0.163
+      },
+      {
+        "bbox": [
+          585,
+          681,
+          652,
+          730
+        ],
+        "area": 415,
+        "density": 0.126
+      },
+      {
+        "bbox": [
+          575,
+          332,
+          628,
+          394
+        ],
+        "area": 380,
+        "density": 0.116
+      },
+      {
+        "bbox": [
+          748,
+          547,
+          760,
+          630
+        ],
+        "area": 328,
+        "density": 0.329
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          525,
+          484,
+          732,
+          652
+        ],
+        "area": 11757,
+        "density": 0.338
+      },
+      {
+        "bbox": [
+          793,
+          613,
+          928,
+          701
+        ],
+        "area": 6884,
+        "density": 0.579
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "thumbs_up_blink.png",
+    "master": "thumbs_up_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\thumbs_up_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is thumbs_up_blink.png paired with thumbs_up_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/thumbs_up_blink.png",
+    "sourceSha256": "6cbae0e9ff3a1b3ed755b3e0e2181879b9467edfc02fecad0751865f1a5569e2",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-1f735ebe-a729-440e-970a-61131db85090.png",
+    "candidates": [
+      {
+        "bbox": [
+          779,
+          538,
+          901,
+          637
+        ],
+        "area": 6670,
+        "density": 0.552
+      },
+      {
+        "bbox": [
+          855,
+          551,
+          917,
+          644
+        ],
+        "area": 1729,
+        "density": 0.3
+      },
+      {
+        "bbox": [
+          796,
+          419,
+          899,
+          538
+        ],
+        "area": 1547,
+        "density": 0.126
+      },
+      {
+        "bbox": [
+          912,
+          413,
+          951,
+          592
+        ],
+        "area": 999,
+        "density": 0.143
+      },
+      {
+        "bbox": [
+          989,
+          455,
+          1051,
+          582
+        ],
+        "area": 901,
+        "density": 0.114
+      },
+      {
+        "bbox": [
+          887,
+          603,
+          970,
+          684
+        ],
+        "area": 720,
+        "density": 0.107
+      },
+      {
+        "bbox": [
+          993,
+          540,
+          1020,
+          615
+        ],
+        "area": 545,
+        "density": 0.269
+      },
+      {
+        "bbox": [
+          946,
+          214,
+          974,
+          331
+        ],
+        "area": 453,
+        "density": 0.138
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          779,
+          538,
+          901,
+          637
+        ],
+        "area": 6670,
+        "density": 0.552
+      },
+      {
+        "bbox": [
+          855,
+          551,
+          917,
+          644
+        ],
+        "area": 1729,
+        "density": 0.3
+      }
+    ]
+  },
+  {
+    "tier": "fanxing",
+    "frame": "worried_blink.png",
+    "master": "worried_1.png",
+    "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\worried_1.png",
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is worried_blink.png paired with worried_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "status": "MASK_REVIEW_REQUIRED",
+    "source": "assets/v2_0/worried_blink.png",
+    "sourceSha256": "1d34e4113d78dc3f7944f2cd29bddecf2a2f8661744e99f0b06cf11193ac658a",
+    "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-7ccb0815-b316-4f3a-acf8-0ca4d6ad1e1d.png",
+    "candidates": [
+      {
+        "bbox": [
+          548,
+          503,
+          735,
+          603
+        ],
+        "area": 9121,
+        "density": 0.488
+      },
+      {
+        "bbox": [
+          776,
+          548,
+          891,
+          631
+        ],
+        "area": 6014,
+        "density": 0.63
+      },
+      {
+        "bbox": [
+          796,
+          473,
+          877,
+          543
+        ],
+        "area": 784,
+        "density": 0.138
+      },
+      {
+        "bbox": [
+          977,
+          373,
+          1020,
+          425
+        ],
+        "area": 398,
+        "density": 0.178
+      },
+      {
+        "bbox": [
+          1009,
+          466,
+          1039,
+          554
+        ],
+        "area": 398,
+        "density": 0.151
+      },
+      {
+        "bbox": [
+          1019,
+          784,
+          1046,
+          870
+        ],
+        "area": 398,
+        "density": 0.171
+      },
+      {
+        "bbox": [
+          747,
+          480,
+          772,
+          580
+        ],
+        "area": 374,
+        "density": 0.15
+      },
+      {
+        "bbox": [
+          788,
+          395,
+          800,
+          490
+        ],
+        "area": 329,
+        "density": 0.289
+      }
+    ],
+    "selected": [
+      {
+        "bbox": [
+          548,
+          503,
+          735,
+          603
+        ],
+        "area": 9121,
+        "density": 0.488
+      },
+      {
+        "bbox": [
+          776,
+          548,
+          891,
+          631
+        ],
+        "area": 6014,
+        "density": 0.63
+      }
+    ]
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "oldPacking": {
+    "tier": "fanxing",
+    "frame": "packing_1.png",
+    "source": "assets/v2_0/packing_1.png",
+    "sourceSha256": "50233bcd2737659ed9d1c1684aa59e08db99e01636bd4409019b5ab440e08879",
+    "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nAction/registration: Packing small bag with both hands low at waist, looking down softly, long boots together below. Exact bag silhouette/placement; plain matte navy, no moon/star jewels.",
+    "status": "CANDIDATE",
+    "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-c9b2e3b5-3efb-4f2e-ae78-156278bd2c63.png"
+  },
+  "oldBlink": {
+    "tier": "fanxing",
+    "frame": "packing_blink.png",
+    "master": "packing_1.png",
+    "masterSha256": "db9d0f29fcf570e5ed2c2f5dbf3ffb1f8a4d4d3d65bfcb3ffc594275a161c387",
+    "generatedDraft": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-5b05bb0d-d7cb-4f32-adc1-9b92caa9130c.png",
+    "composed": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work\\composed\\fanxing__packing_blink.png",
+    "mask": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work\\composed\\fanxing__packing_blink.png.mask.png",
+    "eyeRectangles": [
+      [
+        473,
+        450,
+        660,
+        579
+      ],
+      [
+        717,
+        548,
+        917,
+        641
+      ]
+    ],
+    "eyePolygons": null,
+    "eyeBoundaryPatches": null,
+    "protectedEyebrows": [
+      [
+        550,
+        460,
+        650,
+        495
+      ]
+    ],
+    "outsideEyeExact": true,
+    "alphaExact": true,
+    "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is packing_blink.png paired with packing_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+    "source": "assets/v2_0/packing_blink.png",
+    "sourceSha256": "d8f7773292a1c9595d838b4ed1560e4631d86d0c6f0ae5cb98c3d50698d910a8",
+    "status": "CANDIDATE",
+    "method": "imagegen closed eyes plus explicitly authorized eye-only Pillow compositing"
+  },
+  "oldPackingHash": "db9d0f29fcf570e5ed2c2f5dbf3ffb1f8a4d4d3d65bfcb3ffc594275a161c387",
+  "oldBlinkHash": "d9875be2a18a27309b8636614574ec4362127e66e71fe89144d1f05e2056c410"
+}

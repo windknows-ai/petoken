@@ -1,0 +1,8 @@
+{
+  "tier": "fanxing",
+  "frame": "coquettish_blink.png",
+  "master": "coquettish_1.png",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-a9e395fb-ce97-49db-8b8a-3254974dd9f3.png",
+  "prompt": "Use case: identity-preserve. Exact small eye-only edit of INPUT 1, the finished FANXING coquettish_1 sprite. Close BOTH eyes gently with happy curved closed eyelids, following INPUT 2's closed-eye shapes ONLY. Do not transfer any clothing from INPUT 2. Absolutely preserve INPUT 1's mouth, eyebrows, hair, cheek outline, hands, plain matte gray-blue gown, boots, silhouette, framing, size and all alpha pixels. Output 1254x1254 RGBA genuine transparency. Change only the two small eye regions, nothing else. Keep all fingers/cloth folds identical, no new objects or text. INPUT 1 is the only edit target; INPUT 2 is expression reference.",
+  "status": "DRAFT_EYE_ONLY_QA_PENDING"
+}

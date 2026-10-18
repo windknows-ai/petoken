@@ -1,0 +1,10 @@
+{
+  "tier": "mingyue",
+  "frame": "coquettish_1.png",
+  "source": "assets/v2_0/coquettish_1.png",
+  "sourceSha256": "41ccf141a6e91fa1abcf0cec1d2022c901851095c61837e241c5b0b5c9c3d444",
+  "prompt": "Use case: identity-preserve. ONE production 1254x1254 PNG RGBA with genuine alpha transparency. INPUT 1 is the EXACT DEFAULT ACTION target: trace its head/hair outline, face, hands, boots/feet, knees and body pose at the SAME coordinates, size and canvas margins. NEVER resize, recenter, shift, zoom or change pose. Same silver-lavender hair, violet eyes and natural blue side feather. INPUT 2 is the user-accepted STEP-1 MINGYUE costume ONLY: transfer identical clothes/jewelry/boots to INPUT 1's pose. Ignore INPUT 2's idle hand/leg positions. LOCK all source pose landmarks to INPUT 1. Costume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow. Use same pearl crescent hair comb, moon-pearl bow brooch, pearl scalloped silver edging and white/icy-periwinkle layered skirt as accepted master. Fully opaque modest bodice, no new cutouts, no exposed torso. No text/letters, opaque background/fog or extra anatomy. Full cloth and props within canvas. No crown, wings, cape, luminous particles or aurora.\nAction/registration: Coquettish pleading expression, both gloved hands clasped together under chin, both knees held up. Preserve original relatively small figure, original empty canvas margins. Do not enlarge to fill canvas.",
+  "status": "CANDIDATE",
+  "referenceMode": "original-plus-accepted-costume",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-d51e70d3-cd89-4af9-8242-bc143a166445.png"
+}

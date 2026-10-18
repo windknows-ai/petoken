@@ -1,0 +1,10 @@
+{
+  "tier": "fanxing",
+  "frame": "coquettish_1.png",
+  "source": "assets/v2_0/coquettish_1.png",
+  "sourceSha256": "41ccf141a6e91fa1abcf0cec1d2022c901851095c61837e241c5b0b5c9c3d444",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-68d61257-1078-4251-ad63-040560c51b6d.png",
+  "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nAction/registration: Coquettish pleading expression, both gloved hands clasped together under chin, both knees held up. Preserve original relatively small figure, original empty canvas margins. Do not enlarge to fill canvas.",
+  "status": "CANDIDATE",
+  "recovery": "Recovered orphaned completed generation after user continuation; visually matched distinct pose against reference before copy."
+}

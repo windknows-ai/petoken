@@ -1,0 +1,12 @@
+{
+  "tier": "fanxing",
+  "frame": "hold_card_blink.png",
+  "master": "hold_card_1.png",
+  "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\hold_card_1.png",
+  "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is hold_card_blink.png paired with hold_card_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+  "status": "BLINK_DRAFT_READY",
+  "source": "assets/v2_0/hold_card_blink.png",
+  "sourceSha256": "7631eeed37a8b88aff9cc939d4736d1919e57c0d2da61c4e5be03c6c68491a87",
+  "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-4c8c76b7-cdbc-407c-98be-2c8221a03294.png"
+}

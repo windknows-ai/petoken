@@ -1,0 +1,14 @@
+{
+  "tier": "mingyue",
+  "frame": "thumbs_up_blink.png",
+  "source": "assets/v2_0/thumbs_up_blink.png",
+  "sourceSha256": "6cbae0e9ff3a1b3ed755b3e0e2181879b9467edfc02fecad0751865f1a5569e2",
+  "prompt": "Use case: identity-preserve. EYE ONLY EDIT of the single finished MINGYUE Starsea Gown sprite. Close every visible open eye into a smooth natural closed dark curved eyelid; remove all iris and sclera. Leave existing closed eye closed. Preserve eyebrow, mouth, blush, face silhouette, hair, pose, hands, props, costume, boots, scale and canvas coordinates EXACTLY. No edit outside tiny eyelid regions; no new light or objects. Keep exact 1254x1254 RGBA transparent canvas and full alpha. Expression is same except closed eyes. Output one sprite, no text. Pair thumbs_up_blink.png with thumbs_up_1.png. This is a closed-eyelid draft for authorized exact eye-only compositing.",
+  "status": "FAILED",
+  "references": [
+    "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\mingyue\\thumbs_up_1.png"
+  ],
+  "master": "thumbs_up_1.png",
+  "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\mingyue\\thumbs_up_1.png",
+  "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75705}}\")"
+}
