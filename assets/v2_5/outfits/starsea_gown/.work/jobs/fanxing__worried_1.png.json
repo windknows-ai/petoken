@@ -1,0 +1,9 @@
+{
+  "tier": "fanxing",
+  "frame": "worried_1.png",
+  "source": "assets/v2_0/worried_1.png",
+  "sourceSha256": "030d48e1a8c24ea243a0fc7ad287a9863ac9a3335f8ca657352d0707134b8d23",
+  "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nAction/registration: Worried: hand at chin/mouth, other supports elbow, anxious brows, watery eyes and small sweat drop on right. Exact knees together and boots below.",
+  "status": "CANDIDATE",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-268fb55e-79a2-4599-96ed-33546df9e97b.png"
+}

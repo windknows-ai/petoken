@@ -1,0 +1,10 @@
+{
+  "tier": "fanxing",
+  "frame": "bored_2.png",
+  "source": "assets/v2_0/bored_2.png",
+  "sourceSha256": "4b67fda97f77b183a55cf59c23676a55ba19c3494a633f43fcd8952c44ba3cdf",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-ce415a76-a3e8-464b-9d27-c756d551c935.png",
+  "prompt": "Use case: identity-preserve. ONE 1254x1254 PNG RGBA transparent animated costume sprite. INPUT 1 is the exact original pose/expression/size/location target. INPUT 2 is the ACCEPTED NEW COSTUME FIRST FRAME OF THIS SAME ACTION. Use INPUT 2's plain slate gray-blue single-layer long gown and sleeves, plain navy boots, no accessories or luminous decoration; but take the tiny mouth, eyes and hand/foot pose change from INPUT 1. Lock INPUT 1 head/hair outline, hands, feet/boot tips, knee positions, framing and character scale; NEVER recenter, enlarge or shift. Same silver-lavender hair, violet eyes, natural blue side feather. This is the adjacent frame in the SAME short animation, so costume folds/sleeve shape/outline must stay very stable; change only the subtle gesture/expression seen in INPUT 1. Original empty margins preserved. No jewels, lace, embroidery, crescent/stars, glow, cape, extra skirt layers, labels or letters. No opaque background, preserve full real alpha. No extra anatomy. Remove source costume ornaments rather than copying them.\nAction bored_2.png: Continue lying PRONE, chin supported by hand and boots raised BEHIND on left. Do not stand or sit upright.",
+  "master": "bored_1.png",
+  "status": "CANDIDATE"
+}

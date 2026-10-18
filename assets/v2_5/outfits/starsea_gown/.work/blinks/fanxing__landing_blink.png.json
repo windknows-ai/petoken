@@ -1,0 +1,12 @@
+{
+  "tier": "fanxing",
+  "frame": "landing_blink.png",
+  "master": "landing_1.png",
+  "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\landing_1.png",
+  "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is landing_blink.png paired with landing_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+  "status": "BLINK_DRAFT_READY",
+  "source": "assets/v2_0/landing_blink.png",
+  "sourceSha256": "27560ca042789572dc21b5d3152136d7a1522abee1925af9a8326b3608dda3f1",
+  "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-a754f5d3-ca8b-4c89-be88-e59032a96cbd.png"
+}

@@ -1,0 +1,2094 @@
+{
+  "tier": "fanxing",
+  "newSprites": 83,
+  "targetFramesPresent": 96,
+  "actions": 41,
+  "blinkEyeOnlyExact": 19,
+  "frozenFilesUnchanged": 115,
+  "visualReview": [
+    "all 64 non-blink additions compared to default references",
+    "19 blink composites reviewed including boundary repairs",
+    "packing restored books and papers; linked blink rebuilt",
+    "headpat_happy_3 closed mouth restored"
+  ],
+  "files": [
+    {
+      "tier": "fanxing",
+      "frame": "bored_1.png",
+      "fileSha256": "a484d5afdda154d92930e2efcadd00be63311c8d866a749adeb76ace7e1e7c4a",
+      "pixelSha256": "c4baba25a473836a2462cbb06006c583c9ae07fa475f5940bdff96fdfbb38c5a",
+      "sourceBBox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "newBBox": [
+        34,
+        180,
+        1221,
+        1215
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "bored_2.png",
+      "fileSha256": "b18d91b5af73a2235ee337238723b5a4d0839e9cee5410dc53936dec7cb66d9c",
+      "pixelSha256": "312462935d4adfe781238124eaaff4ece560d4e02c6c22ae51d70f3deff83e5b",
+      "sourceBBox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "newBBox": [
+        23,
+        181,
+        1218,
+        1215
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "bored_3.png",
+      "fileSha256": "2167fc7d208fcb869b1ac0d1f333ec6d90a5c8af7e70f0a1a1e29370099971a4",
+      "pixelSha256": "f7d362e9bd9e2661a22f0895d296b7270d5f5c56dffd334af473269d66db5a4d",
+      "sourceBBox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "newBBox": [
+        38,
+        180,
+        1218,
+        1213
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "bored_blink.png",
+      "fileSha256": "920243a37181ce8984fd7c52c9ffe76d7aeeb660fd928946f972684e42eb95aa",
+      "pixelSha256": "260b045d679df85a45f205f1c3bd37d49664528825bc60e42b87ec38d19e857b",
+      "sourceBBox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "newBBox": [
+        34,
+        180,
+        1221,
+        1215
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "cheer_1.png",
+      "fileSha256": "713f95f06fb8a9e4af82febca3e17ae80dee9cb054069eedfa3c6481d29639a1",
+      "pixelSha256": "e6c5910d71ff5520acbd3eca0a05063fc07ca7dc0802f353244f8426eaeb395a",
+      "sourceBBox": [
+        72,
+        24,
+        1182,
+        1218
+      ],
+      "newBBox": [
+        71,
+        22,
+        1182,
+        1219
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "cheer_2.png",
+      "fileSha256": "23a1ec89638d9c7dbe0b75f7b4da5da3b7e5e01ff1e76d87e2360b4c94c6ffac",
+      "pixelSha256": "f38b851e4e30cff574a7fde1725c7657127184c5fbfe4acce41854cd045250cd",
+      "sourceBBox": [
+        72,
+        24,
+        1182,
+        1218
+      ],
+      "newBBox": [
+        70,
+        26,
+        1181,
+        1220
+      ],
+      "topDelta": 2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "cheer_blink.png",
+      "fileSha256": "fb9518ce84d583599f51d0a3a8cf4d0b5e51ff333f035d96f7c62ccf91c754ef",
+      "pixelSha256": "99ec257004e51e56337ef67c902bffd533dd76dc7af01e992b9ae988577f08b5",
+      "sourceBBox": [
+        72,
+        24,
+        1182,
+        1218
+      ],
+      "newBBox": [
+        71,
+        22,
+        1182,
+        1219
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "clap_1.png",
+      "fileSha256": "f93ab5068ccdda468464833972635ac20eb31aa2f33f0818c5627586f4e8638f",
+      "pixelSha256": "236bdd463577dc996c3f3478e0092f4a853fba08ec2de24520395fe8d9e0d508",
+      "sourceBBox": [
+        147,
+        24,
+        1107,
+        1218
+      ],
+      "newBBox": [
+        147,
+        23,
+        1108,
+        1220
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "clap_2.png",
+      "fileSha256": "50f2368d80458320b44eab712860035f83acb6cbc83cc6c0a741a4704adaf050",
+      "pixelSha256": "72756fe159815dff18f3876526938a801595c959ce09414a263c59f5619da455",
+      "sourceBBox": [
+        147,
+        24,
+        1107,
+        1218
+      ],
+      "newBBox": [
+        146,
+        23,
+        1108,
+        1219
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "clap_3.png",
+      "fileSha256": "eca58ce9f09421c8b31c0645bbe77650577205e349e350f2698d351e39ce444a",
+      "pixelSha256": "2e2b1c0c6d4081784c35e1d1cb99a07cfb925b851db0a065efb618b9087f9223",
+      "sourceBBox": [
+        147,
+        24,
+        1107,
+        1218
+      ],
+      "newBBox": [
+        147,
+        24,
+        1108,
+        1221
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "clap_blink.png",
+      "fileSha256": "64976a7d7f6f39f50a0ff9004591b0b203ba022b4f92d2838502507eda7caddc",
+      "pixelSha256": "50193be6a302b4895ea35c23730d794ee19a7eb8b50c485795b5481846c4b0f1",
+      "sourceBBox": [
+        147,
+        24,
+        1107,
+        1218
+      ],
+      "newBBox": [
+        147,
+        23,
+        1108,
+        1220
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "codex_working_1.png",
+      "fileSha256": "e987e2d19a0b12e6016fd821c93736dc6d267330cdc0839a4ad277a952de3229",
+      "pixelSha256": "3bd957c9fc12363bc09070771f50daedcbf3fd0c03fd2dafc2e3a1bc4d39acfa",
+      "sourceBBox": [
+        47,
+        1,
+        1201,
+        1249
+      ],
+      "newBBox": [
+        48,
+        13,
+        1203,
+        1249
+      ],
+      "topDelta": 12,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "coquettish_1.png",
+      "fileSha256": "b6fddbaf542d9fcbfbbf3d20deaf2201687969a5126c95c5e2b039443275ae1f",
+      "pixelSha256": "83031bac46a8479e54542af8deab0391a7cf16cc43aba76b668c02a6591992a5",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        6,
+        1157,
+        1217
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "coquettish_2.png",
+      "fileSha256": "e3b7ba3178c43e164554d648cfc874ae527bebeddbb01e33cb927b98f8c5e94b",
+      "pixelSha256": "31bd48327961930173447f5923c2c469b5955c71ad2ad719110e026266f9a0f6",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        6,
+        1157,
+        1218
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "coquettish_3.png",
+      "fileSha256": "6192cb393fbb732478248a8936f6dfb19788ce3e309660fe4f8190744c3f96bb",
+      "pixelSha256": "4df11c1752f6679fc7dac936ba522e4b5bfedcbdd826f3ca64738dfc2333765d",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        6,
+        1157,
+        1218
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "coquettish_4.png",
+      "fileSha256": "382704651b63eed8670786f710868a03344469dec2e5b349a5d0269d578701fa",
+      "pixelSha256": "426346b8f479305180960eaa10246d0c6f5c7b6991e9dc5bdcf4c740b0475dd9",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        7,
+        1157,
+        1218
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "coquettish_blink.png",
+      "fileSha256": "9754acc377a878dd59461f17f55160131b9d79bcf4c94b41a3663477af52dcc3",
+      "pixelSha256": "0f7a828a2f3a09d9bc868e5b7d866444714082e9d904d0eb16599b46c7a83c37",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        6,
+        1157,
+        1217
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "curious_1.png",
+      "fileSha256": "f77ef711ed5114987a65c25f3aaee5eb15278a1215891ffcc982d63ffe2ef5ff",
+      "pixelSha256": "109e7b09c326d712dd0d677a2673331eb3941c523e857a3f609e333fc14bf0ad",
+      "sourceBBox": [
+        66,
+        24,
+        1188,
+        1219
+      ],
+      "newBBox": [
+        66,
+        25,
+        1194,
+        1223
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "curious_2.png",
+      "fileSha256": "83ea4d129ef1e0c47f21c143bdd442c2721e87c6c717511a6df435bc202e5ca7",
+      "pixelSha256": "645eee9c47a7e58e3943b74b275cdb325c7f4655932ea2bf192ffa35647a8315",
+      "sourceBBox": [
+        67,
+        19,
+        1214,
+        1219
+      ],
+      "newBBox": [
+        63,
+        16,
+        1215,
+        1221
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "curious_blink.png",
+      "fileSha256": "769d8e5f1249926e1664680d6e38f7ab73b25bc70dc4435304398c6452dd13c3",
+      "pixelSha256": "10acb7481e81bb26bcf1f15445ce29d9128650363130f6deb1950faff75da296",
+      "sourceBBox": [
+        66,
+        24,
+        1188,
+        1219
+      ],
+      "newBBox": [
+        66,
+        25,
+        1194,
+        1223
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "dragged_2.png",
+      "fileSha256": "86063645e2a3883c2a0bd453c501d55d6e66eb87e6bba43755c6518479965073",
+      "pixelSha256": "1d94e0facafdb02eff48388d9c592bd26b995ba3f6fdeab16c574da92729a71b",
+      "sourceBBox": [
+        153,
+        25,
+        1099,
+        1219
+      ],
+      "newBBox": [
+        153,
+        25,
+        1099,
+        1218
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "dragged_3.png",
+      "fileSha256": "ee143a69a844140522b31eb83e77290858cb18872bcc59cbef47d1601f116189",
+      "pixelSha256": "8a50f335314a1961587812abbe7ccb34b6128caea6b266ab34b088a39971727a",
+      "sourceBBox": [
+        153,
+        25,
+        1099,
+        1219
+      ],
+      "newBBox": [
+        144,
+        22,
+        1103,
+        1220
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "dragged_4.png",
+      "fileSha256": "4327ae4ba361525cb2bc36d089c3e715fd5d19cce086763f46cf99c21390d37b",
+      "pixelSha256": "8f742dc12fbbaa232f3a37ace16793504589a05417fd8917c5347dc7af17d14c",
+      "sourceBBox": [
+        153,
+        25,
+        1099,
+        1219
+      ],
+      "newBBox": [
+        143,
+        22,
+        1115,
+        1225
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_done_1.png",
+      "fileSha256": "932ca1fb1d09975af36df765273f07f8e34075ac08e4e068f31879d3d7a252aa",
+      "pixelSha256": "7e687086f75669099fded35a588c1ff5bef8156fb9cf81533e6f0d83746720ad",
+      "sourceBBox": [
+        138,
+        25,
+        1115,
+        1219
+      ],
+      "newBBox": [
+        138,
+        28,
+        1116,
+        1220
+      ],
+      "topDelta": 3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_done_blink.png",
+      "fileSha256": "eb6031623990a839e9544b0b80be94944abacbacec6f273b5c4034b7f608697f",
+      "pixelSha256": "97794f505a692642ce0e22ff6ff691cafd4d7e4810df719f76a5867ad2ae0c4e",
+      "sourceBBox": [
+        138,
+        25,
+        1115,
+        1219
+      ],
+      "newBBox": [
+        138,
+        28,
+        1116,
+        1220
+      ],
+      "topDelta": 3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_read_1.png",
+      "fileSha256": "9b1f8a0a8f5d94c25eb6d9abd119fdad45af2e6371384111e698685ba04c86dd",
+      "pixelSha256": "52d247b32af1c7677dea6ea83b4bdb91873ff41ddc38bad6ce7e40a6a2e8d8ee",
+      "sourceBBox": [
+        80,
+        24,
+        1174,
+        1219
+      ],
+      "newBBox": [
+        77,
+        22,
+        1175,
+        1220
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_read_2.png",
+      "fileSha256": "c050de8fb8ff90deefeda66db6ca4b95814c9899feae048576d4da8755e7f2eb",
+      "pixelSha256": "7fbcc20ff405787251d6197647dc5643e6d091c5666d6048ca860ae656c0964c",
+      "sourceBBox": [
+        80,
+        24,
+        1174,
+        1219
+      ],
+      "newBBox": [
+        79,
+        23,
+        1175,
+        1221
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_read_3.png",
+      "fileSha256": "eab7e77a88cd9ee9ae90874c6aedcae4c4fca44fbf413af4d05624d05da99260",
+      "pixelSha256": "264b1e2a67f3674c8060e62a888d2467559f366ce8c35e2ed234abe8bdf21536",
+      "sourceBBox": [
+        80,
+        24,
+        1174,
+        1219
+      ],
+      "newBBox": [
+        77,
+        25,
+        1174,
+        1221
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_read_4.png",
+      "fileSha256": "dce8f63e117a917f5be2b1a41583f00c7a85f498659570f0388a4a8a353128e6",
+      "pixelSha256": "be33f6784accc46c4768c45673a011cc7cc9d67d784845faccbe249f13a89c1f",
+      "sourceBBox": [
+        80,
+        24,
+        1174,
+        1219
+      ],
+      "newBBox": [
+        79,
+        20,
+        1176,
+        1221
+      ],
+      "topDelta": -4,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_read_blink.png",
+      "fileSha256": "c0e153920cf75f47d9d004697b28a92a6c244904ad59504019ff0ba46b873e93",
+      "pixelSha256": "23a9bb1b61bdc6ca26856bdf17b6dbb542332b2bfd41abcc667f8019d6707002",
+      "sourceBBox": [
+        80,
+        24,
+        1174,
+        1219
+      ],
+      "newBBox": [
+        77,
+        22,
+        1175,
+        1220
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_tea_1.png",
+      "fileSha256": "e305bececdf52e82d7309f08ecc042f2790156bb22918a3396e2911c48fcc662",
+      "pixelSha256": "15077c819b4c0cadd719b27d627653fafff8d9b28331163bb0ac3371809146f0",
+      "sourceBBox": [
+        92,
+        24,
+        1162,
+        1218
+      ],
+      "newBBox": [
+        92,
+        24,
+        1163,
+        1215
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "focus_tea_2.png",
+      "fileSha256": "1960d78e739fab9c8be5a2e0dad90f35ba8eebdf1ccd6c7b1239aea8c513ecd2",
+      "pixelSha256": "774a2d50c906741930649fcca5b0a7e2205cc5e157ee9c3d2a538b656263403d",
+      "sourceBBox": [
+        92,
+        24,
+        1162,
+        1218
+      ],
+      "newBBox": [
+        91,
+        24,
+        1164,
+        1216
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "greet_morning_1.png",
+      "fileSha256": "090b33a0e05c776dbc0998cd62d02b457bc2d49725c3225dc1792188b46fdbf4",
+      "pixelSha256": "9aac41137aaff7eaa4f734aec5d46c78ed9ec53c4dcbb58a69c22e439942b4a0",
+      "sourceBBox": [
+        113,
+        24,
+        1140,
+        1219
+      ],
+      "newBBox": [
+        112,
+        21,
+        1140,
+        1220
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "greet_morning_2.png",
+      "fileSha256": "4ed80cb202b96ddccc7fbd9a628f43c553479928fac883b3c53444a76fa90e53",
+      "pixelSha256": "d4ab501dfe511b31857f3c39885fe02a78fa0313a6459e55f1d7aa5d9386e129",
+      "sourceBBox": [
+        113,
+        24,
+        1140,
+        1219
+      ],
+      "newBBox": [
+        111,
+        21,
+        1142,
+        1221
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "greet_morning_blink.png",
+      "fileSha256": "4d826f216c1e22edbb10f966c04f4fff168e1bb853493475bcfa812a2690d0af",
+      "pixelSha256": "3786695478c9e49b8c45bda0315fc83f28f8d274621e0ce683872cad19abf0c3",
+      "sourceBBox": [
+        113,
+        24,
+        1140,
+        1219
+      ],
+      "newBBox": [
+        112,
+        21,
+        1140,
+        1220
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "greet_night_1.png",
+      "fileSha256": "89c2e268c13ce8de5bff6788f294fe2db7c0aa89390ee8cb30fc89d78a00e10d",
+      "pixelSha256": "6b2719aef23103df9337272a43b38eb25f9f7b46d6dcb1c51dde41f306e33315",
+      "sourceBBox": [
+        103,
+        25,
+        1150,
+        1218
+      ],
+      "newBBox": [
+        102,
+        24,
+        1151,
+        1220
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "greet_night_2.png",
+      "fileSha256": "a1ba9ba1a16816c8b6d7b125f59dcfae674ac3b4b37cb8f0909fe1db974142fd",
+      "pixelSha256": "9901225956af93d172298ff54ac7ac7dabd3a0d73cf567f4c59141643b317a66",
+      "sourceBBox": [
+        103,
+        25,
+        1150,
+        1218
+      ],
+      "newBBox": [
+        102,
+        24,
+        1152,
+        1221
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "grievance_1.png",
+      "fileSha256": "7dd1651128606831a3d8f33fcea171a5d88896358e7634f81bb905894ecb2596",
+      "pixelSha256": "e8efb63d7b7942847f36bfaa3f4005eabf749c7ef0e9603f37e397d2530047ff",
+      "sourceBBox": [
+        75,
+        24,
+        1179,
+        1219
+      ],
+      "newBBox": [
+        71,
+        25,
+        1183,
+        1218
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "grievance_2.png",
+      "fileSha256": "d351d5f3c00b1815e3042c2314aa7aa1443672b5d977c98cf17b6fa75c4c8297",
+      "pixelSha256": "0df7b4d7543889ce3dfe77a052a945d391c43ff77d267e553ff74a14a7792f55",
+      "sourceBBox": [
+        75,
+        24,
+        1179,
+        1219
+      ],
+      "newBBox": [
+        72,
+        24,
+        1182,
+        1218
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "guitar_1.png",
+      "fileSha256": "24ce171ec19c4c6a90fb26a31e4a5513fdb160f8ce2eefd7afb2e38fd556858e",
+      "pixelSha256": "99f454cf535a318720b9a767df3e4aa42b39d27f8c1f9afa33e0fa4779fd6d94",
+      "sourceBBox": [
+        44,
+        2,
+        1228,
+        1239
+      ],
+      "newBBox": [
+        44,
+        0,
+        1224,
+        1240
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "headpat_happy_1.png",
+      "fileSha256": "24769c3fd142b86c2168e600b46b37e31aa0c040530161a3b5e2c1442b0a3664",
+      "pixelSha256": "230f6ff807928d0448b2adb251d715c765c318ceffe53403863866cc2313cde9",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        8,
+        1160,
+        1222
+      ],
+      "topDelta": 2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "headpat_happy_2.png",
+      "fileSha256": "2c966bee7073c884824f438745537a824e6110458bfb72d4d59507b9739a36c3",
+      "pixelSha256": "02ced07a21021fbe3aea04bedb3ad251dd80bfba64e4769289743c7a565705d7",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        7,
+        1159,
+        1224
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "headpat_happy_3.png",
+      "fileSha256": "801c9169d204a4d9596e439021e4d4ab3ba11283a1a2413efae479eebdd50337",
+      "pixelSha256": "51503d4cba01b9e26e16aaede94bd28671cf4396f4163213144ee54f95eb7c06",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        78,
+        8,
+        1160,
+        1224
+      ],
+      "topDelta": 2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "headpat_happy_4.png",
+      "fileSha256": "4f2235720940b312a9b28bb317929d0802a53f741e2ef22f92e774e0d1982399",
+      "pixelSha256": "33618fc04245422ab3fa3a2b855134fa7acd7e75feb32ef407fab8884b8eaa4c",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        7,
+        1160,
+        1222
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "headpat_happy_blink.png",
+      "fileSha256": "22b24ec0f20ff93424bf208d566260bf667a7810ffb42d0503f79a9c502374ca",
+      "pixelSha256": "0ffcdff3b550072bae68ef325517f362201f135889e42b68923e3a4faef1de0c",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        8,
+        1160,
+        1222
+      ],
+      "topDelta": 2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "heart_1.png",
+      "fileSha256": "4cb9498b644e0ec4887cf999d5a16274fd6d7b7dc9ec88d161dcb03bbadbe176",
+      "pixelSha256": "641ecf138ed702f654281b2bbc8f054c0843f6f9103b893f39f3921c45a9610a",
+      "sourceBBox": [
+        130,
+        24,
+        1123,
+        1219
+      ],
+      "newBBox": [
+        128,
+        25,
+        1126,
+        1233
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "hold_card_1.png",
+      "fileSha256": "5445390caa119592f1f08514c7a6a30c3375eb5ed4621f160c2bb330b63d27a9",
+      "pixelSha256": "1ef323f42c14514211a195273181ec767261daf0b1e39948d09900422bd7e0b7",
+      "sourceBBox": [
+        120,
+        24,
+        1134,
+        1219
+      ],
+      "newBBox": [
+        111,
+        18,
+        1140,
+        1222
+      ],
+      "topDelta": -6,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "hold_card_blink.png",
+      "fileSha256": "413b7727d9a8cb2d1668cef367bbb4ec6dcb44799d2f59506443b501df3e2d92",
+      "pixelSha256": "70f21f3efb1a20280672b3c728537b7fbfbbe52b6b6c77fe5a5d12cbf8aad60a",
+      "sourceBBox": [
+        120,
+        24,
+        1134,
+        1219
+      ],
+      "newBBox": [
+        111,
+        18,
+        1140,
+        1222
+      ],
+      "topDelta": -6,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "hug_1.png",
+      "fileSha256": "d3e14cc331fcd343fac1aaf86d0185c99ed54ab1b28fbbcfb18ebb1a9633dfc3",
+      "pixelSha256": "beb4a477f4d10790fcea29fe728342e2c8751ad84e96f1c1cfa5168b0c056202",
+      "sourceBBox": [
+        106,
+        25,
+        1148,
+        1219
+      ],
+      "newBBox": [
+        105,
+        22,
+        1150,
+        1222
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "hug_2.png",
+      "fileSha256": "ae2429be82e8cb3cfe2f87b238de6c8a5388d64714648cbb53f215eb636a846e",
+      "pixelSha256": "b0d017ac7e18f384acf1900d8588e7eb25986ddbe7a365568db4bb9c8b42ba91",
+      "sourceBBox": [
+        105,
+        25,
+        1179,
+        1219
+      ],
+      "newBBox": [
+        106,
+        25,
+        1179,
+        1221
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "hug_blink.png",
+      "fileSha256": "9f2a10a820cd98214531920c686d9cb8670cab001f308518371362789f5a67c8",
+      "pixelSha256": "ad28fcd582eee2af763f7b08139915c40c869fe02b89fa6922da384d53419647",
+      "sourceBBox": [
+        106,
+        25,
+        1148,
+        1219
+      ],
+      "newBBox": [
+        105,
+        22,
+        1150,
+        1222
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "landing_1.png",
+      "fileSha256": "a1e76fe80b99e65e8c7ba4e2d5bb6e5c4acb1a42f1048c257aa66c65030d5437",
+      "pixelSha256": "22fb8afd3f053bb9004809cc7e575290ec379157bc9903483f714fcce147f0a2",
+      "sourceBBox": [
+        40,
+        33,
+        1213,
+        1219
+      ],
+      "newBBox": [
+        42,
+        32,
+        1214,
+        1221
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "landing_blink.png",
+      "fileSha256": "450408741ed6a1eb6ca85b5d49663594c8245ced53cfcc55f74722d54c886716",
+      "pixelSha256": "2a245e2a1abd920e25917414f567f35820864a613887fcbb14d5e1f57b00a8a9",
+      "sourceBBox": [
+        40,
+        33,
+        1213,
+        1219
+      ],
+      "newBBox": [
+        42,
+        32,
+        1214,
+        1221
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "microphone_1.png",
+      "fileSha256": "8c419f2f0f7b3944f0cfb40904e439539cdad560d55684efa833bb2cd7e111bc",
+      "pixelSha256": "17f8f909c0deb3eeb6055239d285461242f219ab626b805d5834d1f2dd77e9a0",
+      "sourceBBox": [
+        81,
+        10,
+        1185,
+        1230
+      ],
+      "newBBox": [
+        80,
+        17,
+        1188,
+        1230
+      ],
+      "topDelta": 7,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "music_1.png",
+      "fileSha256": "1c61b14a68e2ac4662964d0636318b15ea9560a992b0b1f5ce03666a1ec44fce",
+      "pixelSha256": "79007d89a256b3af53768a8f664bae04659f887341ed69356742ee0c8b206840",
+      "sourceBBox": [
+        62,
+        8,
+        1184,
+        1224
+      ],
+      "newBBox": [
+        61,
+        12,
+        1185,
+        1209
+      ],
+      "topDelta": 4,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "packing_1.png",
+      "fileSha256": "73a7b2791a5ccbb52b33c4f79530537128631ae64bc4cca56695968f447e7c78",
+      "pixelSha256": "95251e099967af4ae0ce77b54ebc6497e516004912947c9d35924c0dfaa2c3ac",
+      "sourceBBox": [
+        78,
+        24,
+        1176,
+        1219
+      ],
+      "newBBox": [
+        78,
+        24,
+        1178,
+        1221
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "packing_blink.png",
+      "fileSha256": "69e6275098660eb35bcb21b3538efc5719fe9ec7f94de2ff3c36369f44a31169",
+      "pixelSha256": "fcec1d8fb81d9cbba033e90550640f2d56d956361bf44a341949676ca154f7a6",
+      "sourceBBox": [
+        78,
+        24,
+        1176,
+        1219
+      ],
+      "newBBox": [
+        78,
+        24,
+        1178,
+        1221
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "peek_1.png",
+      "fileSha256": "44e8f77949f5d79ab6dae56b9054e0ac47399a89b73dc5393062ce87b9aada2f",
+      "pixelSha256": "91149722f2a7df91e56632bc087cdf39b81b945f14849fe4d94e1388e1e3bd53",
+      "sourceBBox": [
+        51,
+        24,
+        1203,
+        1219
+      ],
+      "newBBox": [
+        48,
+        22,
+        1220,
+        1221
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "peek_2.png",
+      "fileSha256": "9abfe7a871ce7ac67260ea44557ad165427349673612e0146d3491c1313576b9",
+      "pixelSha256": "5b90884207a1f7dae0246a31e13a3012b48b9ac20205f7658d243fd5a8139688",
+      "sourceBBox": [
+        51,
+        15,
+        1203,
+        1219
+      ],
+      "newBBox": [
+        51,
+        17,
+        1208,
+        1219
+      ],
+      "topDelta": 2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "pout_1.png",
+      "fileSha256": "23499c29124c3507a8ddca0d11495f67222659d697273f339a90ff8533971dd9",
+      "pixelSha256": "0261ffad6dfce2a8b2ba1e4b7f16d64aaed659ab19ea6d00c31b13d68413c0b5",
+      "sourceBBox": [
+        132,
+        24,
+        1122,
+        1219
+      ],
+      "newBBox": [
+        129,
+        21,
+        1128,
+        1224
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "pout_2.png",
+      "fileSha256": "938499ac1595216a45c404f2801985be5dff1d9456506f4db2cc5c9498bb9a06",
+      "pixelSha256": "4cc1164cf48aa3d843330c0306be329235a357ae58da626443b731eb5e67587b",
+      "sourceBBox": [
+        132,
+        24,
+        1122,
+        1219
+      ],
+      "newBBox": [
+        133,
+        24,
+        1123,
+        1228
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "pout_blink.png",
+      "fileSha256": "978f0585a3a6579a177f79c00220cd1dbbdc9277cc8f01e2a10fb917b9196954",
+      "pixelSha256": "5abb36c532ab440268bfa20c36b6e71ecf337b63dfbf5a364ba9e33ffb55d855",
+      "sourceBBox": [
+        132,
+        24,
+        1122,
+        1219
+      ],
+      "newBBox": [
+        129,
+        21,
+        1128,
+        1224
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "proud_1.png",
+      "fileSha256": "1936e7ef216fbdc215a6534587d40a0b4fa542518b2180574fc0fc474e9f0323",
+      "pixelSha256": "b3b99e6f2c31f678fa50ba04f3bdd126771d2b0a0b57b5d9b7b2cdf7f5a90a3b",
+      "sourceBBox": [
+        132,
+        24,
+        1121,
+        1219
+      ],
+      "newBBox": [
+        128,
+        28,
+        1126,
+        1222
+      ],
+      "topDelta": 4,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "ready_go_1.png",
+      "fileSha256": "a16319fd4b879f35a81fb5e180457ad56cbed56e6c3635eabab0288f89b1a8cd",
+      "pixelSha256": "9a1e7bda196f461f8393c197bff7cad515eb7d7cb298272086a7c2b3b8cfbad6",
+      "sourceBBox": [
+        106,
+        24,
+        1147,
+        1219
+      ],
+      "newBBox": [
+        103,
+        25,
+        1152,
+        1223
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "ready_go_blink.png",
+      "fileSha256": "9bb33380da8c67f9f0a1084de6d089243c316e41188149d9708cfbe5f165ddd0",
+      "pixelSha256": "dd3a2e20e1042df9edbeafa997f4d76d3b69b2a6d87b5c3e306f7f354e23f3b8",
+      "sourceBBox": [
+        106,
+        24,
+        1147,
+        1219
+      ],
+      "newBBox": [
+        103,
+        25,
+        1152,
+        1223
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "shy_1.png",
+      "fileSha256": "c4d2c38114bd00fed8eea466d0c566cc5ad8fd8db52ba53f380a198dacd971f9",
+      "pixelSha256": "ae6092288ef1314327d4e22ad50d54e3b743fcd8cb206f88f45a930bfdd68be9",
+      "sourceBBox": [
+        170,
+        24,
+        1084,
+        1219
+      ],
+      "newBBox": [
+        166,
+        19,
+        1091,
+        1232
+      ],
+      "topDelta": -5,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "shy_2.png",
+      "fileSha256": "e2e8793286d7876a633123fd4b18f4b255eb6f669a95f8bb2e4b2fe04bc970f1",
+      "pixelSha256": "cf3d22b8e327028ab0b21c56f88b5678d832992ec02141e2f8a9e761e5222e7d",
+      "sourceBBox": [
+        170,
+        24,
+        1084,
+        1219
+      ],
+      "newBBox": [
+        171,
+        27,
+        1084,
+        1231
+      ],
+      "topDelta": 3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "sleep_3.png",
+      "fileSha256": "9b65981c19b832fa388f402515b47f3345d37fc8e860fc6a608456de5a4b41e4",
+      "pixelSha256": "8e3af2f1a8e5a9166a828a539994c28104b141c011e8937905e6c8a7e5c5a3c7",
+      "sourceBBox": [
+        40,
+        287,
+        1214,
+        1219
+      ],
+      "newBBox": [
+        10,
+        287,
+        1247,
+        1166
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "stretch_break_1.png",
+      "fileSha256": "4a4edc8a363fe46d2839da25a6bb8be4b9442a6aa7a6b7061d2dc128334fba23",
+      "pixelSha256": "d5d576b596c08de05cb4b2bfa7de43e113b15f6cd43235f49f0f32b34612faec",
+      "sourceBBox": [
+        124,
+        30,
+        1131,
+        1219
+      ],
+      "newBBox": [
+        125,
+        31,
+        1134,
+        1222
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "stretch_break_2.png",
+      "fileSha256": "0da7a9416b3c42623d4e5276c02d7f2d9fb32609cc62a6f7e02f55637b45ed0a",
+      "pixelSha256": "186f78d6d5eb3e773e7815785f3373f3c8bf5246149afe22d2c7b78104d6b060",
+      "sourceBBox": [
+        128,
+        51,
+        1144,
+        1219
+      ],
+      "newBBox": [
+        101,
+        32,
+        1163,
+        1225
+      ],
+      "topDelta": -19,
+      "cornerAlpha": [
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "stretch_break_blink.png",
+      "fileSha256": "87e35f162ff3d7b7d9594044d14b92124f22af3328b36e63007906772f6abd24",
+      "pixelSha256": "ce3926625d82024980b02129adf4828fdd1fc8d45c4a776d67f300e43524cf76",
+      "sourceBBox": [
+        124,
+        30,
+        1131,
+        1219
+      ],
+      "newBBox": [
+        125,
+        31,
+        1134,
+        1222
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "surprised_1.png",
+      "fileSha256": "7ec304e5ad094fcb37e0e6e75e7e532547d9a2c22680b3dc8aa62d240188c235",
+      "pixelSha256": "6ae6bde2cf039742e58c0a2329e7b76644dc24f17fc3ce200eeebe80c2a1fe95",
+      "sourceBBox": [
+        70,
+        24,
+        1182,
+        1219
+      ],
+      "newBBox": [
+        70,
+        21,
+        1185,
+        1220
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "thinking_blink.png",
+      "fileSha256": "60ddf5df25881ab4b74087b0160156fd272ee57a9e3602228dc0deccfc635d26",
+      "pixelSha256": "fc00d606c23e2db6799a3d4127d8a150812aa20d82bd18108bdfaf9c9e5502ae",
+      "sourceBBox": [
+        93,
+        24,
+        1161,
+        1218
+      ],
+      "newBBox": [
+        50,
+        9,
+        1204,
+        1219
+      ],
+      "topDelta": -15,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "thumbs_up_1.png",
+      "fileSha256": "fbf5190ce83fd5edc1430cfbb265e10772a3c96d3093f552a2c893964fe32769",
+      "pixelSha256": "d93fdc973eb78e6bb97c54a11f063b15fd723171e4cf62c887bcb3f84913deea",
+      "sourceBBox": [
+        101,
+        24,
+        1152,
+        1219
+      ],
+      "newBBox": [
+        99,
+        22,
+        1152,
+        1221
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "thumbs_up_blink.png",
+      "fileSha256": "9c899d68dfa3a16f02eb71efcff24641c91b37e8512b96cfba96360b1453292b",
+      "pixelSha256": "7ab751fbd94f4d976402b704c82f9db89f0aeec857e3b07183a06524cd31cd26",
+      "sourceBBox": [
+        101,
+        24,
+        1152,
+        1219
+      ],
+      "newBBox": [
+        99,
+        22,
+        1152,
+        1221
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "wake_stretch_1.png",
+      "fileSha256": "d4d117079cfe3b2dd2a043a6d685f8414d155fa02b9f9c2b5881a8d227a5fba9",
+      "pixelSha256": "ba50dd875c61f326a117f7e81d1c579e04518bcee8fd9216fdb3565e34a753ba",
+      "sourceBBox": [
+        147,
+        41,
+        1106,
+        1218
+      ],
+      "newBBox": [
+        146,
+        41,
+        1107,
+        1219
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "wake_stretch_2.png",
+      "fileSha256": "6e4aa8ec1d63fcc459ade051f978746bd5fc297e92037ed47c45c54939d9b460",
+      "pixelSha256": "83b46ed52377aa97227a29cb1322d8810805da07a8f059e23495be8a5331f4d2",
+      "sourceBBox": [
+        147,
+        41,
+        1106,
+        1218
+      ],
+      "newBBox": [
+        146,
+        40,
+        1107,
+        1219
+      ],
+      "topDelta": -1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "worried_1.png",
+      "fileSha256": "9483390d613607545f4384113c0b8e07afee62d62c486807274137a8c3c4aa22",
+      "pixelSha256": "3b1f2e868fe9019763a062d5827678e304465dd79f2ba3e55f0554d3ef37072b",
+      "sourceBBox": [
+        156,
+        24,
+        1098,
+        1219
+      ],
+      "newBBox": [
+        157,
+        12,
+        1100,
+        1229
+      ],
+      "topDelta": -12,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "worried_2.png",
+      "fileSha256": "aa0bd28469d886e4adb1693828d8e3d0e849002323d9ecc3267c83980703a465",
+      "pixelSha256": "ee3f94bffc86168b6b3c70f6b5033169b907e73438453c277d7e724dc023e073",
+      "sourceBBox": [
+        156,
+        24,
+        1098,
+        1219
+      ],
+      "newBBox": [
+        156,
+        21,
+        1099,
+        1225
+      ],
+      "topDelta": -3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "worried_blink.png",
+      "fileSha256": "49f8002ddb848d840a4562f23e2984397ea3eacd13780b482dfc17411cbf2abc",
+      "pixelSha256": "7455bfa7139e9ac15d704322693af04a32464642b404c4caa13d0274bf869a32",
+      "sourceBBox": [
+        156,
+        24,
+        1098,
+        1219
+      ],
+      "newBBox": [
+        157,
+        12,
+        1100,
+        1229
+      ],
+      "topDelta": -12,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "yawn_1.png",
+      "fileSha256": "fb0201c31df3f6316308725fed5ff51ff0b3e56e4500e8a17d15f6546cf89420",
+      "pixelSha256": "5ca5f23c8625f27fc2e7abd9b2e8eee389ad9aeec247f68dbde34bb2e00efd5b",
+      "sourceBBox": [
+        103,
+        25,
+        1150,
+        1219
+      ],
+      "newBBox": [
+        103,
+        26,
+        1151,
+        1204
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "yawn_2.png",
+      "fileSha256": "5acc0e527467b08e8985344d8dbca725144ce8a7ea1982815c2ae6ad91f3e194",
+      "pixelSha256": "283660f8302abe2bd5f88eb1b680da2ae4ccabaf5c19d10de09ae73172dc2d1b",
+      "sourceBBox": [
+        103,
+        25,
+        1150,
+        1219
+      ],
+      "newBBox": [
+        102,
+        23,
+        1151,
+        1215
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "fanxing",
+      "frame": "yawn_3.png",
+      "fileSha256": "f4aa38b6d6c94c28cc3d4be8eee14280c480df3520d05f849ed238fcac20e545",
+      "pixelSha256": "89a90dbb402c24b41166d531700bb08a82ea9072c78ed944b6dce8606e4a533f",
+      "sourceBBox": [
+        103,
+        25,
+        1150,
+        1219
+      ],
+      "newBBox": [
+        101,
+        23,
+        1158,
+        1211
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "limits": [
+    "No runtime outfit playback/accessory overlay test; numerical pose landmarks not independently certified"
+  ]
+}

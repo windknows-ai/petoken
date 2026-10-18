@@ -1,0 +1,14 @@
+# Starsea gown step 2
+- User accepted/merged step 1 and authorized step 2 on 2026-10-18.
+- Authoritative 41-action / 96-frame spec: .work/STEP2_SPEC.md. Thirteen target filenames already existed per tier, leaving 83 additions per tier / 415 total. Retain all first-step extra frames.
+- COMPLETE: fanxing 83 new sprites, all 96 target filenames covered. All 64 non-blink poses and 19 blink composites visually reviewed. Book-hugging packing and frame-3 headpat mouth corrected before delivery.
+- Verified fanxing: native Qt decode; 1254x1254 RGBA, transparent corners; 19 blink files exactly preserve non-eye RGB and entire alpha. Source snapshots/hash and all 115 pre-existing sprite/preview hashes checked. .work/FANXING_COMPLETE_QA.json contains current file hashes.
+- IN PROGRESS: mingyue 64 non-blink additions saved and visually reviewed; 19 closed-eye drafts generating. Compose/review eyes before counting blink files.
+- IN PROGRESS: haori 34 default-pose masters generating. Yinhe/xinghai not started.
+- Source images override action names. Packing hugs books/papers; heart uses both hands; proud hands on hips; night has raised hand; ready_go points forward. See .work/STEP2_STATE.json actionOverrides.
+- User explicitly approved Python eye-only composition on 2026-10-18. Preserve every pixel outside reviewed small eye masks and all alpha; built-in imagegen supplies eyelids. No other procedural art edits.
+- Root files stay unchanged under user's asset-only/add-only scope. All writes/commits stay under assets/v2_5/outfits/starsea_gown. Old previews and first-step PNGs immutable. New overall preview: STARSEA_GOWN_PREVIEW.png in this folder.
+- Built-in imagegen only. No paid API, push, merge, runtime edits or subagents. Branch codex/outfits-starsea-gown; local per-tier commits.
+- Resolved issues: interrupted batch recovered/requeued; curious_1 output moderation retried with modest fully covered costume; image runner missing btoa replaced before any requests. No current generation quota error.
+- Exact next step: finalize fanxing local commit; finish mingyue blink composites/visual review and local commit, then remaining 3 qualities. Job requests/draft paths/prompts persist in .work/jobs and .work/blinks; do not duplicate live requests.
+- Remaining verification limits: exact pose/foot/head landmark certification and runtime accessory layering are not independently automated; source-vs-output visual review required.

@@ -1,0 +1,9 @@
+{
+  "tier": "fanxing",
+  "frame": "focus_tea_1.png",
+  "source": "assets/v2_0/focus_tea_1.png",
+  "sourceSha256": "b113f4548468241d60f70519b14f90451f9bcd44bb980fe02507a2bfc42876ba",
+  "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nAction/registration: Tea break: seated eyes CLOSED, both hands hold teacup near mouth, legs tucked under. Exact cup, fingers and boots; plain pale-gray cup without moon/jewels.",
+  "status": "CANDIDATE",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-4852a335-a907-4968-8fb7-59b873239f15.png"
+}
