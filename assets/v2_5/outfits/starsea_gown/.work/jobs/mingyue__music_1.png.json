@@ -1,0 +1,9 @@
+{
+  "tier": "mingyue",
+  "frame": "music_1.png",
+  "source": "assets/v1_1/music.png",
+  "sourceSha256": "ee66445aef3050091d08adf3eadcf13dec9d796bfa722c822208aca772dfbe89",
+  "prompt": "Use case: identity-preserve. Make ONE 1254x1254 RGBA sprite with genuinely transparent background. INPUT 1 is EXACT default action pose/face/head/hair/hand/knee/boot registration and canvas-scale target; trace its silhouette anchors precisely, do not recenter/resize/zoom/shift. INPUT 2 is the user-accepted step-1 MINGYUE costume reference only. Adapt its identical garment, jewelry and boots to INPUT 1's action, never copy its idle gesture. Preserve silver-lavender hair, violet eyes and blue side feather. No text or extra anatomy. Complete garment/props within canvas, no clipping. Keep blank alpha around the sprite.\nAction: Listening to music, eyes CLOSED smiling, BOTH hands on headphones, original knees and boots crossed. Pearl-silver headphones, no luminous particles; tiny music symbols may stay.\nCostume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow.",
+  "status": "CANDIDATE",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-5c7ff0af-fe5f-4cc1-a9d2-cd7ce4413c3c.png"
+}

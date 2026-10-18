@@ -1,0 +1,10 @@
+{
+  "tier": "mingyue",
+  "frame": "peek_1.png",
+  "source": "assets/v2_0/peek_1.png",
+  "sourceSha256": "ec5a54f3829006ea36b5f165e6340812b5737f904bfac659f9708994fd1f31c4",
+  "prompt": "Use case: identity-preserve. ONE production 1254x1254 PNG RGBA with genuine alpha transparency. INPUT 1 is the EXACT DEFAULT ACTION target: trace its head/hair outline, face, hands, boots/feet, knees and body pose at the SAME coordinates, size and canvas margins. NEVER resize, recenter, shift, zoom or change pose. Same silver-lavender hair, violet eyes and natural blue side feather. INPUT 2 is the user-accepted STEP-1 MINGYUE costume ONLY: transfer identical clothes/jewelry/boots to INPUT 1's pose. Ignore INPUT 2's idle hand/leg positions. LOCK all source pose landmarks to INPUT 1. Costume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow. Use same pearl crescent hair comb, moon-pearl bow brooch, pearl scalloped silver edging and white/icy-periwinkle layered skirt as accepted master. Fully opaque modest bodice, no new cutouts, no exposed torso. No text/letters, opaque background/fog or extra anatomy. Full cloth and props within canvas. No crown, wings, cape, luminous particles or aurora.\nAction/registration: Hiding behind LARGE cloud-shaped pillow, only eyes/top of head and small hands visible. Exact pillow and head position. Plain matte pale slate-blue cushion without moon emblem; do not expose hidden body or invent feet.",
+  "status": "CANDIDATE",
+  "referenceMode": "original-plus-accepted-costume",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-57badbe8-ef46-481d-a11a-fe7c06d42ff5.png"
+}
