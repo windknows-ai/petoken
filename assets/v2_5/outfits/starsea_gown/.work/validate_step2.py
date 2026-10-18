@@ -15,13 +15,15 @@ for line in subprocess.check_output(['git','diff',state['baseline'],'--name-stat
     assert line.startswith('A\t'),('not_add_only',line)
 untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines()
 assert all(p.startswith(prefix) for p in untracked),('outside_scope_untracked',untracked)
-images=[];failed=[];pending=[];counts={t:0 for t in state['tiers']};blinkExact={t:0 for t in state['tiers']}
+images=[];failed=[];pending=[];rejected=[];counts={t:0 for t in state['tiers']};blinkExact={t:0 for t in state['tiers']}
 for path in sorted((work/'jobs').glob('*.json')):
     rec=json.loads(path.read_text(encoding='utf-8'))
     if rec['status']=='FAILED':
         failed.append({'tier':rec['tier'],'frame':rec['frame'],'error':rec.get('error')});continue
     if rec['status']=='REQUESTED':
         pending.append({'tier':rec['tier'],'frame':rec['frame']});continue
+    if rec['status']=='REJECTED_NEEDS_REGEN':
+        rejected.append({'tier':rec['tier'],'frame':rec['frame'],'reason':rec['visualIssue']});continue
     if rec['status']!='CANDIDATE':continue
     tier=rec['tier'];name=rec['frame'];dest=folder/tier/name
     assert name in state['missingAtStart'][tier],('not_requested',dest)
@@ -59,7 +61,10 @@ for path in sorted((work/'jobs').glob('*.json')):
     counts[tier]+=1
     images.append({'tier':tier,'frame':name,'fileSha256':hashlib.sha256(dest.read_bytes()).hexdigest(),'pixelSha256':pixelhash,'sourceBBox':oldbbox,'newBBox':bbox,'topDelta':bbox[1]-oldbbox[1],'cornerAlpha':corners})
 assert len({im['pixelSha256'] for im in images})==len(images),'duplicate decoded sprites'
-report={'status':'PASS_SAVED_FORMAT_QT_AND_ADD_ONLY_SCOPE','saved':len(images),'counts':counts,'blinkOutsideEyeAndAlphaExact':blinkExact,'requiredNew':415,'frozenExistingUnchanged':len(state['existingFileHashes']),'pending':pending,'failed':failed,'images':images,'limits':['Exact pose/foot/head pixel landmarks not quantitatively certified; visual review separate']}
+expected={(im['tier'],im['frame']) for im in images}
+actual={(tier,path.name) for tier in state['tiers'] for path in (folder/tier).glob('*.png') if path.name in state['missingAtStart'][tier]}
+assert actual==expected,('unrecorded_or_missing_production_png',actual^expected)
+report={'status':'PASS_SAVED_FORMAT_QT_AND_ADD_ONLY_SCOPE','saved':len(images),'counts':counts,'blinkOutsideEyeAndAlphaExact':blinkExact,'requiredNew':415,'frozenExistingUnchanged':len(state['existingFileHashes']),'pending':pending,'failed':failed,'rejected':rejected,'images':images,'limits':['Exact pose/foot/head pixel landmarks not quantitatively certified; visual review separate']}
 (work/'CURRENT_QA.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
 state['done']={t:[im['frame'] for im in images if im['tier']==t] for t in state['tiers']}
 state['currentValidation']={k:report[k] for k in ['status','saved','counts','requiredNew','frozenExistingUnchanged']}

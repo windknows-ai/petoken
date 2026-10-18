@@ -37,6 +37,8 @@ polys={
 }
 exclude={'packing_blink.png':[[550,460,650,495]],'stretch_break_blink.png':[[690,320,790,392]]}
 extras={'bored_blink.png':[[1058,713,1087,750]],'cheer_blink.png':[[842,503,888,531]]}
+if tier=='mingyue':
+ extras['landing_blink.png']=[[970,605,1020,670],[819,750,997,790]]
 outdir=work/'composed';outdir.mkdir(exist_ok=True)
 reports=[]
 for r in plans:
@@ -67,7 +69,10 @@ qa='BLINK_COMPOSITE_QA.json' if tier=='fanxing' else tier.upper()+'_BLINK_COMPOS
 if args.finalize:
  for r in reports:
   dest=folder/r['tier']/r['frame']
-  assert r['frame'] in s['missingAtStart'][r['tier']] and not dest.exists(),dest
+  assert r['frame'] in s['missingAtStart'][r['tier']],dest
+  if dest.exists():
+   assert hashlib.sha256(dest.read_bytes()).digest()==hashlib.sha256(Path(r['composed']).read_bytes()).digest(),('existing_composite_differs',dest)
+   continue
   shutil.copyfile(r['composed'],dest)
   src=next(f for f in s['frames'] if f['name']==r['frame'])
   record={**r,'source':src['source'],'sourceSha256':src['sourceSha256'],'status':'CANDIDATE','method':'imagegen closed eyes plus explicitly authorized eye-only Pillow compositing'}

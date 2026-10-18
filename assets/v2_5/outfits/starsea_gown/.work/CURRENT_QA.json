@@ -1,33 +1,82 @@
 {
   "status": "PASS_SAVED_FORMAT_QT_AND_ADD_ONLY_SCOPE",
-  "saved": 153,
+  "saved": 172,
   "counts": {
     "fanxing": 83,
-    "mingyue": 64,
-    "haori": 6,
-    "yinhe": 0,
-    "xinghai": 0
+    "mingyue": 73,
+    "haori": 10,
+    "yinhe": 1,
+    "xinghai": 5
   },
   "blinkOutsideEyeAndAlphaExact": {
     "fanxing": 19,
-    "mingyue": 0,
+    "mingyue": 9,
     "haori": 0,
     "yinhe": 0,
     "xinghai": 0
   },
   "requiredNew": 415,
   "frozenExistingUnchanged": 115,
-  "pending": [
+  "pending": [],
+  "failed": [
     {
       "tier": "haori",
-      "frame": "bored_1.png"
+      "frame": "hug_1.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75645}}\")"
     },
     {
       "tier": "haori",
-      "frame": "sleep_3.png"
+      "frame": "landing_1.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75657}}\")"
+    },
+    {
+      "tier": "haori",
+      "frame": "pout_1.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75659}}\")"
+    },
+    {
+      "tier": "xinghai",
+      "frame": "bored_1.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75643}}\")"
+    },
+    {
+      "tier": "xinghai",
+      "frame": "headpat_happy_1.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75651}}\")"
+    },
+    {
+      "tier": "xinghai",
+      "frame": "sleep_3.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75650}}\")"
+    },
+    {
+      "tier": "yinhe",
+      "frame": "codex_working_1.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386936,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75698}}\")"
+    },
+    {
+      "tier": "yinhe",
+      "frame": "music_1.png",
+      "error": "image generation failed: http 429 Too Many Requests: Some(\"{\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"plus\\\",\\\"resets_at\\\":1792386937,\\\"eligible_promo\\\":null,\\\"limit_window_minutes\\\":1440,\\\"resets_in_seconds\\\":75709}}\")"
     }
   ],
-  "failed": [],
+  "rejected": [
+    {
+      "tier": "haori",
+      "frame": "bored_1.png",
+      "reason": "Natural blue side feather incorrectly painted gold; restore blue feather separately from gold sun brooch while preserving original pose."
+    },
+    {
+      "tier": "haori",
+      "frame": "curious_1.png",
+      "reason": "Natural blue side feather incorrectly painted gold; restore blue feather separately from gold sun brooch while preserving original pose."
+    },
+    {
+      "tier": "haori",
+      "frame": "sleep_3.png",
+      "reason": "Natural blue side feather incorrectly painted gold; restore blue feather separately from gold sun brooch while preserving original pose."
+    }
+  ],
   "images": [
     {
       "tier": "fanxing",
@@ -2156,6 +2205,31 @@
     },
     {
       "tier": "haori",
+      "frame": "dragged_2.png",
+      "fileSha256": "a7954db12b4b54aed0c2f19c77ff76be60304af3178355d85713d342a319bcda",
+      "pixelSha256": "29e9d3324c5411ca86589d940afb05bb223cc5b3d35956ec46413f50f803ed02",
+      "sourceBBox": [
+        153,
+        25,
+        1099,
+        1219
+      ],
+      "newBBox": [
+        137,
+        26,
+        1116,
+        1221
+      ],
+      "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "haori",
       "frame": "guitar_1.png",
       "fileSha256": "301df5fb9e3eda4305e3a1dc82a43de546024b436b6e9b983af3b3fb60a9b252",
       "pixelSha256": "60729b0a6bcc294ce3aefb1be314daab85f4dcfdb055777e8b05f6bbab51ccc4",
@@ -2255,6 +2329,81 @@
       ]
     },
     {
+      "tier": "haori",
+      "frame": "shy_1.png",
+      "fileSha256": "895726fdc02c2d6161bfabe961e8d9b505a30ab4a5cb21970e9d6d34bb17012a",
+      "pixelSha256": "eed44d5382cecf09588ff67e6da8dcc64c74d0069fe10dc0bc742a61dcffab7b",
+      "sourceBBox": [
+        170,
+        24,
+        1084,
+        1219
+      ],
+      "newBBox": [
+        157,
+        24,
+        1108,
+        1224
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "haori",
+      "frame": "wake_stretch_1.png",
+      "fileSha256": "c956ed9292a59bb4814411ed61d5a1cd4a2975791881c271607c3e6c12f470f3",
+      "pixelSha256": "6c0ef78ab906a1869db3b1014e416389da594ab9db41d36a3ceb0faba61c8f64",
+      "sourceBBox": [
+        147,
+        41,
+        1106,
+        1218
+      ],
+      "newBBox": [
+        144,
+        39,
+        1109,
+        1222
+      ],
+      "topDelta": -2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "haori",
+      "frame": "yawn_1.png",
+      "fileSha256": "9b3cea95c9359b5f8003e547ee514a756217a3bb2e796e5ad368388e737bc32a",
+      "pixelSha256": "779344477f2f3cd58f1afedf4e301b0260cba4f96dc5a04bf64969b1d5aae011",
+      "sourceBBox": [
+        103,
+        25,
+        1150,
+        1219
+      ],
+      "newBBox": [
+        102,
+        29,
+        1157,
+        1217
+      ],
+      "topDelta": 4,
+      "cornerAlpha": [
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
       "tier": "mingyue",
       "frame": "bored_1.png",
       "fileSha256": "a2e79fc2097fbfc7c1fac3365eb181ce16d49d5d71633b18f1450b7ec47612fa",
@@ -2322,6 +2471,31 @@
         1208
       ],
       "topDelta": 2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
+      "frame": "bored_blink.png",
+      "fileSha256": "6c83b2ea63ca1d41f8e96823dc2b77cab4ab459228d3549923111a88d8ac04f5",
+      "pixelSha256": "066cf6c4f6f3d1c39e0c21108ad4029fe148bbb9fdb04457b24b5c73d2d696d6",
+      "sourceBBox": [
+        40,
+        180,
+        1214,
+        1219
+      ],
+      "newBBox": [
+        37,
+        184,
+        1219,
+        1207
+      ],
+      "topDelta": 4,
       "cornerAlpha": [
         0,
         0,
@@ -2581,6 +2755,31 @@
     },
     {
       "tier": "mingyue",
+      "frame": "coquettish_blink.png",
+      "fileSha256": "3d86b269b8187a6bd23034180dd547982ff92270750146f14ee7daada5e3df6e",
+      "pixelSha256": "b79e7cc45b995648a3cd8c3b6706879f6782c372d1c0b8c857e97f1725594f57",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        78,
+        6,
+        1162,
+        1233
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
       "frame": "curious_1.png",
       "fileSha256": "082c44d74db8cee358039872adfa0724985a4f585e38bff2a78c6789d85b9d91",
       "pixelSha256": "c0a440de09201d2cfab3535780ca94c66c32a1a1ddac0368bf7064c42920103c",
@@ -2622,6 +2821,31 @@
         1218
       ],
       "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
+      "frame": "curious_blink.png",
+      "fileSha256": "cf3b68f15b93de4610b95ddcc2db925a2770571f70ad2c65827f7f2ff9afe39d",
+      "pixelSha256": "c355630d6fc6a12ea82f6de41da0fc95e5c47f0530c55ebdbb1a66449560a642",
+      "sourceBBox": [
+        66,
+        24,
+        1188,
+        1219
+      ],
+      "newBBox": [
+        60,
+        23,
+        1194,
+        1220
+      ],
+      "topDelta": -1,
       "cornerAlpha": [
         0,
         0,
@@ -2931,6 +3155,31 @@
     },
     {
       "tier": "mingyue",
+      "frame": "greet_morning_blink.png",
+      "fileSha256": "a3f47f1a28cd68e31cc79b5e744a9f75d0ca249a19422f421b4a7a367ae56bc1",
+      "pixelSha256": "c972acb8c0afaa6aada24a6ee8689fb2d9be5caac83633e873f00e2ffbea87dc",
+      "sourceBBox": [
+        113,
+        24,
+        1140,
+        1219
+      ],
+      "newBBox": [
+        113,
+        24,
+        1142,
+        1219
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
       "frame": "greet_night_1.png",
       "fileSha256": "d5c89782ff075c253e803659002332e767f4ad14fe5efad4326990af3b6cc480",
       "pixelSha256": "23005652fce3ab9f091fddde1c5c57f918c9189e1e14baa3899686b827088a58",
@@ -3156,6 +3405,31 @@
     },
     {
       "tier": "mingyue",
+      "frame": "headpat_happy_blink.png",
+      "fileSha256": "5dd5874b164bf54e32bfbf60b75f810eec04693a273f317d31cab289d47fc8b5",
+      "pixelSha256": "d97ce0089362e133dc4b6ab2e0138a70a06be160b6581f6851a7b0b4efa98833",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        79,
+        8,
+        1158,
+        1224
+      ],
+      "topDelta": 2,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
       "frame": "heart_1.png",
       "fileSha256": "31d8e8213cb7d5d15a835d6b6bbbb50539e9b46ea97e0c6aa22b213d12ee4b7b",
       "pixelSha256": "97903c0bc270f03b69757b32c8a1fc91e401fa6fe62d9d633f7469125d70ab06",
@@ -3256,9 +3530,59 @@
     },
     {
       "tier": "mingyue",
+      "frame": "hug_blink.png",
+      "fileSha256": "5edfaa5653bf94cc36858f742a80ce881b5cf55fbd9006f81daeb82cafb70d2f",
+      "pixelSha256": "5c9c70c595cdb351e2efa80ce13398f888f456701a66c027b8fa42f38d02079a",
+      "sourceBBox": [
+        106,
+        25,
+        1148,
+        1219
+      ],
+      "newBBox": [
+        98,
+        20,
+        1155,
+        1224
+      ],
+      "topDelta": -5,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
       "frame": "landing_1.png",
       "fileSha256": "fc54e96ee7d2281df310cffecffdadce1cc407ca27f638bfd2e537fe30dabb37",
       "pixelSha256": "7ae3904143370a5fab1a3203d743bdf5d376e911567143d71212448bd06c39a5",
+      "sourceBBox": [
+        40,
+        33,
+        1213,
+        1219
+      ],
+      "newBBox": [
+        32,
+        21,
+        1221,
+        1227
+      ],
+      "topDelta": -12,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
+      "frame": "landing_blink.png",
+      "fileSha256": "f0a5f9867d13f625e084e4a70c16547985da01fe50afb9706d5e182b5a55506a",
+      "pixelSha256": "13aaf84b01c23694078fad60aaa577132c360d814b54ea0791139bcd2637d60e",
       "sourceBBox": [
         40,
         33,
@@ -3447,6 +3771,31 @@
         1220
       ],
       "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
+      "frame": "pout_blink.png",
+      "fileSha256": "2dd84bb2ac9020b4dfedc04af55aa9444704214cb6a6582730685c3b43d5cdc9",
+      "pixelSha256": "f895cf2382087ffb2b204dc6d83f081da7a8ffab711edb8ed1351004960375a7",
+      "sourceBBox": [
+        132,
+        24,
+        1122,
+        1219
+      ],
+      "newBBox": [
+        131,
+        24,
+        1124,
+        1222
+      ],
+      "topDelta": 0,
       "cornerAlpha": [
         0,
         0,
@@ -3656,6 +4005,31 @@
     },
     {
       "tier": "mingyue",
+      "frame": "thinking_blink.png",
+      "fileSha256": "c0ea32840cc9ec931ff146d14f2d1b2be4b9e0a0ee3ea1bf36b84616f2fc50c3",
+      "pixelSha256": "2239e0de0fb4b4f2e680ce78fd8176c150993af94b3d442db770d9f7b2dbc69a",
+      "sourceBBox": [
+        93,
+        24,
+        1161,
+        1218
+      ],
+      "newBBox": [
+        52,
+        9,
+        1204,
+        1223
+      ],
+      "topDelta": -15,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "mingyue",
       "frame": "thumbs_up_1.png",
       "fileSha256": "4c9604767795df4d38b5a7525e2e92294cb2cd5f708d96416aeba8242b201528",
       "pixelSha256": "fc48e86feb237dd59011cd6626e34e9bba57ee5ae932f632ac9b5f0a0449d78e",
@@ -3847,6 +4221,156 @@
         1216
       ],
       "topDelta": 1,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "xinghai",
+      "frame": "codex_working_1.png",
+      "fileSha256": "d5667c2ea598b988129e2f23afcde3f02a203b69fec4a5a5f9900a0fc428a939",
+      "pixelSha256": "f99ae2c8581b7d5fd1f624565c6b448cd0d711b2828795e9961d33d1cdc74aa0",
+      "sourceBBox": [
+        47,
+        1,
+        1201,
+        1249
+      ],
+      "newBBox": [
+        5,
+        12,
+        1254,
+        1238
+      ],
+      "topDelta": 11,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "xinghai",
+      "frame": "coquettish_1.png",
+      "fileSha256": "c7bae33749356ae2aa19860ee6e12f21a942cf646a1d4dba5d32bdef88941f77",
+      "pixelSha256": "2d34a29130ecef3921c1aef7c814e535f4052c58ce1acf2653035d287a2415ba",
+      "sourceBBox": [
+        80,
+        6,
+        1156,
+        1219
+      ],
+      "newBBox": [
+        32,
+        20,
+        1250,
+        1233
+      ],
+      "topDelta": 14,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "xinghai",
+      "frame": "guitar_1.png",
+      "fileSha256": "e3a2926d66a3d5e6163d950ea1aac13f687a895dfe2ffe7e6a06e2f77effbc31",
+      "pixelSha256": "af6a6b1ebeb404315c61524ca5c3e931db0d83c9d4d77b8d5074c79f4b4b5691",
+      "sourceBBox": [
+        44,
+        2,
+        1228,
+        1239
+      ],
+      "newBBox": [
+        17,
+        5,
+        1249,
+        1238
+      ],
+      "topDelta": 3,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "xinghai",
+      "frame": "microphone_1.png",
+      "fileSha256": "b940b8b20ec0dc0973429dbe6e76f38cf06403b50a375b51a0c61e86f7e5d42d",
+      "pixelSha256": "9d2cf2d11b09facad5d7bc4fab565972e54861e44426dfea308ab6d9ba40ad64",
+      "sourceBBox": [
+        81,
+        10,
+        1185,
+        1230
+      ],
+      "newBBox": [
+        13,
+        10,
+        1241,
+        1237
+      ],
+      "topDelta": 0,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "xinghai",
+      "frame": "music_1.png",
+      "fileSha256": "b8b08106826f10522754f5166663bee88172af22cb2bd36cae3c22923c1bcd44",
+      "pixelSha256": "91eb6f39cec90870aba26506e42d349c566fc809a499eeb54ea7b65c73f0dbd5",
+      "sourceBBox": [
+        62,
+        8,
+        1184,
+        1224
+      ],
+      "newBBox": [
+        15,
+        14,
+        1248,
+        1233
+      ],
+      "topDelta": 6,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tier": "yinhe",
+      "frame": "microphone_1.png",
+      "fileSha256": "d91bbfa8c9e4fddbfe34186a43b9bb2267c452ecf366b747b2b6861ed2411fde",
+      "pixelSha256": "cb2a346d92e7a239cdff88188751892bff69267edbf55011b175c7cba506027b",
+      "sourceBBox": [
+        81,
+        10,
+        1185,
+        1230
+      ],
+      "newBBox": [
+        40,
+        10,
+        1222,
+        1233
+      ],
+      "topDelta": 0,
       "cornerAlpha": [
         0,
         0,
