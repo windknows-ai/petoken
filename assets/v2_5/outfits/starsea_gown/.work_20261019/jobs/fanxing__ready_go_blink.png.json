@@ -1,0 +1,60 @@
+{
+  "tier": "fanxing",
+  "frame": "ready_go_blink.png",
+  "master": "ready_go_1.png",
+  "masterSha256": "a16319fd4b879f35a81fb5e180457ad56cbed56e6c3635eabab0288f89b1a8cd",
+  "generatedDraft": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-91c773a6-f3f5-46dd-a252-1921ef856d72.png",
+  "composed": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work\\composed\\fanxing__ready_go_blink.png",
+  "mask": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work\\composed\\fanxing__ready_go_blink.png.mask.png",
+  "eyeRectangles": [
+    [
+      492,
+      459,
+      707,
+      578
+    ],
+    [
+      747,
+      533,
+      942,
+      659
+    ]
+  ],
+  "eyePolygons": [
+    [
+      [
+        492,
+        455
+      ],
+      [
+        565,
+        460
+      ],
+      [
+        660,
+        489
+      ],
+      [
+        707,
+        530
+      ],
+      [
+        692,
+        580
+      ],
+      [
+        512,
+        579
+      ]
+    ]
+  ],
+  "eyeBoundaryPatches": null,
+  "protectedEyebrows": null,
+  "outsideEyeExact": true,
+  "alphaExact": true,
+  "prompt": "Use case: identity-preserve. EYE-ONLY blink edit of the single input finished Starsea Gown FANXING action sprite. Close both visible eyes naturally into smooth dark curved closed eyelids, erase all visible violet iris/white sclera, preserve the emotion and eye angle. Do NOT alter mouth, eyebrows, cheek outline, hair, gloves/hands, prop, gray-blue gown, plain boots, body pose, framing, original scale or empty margins. All pixels outside the two tiny eye regions should stay unchanged. Keep exact 1254x1254 RGBA transparent canvas and original full alpha, no extra dots/background. No writing. This is ready_go_blink.png paired with ready_go_1.png; ONLY eyelids close. If a hand covers one eye, leave hand pixels unchanged. No other edit.",
+  "source": "assets/v2_0/ready_go_blink.png",
+  "sourceSha256": "34c3637145f83fc5bd4b4c5f6d0505cf46084502cc8e510399c15465503134ad",
+  "status": "CANDIDATE",
+  "method": "imagegen closed eyes plus explicitly authorized eye-only Pillow compositing"
+}

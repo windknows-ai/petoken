@@ -1,0 +1,33 @@
+{
+  "tier": "haori",
+  "frame": "worried_blink.png",
+  "master": "worried_1.png",
+  "masterSha256": "13731a9e02cb8be8f7e559e56c02814b25be2163a4ecb728a71ffaa76c876a2d",
+  "generatedDraft": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-91a46687-dbce-4c32-801b-5c22c54574ce.png",
+  "composed": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\haori__worried_blink.png",
+  "mask": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\haori__worried_blink.png.mask.png",
+  "eyeRectangles": [
+    [
+      525,
+      495,
+      755,
+      650
+    ],
+    [
+      755,
+      540,
+      920,
+      670
+    ]
+  ],
+  "eyePolygons": null,
+  "eyeBoundaryPatches": null,
+  "protectedEyebrows": null,
+  "outsideEyeExact": true,
+  "alphaExact": true,
+  "prompt": "Use case: identity-preserve. EYE ONLY edit of the single finished HAORI worried sprite. Close both eyes FULLY into SOLID dark purple curved closed eyelids. REMOVE every white sparkle/star, highlight dot, violet iris and white sclera from the eyes. Closed eyelids are continuous solid dark ink, NO white stars or dots. Keep worried mouth/hand, eyebrows, blush, hair, costume, boots, full pose/position/scale identical. Exact 1254x1254 RGBA true alpha; all non-eye content and entire alpha unchanged. No text. No new stars on face or eyelids. Corrected eyelid draft for authorized eye-only composition.",
+  "source": "assets/v2_0/worried_blink.png",
+  "sourceSha256": "1d34e4113d78dc3f7944f2cd29bddecf2a2f8661744e99f0b06cf11193ac658a",
+  "status": "CANDIDATE",
+  "method": "imagegen closed eyes plus explicitly authorized eye-only Pillow compositing"
+}

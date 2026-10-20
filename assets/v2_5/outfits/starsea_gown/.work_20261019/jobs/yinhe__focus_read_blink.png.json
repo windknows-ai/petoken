@@ -1,0 +1,33 @@
+{
+  "tier": "yinhe",
+  "frame": "focus_read_blink.png",
+  "master": "focus_read_1.png",
+  "masterSha256": "f8b4ba19c7b8cb0edc09846bd7442cb0857707ed78cde5a9c12c49e9bab91d55",
+  "generatedDraft": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-2a8517c5-b9c0-4231-9c1a-9683d9f5b1b0.png",
+  "composed": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\yinhe__focus_read_blink.png",
+  "mask": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\yinhe__focus_read_blink.png.mask.png",
+  "eyeRectangles": [
+    [
+      512,
+      565,
+      772,
+      718
+    ],
+    [
+      772,
+      631,
+      956,
+      747
+    ]
+  ],
+  "eyePolygons": null,
+  "eyeBoundaryPatches": null,
+  "protectedEyebrows": null,
+  "outsideEyeExact": true,
+  "alphaExact": true,
+  "prompt": "Use case: identity-preserve. EYE ONLY EDIT of the single finished YINHE Starsea Gown sprite. Close every visible open eye into a smooth natural closed dark curved eyelid; remove all iris and sclera. Leave existing closed eye closed. Preserve eyebrow, mouth, blush, face silhouette, hair, pose, hands, props, costume, boots, scale and canvas coordinates EXACTLY. No edit outside tiny eyelid regions; no new light or objects. Keep exact 1254x1254 RGBA transparent canvas and full alpha. Expression is same except closed eyes. Output one sprite, no text. Pair focus_read_blink.png with focus_read_1.png. This is a closed-eyelid draft for authorized exact eye-only compositing.",
+  "source": "assets/v2_0/focus_read_blink.png",
+  "sourceSha256": "6962177cb94c8a33af65a337564560b353011fa4018d6fc84c07d7599359383e",
+  "status": "CANDIDATE",
+  "method": "imagegen closed eyes plus explicitly authorized eye-only Pillow compositing"
+}

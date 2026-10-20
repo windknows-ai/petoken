@@ -1,0 +1,11 @@
+{
+  "tier": "fanxing",
+  "frame": "curious_2.png",
+  "source": "assets/v2_0/curious_2.png",
+  "sourceSha256": "74f754477cc0474792a8d5bc923a0247938ba09e9a6821ebd25bc0ec0f4f4b0a",
+  "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nFrame curious_2.png: Leaning forward on both palms, alternate head tilt. Fully covered opaque high-closed-neck long gown, shoulders and torso entirely covered. Long sleeves and opaque boots. No revealing cutouts.",
+  "status": "CANDIDATE",
+  "referenceMode": "original-only",
+  "master": null,
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-4e340577-0786-4376-9f96-44e0786fb650.png"
+}

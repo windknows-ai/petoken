@@ -1,0 +1,14 @@
+{
+  "tier": "fanxing",
+  "frame": "packing_blink.png",
+  "master": "packing_1.png",
+  "target": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\fanxing\\packing_1.png",
+  "prompt": "Use case: identity-preserve. Close ONLY both eyes of this finished FANXING packing sprite into naturally curved dark closed eyelids, no visible iris. Absolutely preserve original brows, mouth, hair, crossed arms HUGGING STACK OF BOOKS/PAPERS, book positions, plain gray-blue gown, boots, pose, framing and size. Do not move any book/finger or replace books with a bag. ONE 1254x1254 RGBA genuine alpha transparent PNG, no background or text. Eye-only small edit.",
+  "status": "BLINK_DRAFT_READY",
+  "source": "assets/v2_0/packing_blink.png",
+  "sourceSha256": "d8f7773292a1c9595d838b4ed1560e4631d86d0c6f0ae5cb98c3d50698d910a8",
+  "finalization": "Python eye-only compositing authorization pending; never copy whole draft into final sprite folder.",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-567c98d0-0682-4b0b-8d47-ae8df2e12dae.png",
+  "priorGenerated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-5b05bb0d-d7cb-4f32-adc1-9b92caa9130c.png",
+  "correction": "New book-hugging base restored."
+}
