@@ -1,0 +1,9 @@
+{
+  "tier": "fanxing",
+  "frame": "greet_night_1.png",
+  "source": "assets/v2_0/greet_night_1.png",
+  "sourceSha256": "69a33b9d8322756363eeb08b5fc2a4b55cc0b821fa2d7b4e27ee1dc93c02a543",
+  "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nAction/registration: Good night: sleepy face, cheek against hands holding a small soft cloud/pillow, crescent sleep icon to right. Make pillow plain pale gray-blue without jewels; no letters.",
+  "status": "CANDIDATE",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-7d11771f-2f65-438e-a87d-30940f09b097.png"
+}

@@ -1,0 +1,11 @@
+{
+  "tier": "fanxing",
+  "frame": "grievance_2.png",
+  "source": "assets/v2_0/grievance_2.png",
+  "sourceSha256": "9ef69a5715f5b4eaa2a93422e82f0da20018b72a4b6369ff3073ec72b31c8c5d",
+  "prompt": "Use case: identity-preserve. ONE 1254x1254 RGBA genuinely transparent sprite. INPUT 1 is EXACT default action pose/expression/scale/head and foot registration target; trace all its anchors and framing, never recenter, enlarge or shift. INPUT 2 supplies the new plain matte slate-gray-blue single-cloth long gown, plain sleeves and plain navy boots of this SAME action. Only take costume from INPUT 2, never its gesture if INPUT 1 differs. Same silver-lavender hair, violet eyes and natural blue side feather; no added jewels/star patterns/lace/cape/layers/glow. Keep adjacent-frame costume silhouette/folds very stable. No text/labels. Empty alpha around complete figure; preserve original margins, no clipping/extra anatomy.\nFrame grievance_2.png: Watery eyes, tiny trembling mouth variant, hands clasped near chest; knees/boots exact.",
+  "status": "CANDIDATE",
+  "referenceMode": "original-plus-new-action-master",
+  "master": "grievance_1.png",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-0a64042a-56a8-44eb-a011-132801d08e50.png"
+}

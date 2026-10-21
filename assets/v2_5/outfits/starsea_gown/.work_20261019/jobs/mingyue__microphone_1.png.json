@@ -1,0 +1,9 @@
+{
+  "tier": "mingyue",
+  "frame": "microphone_1.png",
+  "source": "assets/v1_1/microphone.png",
+  "sourceSha256": "8ee59123e552958b268b01fc7117e7247b273f5f41d37f8165d7711a260bf540",
+  "prompt": "Use case: identity-preserve. Make ONE 1254x1254 RGBA sprite with genuinely transparent background. INPUT 1 is EXACT default action pose/face/head/hair/hand/knee/boot registration and canvas-scale target; trace its silhouette anchors precisely, do not recenter/resize/zoom/shift. INPUT 2 is the user-accepted step-1 MINGYUE costume reference only. Adapt its identical garment, jewelry and boots to INPUT 1's action, never copy its idle gesture. Preserve silver-lavender hair, violet eyes and blue side feather. No text or extra anatomy. Complete garment/props within canvas, no clipping. Keep blank alpha around the sprite.\nAction: Singing/speaking with eyes CLOSED, mouth open and BOTH hands holding microphone close to mouth, boots angled/crossed exactly. Modest silver-blue microphone with small pearl detail.\nCostume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow.",
+  "status": "CANDIDATE",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-92bce59a-7476-4acb-aa09-41d048770996.png"
+}

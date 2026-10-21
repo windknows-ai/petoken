@@ -1,0 +1,10 @@
+{
+  "tier": "mingyue",
+  "frame": "cheer_2.png",
+  "source": "assets/v2_0/cheer_2.png",
+  "sourceSha256": "22de93b5bbec44893c911d670bab412d93de58042965b9241c6a078bdde54f7c",
+  "prompt": "Use case: identity-preserve. ONE 1254x1254 RGBA transparent animated Starsea Gown MINGYUE sprite. INPUT 1 is the EXACT designated DEFAULT FRAME: copy its specific facial expression, head/hair outline, finger/hand/arm locations, every prop and its shape/placement, knees, boot soles and tip positions, whole figure scale and original canvas framing. NO recentering, resizing, shifting or pose reinterpretation. The IMAGE overrides any action-name inference. INPUT 2 supplies the NEW MINGYUE COSTUME FIRST FRAME OF THIS SAME ACTION. Keep its garment colors, layers, brooch, hair comb, boots and folds very stable, but use ONLY INPUT 1's exact small gesture/expression change. Never copy INPUT 2's gesture when INPUT 1 differs.\nCostume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow. Same pearl crescent comb and moon-pearl bow brooch as the accepted costume, no crown/cape/wings/aurora. Preserve silver-lavender hair and blue side feather. No extra anatomy, no letters/writing/logos. Keep complete dress/props within canvas, genuine empty alpha outside. Preserve all prop identities from INPUT 1. Frame: cheer_2.png",
+  "status": "CANDIDATE",
+  "master": "cheer_1.png",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-bd77b504-44e8-4367-a29c-fc47e9a71d92.png"
+}

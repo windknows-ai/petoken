@@ -1,0 +1,10 @@
+{
+  "tier": "mingyue",
+  "frame": "sleep_3.png",
+  "source": "assets/v2_0/sleep_3.png",
+  "sourceSha256": "916560be9d19c33330f0dd2caaa6e73688012b6aab5eb9b4cfe49b9b2e9859a3",
+  "prompt": "Use case: identity-preserve. ONE production 1254x1254 PNG RGBA with genuine alpha transparency. INPUT 1 is the EXACT DEFAULT ACTION target: trace its head/hair outline, face, hands, boots/feet, knees and body pose at the SAME coordinates, size and canvas margins. NEVER resize, recenter, shift, zoom or change pose. Same silver-lavender hair, violet eyes and natural blue side feather. Edit this single source costume according to the precise accepted MINGYUE design below. Preserve this source's own low/leaned body registration without importing an upright pose. Costume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow. Use same pearl crescent hair comb, moon-pearl bow brooch, pearl scalloped silver edging and white/icy-periwinkle layered skirt as accepted master. Fully opaque modest bodice, no new cutouts, no exposed torso. No text/letters, opaque background/fog or extra anatomy. Full cloth and props within canvas. No crown, wings, cape, luminous particles or aurora.\nAction/registration: LYING PRONE ASLEEP, face resting low on folded arms, both boots raised behind at upper right, hair pooling flat along ground. Trace exact LOW head, horizontal body and raised boot anchors. NOT an upright seated pose.",
+  "status": "CANDIDATE",
+  "referenceMode": "original-only",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-db50d58d-ad5e-4cc8-b783-f7f101640846.png"
+}

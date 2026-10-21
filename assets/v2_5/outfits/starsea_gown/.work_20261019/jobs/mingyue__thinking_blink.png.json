@@ -1,0 +1,33 @@
+{
+  "tier": "mingyue",
+  "frame": "thinking_blink.png",
+  "master": "thinking_1.png",
+  "masterSha256": "0c9098b39daadb2259cc7b0970f5ab2bd81535ff925c37de84a377225ca9257f",
+  "generatedDraft": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-2cda7e67-6339-4333-a6c2-7ca63c2ed00e.png",
+  "composed": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work\\composed\\mingyue__thinking_blink.png",
+  "mask": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work\\composed\\mingyue__thinking_blink.png.mask.png",
+  "eyeRectangles": [
+    [
+      514,
+      543,
+      743,
+      664
+    ],
+    [
+      782,
+      608,
+      940,
+      713
+    ]
+  ],
+  "eyePolygons": null,
+  "eyeBoundaryPatches": null,
+  "protectedEyebrows": null,
+  "outsideEyeExact": true,
+  "alphaExact": true,
+  "prompt": "Use case: identity-preserve. EYE ONLY EDIT of the single finished MINGYUE Starsea Gown sprite. Close every visible open eye into a smooth natural closed dark curved eyelid; remove all iris and sclera. Leave existing closed eye closed. Preserve eyebrow, mouth, blush, face silhouette, hair, pose, hands, props, costume, boots, scale and canvas coordinates EXACTLY. No edit outside tiny eyelid regions; no new light or objects. Keep exact 1254x1254 RGBA transparent canvas and full alpha. Expression is same except closed eyes. Output one sprite, no text. Pair thinking_blink.png with thinking_1.png. This is a closed-eyelid draft for authorized exact eye-only compositing.",
+  "source": "assets/v2_0/thinking_blink.png",
+  "sourceSha256": "cb9af80fae62e81c7507c650ea720b50bdbb180bf02edc8a50cfc3aa70a1511e",
+  "status": "CANDIDATE",
+  "method": "imagegen closed eyes plus explicitly authorized eye-only Pillow compositing"
+}

@@ -1,0 +1,9 @@
+{
+  "tier": "fanxing",
+  "frame": "sleep_3.png",
+  "source": "assets/v2_0/sleep_3.png",
+  "sourceSha256": "916560be9d19c33330f0dd2caaa6e73688012b6aab5eb9b4cfe49b9b2e9859a3",
+  "prompt": "Use case: identity-preserve. Precisely EDIT the SINGLE input default-action sprite into the lowest-tier Starsea Gown costume. Output ONE 1254x1254 PNG with genuine RGBA alpha transparency. Trace the input character's exact position, scale, pose, hair/head outline, face expression, hands, knees and BOOT/FOOT LANDMARKS. Never center, enlarge, zoom, shift or reinterpret the pose. Same silver-lavender hair, violet eyes, natural blue side feather. Costume exactly follows the accepted FANXING design: plain single continuous matte slate/gray-blue cloth long gown, simple off-shoulder/long draped plain sleeves, plain dark navy boots and plain navy gloves if needed by source gesture. No star/moon patterns, jewelry, ruffles, lace, brooch, embroidery, glow, cape or multiple skirts. Remove ornamental clips, necklace and hanging jewels; retain natural blue feather. The gown drapes around the source pose's knees without moving the legs. Preserve bare hand/finger anatomy where present. No extra anatomy, no text or labels, no opaque backdrop; clear empty alpha around the subject. Do not crop any hair/cloth/boots; retain original margins and hair/feet silhouette anchors exactly.\nAction/registration: LYING PRONE ASLEEP, face resting low on folded arms, both boots raised behind at upper right, hair pooling flat along ground. Trace exact LOW head, horizontal body and raised boot anchors. NOT an upright seated pose.",
+  "status": "CANDIDATE",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-ec0b4e16-00e2-4be2-a3ae-f6a156d2f276.png"
+}

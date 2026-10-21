@@ -1,0 +1,13 @@
+{
+  "tier": "yinhe",
+  "frame": "landing_1.png",
+  "source": "assets/v2_0/landing_1.png",
+  "sourceSha256": "cd3dc398ad555eb4a8e8cc0b17ae0c58a1f18e6c09ce59acf0ffbea981e6d972",
+  "prompt": "Use case: identity-preserve. ONE production 1254x1254 RGBA transparent chibi sprite. INPUT 1 is the EXACT default action reference and absolute authority for pose and props: trace its head, hair outline, expression, mouth, every hand/finger and prop, knee and boot/foot tips at SAME coordinates and size. Never recenter, enlarge, shift, zoom, change the gesture or invent a prop. Same silver lavender hair, violet eyes and natural blue side feather. INPUT 2 is accepted YINHE COSTUME ONLY; ignore its pose and keep INPUT 1 geometry. Transfer exactly this costume: Fourth rarity: rich MIDNIGHT NAVY and platinum-silver gown with softly flowing painted constellation/nebula motifs on large dark cloth areas, clearly LENGTHENED translucent second outer skirt train sweeping to both sides below her hair, platinum trim, modest silver collar clasp. Cool cyan narrow edge luminescence, only mild glow. Slim silver crescent comb. Deep dark-blue center and large pale-cyan gauze train. No aurora wings or royal crown. Fully covered opaque modest bodice, long opaque sleeves where needed, no new cutouts or exposed torso. Clothes drape around ORIGINAL knees and props; never replace gesture. All hair/cloth/boot tips inside canvas with original margins. Genuine empty alpha, no opaque backdrop, no text, no extra anatomy. Default reference IMAGE overrides action labels or prose. ",
+  "status": "CANDIDATE",
+  "references": [
+    "C:\\Users\\fengz\\.codex\\visualizations\\2026\\10\\12\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\starsea-step2-refs\\landing_1.png",
+    "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\yinhe\\idle_1.png"
+  ],
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-dfbd3e40-3267-436d-82d8-c6660675f162.png"
+}

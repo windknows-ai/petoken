@@ -1,0 +1,9 @@
+{
+  "tier": "fanxing",
+  "frame": "music_1.png",
+  "source": "assets/v1_1/music.png",
+  "sourceSha256": "ee66445aef3050091d08adf3eadcf13dec9d796bfa722c822208aca772dfbe89",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-3888ce87-3605-46f3-8295-e9aab1554a4b.png",
+  "prompt": "Use case: identity-preserve. Create ONE production 1254x1254 PNG RGBA transparent sprite for the Starsea Gown outfit. INPUT 1 is the EXACT default-action pose registration target: trace its head/hair silhouette, face expression, hand/arm positions, knees, boots, foot contact points, character size and canvas framing. NEVER rescale/recenter/reposition the figure. INPUT 2 is the user-accepted step-1 costume design ONLY: transfer its fabric/color/trim/hair ornament/boot design to INPUT 1's action. Do not copy INPUT 2's seated idle hands/pose. Keep the same silver-lavender hair, violet eyes and natural blue side feather. Preserve INPUT 1's action and prop arrangement; restyle props to the costume's rarity, no words/letters/logos. Only costume and matching ornaments/prop styling change. Genuinely empty alpha background; no opaque halo or background. Added garment fully inside the canvas, do not crop head, boots, fabric or props. Keep pose-specific face and all limb locations locked to INPUT 1. No extra anatomy.\nAction: Listening to music: eyes CLOSED content smile, BOTH hands on headphones at sides of head; knees up and crossed boots exactly as source. Plain dark headphones; tiny music notes may stay, non-luminous.\nCostume: Lowest rarity: simple single-layer matte slate/gray-blue gown, plain fitted sleeves, plain dark navy boots, continuous simple skirt hem. No lace, jewel, embroidery, stars or glow. Remove ornamental hair clip, retain natural blue hair feather.",
+  "status": "CANDIDATE"
+}

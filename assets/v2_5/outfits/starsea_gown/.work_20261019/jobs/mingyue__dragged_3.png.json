@@ -1,0 +1,10 @@
+{
+  "tier": "mingyue",
+  "frame": "dragged_3.png",
+  "source": "assets/v2_0/dragged_3.png",
+  "sourceSha256": "ee4d7e4210f4c92b95a47dc8cb0254fddd5e176310b60956b7ec90f7ff551e7f",
+  "prompt": "Use case: identity-preserve. ONE 1254x1254 RGBA transparent animated Starsea Gown MINGYUE sprite. INPUT 1 is the EXACT designated DEFAULT FRAME: copy its specific facial expression, head/hair outline, finger/hand/arm locations, every prop and its shape/placement, knees, boot soles and tip positions, whole figure scale and original canvas framing. NO recentering, resizing, shifting or pose reinterpretation. The IMAGE overrides any action-name inference. Use this original pose as the only image target, with the accepted costume specification below.\nCostume: Second rarity: pearl-silver and icy periwinkle gown, exactly two clear fabric layers with scalloped pearl-silver edging, modest translucent upper overskirt, one small moon-pearl brooch and delicate silver crescent hairpin. Silver ribbons are short. Plain subdued slate boots with silver trim. Clearly more refined than a starter dress but no cape, particles or glow. Same pearl crescent comb and moon-pearl bow brooch as the accepted costume, no crown/cape/wings/aurora. Preserve silver-lavender hair and blue side feather. No extra anatomy, no letters/writing/logos. Keep complete dress/props within canvas, genuine empty alpha outside. Preserve all prop identities from INPUT 1. Frame: dragged_3.png",
+  "status": "CANDIDATE",
+  "master": null,
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-7beda4fa-4919-41db-a509-c12cafb71076.png"
+}

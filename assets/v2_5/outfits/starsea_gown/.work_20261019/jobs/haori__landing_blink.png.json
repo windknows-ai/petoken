@@ -1,0 +1,46 @@
+{
+  "tier": "haori",
+  "frame": "landing_blink.png",
+  "master": "landing_1.png",
+  "masterSha256": "e7d5ca1857095068a32773208cb675b07e8c826b064f69de9ad2d3180b516272",
+  "generatedDraft": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-029ecb2a-2ee5-421b-97a8-0dd0c305f40a.png",
+  "composed": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\haori__landing_blink.png",
+  "mask": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\haori__landing_blink.png.mask.png",
+  "eyeRectangles": [
+    [
+      539,
+      610,
+      791,
+      755
+    ],
+    [
+      819,
+      648,
+      997,
+      759
+    ]
+  ],
+  "eyePolygons": null,
+  "eyeBoundaryPatches": [
+    [
+      970,
+      605,
+      1020,
+      670
+    ],
+    [
+      819,
+      750,
+      997,
+      790
+    ]
+  ],
+  "protectedEyebrows": null,
+  "outsideEyeExact": true,
+  "alphaExact": true,
+  "prompt": "Use case: identity-preserve. EYE ONLY EDIT of the single finished HAORI Starsea Gown sprite. Close every visible open eye into a smooth natural closed dark curved eyelid; remove all iris and sclera. Leave existing closed eye closed. Preserve eyebrow, mouth, blush, face silhouette, hair, pose, hands, props, costume, boots, scale and canvas coordinates EXACTLY. No edit outside tiny eyelid regions; no new light or objects. Keep exact 1254x1254 RGBA transparent canvas and full alpha. Expression is same except closed eyes. Output one sprite, no text. Pair landing_blink.png with landing_1.png. This is a closed-eyelid draft for authorized exact eye-only compositing.",
+  "source": "assets/v2_0/landing_blink.png",
+  "sourceSha256": "27560ca042789572dc21b5d3152136d7a1522abee1925af9a8326b3608dda3f1",
+  "status": "CANDIDATE",
+  "method": "imagegen closed eyes plus explicitly authorized eye-only Pillow compositing"
+}

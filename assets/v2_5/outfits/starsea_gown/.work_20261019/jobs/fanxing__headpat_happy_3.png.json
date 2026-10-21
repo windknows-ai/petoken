@@ -1,0 +1,12 @@
+{
+  "tier": "fanxing",
+  "frame": "headpat_happy_3.png",
+  "source": "assets/v2_0/headpat_happy_3.png",
+  "sourceSha256": "93005c770576b97f75eda1f3ba6b64bf2ce7f4766d0c9ad0f9607682c5582ad9",
+  "generated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-427bf819-bcdd-4dbe-b762-7d267b355932.png",
+  "prompt": "Use case: identity-preserve. Edit ONLY the small MOUTH of INPUT 1 (finished gray-blue gown happy headpat sprite): replace its OPEN orange mouth with a tiny CLOSED content curved smile like INPUT 2. Eyes remain exactly INPUT 1 happy squint. No open mouth cavity, no visible teeth, no tongue. INPUT 2 supplies closed-mouth expression only; NEVER copy its navy star costume. Preserve all INPUT 1 plain gray-blue gown, sleeves, hair, hands, knees, boots, pose, small hearts, canvas framing and alpha background unchanged. Output 1254x1254 RGBA transparent. This corrects adjacent frame 3's mouth to the designated original; no other changes.",
+  "master": "headpat_happy_1.png",
+  "status": "CANDIDATE",
+  "priorGenerated": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-cfab91ad-d1b5-4440-ab79-24794ae1f115.png",
+  "correction": "Close mouth to match default headpat_happy_3; original generated draft retained."
+}

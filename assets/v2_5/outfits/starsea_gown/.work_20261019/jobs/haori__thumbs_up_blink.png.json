@@ -1,0 +1,67 @@
+{
+  "tier": "haori",
+  "frame": "thumbs_up_blink.png",
+  "master": "thumbs_up_1.png",
+  "masterSha256": "8a322be161cba1f3e2c76a41e24c678c05f9b2deb5aed1869b72f40f91a20f87",
+  "generatedDraft": "C:\\Users\\fengz\\.codex\\generated_images\\01a12eca-2b82-7dc1-8cbb-263b2d6b985b\\exec-a524d0d6-2eb6-42c6-ab3d-de90ec7faf7f.png",
+  "composed": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\haori__thumbs_up_blink.png",
+  "mask": "D:\\Documents\\ChatGPT\\petoken-outfits-starsea-gown\\assets\\v2_5\\outfits\\starsea_gown\\.work_20261019\\composed\\haori__thumbs_up_blink.png.mask.png",
+  "eyeRectangles": [
+    [
+      505,
+      464,
+      718,
+      577
+    ],
+    [
+      768,
+      531,
+      930,
+      653
+    ]
+  ],
+  "eyePolygons": [
+    [
+      [
+        500,
+        450
+      ],
+      [
+        580,
+        454
+      ],
+      [
+        710,
+        500
+      ],
+      [
+        724,
+        534
+      ],
+      [
+        710,
+        577
+      ],
+      [
+        514,
+        572
+      ]
+    ]
+  ],
+  "eyeBoundaryPatches": [
+    [
+      565,
+      430,
+      625,
+      480
+    ]
+  ],
+  "protectedEyebrows": null,
+  "outsideEyeExact": true,
+  "alphaExact": true,
+  "prompt": "Use case: identity-preserve. EYE ONLY EDIT of the single finished HAORI Starsea Gown sprite. Close every visible open eye into a smooth natural closed dark curved eyelid; remove all iris and sclera. Leave existing closed eye closed. Preserve eyebrow, mouth, blush, face silhouette, hair, pose, hands, props, costume, boots, scale and canvas coordinates EXACTLY. No edit outside tiny eyelid regions; no new light or objects. Keep exact 1254x1254 RGBA transparent canvas and full alpha. Expression is same except closed eyes. Output one sprite, no text. Pair thumbs_up_blink.png with thumbs_up_1.png. This is a closed-eyelid draft for authorized exact eye-only compositing.",
+  "source": "assets/v2_0/thumbs_up_blink.png",
+  "sourceSha256": "6cbae0e9ff3a1b3ed755b3e0e2181879b9467edfc02fecad0751865f1a5569e2",
+  "status": "CANDIDATE",
+  "method": "imagegen closed eyes plus explicitly authorized eye-only Pillow compositing"
+}
