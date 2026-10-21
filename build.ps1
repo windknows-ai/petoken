@@ -100,6 +100,8 @@ foreach ($sheet in 'EQUIPPED_PREVIEW.png', 'WEAPONS_PREVIEW.png') {
 foreach ($folder in 'assets/v2_5/forms', 'assets/v2_5/outfits') {
     $root = Join-Path $internal $folder
     if (Test-Path -LiteralPath $root) {
+        Get-ChildItem -LiteralPath $root -Recurse -Directory -Force | Where-Object { $_.Name -like '.work*' } |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         Get-ChildItem -LiteralPath $root -Recurse -File | Where-Object {
             $_.Extension -in '.json', '.md' -or $_.Name -like '*PREVIEW*'
         } | Remove-Item -Force
