@@ -7,7 +7,7 @@ import time
 import weakref
 
 from PySide6.QtCore import Qt, QPointF, QTimer
-from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPainterPath, QPen, QRadialGradient, QPolygonF
+from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QRadialGradient, QPolygonF
 from PySide6.QtWidgets import QWidget
 
 import halo_geometry as geometry
@@ -102,6 +102,13 @@ def _lerp(a, b, t):
 def _toward(color, target, amount):
     """Move ``color`` part of the way to ``target`` (white lifts, ink deepens)."""
     return _lerp(color, target, amount)
+
+
+def _tint_key(tints):
+    """The ring's colours as a cache key: the stars' angles to the width of two of its stretches
+    (they orbit all the time; the ring is redrawn when that shows, not every frame)."""
+    step = 2 * math.pi / RING_SEGMENTS
+    return tuple((round((a % math.tau) / step), tuple(color)) for a, color in tints or ())
 
 
 def ring_tint(angle, tints):
@@ -405,20 +412,8 @@ class HaloLayer(QWidget):
             painter.setBrush(QColor(*color, int(210 * math.sin(math.pi * phase))))
             painter.drawEllipse(QPointF(mx, my), 1.5, 1.5)
 
-    def paintEvent(self, event):
-        if self.pose is None:
-            return
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        start = 0 if self.front else math.pi
-        angles = [start + math.pi * i / RING_SEGMENTS for i in range(RING_SEGMENTS + 1)]
-        points = []
-        for angle in angles:
-            x, y, _ = geometry.project(self.pose, angle)
-            points.append(QPointF(x - self.x(), y - self.y()))
-        if SKIN == 'meteor' and not self.front:
-            self._paint_shooting_stars(painter)
-            painter.setBrush(Qt.NoBrush)
+    def _paint_hoop(self, painter, start, angles, points, pose, ox, oy):
+        """The ring itself, its inlay and its dotted guide (all but what moves on it)."""
         if SKIN == 'aurora':
             self._paint_curtains(painter, start)
             painter.setBrush(Qt.NoBrush)
@@ -457,21 +452,21 @@ class HaloLayer(QWidget):
         # All ornament shares the projected plane and existing clock, and
         # stays inside the hit-disc margin; no extra native input surfaces.
         inlay = QPainterPath()
-        inset = self.pose._replace(rx=self.pose.rx - 4, ry=self.pose.ry - 4)
+        inset = pose._replace(rx=pose.rx - 4, ry=pose.ry - 4)
         for i in range(33):
             x, y, _ = geometry.project(inset, start + math.pi * (.15 + .55 * i / 32))
-            point = QPointF(x - self.x(), y - self.y())
+            point = QPointF(x - ox, y - oy)
             inlay.moveTo(point) if i == 0 else inlay.lineTo(point)
         painter.setPen(QPen(QColor(255, 218, 170, 210 if self.front else 145), 1.0))
         painter.drawPath(inlay)
-        outer = self.pose._replace(rx=self.pose.rx + 11, ry=self.pose.ry + 8)
+        outer = pose._replace(rx=pose.rx + 11, ry=pose.ry + 8)
         guide_alpha = 210 if self.front else 150
         if not self.tints:
             guide = QPainterPath()
             for begin, end in ((.01, .47), (.53, .99)):
                 for i in range(25):
                     x, y, _ = geometry.project(outer, start + math.pi * (begin + (end - begin) * i / 24))
-                    point = QPointF(x - self.x(), y - self.y())
+                    point = QPointF(x - ox, y - oy)
                     guide.moveTo(point) if i == 0 else guide.lineTo(point)
             pen = QPen(QColor(173, 153, 255, guide_alpha), 1.0)
             pen.setDashPattern([1.5, 4])
@@ -486,12 +481,55 @@ class HaloLayer(QWidget):
                     piece = QPainterPath()
                     for j in range(5):
                         x, y, _ = geometry.project(outer, a0 + (a1 - a0) * j / 4)
-                        point = QPointF(x - self.x(), y - self.y())
+                        point = QPointF(x - ox, y - oy)
                         piece.moveTo(point) if j == 0 else piece.lineTo(point)
                     pen = QPen(QColor(*ring_tint((a0 + a1) / 2, self.tints), guide_alpha), 1.0)
                     pen.setDashPattern([1.5, 4])
                     painter.setPen(pen)
                     painter.drawPath(piece)
+
+    def paintEvent(self, event):
+        if self.pose is None:
+            return
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        start = 0 if self.front else math.pi
+        angles = [start + math.pi * i / RING_SEGMENTS for i in range(RING_SEGMENTS + 1)]
+        points = []
+        for angle in angles:
+            x, y, _ = geometry.project(self.pose, angle)
+            points.append(QPointF(x - self.x(), y - self.y()))
+        if SKIN == 'meteor' and not self.front:
+            self._paint_shooting_stars(painter)
+            painter.setBrush(Qt.NoBrush)
+        if SKIN == 'aurora':                              # Its colours flow: drawn every time.
+            self._paint_hoop(painter, start, angles, points, self.pose, self.x(), self.y())
+        else:
+            # The ring only changes shape or colour now and then: drawn once round its own centre,
+            # then placed wherever she is (she bobs, the ring follows).
+            ratio = self.devicePixelRatioF()
+            local = self.pose._replace(cx=0.0, cy=0.0)
+            key = (round(local.rx, 1), round(local.ry, 1), round(local.tilt, 3), self.front, SKIN,
+                   _tint_key(self.tints), ratio)
+            if getattr(self, '_hoop_key', None) != key:
+                big = local._replace(rx=local.rx + 24, ry=local.ry + 24)
+                x0, y0, x1, y1 = geometry.projected_bounds(big)
+                image = QPixmap(max(1, round((x1 - x0) * ratio)), max(1, round((y1 - y0) * ratio)))
+                image.setDevicePixelRatio(ratio)
+                image.fill(Qt.transparent)
+                hoop = QPainter(image)
+                hoop.setRenderHint(QPainter.Antialiasing)
+                local_points = []
+                for angle in angles:
+                    x, y, _ = geometry.project(local, angle)
+                    local_points.append(QPointF(x - x0, y - y0))
+                self._paint_hoop(hoop, start, angles, local_points, local, x0, y0)
+                hoop.end()
+                self._hoop, self._hoop_at, self._hoop_key = image, (x0, y0), key
+            painter.drawPixmap(QPointF(self.pose.cx - self.x() + self._hoop_at[0],
+                                       self.pose.cy - self.y() + self._hoop_at[1]), self._hoop)
+        inset = self.pose._replace(rx=self.pose.rx - 4, ry=self.pose.ry - 4)
+        outer = self.pose._replace(rx=self.pose.rx + 11, ry=self.pose.ry + 8)
         if SKIN == 'meteor':
             self._paint_meteors(painter, start)
             painter.setBrush(Qt.NoBrush)
@@ -539,7 +577,9 @@ class HaloLayer(QWidget):
             else:
                 glow, body = (158, 144, 255), (184, 218, 255)
             wide = 1.0
-            for first, last in zip(trail, list(trail)[1:]):
+            points = list(trail)
+            points = points[::2] + ([points[-1]] if len(points) % 2 == 0 else [])   # Every other point: half the lines, same ribbon.
+            for first, last in zip(points, points[1:]):
                 x, y, stamp, depth = last
                 if (depth >= 0) != self.front:
                     continue

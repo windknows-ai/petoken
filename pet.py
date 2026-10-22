@@ -46,7 +46,7 @@ class DesktopPet(QWidget):
         # them into the small logical sprite box each frame so high-DPI
         # screens stay sharp. Missing art can never crash the pet: unresolvable
         # states are simply absent and fall back to the idle source.
-        self.sprites={k:v for k,v in assets.load_sprites().items() if v is not None}
+        self.sprites=assets.load_sprites()       # Pictures read when first shown (pet_assets.LazySprites).
         self.sprite=self.sprites.get('idle',QPixmap())
         self._render_cache=OrderedDict()
         self._render_dpr=None

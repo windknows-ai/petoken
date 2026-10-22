@@ -8,7 +8,11 @@ name, what brings it on, and a Show me button that plays it right away.
 """
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, Qt
+import threading
+
+import shiboken6
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea,
                                QVBoxLayout, QWidget)
 
@@ -66,6 +70,24 @@ def thumbnail(state, side):
     return pixmap.scaled(QSize(side, side), Qt.KeepAspectRatio, Qt.SmoothTransformation) if pixmap else None
 
 
+_THUMBS = {}                  # state -> its picture for the guide, kept across rebuilds.
+
+
+def thumbnail_file(state):
+    """The file of an ordinary pose's first picture (read off the main thread), or None."""
+    if state in SPECIAL:
+        return None
+    try:
+        entry = assets.entry_for(state)
+        frames = assets.existing_frames(entry)
+        for path in (frames[0] if frames else None, entry.path, entry.fallback):   # Exists, not loaded.
+            if path and assets._file(path).is_file():
+                return str(assets._file(path))
+        return None
+    except Exception:
+        return None
+
+
 def _card_frame(name):
     card = QFrame()
     card.setObjectName(name)
@@ -75,9 +97,13 @@ def _card_frame(name):
 
 
 class GuidePage(QWidget):
+    thumbReady = Signal(str, QImage)
+
     def __init__(self, panel):
         super().__init__()
         self.panel = panel
+        self._waiting = {}                                 # state -> its picture label
+        self.thumbReady.connect(self._thumb_ready)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(10)
@@ -128,6 +154,7 @@ class GuidePage(QWidget):
             elif item.layout() is not None:
                 self._clear(item.layout())
         self.show_buttons, self.level_buttons = {}, {}
+        self._waiting = {}
         language = self.language
         # The three clinginess levels, in detail.
         self.column.addWidget(self._title('guide_levels_title'))
@@ -174,6 +201,32 @@ class GuidePage(QWidget):
             self.column.addLayout(grid)
         self.column.addStretch()
         self.built_language = language
+        self._load_thumbs()
+
+    def _load_thumbs(self):
+        """Read the waiting pictures in a worker (full-size art takes a while to decode), so the
+        page opens at once and its pictures arrive a moment later."""
+        jobs = [(state, thumbnail_file(state)) for state in self._waiting]
+        jobs = [(state, path) for state, path in jobs if path]
+        if not jobs:
+            return
+        side = 72 * 2                                      # Sharp on a 200% screen.
+
+        def work():
+            for state, path in jobs:
+                image = QImage(path)
+                if not image.isNull():
+                    self.thumbReady.emit(state, image.scaled(side, side, Qt.KeepAspectRatio,
+                                                             Qt.SmoothTransformation))
+        threading.Thread(target=work, name='petoken-guide-thumbs', daemon=True).start()
+
+    def _thumb_ready(self, state, image):
+        pixmap = QPixmap.fromImage(image)
+        pixmap.setDevicePixelRatio(2.0)
+        _THUMBS[state] = pixmap
+        label = self._waiting.pop(state, None)
+        if label is not None and shiboken6.isValid(label):
+            label.setPixmap(pixmap)
 
     def _clear(self, layout):
         while layout.count():
@@ -193,9 +246,14 @@ class GuidePage(QWidget):
         picture = QLabel()
         picture.setFixedSize(72, 72)
         picture.setAlignment(Qt.AlignCenter)
-        image = thumbnail(state, 72)
-        if image is not None:
-            picture.setPixmap(image)
+        if state in _THUMBS:
+            picture.setPixmap(_THUMBS[state])
+        elif thumbnail_file(state):
+            self._waiting[state] = picture                  # Filled in by _load_thumbs.
+        else:
+            image = thumbnail(state, 72)
+            if image is not None:
+                picture.setPixmap(image)
         row.addWidget(picture)
         words = QVBoxLayout()
         words.setSpacing(2)

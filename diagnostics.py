@@ -73,6 +73,40 @@ def install_error_log(folder):
     threading.excepthook = thread_hook
 
 
+_CRASH_FILE = None
+
+
+def install_crash_log(folder):
+    """A crash inside Qt ends the app without a Python error: keep Qt's own last words (its
+    critical and fatal messages) and every thread's Python stack at that moment."""
+    global _CRASH_FILE
+    try:
+        import faulthandler
+        path = error_log_path(folder)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _CRASH_FILE = path.open('a', encoding='utf-8')
+        faulthandler.enable(file=_CRASH_FILE, all_threads=True)
+    except (OSError, RuntimeError, ValueError):
+        return
+    try:
+        from PySide6.QtCore import QtMsgType, qInstallMessageHandler
+    except ImportError:
+        return
+    serious = (QtMsgType.QtCriticalMsg, QtMsgType.QtFatalMsg)
+
+    def qt_message(kind, context, message):
+        if kind not in serious:
+            return
+        try:
+            where = f' ({context.file}:{context.line})' if context is not None and context.file else ''
+            _CRASH_FILE.write(f'--- {time.strftime("%Y-%m-%d %H:%M:%S")} (qt {kind.name}){where}\n{message}\n')
+            _CRASH_FILE.flush()
+        except (OSError, ValueError):
+            pass
+
+    qInstallMessageHandler(qt_message)
+
+
 def _tail(path, lines=TAIL_LINES):
     try:
         return '\n'.join(Path(path).read_text(encoding='utf-8', errors='replace').splitlines()[-lines:])

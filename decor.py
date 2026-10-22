@@ -30,7 +30,7 @@ from PySide6.QtWidgets import QWidget
 import pet_geometry as geometry
 import shop
 
-LYING = frozenset({'sleep', 'star_sleep', 'dragged', 'star_dragged', 'landing', 'peek'})
+LYING = frozenset({'sleep', 'star_sleep', 'dragged', 'star_dragged', 'landing', 'peek', 'bored', 'read'})
 SCALE = .42 / 336             # A Stars-rarity hat (336 px wide) is .42 of her sprite box; all pieces share it.
 BEHIND = ('ground', 'back', 'weapon')
 FRONT = ('buddy', 'head', 'weapon')
@@ -73,6 +73,32 @@ def hands():
         except (OSError, ValueError, KeyError):
             _HANDS = {}
     return _HANDS
+
+
+def hand_for(source):
+    """Codex's hand record for a picture file. Her forms and outfits were drawn over her default
+    poses, so a frame of theirs with no record of its own borrows the default frame of the same
+    action (``.../forms/night/wave_2.webp`` holds where ``assets/v2_0/wave_2.png`` holds)."""
+    table = hands()
+    if not source:
+        return None
+    if source in table:
+        return table[source]
+    stem = source.rsplit('/', 1)[-1].rsplit('.', 1)[0]
+    pose, _, number = stem.rpartition('_')
+    if not pose or not number.isdigit():
+        return None
+    default = frame_file(pose, int(number) - 1)
+    return table.get(default) if default else None
+
+
+def lies_down(state):
+    """Whether she is lying (on her back, side or tummy) in this pose, in any of her forms."""
+    base = (state or '').split(':', 1)[-1]
+    for prefix in ('star_', 'night_', 'game_'):
+        if base.startswith(prefix):
+            base = base[len(prefix):]
+    return base in LYING or (state or '') in LYING
 
 
 _DOMINANT = {}
@@ -374,6 +400,7 @@ class Decor:
         if not self.layers():
             return
         self.source = source
+        self._lying = lies_down(state)
         moving = self._step_weapon() if 'weapon' in self.items else False
         pose = (state, pixmap.cacheKey(), transform, QRectF(rect))
         if (self.pose is None or pose[1:] != self.pose[1:] or pose[0] != self.pose[0] or 'buddy' in self.items
@@ -385,7 +412,7 @@ class Decor:
     def _weapon_target(self, now):
         """Where the weapon wants to be: (x, y as fractions of her picture, angle, scale, in front)."""
         source = getattr(self, 'source', None) or ''
-        hand = hands().get(source)
+        hand = hand_for(source)
         prefix = source.rsplit('/', 1)[-1].rsplit('_', 1)[0]
         if hand is not None and hand['hand'] != dominant_hand(prefix):
             hand = None                                     # A stray frame: keep the hand it had.
@@ -398,6 +425,8 @@ class Decor:
             return hand['x'] / 1254, hand['y'] / 1254, angle - 360 if angle > 180 else angle, 1.0, \
                 bool(hand.get('front', True))
         self._held = None
+        if getattr(self, '_lying', False):
+            return None                                     # No hand free while she lies: put away.
         return .9, .62 + math.sin(now * 1.8) * .025, 22 + math.sin(now * 1.2) * 4, .62, False
 
     def _step_weapon(self):
@@ -408,6 +437,10 @@ class Decor:
             return getattr(self, '_wmoving', False)
         self._wtime = now
         target = self._weapon_target(now)
+        if target is None:
+            self._wpose = None
+            self._wmoving = False
+            return False
         state = getattr(self, '_wpose', None)
         if state is None or last is None or now - last > .5:
             self._wpose = list(target)
@@ -432,7 +465,8 @@ class Decor:
         side = geometry.scaled_sprite_rect(self.pet.pet_scale)[2]
         scale = side * SCALE
         now = time.monotonic()
-        lying = state in LYING
+        lying = lies_down(state)
+        self._lying = lying
         for slot in (FRONT if layer.front else BEHIND):
             item = self.items.get(slot)
             if item is None or (lying and slot in ('head', 'back')):
@@ -447,6 +481,8 @@ class Decor:
             turn = fit.get('angle', 0)
             if slot == 'weapon':                            # In her hand (Codex measured it per frame), eased.
                 self._step_weapon()
+                if self._wpose is None:
+                    continue
                 fx, fy, turn_to, grow, front = self._wpose
                 if front != layer.front:
                     continue                                # Held in front, or floating behind her.

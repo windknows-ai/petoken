@@ -24,6 +24,10 @@ NEAREST = dict(
     headpat_happy='headpat', surprised='poked', landing='dragged', bored='idle', yawn='sleep', wake_stretch='idle')
 # States that are a different look of hers already: an outfit never covers them.
 OWN_LOOK = ('star_', 'night_', 'game_', 'form2', 'xform', 'awaken', 'night:', 'game:', 'star:')
+# Frames drawn in two batches that do not belong together (the first batch's own pose, then the
+# missing frames after her default ones): played in turn she would swap pose and clothes, so only
+# the matching run plays. Every tier of both series has them.
+LEFT_OUT = dict(dragged=(1,), sleep=(3,))
 
 
 def catalog(prices):
@@ -58,6 +62,8 @@ def core_pose(state):
 def _frames(series, tier, pose):
     folder = OUTFIT_DIR / series / tier
     found = sorted(folder.glob(f'{pose}_[0-9].webp')) or sorted(folder.glob(f'{pose}_[0-9].png'))
+    kept = [p for p in found if int(p.stem.rsplit('_', 1)[1]) not in LEFT_OUT.get(pose, ())]
+    found = kept or found
     return tuple(str(p.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/') for p in found)
 
 

@@ -250,9 +250,47 @@ def resolve_path(entry):
     pinned idle fallback cannot load.
     """
     for candidate in [entry.path] + existing_frames(entry) + [entry.fallback, IDLE_FALLBACK]:
-        if load_path(candidate) is not None:
+        if readable(candidate):
             return candidate
     return None
+
+
+_READABLE = {}
+
+
+def readable(path):
+    """Whether ``path`` is a picture Qt can read, from its header only (decoding every pose's full
+    picture just to check it made start-up take seconds)."""
+    if path not in _READABLE:
+        from PySide6.QtGui import QImageReader
+        file = _file(path)
+        reader = QImageReader(str(file))
+        _READABLE[path] = file.is_file() and reader.canRead() and not reader.size().isEmpty()
+    return _READABLE[path]
+
+
+class LazySprites(dict):
+    """{state: picture} whose pictures are read the first time they are shown (through the
+    size-capped cache), not all at start-up. Values may be a QPixmap or a registry path."""
+
+    def __getitem__(self, key):
+        value = dict.__getitem__(self, key)
+        return pose_source(value) if isinstance(value, str) else value
+
+    def get(self, key, default=None):
+        if key not in self:
+            return default
+        value = self[key]
+        return default if value is None else value
+
+    def values(self):
+        return [self[key] for key in self]
+
+    def items(self):
+        return [(key, self[key]) for key in self]
+
+    def copy(self):
+        return LazySprites(dict.items(self))
 
 
 def sprite_for(state):
@@ -363,14 +401,13 @@ def load_sprites():
     """
     global _SPRITE_TABLE
     if _SPRITE_TABLE is None:
-        table = {entry.state: sprite_for(entry.state) for entry in REGISTRY}
-        # Companion poses share the V1.1 pixmap they fall back to, so they
-        # cost no extra memory until their own art exists.
-        paths = {resolve_path(entry): table[entry.state] for entry in REGISTRY}
-        for entry in COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY + STAR_REGISTRY + FORM_REGISTRY:
+        table = LazySprites()
+        for entry in REGISTRY + COMPANION_REGISTRY + GAME_REGISTRY + NIGHT_REGISTRY + NIGHT_CHANGE_REGISTRY                 + STAR_REGISTRY + FORM_REGISTRY:
             path = resolve_path(entry)
-            table[entry.state] = paths.get(path) or (pose_source(path) if path else None)
-        table['working'] = table['codex_working']
-        table['usage'] = table['idle']
+            if path is not None:
+                dict.__setitem__(table, entry.state, path)       # Read when first shown.
+        for alias, state in (('working', 'codex_working'), ('usage', 'idle')):
+            if state in table:
+                dict.__setitem__(table, alias, dict.__getitem__(table, state))
         _SPRITE_TABLE = table
-    return dict(_SPRITE_TABLE)
+    return _SPRITE_TABLE.copy()

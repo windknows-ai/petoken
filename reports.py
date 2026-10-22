@@ -267,6 +267,24 @@ def search(history, query='', provider=None, since=None):
     return out
 
 
+def ping():
+    """Answers from the report process (the packaged build checks it can start one)."""
+    return 'ok'
+
+
+def load_elsewhere():
+    """``load()`` in a process of its own. Reading months of Claude and Codex logs is heavy Python
+    work; in a thread it holds Python's lock in long stretches and every window stutters while it
+    runs. Falls back to loading here when a process cannot be started."""
+    try:
+        import multiprocessing
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context('spawn')) as pool:
+            return pool.submit(load).result(timeout=600)
+    except Exception:
+        return load()
+
+
 class ReportCache:
     """The last ``load()`` result, shared by every report page.
 
@@ -277,6 +295,7 @@ class ReportCache:
 
     def __init__(self, loader=None, max_age=300):
         self.loader = loader or load
+        self.separate = loader is None               # The real load runs in its own process.
         self.max_age = max_age
         self.data = None
         self.at = 0.0
@@ -301,7 +320,7 @@ class ReportCache:
 
     def _work(self):
         try:
-            data = self.loader()
+            data = load_elsewhere() if self.separate else self.loader()
         except Exception:
             data = dict(events=[], history=[], missing=['claude', 'codex'],
                         activity=dict(turns=[], edits=[]))

@@ -11,6 +11,8 @@ Sounds only where they mean something: buying (and the shows themselves).
 """
 from __future__ import annotations
 
+import functools
+
 import math
 from pathlib import Path
 
@@ -60,6 +62,13 @@ class _Layer:
         return QPoint(0, 0)
 
 
+@functools.lru_cache(maxsize=16)
+def _picture(path):
+    """Her full-size picture, read once (the mirror and the skin cards ask for it again and again
+    while the window lays out)."""
+    return QImage(str(pet_assets._file(path)))
+
+
 def portrait(panel, items, pose, width, height):
     """Her in ``pose`` wearing ``items``, on transparency, ``width`` x ``height`` pixels: her feet
     at the bottom centre, room above and beside her for wings, crowns and a buddy."""
@@ -74,7 +83,7 @@ def portrait(panel, items, pose, width, height):
         or decor.frame_file('idle', 0)
     sx, sy, sw, sh = geometry.scaled_sprite_rect(100)
     k = min(height / (sh * 1.16), width / (sw * 1.45))       # Her box, with room for what she wears.
-    source = QImage(str(pet_assets._file(path)))
+    source = _picture(path)
     sprite = source.scaled(int(sh * k), int(sh * k), Qt.KeepAspectRatio, Qt.SmoothTransformation)
     image = QImage(width, height, QImage.Format_ARGB32_Premultiplied)
     image.fill(Qt.transparent)
@@ -134,7 +143,7 @@ def skin_scene(choice, width, height):
     SkinCard._ring(ring, p, False)
     pose = 'star_idle' if choice == 'starsea' and pet_assets.has_own_art('star_idle') else 'idle'
     path = decor.frame_file(pose, 0) or decor.frame_file('idle', 0)
-    her = QImage(str(pet_assets._file(path))) if path else QImage()
+    her = _picture(path) if path else QImage()
     if not her.isNull():
         side = 92 * k                                       # Scaled once, straight from the big picture.
         her = her.scaled(int(side * her.width() / max(1, her.height())), int(side), Qt.KeepAspectRatio,

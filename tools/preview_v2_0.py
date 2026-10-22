@@ -697,6 +697,10 @@ def main(argv=None):
     import widget_mirror
     widget_mirror.install(app)
     app.setQuitOnLastWindowClosed(False)
+    import diagnostics
+    import widget
+    diagnostics.install_error_log(widget.PREF_DIR)        # The real folder: what goes wrong while testing
+    diagnostics.install_crash_log(widget.PREF_DIR)        # is kept for the next bug report.
     with ExitStack() as stack:
         directory = stack.enter_context(tempfile.TemporaryDirectory(prefix='petoken-v2-qa-'))
         stack.enter_context(patch('widget.PREF_DIR', Path(directory)))

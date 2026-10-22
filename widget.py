@@ -7169,6 +7169,15 @@ def ui_selftest(report):
     import wardrobe
     wardrobe.load_fonts()
     problems = []
+    try:                                      # The report reader's own process starts (reports.load_elsewhere).
+        import multiprocessing
+        from concurrent.futures import ProcessPoolExecutor
+        import reports
+        with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context('spawn')) as pool:
+            if pool.submit(reports.ping).result(timeout=120) != 'ok':
+                problems.append('report process: wrong answer')
+    except Exception as error:
+        problems.append(f'report process: {error!r}')
 
     class Stand:                               # Enough of a panel to load the page.
         prefs = dict(language='zh_CN')
@@ -7278,6 +7287,7 @@ def main():
     PREF_DIR.mkdir(parents=True, exist_ok=True)
     import diagnostics
     diagnostics.install_error_log(PREF_DIR)   # Windowed app: keep errors for bug reports.
+    diagnostics.install_crash_log(PREF_DIR)   # ...and Qt's last words if it ever crashes.
     lock = QLockFile(str(PREF_DIR/'widget.lock'))
     if not lock.tryLock(100):
         return 0
@@ -7326,4 +7336,6 @@ def main():
 
 
 if __name__ == '__main__':
+    import multiprocessing
+    multiprocessing.freeze_support()          # The packaged app also runs the report reader (reports.load_elsewhere).
     raise SystemExit(main())

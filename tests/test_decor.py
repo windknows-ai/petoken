@@ -218,3 +218,25 @@ class OwnFitAndFullSetTests(unittest.TestCase):
                 found = pet_assets._file('assets/v2_5/forms/game/hug_1.png')
                 self.assertEqual(found.suffix, '.webp')
                 self.assertEqual(pet_assets._file('assets/v2_0/idle_1.png').suffix, '.png')
+
+    def test_outfit_actions_never_mix_two_batches_of_frames(self):
+        import outfits
+        outfits._frames.cache_clear()
+        for series in ('starsea_gown', 'frost_coat'):
+            for tier in ('fanxing', 'mingyue', 'haori'):
+                dragged = outfits._frames(series, tier, 'dragged')
+                sleep = outfits._frames(series, tier, 'sleep')
+                self.assertEqual([p.rsplit('_', 1)[1][:1] for p in dragged], ['2', '3', '4'])
+                self.assertEqual([p.rsplit('_', 1)[1][:1] for p in sleep], ['1', '2'])
+
+    def test_lying_poses_are_known_in_every_form(self):
+        for state in ('sleep', 'night_read', 'night:bored', 'star:sleep', 'game:dragged', 'bored'):
+            self.assertTrue(decor.lies_down(state), state)
+        for state in ('idle', 'night:typing', 'star_wave', None):
+            self.assertFalse(decor.lies_down(state), state)
+
+    def test_form_and_outfit_frames_borrow_the_default_hand(self):
+        held = [f for f, hand in decor.hands().items() if hand and f.startswith('assets/v2_0/')][0]
+        name = held.rsplit('/', 1)[1].replace('.png', '.webp')
+        self.assertEqual(decor.hand_for(f'assets/v2_5/forms/night/{name}'), decor.hands()[held])
+        self.assertIsNone(decor.hand_for('assets/v2_5/forms/night/nothing.png'))

@@ -94,6 +94,10 @@ def nice_max(value):
     return 10 * power
 
 
+
+def _plain(value, axis=False):
+    return f'{value:g}' if isinstance(value, float) else str(value)
+
 class LineChart(QWidget):
     """One metric over time: a line per series, total in the corner, hover values."""
 
@@ -106,11 +110,11 @@ class LineChart(QWidget):
         self.total = ''
         self.labels = []
         self.lines = []          # [(name, QColor, [values])]
-        self.fmt = str
+        self.fmt = _plain               # Until set_data: drawn before the report is read.
         self.hover = None
 
-    def set_data(self, title, total, labels, lines, fmt=str):
-        self.title, self.total, self.labels, self.lines, self.fmt = title, total, labels, lines, fmt
+    def set_data(self, title, total, labels, lines, fmt=None):
+        self.title, self.total, self.labels, self.lines, self.fmt = title, total, labels, lines, fmt or _plain
         self.hover = None
         self.update()
 

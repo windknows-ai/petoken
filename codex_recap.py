@@ -9,6 +9,7 @@ import ntpath
 from pathlib import Path
 import posixpath
 import sqlite3
+import time
 
 from codex_compat import inspect_table, state_database
 
@@ -117,15 +118,29 @@ def _ledger_times(home, thread_id):
         return None, None
 
 
-def _rollout_events(row):
-    """Validated, thread-local events with the same cwd/fork rules for all readers."""
+_ALWAYS = (b'"type":"session_meta"', b'"type":"turn_context"')
+
+
+def _rollout_events(row, kinds=None):
+    """Validated, thread-local events with the same cwd/fork rules for all readers.
+
+    ``kinds`` (event types, e.g. ('event_msg',)) skips other records without parsing them when
+    their type shows at the start of the line: tool outputs can be megabytes of JSON, and parsing
+    them holds Python's lock long enough to make every window stutter while a report loads."""
     root = cwd = row.get('cwd')
     metadata = False
     fork_at = None
+    wanted = tuple(b'"type":"' + kind.encode() + b'"' for kind in kinds) + _ALWAYS if kinds else None
     with Path(row['rollout_path']).open('rb') as stream:
-        for line in stream:
+        for count, line in enumerate(stream):
             if not line.endswith(b'\n'):
                 raise ValueError('incomplete rollout record')
+            if wanted is not None:
+                head = line[:160]
+                if b'"type":"' in head and not any(mark in head for mark in wanted):
+                    continue
+            if count % 200 == 0:
+                time.sleep(0)                                # Let the windows run between chunks.
             event = json.loads(line)
             if not isinstance(event, dict) or not isinstance(event.get('payload'), dict):
                 raise ValueError('invalid rollout record')
@@ -296,7 +311,7 @@ def turn_outcome(home, thread_id):
     in_turn = False
     error = False
     try:
-        for event, payload, _root, _cwd, _stamp in _rollout_events(row):
+        for event, payload, _root, _cwd, _stamp in _rollout_events(row, ('event_msg',)):
             if event.get('type') != 'event_msg':
                 continue
             tag = payload.get('type')
@@ -325,7 +340,7 @@ def _rollout_activity(row, since, project):
     started = active_turn = None
     in_turn = False
     error = False
-    for event, payload, root, cwd, stamp in _rollout_events(row):
+    for event, payload, root, cwd, stamp in _rollout_events(row, ('event_msg',)):
         if event.get('type') != 'event_msg':
             continue
         tag = payload.get('type')
