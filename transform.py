@@ -21,6 +21,7 @@ import threading
 import time
 from pathlib import Path
 
+import shiboken6
 from PySide6.QtCore import QObject, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QColor, QImage, QLinearGradient, QPainter, QPen, QPixmap, QRadialGradient,
                            QTransform)
@@ -192,13 +193,13 @@ class PieceCache(QObject):
         """The pieces at ``side`` pixels, or None while they are being built.
         With ``nearest``, a set built at another size is returned meanwhile
         (it is drawn scaled), so a new size never skips the animation."""
-        pieces = self.sizes.get(side)
-        if pieces is not None:
-            return pieces
-        fallback = None
-        if nearest and self.sizes:
-            fallback = min(self.sizes.values(), key=lambda p: abs(p.side - side))
-        with self._lock:
+        with self._lock:                                   # The worker adds and drops sizes meanwhile.
+            pieces = self.sizes.get(side)
+            if pieces is not None:
+                return pieces
+            fallback = None
+            if nearest and self.sizes:
+                fallback = min(self.sizes.values(), key=lambda p: abs(p.side - side))
             if side in self._building:
                 return fallback
             self._building.add(side)
@@ -214,13 +215,18 @@ class PieceCache(QObject):
                     self.sizes[side] = built
                     while len(self.sizes) > self.KEEP:
                         self.sizes.pop(next(iter(self.sizes)))
-            self.ready.emit()
+            try:
+                if shiboken6.isValid(self):                 # Petoken may be quitting meanwhile.
+                    self.ready.emit()
+            except RuntimeError:
+                pass
         threading.Thread(target=work, daemon=True, name='petoken-transform-art').start()
         return fallback
 
     @property
     def pieces(self):          # The latest built set (tests and tools).
-        return next(reversed(self.sizes.values()), None)
+        with self._lock:
+            return next(reversed(self.sizes.values()), None)
 
 
 CACHE = PieceCache()

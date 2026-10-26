@@ -42,7 +42,7 @@ Item {
             id: row
             required property var modelData
             readonly property var r: modelData
-            width: view.width - (view.contentHeight > view.height ? 10 : 0)
+            width: view.width - 10                   // Room for the bar always (no width / height loop).
             height: Math.max(44, words.implicitHeight + 20)
             Rectangle {
                 anchors.fill: parent

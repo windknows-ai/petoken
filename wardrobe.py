@@ -668,6 +668,14 @@ class Wardrobe(QuickWindow):
         self.bridge.opened.emit()
 
     def closeEvent(self, event):
+        overlay, self._overlay = self._overlay, None
+        if overlay is not None:                              # A show still playing ends with the window:
+            try:                                             # hidden, it kept its clock, its sound thread
+                overlay.close()                              # and hundreds of MB of frames.
+                overlay.deleteLater()
+            except RuntimeError:
+                pass
+            self.bridge.set_covered(False)
         self.bridge.sounds.close()
         from wish_sound import Sounds
         self.bridge.sounds = Sounds(bool(self.panel.prefs.get('wish_sound', True)))

@@ -208,6 +208,9 @@ class UpdateController(QObject):
         threading.Thread(target=work, daemon=True).start()
 
     def _installed(self, dialog, error):
+        import shiboken6
+        if dialog is not None and not shiboken6.isValid(dialog):
+            dialog = None                                   # Closed while the update downloaded.
         if error is not None:
             if dialog is not None:
                 dialog.failed(error)

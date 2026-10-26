@@ -301,3 +301,33 @@ class PanelNotificationTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class BackgroundRecapTests(unittest.TestCase):
+    def test_a_finished_task_is_recorded_after_its_recap_off_the_main_thread(self):
+        import tempfile, threading, time
+        from pathlib import Path
+        from PySide6.QtWidgets import QApplication
+        import notifications
+        app = QApplication.instance() or QApplication([])
+        with tempfile.TemporaryDirectory() as temp:
+            store = notifications.NotificationStore(Path(temp) / 'n.sqlite3')
+            center = notifications.NotificationCenter(store, lambda: {})
+            threads = []
+
+            def enrich(event):
+                threads.append(threading.current_thread() is threading.main_thread())
+                event['detail'] = 'two files'
+                return event
+            center.enrich, center.enrich_in_background = enrich, True
+            fired = []
+            center.fired.connect(fired.append)
+            event = dict(kind='finished', provider='codex', task_key='t1', project='p', detail='', at=time.time(), dedupe='finished:t1')
+            self.assertTrue(center.ingest(dict(event)))
+            self.assertFalse(center.ingest(dict(event)))        # A repeat while the recap is read.
+            end = time.time() + 3
+            while not fired and time.time() < end:
+                app.processEvents(); time.sleep(.01)
+            self.assertEqual(threads, [False])
+            self.assertEqual(fired[0]['detail'], 'two files')
+            store.close() if hasattr(store, 'close') else None

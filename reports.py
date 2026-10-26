@@ -269,20 +269,63 @@ def search(history, query='', provider=None, since=None):
 
 def ping():
     """Answers from the report process (the packaged build checks it can start one)."""
-    return 'ok'
+    import multiprocessing
+    return multiprocessing.current_process().name   # 'petoken-reports' when it ran in its own process.
 
 
-def load_elsewhere():
+_CHILD = None                         # The report reader's process while it runs.
+
+
+def _child_main(conn, job):
+    try:
+        conn.send(('ok', job()))
+    except Exception as error:
+        conn.send(('error', repr(error)))
+    finally:
+        conn.close()
+
+
+def load_elsewhere(timeout=600, job=None):
     """``load()`` in a process of its own. Reading months of Claude and Codex logs is heavy Python
     work; in a thread it holds Python's lock in long stretches and every window stutters while it
-    runs. Falls back to loading here when a process cannot be started."""
+    runs. The process is a daemon: quitting Petoken ends it at once (a process pool made quitting
+    wait for the whole read). Loads here when no process can be started."""
+    global _CHILD
+    import multiprocessing
     try:
-        import multiprocessing
-        from concurrent.futures import ProcessPoolExecutor
-        with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context('spawn')) as pool:
-            return pool.submit(load).result(timeout=600)
+        context = multiprocessing.get_context('spawn')
+        receiver, sender = context.Pipe(duplex=False)
+        child = context.Process(target=_child_main, args=(sender, job or load), daemon=True, name='petoken-reports')
+        child.start()
     except Exception:
-        return load()
+        return (job or load)()
+    sender.close()
+    _CHILD = child
+    try:
+        if not receiver.poll(timeout):
+            raise TimeoutError('report reader took too long')
+        status, data = receiver.recv()                  # Before join: a big answer fills the pipe.
+    except EOFError:
+        raise RuntimeError('report reader stopped')
+    finally:
+        receiver.close()
+        if child.is_alive():
+            child.terminate()
+        child.join(5)
+        _CHILD = None
+    if status != 'ok':
+        raise RuntimeError(data)
+    return data
+
+
+def stop_elsewhere():
+    """Petoken is quitting: end a report read in progress."""
+    child = _CHILD
+    if child is not None and child.is_alive():
+        try:
+            child.terminate()
+        except OSError:
+            pass
 
 
 class ReportCache:

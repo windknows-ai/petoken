@@ -398,18 +398,19 @@ def capture_all(pv, base, size=(1120, 820)):
     page = window.collection_page
     page.apply_language()
     pump(.5)
-    shot = grab(page)                      # Only its stardust part, so the cards are big enough to read.
-    cards = page.skin_cards
-    region = rect_in(page.stardust_title, page).united(rect_in(cards['starsea'], page)).united(
-        rect_in(page.stardust_earn, page)).adjusted(-16, -14, 16, 14)
-    region.setWidth(min(region.width(), rect_in(cards['starsea'], page).right() + 40 - region.x()))
-    dpr = shot['dpr']
-    shot['image'] = shot['image'].copy(int(region.x() * dpr), int(region.y() * dpr),
-                                       int(region.width() * dpr), int(region.height() * dpr))
-    origin = region.topLeft()
-    shot['marks']['cards'] = rect_in(cards['default'], page).united(rect_in(cards['starsea'], page)).translated(-origin)
-    shot['marks']['earn'] = rect_in(page.stardust_earn, page).translated(-origin)
-    out['collection_star'] = shot
+    cards = getattr(page, 'skin_cards', None)  # Before 2.5: the stardust part sat in Collection
+    if cards:                                  # (2.5 moved it to the wardrobe).
+        shot = grab(page)                      # Only its stardust part, so the cards are big enough to read.
+        region = rect_in(page.stardust_title, page).united(rect_in(cards['starsea'], page)).united(
+            rect_in(page.stardust_earn, page)).adjusted(-16, -14, 16, 14)
+        region.setWidth(min(region.width(), rect_in(cards['starsea'], page).right() + 40 - region.x()))
+        dpr = shot['dpr']
+        shot['image'] = shot['image'].copy(int(region.x() * dpr), int(region.y() * dpr),
+                                           int(region.width() * dpr), int(region.height() * dpr))
+        origin = region.topLeft()
+        shot['marks']['cards'] = rect_in(cards['default'], page).united(rect_in(cards['starsea'], page)).translated(-origin)
+        shot['marks']['earn'] = rect_in(page.stardust_earn, page).translated(-origin)
+        out['collection_star'] = shot
     window.resize(old_size)
     guide = window.guide_page
     tabs.setCurrentIndex(window.guide_tab)

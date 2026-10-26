@@ -174,7 +174,8 @@ class PanelGameModeTests(unittest.TestCase):
         usage = game_mode.GameUsage(pet)
         usage.set_content('bar', [], dict(cpu=5.0), ['cpu'], 'en')
         usage.show()
-        pet.game_usage = usage
+        usage.move(pet.frameGeometry().right() + 40, pet.y())   # Beside her, never over her (an earlier
+        pet.game_usage = usage                                 # test's saved bar spot could overlap).
         cursor = dict(at=QPoint(-5000, -5000))
         calls = []
         with patch('game_mode.set_clickthrough', side_effect=lambda w, through: calls.append((w, through))):
@@ -202,6 +203,8 @@ class PanelGameModeTests(unittest.TestCase):
         from PySide6.QtCore import QPoint, QPointF, QEvent
         from PySide6.QtGui import QMouseEvent
         pet = self.panel.pet
+        screen = pet.screen().availableGeometry()        # Mid-screen: a move up is never stopped
+        pet.move(screen.center() - pet.rect().center())  # by the top edge (it was, from y = 0).
         usage = game_mode.GameUsage(pet)
         usage.set_content('bar', [], dict(cpu=5.0), ['cpu'], 'en')
         usage.show()

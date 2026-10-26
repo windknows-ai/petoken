@@ -113,6 +113,7 @@ def recap_note(language, todo_title, schedule, event, currency='USD', rates=None
 class TodoScheduler(QObject):
     changed = Signal()              # The workbench should refresh.
     matched = Signal(str, str)      # todo id, task key (from the matching worker)
+    _outcome_found = Signal(object, object, object)   # schedule, event, outcome (from the outcome worker)
 
     def __init__(self, panel, store=None, launcher=None, match=None):
         super().__init__()
@@ -126,6 +127,10 @@ class TodoScheduler(QObject):
         self._announced_missed = set()
         self._matching = False
         self.matched.connect(self._matched)
+        self._outcome_found.connect(self._apply_outcome)
+        # Whether a finished task really finished is read from its logs: off the main thread in the
+        # app (a long Codex log froze the windows for a moment); in line for tests.
+        self.outcome_in_background = False
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.tick)
 
@@ -261,14 +266,27 @@ class TodoScheduler(QObject):
         for schedule in started:
             if (schedule['provider_id'], schedule['task_key']) != key:
                 continue
-            outcome = 'failed' if kind == 'failed' else self._outcome(schedule)
-            if outcome == 'failed':
-                self.store.update_schedule(schedule['todo_id'], state='failed')
-            elif outcome == 'interrupted':
-                continue   # You stopped it: not done; a later real finish still counts.
+            if kind == 'failed':
+                self._apply_outcome(schedule, event, 'failed')
+            elif self.outcome_in_background:
+                def work(schedule=schedule, event=event):
+                    outcome = self._outcome(schedule)
+                    try:
+                        self._outcome_found.emit(schedule, event, outcome)
+                    except RuntimeError:
+                        pass                                # Quitting.
+                threading.Thread(target=work, daemon=True, name='petoken-todo-outcome').start()
             else:
-                self._finish(schedule, event)
-            self.changed.emit()
+                self._apply_outcome(schedule, event, self._outcome(schedule))
+
+    def _apply_outcome(self, schedule, event, outcome):
+        if outcome == 'failed':
+            self.store.update_schedule(schedule['todo_id'], state='failed')
+        elif outcome == 'interrupted':
+            return     # You stopped it: not done; a later real finish still counts.
+        else:
+            self._finish(schedule, event)
+        self.changed.emit()
 
     @staticmethod
     def _outcome(schedule):

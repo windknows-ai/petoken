@@ -20,7 +20,7 @@ Item {
         ScrollBar.vertical: ScrollBar { policy: flick.contentHeight > flick.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff }
         Loader {
             id: holder
-            width: flick.width - (flick.contentHeight > flick.height ? 12 : 0)
+            width: flick.width - 12                   // Room for the bar always: no width / height loop.
             height: item ? Math.max(item.implicitHeight, flick.height) : 0
             active: !!s.node.child
             source: "MirrorNode.qml"

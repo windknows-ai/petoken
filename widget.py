@@ -5289,6 +5289,7 @@ class Panel(QWidget):
         self.notifications = NotificationCenter(
             NotificationStore(notify_dir / 'notifications.sqlite3'), lambda: self.prefs)
         self.notifications.enrich = self.recap_event
+        self.notifications.enrich_in_background = self.live   # Reading a real task log never freezes the windows.
         self.focus_failed.connect(lambda fallback: fallback() if not self.closing else None)
         self.notifications.fired.connect(self.announce)
         self.notifications.recorded.connect(self._notifications_recorded)
@@ -5327,6 +5328,7 @@ class Panel(QWidget):
         self.sync_claude_toasts()
         from todo_ai import TodoScheduler
         self.todo_ai = TodoScheduler(self)
+        self.todo_ai.outcome_in_background = self.live   # Real logs can be long; the test build has none.
         self.notifications.stored.connect(self.todo_ai.on_event)
         self.todo_ai.changed.connect(self._workbench_changed)
         if live:
@@ -6085,8 +6087,28 @@ class Panel(QWidget):
             self.publish_snapshot(snapshot)
 
     def open_settings(self):
-        # Settings is its own window: opening it never opens the usage panel.
-        Settings(self).exec()
+        # Settings is its own window: opening it never opens the usage panel. The tray menu still
+        # works while it is open: a second click brings that one forward instead of a second
+        # Settings on top (the one saved last would undo the other).
+        if self._bring_forward(getattr(self, '_settings_dialog', None)):
+            return
+        dialog = self._settings_dialog = Settings(self)
+        try:
+            dialog.exec()
+        finally:
+            self._settings_dialog = None
+
+    @staticmethod
+    def _bring_forward(dialog):
+        """Raise an open dialog (and the window that draws it); False when there is none."""
+        import shiboken6
+        if dialog is None or not shiboken6.isValid(dialog) or not dialog.isVisible():
+            return False
+        for window in (getattr(dialog, '_mirror_window', None), dialog):
+            if window is not None and shiboken6.isValid(window):
+                window.raise_()
+                window.activateWindow()
+        return True
 
     def poll_notifications(self, now=None):
         """Every 2 s: Claude hook events; every 30 s: quotas and reminders."""
@@ -6584,10 +6606,16 @@ class Panel(QWidget):
 
     def open_focus_dialog(self, todo_id=None):
         from focus_mode import FocusDialog
-        dialog = FocusDialog(self, self.workbench_store(), QApplication.activeModalWidget())
+        if self._bring_forward(getattr(self, '_focus_dialog', None)):
+            return                                       # One focus dialog at a time.
+        dialog = self._focus_dialog = FocusDialog(self, self.workbench_store(), QApplication.activeModalWidget())
         if todo_id:
             dialog.todo.setCurrentIndex(max(0, dialog.todo.findData(todo_id)))
-        if dialog.exec() == QDialog.Accepted:
+        try:
+            accepted = dialog.exec() == QDialog.Accepted
+        finally:
+            self._focus_dialog = None
+        if accepted:
             values = dialog.values()
             for key in ('focus_break', 'focus_long_break', 'focus_long_every'):
                 self.prefs[key] = values[key]
@@ -7113,6 +7141,8 @@ class Panel(QWidget):
         self.closing = True
         import diagnostics
         diagnostics.quiet_crash_log()   # Windows' own handled errors while threads stop are no crash.
+        import reports
+        reports.stop_elsewhere()        # A report read in progress ends with Petoken.
         self.notify_clock.stop()
         self.approvals.stop()
         self.updates.stop()
@@ -7172,12 +7202,9 @@ def ui_selftest(report):
     wardrobe.load_fonts()
     problems = []
     try:                                      # The report reader's own process starts (reports.load_elsewhere).
-        import multiprocessing
-        from concurrent.futures import ProcessPoolExecutor
         import reports
-        with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context('spawn')) as pool:
-            if pool.submit(reports.ping).result(timeout=120) != 'ok':
-                problems.append('report process: wrong answer')
+        if reports.load_elsewhere(timeout=120, job=reports.ping) != 'petoken-reports':
+            problems.append('report process: wrong answer')
     except Exception as error:
         problems.append(f'report process: {error!r}')
 

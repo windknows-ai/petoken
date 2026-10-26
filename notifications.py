@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 import time
 from contextlib import closing, contextmanager
 from datetime import datetime, timedelta
@@ -239,6 +240,7 @@ class NotificationCenter(QObject):
     fired = Signal(dict)
     recorded = Signal()
     stored = Signal(dict)       # Every event kept in the history (quiet or not).
+    _enriched = Signal(object, float)
 
     def __init__(self, store, prefs):
         super().__init__()
@@ -249,6 +251,10 @@ class NotificationCenter(QObject):
         self._preference = None
         # Optional: adds a recap (files, time, cost) to finished events.
         self.enrich = None
+        # The recap reads the task's logs; in the app that happens off the main thread (a big log
+        # froze every window for a moment each time a task finished). Tests keep it in line.
+        self.enrich_in_background = False
+        self._enriched.connect(self._record)
 
     def ingest(self, event, now=None):
         now = time.time() if now is None else now
@@ -258,10 +264,29 @@ class NotificationCenter(QObject):
         if event['kind'] != 'reminder' and now - self._recent.get(same, -1e18) < DUPLICATE_WINDOW_S:
             return False
         if event['kind'] == 'finished' and self.enrich is not None:
+            if self.enrich_in_background:
+                self._recent[same] = now                    # A repeat meanwhile is still a repeat.
+                enrich = self.enrich
+
+                def work(event=dict(event)):
+                    try:
+                        event = enrich(dict(event)) or event
+                    except Exception:
+                        pass
+                    try:
+                        self._enriched.emit(event, now)     # Recorded on the main thread.
+                    except RuntimeError:
+                        pass                                # Quitting.
+                threading.Thread(target=work, daemon=True, name='petoken-recap').start()
+                return True
             try:
                 event = self.enrich(dict(event)) or event
             except Exception:
                 pass  # A recap is a bonus; the notice itself must not fail.
+        return self._record(event, now)
+
+    def _record(self, event, now):
+        same = (event.get('provider'), event.get('task_key'), event['kind'])
         if not self.store.add_event(event):
             return False
         self._recent[same] = now
