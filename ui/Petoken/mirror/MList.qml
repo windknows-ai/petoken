@@ -17,6 +17,18 @@ Item {
         color: Theme.dark ? "#26140F3C" : Theme.card
         border.color: Theme.glassEdge
     }
+    Text {                                               // Nothing here yet: said inside the box, not under it.
+        visible: l.rows.length === 0 && (l.val.empty || "") !== ""
+        anchors.centerIn: parent
+        width: parent.width - 48
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.Wrap
+        text: l.val.empty || ""
+        color: Theme.muted
+        font.family: Theme.sans
+        font.pixelSize: 14
+        lineHeight: 1.3
+    }
     ListView {
         id: view
         anchors.fill: parent

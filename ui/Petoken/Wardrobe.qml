@@ -26,6 +26,7 @@ Item {
         ]
         content: Item {
             anchors.fill: parent
+            visible: !bridge.covered                     // Under a wish show: nothing to draw.
 
             GemButton {                                  // Sign-in, top right of the content.
                 anchors { right: parent.right; rightMargin: 104; top: parent.top; topMargin: -52 }

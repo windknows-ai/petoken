@@ -181,9 +181,11 @@ class WardrobeBridge(HostBridge):
     changed = Signal()
     opened = Signal()
     sparkle = Signal(bool)
+    coveredChanged = Signal()
 
     def __init__(self, window, panel):
         super().__init__(window, panel)
+        self._covered = False
         self._kind = 'head'
         self._page = 0
         self._shelf = 0
@@ -233,6 +235,17 @@ class WardrobeBridge(HostBridge):
         if key == 'wardrobe_title_plain':
             return self._t('wardrobe_title').replace('✦', '').strip()
         return super().tr(key)
+
+    @Property(bool, notify=coveredChanged)
+    def covered(self):
+        """A wish show or a discount draw fills the window: the wardrobe beneath stops drawing (its
+        sparkles and her bobbing would be redrawn and copied every frame for nothing)."""
+        return self._covered
+
+    def set_covered(self, covered):
+        if covered != self._covered:
+            self._covered = covered
+            self.coveredChanged.emit()
 
     @Property(str, notify=changed)
     def balanceText(self):
@@ -420,6 +433,7 @@ class WardrobeBridge(HostBridge):
                 current = bool(starsea is not None and starsea.active)
             else:
                 current = skin == choice
+            ok = ok or current                              # What she wears is never shown locked.
             caption = (self._t('stardust_card_on') if current else self._t('stardust_card_wear') if ok
                        else self._t('stardust_card_locked', need=need.get(key, 0)))
             out.append(dict(key=choice, name=self._t(f'stardust_card_{choice}'), caption=caption, unlocked=ok,
@@ -680,11 +694,13 @@ class Wardrobe(QuickWindow):
         overlay.setFocus()
         overlay.installEventFilter(self)                     # Gone as soon as it closes.
         self._overlay = overlay
+        self.bridge.set_covered(True)
 
     def eventFilter(self, obj, event):
         from PySide6.QtCore import QEvent
         if obj is self._overlay and event.type() in (QEvent.Hide, QEvent.Close):
             self._overlay = None
+            self.bridge.set_covered(False)
             self.bridge.touch(True)
         return False
 
@@ -704,8 +720,7 @@ class Wardrobe(QuickWindow):
         starsea = getattr(self.panel, 'starsea', None)
         show = WishShow(self, results, self.bridge.language, bool(starsea is not None and starsea.active),
                         sound=sound, on_sound=remember)
-        self._show_overlay(show)
-        self.bridge.touch(True)
+        self._show_overlay(show)                             # The wardrobe catches up when it closes.
 
     @property
     def shop(self):

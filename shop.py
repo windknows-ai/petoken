@@ -177,7 +177,8 @@ class Shop:
         return self.dust.total() if self.dust is not None else 0
 
     def spendable(self):
-        return self.earned() - self.state.get('spent', 0) + self.state.get('refunds', 0)
+        # Never below zero: stardust earned can shrink (its record reset) after it was spent.
+        return max(0, self.earned() - self.state.get('spent', 0) + self.state.get('refunds', 0))
 
     def _spend(self, amount):
         if amount > self.spendable():

@@ -62,12 +62,14 @@ Page {
                 id: cabinetBox
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                readonly property real k: Math.min(width / 1200, height / 1400)
+                readonly property int pager: 40                      // Room under the cabinet for turning pages.
+                readonly property real k: Math.min(width / 1200, (height - pager) / 1400)
                 Image {
                     id: cabinet
                     width: 1200 * cabinetBox.k
                     height: 1400 * cabinetBox.k
-                    anchors.centerIn: parent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: (parent.height - cabinetBox.pager - height) / 2
                     source: bridge.wardrobeUrl("backdrop_closet")
                     sourceSize: Qt.size(width * Screen.devicePixelRatio, height * Screen.devicePixelRatio)
                     smooth: true
@@ -94,7 +96,7 @@ Page {
                     }
                 }
                 Row {                                    // Turning the pages.
-                    anchors { horizontalCenter: cabinet.horizontalCenter; bottom: cabinet.bottom; bottomMargin: 22 * cabinetBox.k }
+                    anchors { horizontalCenter: cabinet.horizontalCenter; top: cabinet.bottom; topMargin: 6 }   // Below it, clear of its base.
                     spacing: 14
                     visible: bridge.pageCount > 1
                     GemButton { kind: "ghost"; height: 30; implicitWidth: 44; icon: "caret-left"; text: ""; enabled: bridge.shelfPage > 0; onClicked: bridge.turn(-1) }

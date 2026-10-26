@@ -42,6 +42,13 @@ _STANDARD = {QDialogButtonBox.Ok: '好', QDialogButtonBox.Cancel: '取消', QDia
 _EXPANDING = (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding, QSizePolicy.Ignored)
 
 
+def empty_hint(listing, label):
+    """Show ``label`` (a list's "nothing here yet" line) inside the drawn ``listing`` while it is
+    empty, instead of as a line of its own under a big blank box."""
+    listing._mirror_empty = label
+    label.setProperty('mirrorSkip', True)
+
+
 def _alive(obj):
     return obj is not None and shiboken6.isValid(obj)
 
@@ -385,7 +392,9 @@ class Mirror(QObject):
                                  on=checkable and item.checkState() == Qt.Checked, bold=item.font().bold(),
                                  color=colour.name() if colour is not None else '',
                                  icon=self.images.icon(item.icon(), 32)))
-            out.update(rows=rows, scroll=widget.verticalScrollBar().value())
+            hint = getattr(widget, '_mirror_empty', None)        # Its "nothing here yet" line, shown inside it.
+            empty = hint.text() if not rows and hint is not None and _alive(hint) else ''
+            out.update(rows=rows, scroll=widget.verticalScrollBar().value(), empty=empty)
         elif isinstance(widget, QTreeWidget):
             header = widget.headerItem()
             heads = [header.text(c) for c in range(widget.columnCount())] if header is not None else []
@@ -396,8 +405,10 @@ class Mirror(QObject):
                     continue
                 rows.append(dict(row=row, cells=[item.text(c) for c in range(widget.columnCount())],
                                  sel=item.isSelected(), tip=item.toolTip(0)))
+            hint = getattr(widget, '_mirror_empty', None)
             out.update(heads=heads, rows=rows, header=not widget.isHeaderHidden(),
-                       widths=[widget.columnWidth(c) for c in range(widget.columnCount())])
+                       widths=[widget.columnWidth(c) for c in range(widget.columnCount())],
+                       empty=hint.text() if not rows and hint is not None and _alive(hint) else '')
         elif isinstance(widget, QTableWidget):           # A table: its header and its cells, as text.
             columns = widget.columnCount()
             heads = [(widget.horizontalHeaderItem(c).text() if widget.horizontalHeaderItem(c) else '')

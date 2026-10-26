@@ -366,8 +366,10 @@ class Animator:
                     and self.has_blink(self.state))
         blink = self._blink(now, eligible) and eligible
 
-        lively = bool(previous or self.dragging or nxt is not None or profile.bounce
-                      or profile.particles or profile.sway
+        # 60 fps only for fast motion (a drag, a bounce, a spring settling, a pose cross-fading in);
+        # her slow sway and the soft blend between frames of one pose look the same at 30 and cost
+        # half as much (every frame repaints a translucent window).
+        lively = bool(previous or self.dragging or profile.bounce or profile.particles
                       or not (self.squash.settled and self.tilt.settled and self.lift.settled))
         return Frame(
             state=self.state, index=index, next_index=nxt, next_alpha=alpha,

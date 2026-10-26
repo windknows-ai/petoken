@@ -76,6 +76,16 @@ def install_error_log(folder):
 _CRASH_FILE = None
 
 
+def quiet_crash_log():
+    """Stop recording native exceptions: while Petoken quits, Windows raises and handles its own
+    (RPC_E_WRONG_THREAD as the activity watcher stops), which would read like crashes."""
+    try:
+        import faulthandler
+        faulthandler.disable()
+    except (ImportError, RuntimeError):
+        pass
+
+
 def install_crash_log(folder):
     """A crash inside Qt ends the app without a Python error: keep Qt's own last words (its
     critical and fatal messages) and every thread's Python stack at that moment."""

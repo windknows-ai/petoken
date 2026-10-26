@@ -16,6 +16,7 @@ from localization import text
 from providers import PROVIDER_NAMES, PROVIDER_REGISTRY
 from pet_assets import sprite_for, ASSETS_DIR
 import theme
+from widget_mirror import empty_hint
 from workbench_store import WorkbenchError
 from notifications import KINDS as NOTIFY_KINDS, REPEATS, parse_recap, recap_text
 
@@ -385,6 +386,7 @@ class WorkbenchWindow(QWidget):
             hint = self.caption('wb_empty_todos' if attr == 'pending_list' else 'wb_empty_tasks', 'muted')
             setattr(self, attr + '_empty', hint)
             body.addWidget(hint)
+            empty_hint(listing, hint)
             if attr == 'task_list':
                 listing.itemSelectionChanged.connect(self._update_actions)
                 actions = QHBoxLayout()
@@ -432,6 +434,7 @@ class WorkbenchWindow(QWidget):
         layout.addWidget(self.todo_list, 1)
         self.todo_empty = self.caption('wb_empty_todos', 'muted')
         layout.addWidget(self.todo_empty)
+        empty_hint(self.todo_list, self.todo_empty)
         actions = QHBoxLayout()
         self.show_completed = QCheckBox()
         self._captions.append((self.show_completed, 'wb_completed'))
@@ -500,6 +503,7 @@ class WorkbenchWindow(QWidget):
         layout.addWidget(self.projects_table, 1)
         self.projects_empty = self.caption('wb_empty_projects', 'muted')
         layout.addWidget(self.projects_empty)
+        empty_hint(self.projects_table, self.projects_empty)
         actions = QHBoxLayout()
         self.button(actions, 'wb_new_project', lambda: self.edit_project(), True, tip='tip_new_project')
         actions.addStretch()
@@ -657,6 +661,7 @@ class WorkbenchWindow(QWidget):
         layout.addWidget(self.notify_list, 3)
         self.notify_empty = self.caption('wb_notify_empty', 'muted')
         layout.addWidget(self.notify_empty)
+        empty_hint(self.notify_list, self.notify_empty)
         header = QHBoxLayout()
         header.addWidget(self.caption('wb_reminders', 'heading'))
         header.addStretch()

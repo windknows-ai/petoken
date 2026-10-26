@@ -28,6 +28,18 @@ Item {
         color: Theme.dark ? "#26140F3C" : Theme.card
         border.color: Theme.glassEdge
     }
+    Text {                                               // Nothing here yet: said inside the box.
+        visible: t.rows.length === 0 && (t.val.empty || "") !== ""
+        anchors.centerIn: parent
+        width: parent.width - 48
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.Wrap
+        text: t.val.empty || ""
+        color: Theme.muted
+        font.family: Theme.sans
+        font.pixelSize: 14
+        lineHeight: 1.3
+    }
     Row {
         id: header
         visible: t.val.header !== false && t.heads.length > 0

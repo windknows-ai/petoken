@@ -577,24 +577,39 @@ class HaloLayer(QWidget):
             else:
                 glow, body = (158, 144, 255), (184, 218, 255)
             wide = 1.0
+            # The ribbon in short runs of three stretches, each drawn at its middle's strength: the
+            # fade is gradual, so it looks the same as stretch by stretch at a third of the calls.
             points = list(trail)
-            points = points[::2] + ([points[-1]] if len(points) % 2 == 0 else [])   # Every other point: half the lines, same ribbon.
-            for first, last in zip(points, points[1:]):
-                x, y, stamp, depth = last
-                if (depth >= 0) != self.front:
-                    continue
+            points = points[::2] + ([points[-1]] if len(points) % 2 == 0 else [])
+            run = []
+
+            def flush(run):
+                if len(run) < 2:
+                    return
+                x, y, stamp, depth = run[len(run) // 2]
                 fade = max(0.0, 1 - (self.now - stamp) / self.age) ** 1.5
                 if fade == 0:
-                    continue
+                    return
                 strength = fade * (.60 + .40 * (depth + 1) / 2)
-                a, b = QPointF(first[0] - self.x(), first[1] - self.y()), QPointF(x - self.x(), y - self.y())
+                line = QPolygonF([QPointF(p[0] - self.x(), p[1] - self.y()) for p in run])
                 for width, color in ((8, QColor(*glow, int(30 * strength * wide))),
                                      (2.5, QColor(*body, int(150 * strength))),
                                      (.9, QColor(252, 249, 255, int(230 * strength)))):
                     pen = QPen(color, width * wide * (.7 + .3 * fade))
                     pen.setCapStyle(Qt.RoundCap)
+                    pen.setJoinStyle(Qt.RoundJoin)
                     painter.setPen(pen)
-                    painter.drawLine(a, b)
+                    painter.drawPolyline(line)
+            for point in points:
+                if (point[3] >= 0) != self.front:           # Behind her on the far side: a gap.
+                    flush(run)
+                    run = []
+                    continue
+                run.append(point)
+                if len(run) == 4:                           # Three stretches; the next run starts here.
+                    flush(run)
+                    run = [point]
+            flush(run)
             # A few pearl motes recede along the ribbon, never a particle cloud.
             for x, y, stamp, depth in list(trail)[::18]:
                 age = self.now - stamp

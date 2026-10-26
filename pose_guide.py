@@ -215,9 +215,15 @@ class GuidePage(QWidget):
         def work():
             for state, path in jobs:
                 image = QImage(path)
-                if not image.isNull():
-                    self.thumbReady.emit(state, image.scaled(side, side, Qt.KeepAspectRatio,
-                                                             Qt.SmoothTransformation))
+                if image.isNull():
+                    continue
+                image = image.scaled(side, side, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                if not shiboken6.isValid(self):             # The workbench closed meanwhile.
+                    return
+                try:
+                    self.thumbReady.emit(state, image)
+                except (RuntimeError, TypeError):
+                    return
         threading.Thread(target=work, name='petoken-guide-thumbs', daemon=True).start()
 
     def _thumb_ready(self, state, image):

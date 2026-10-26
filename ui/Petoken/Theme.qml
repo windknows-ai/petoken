@@ -20,7 +20,7 @@ QtObject {
     // Words
     readonly property color ink: dark ? "#F1EEFF" : "#25213F"
     readonly property color inkSoft: dark ? "#C9C2EC" : "#4B4668"
-    readonly property color muted: dark ? "#9289C4" : "#76708F"
+    readonly property color muted: dark ? "#9289C4" : "#66607F"   // 5:1 on the lavender cards: small captions stay readable.
     readonly property color gold: dark ? "#F3C96B" : "#A86F12"
     readonly property color goldDeep: "#C88A2E"
     readonly property color violet: dark ? "#9C7BFF" : "#6655C8"

@@ -39,7 +39,7 @@ SEQ_FPS = 30
 _SEQ = {}
 _FRAMES = {}                        # (name, index) -> QImage, or the Future decoding it.
 # Decoding happens off the main thread, ahead of need, so a burst never waits on a file.
-_POOL = ThreadPoolExecutor(max_workers=3, thread_name_prefix='wish')
+_POOL = ThreadPoolExecutor(max_workers=2, thread_name_prefix='wish')
 
 
 def fx(name):
@@ -87,6 +87,11 @@ def seq_length(name):
 def _decode(path):
     image = QImage(path)
     return image.convertToFormat(QImage.Format_RGB32) if not image.isNull() else image
+
+
+def _scaled_pose(path, height):
+    image = QImage(path)
+    return image.scaledToHeight(height, Qt.SmoothTransformation) if not image.isNull() else None
 
 
 def preload(name):
@@ -204,8 +209,34 @@ def light(p, name, centre, width, alpha=1.0, angle=0.0, squash=1.0, tilt=0.0):
         p.rotate(angle)
     p.setOpacity(min(1.0, alpha))
     height = width * pm.height() / pm.width()
-    p.drawPixmap(QRectF(-width / 2, -height / 2, width, height), pm, QRectF(pm.rect()))
+    turned = tilt or angle or squash != 1.0
+    scale = abs(p.transform().m11()) if not turned else 0.0
+    if not turned and scale > 0:
+        # Upright and unturned (most lights): drawn from a copy already at its size on screen.
+        # Shrinking the big source every frame was most of the show's cost.
+        ratio = p.device().devicePixelRatioF() if p.device() is not None else 1.0
+        side = max(2, int(width * scale * ratio / 4 + .5) * 4)     # Sizes in steps of 4 px: few copies.
+        sized = _sized(name, side)
+        p.drawPixmap(QRectF(-width / 2, -height / 2, width, height), sized, QRectF(sized.rect()))
+    else:
+        p.drawPixmap(QRectF(-width / 2, -height / 2, width, height), pm, QRectF(pm.rect()))
     p.restore()
+
+
+_SIZED = {}
+
+
+def _sized(name, side):
+    """Light ``name`` scaled once to ``side`` device pixels wide (a small cache of recent sizes)."""
+    key = (name, side)
+    pm = _SIZED.get(key)
+    if pm is None:
+        source = fx(name)
+        pm = source.scaledToWidth(side, Qt.SmoothTransformation) if side < source.width() else source
+        if len(_SIZED) > 240:
+            _SIZED.pop(next(iter(_SIZED)))
+        _SIZED[key] = pm
+    return pm
 
 
 def streak(p, name, head, angle, length, alpha=1.0, grow=1.0):
@@ -292,10 +323,16 @@ class WishShow(QWidget):
         self.exclusive = {}           # index -> when its own opening starts (Galaxy, Starsea).
         self._layers = {}
         self._used = set()
-        for name in ['wishstar', 'charge'] + [f'{kind}_{r}' for r in {res['item']['rarity'] for res in results}
-                                              for kind in ('emblem', 'cardbeam')]:
+        self._prepare_poses()                               # Her pictures first: she shows at once.
+        # Everything this show will play starts decoding now: the results are known, and a burst read
+        # from disk only when it is caught made the first show of the day stop for a second.
+        rarities = {res['item']['rarity'] for res in results}
+        for name in ['wishstar', 'charge'] + [f'{kind}_{r}' for r in rarities for kind in ('emblem', 'cardbeam')]:
             self._preload(name)
-        self._prepare_poses()
+        # The big bursts a moment later, once the opening plays: hundreds of MB decoded all at once
+        # stalled the whole app while the opening started.
+        self._later = [f'{kind}_{r}' for r in rarities for kind in ('reveal', 'pillar')]
+        self._later += [f'exclusive_{r}' for r in rarities if shop.RARITIES.index(r) >= 3]
         self._prepare_layers()
         self._prepare_art()
         from wish_sound import Sounds
@@ -322,10 +359,9 @@ class WishShow(QWidget):
         self._pose_jobs = {}
         size = self.height() * (.34 if self.ten else .40) * self.devicePixelRatioF()
         for name in POSES:
-            source = self._pose_source(name)
-            if source is not None:
-                image = source.toImage()
-                self._pose_jobs[name] = _POOL.submit(image.scaledToHeight, int(size), Qt.SmoothTransformation)
+            path = self._pose_file(name)
+            if path is not None:                            # Read and scaled off the main thread.
+                self._pose_jobs[name] = _POOL.submit(_scaled_pose, path, int(size))
 
     def _prepare_art(self):
         """Each find's picture, decoded and scaled to its card in the background."""
@@ -389,6 +425,20 @@ class WishShow(QWidget):
                         rng.choice(SHOWER)))
         return out
 
+    def _pose_file(self, name):
+        """The file of her first picture for a moment of the show (her Starsea one when she is in it)."""
+        state = POSES[name][1 if self.starsea else 0]
+        for candidate in (state, POSES[name][0], 'idle'):
+            try:
+                entry = pet_assets.entry_for(candidate)
+            except KeyError:
+                continue
+            frames = pet_assets.existing_frames(entry)
+            path = frames[0] if frames else pet_assets.resolve_path(entry)
+            if path:
+                return str(pet_assets._file(path))
+        return None
+
     def _pose_source(self, name):
         state = POSES[name][1 if self.starsea else 0]
         for candidate in (state, POSES[name][0], 'idle'):
@@ -402,6 +452,8 @@ class WishShow(QWidget):
         """Her picture for a moment of the show (scaled in the background at the start)."""
         if name not in self._poses:
             job = self._pose_jobs.get(name)
+            if job is not None and not job.done():
+                return None                                 # Still being scaled: drawn from the next frame.
             image = job.result() if job is not None else None
             if image is not None:
                 image.setDevicePixelRatio(self.devicePixelRatioF())
@@ -429,6 +481,10 @@ class WishShow(QWidget):
         last = getattr(self, '_last_step', None)
         self._last_step = now
         self.advance(min(.05, now - last) if last is not None else self.FPS_MS / 1000)
+        if self._later and self.t > .6:
+            for name in self._later:
+                self._preload(name)
+            self._later = []
         if self.t > self.length + 30:
             self.timer.stop()
         self.update()

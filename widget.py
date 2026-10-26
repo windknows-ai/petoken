@@ -7111,6 +7111,8 @@ class Panel(QWidget):
         if self.workbench_window and not self.workbench_window.shutdown():
             return False
         self.closing = True
+        import diagnostics
+        diagnostics.quiet_crash_log()   # Windows' own handled errors while threads stop are no crash.
         self.notify_clock.stop()
         self.approvals.stop()
         self.updates.stop()
