@@ -24,7 +24,7 @@ import sys
 import time
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt
-from PySide6.QtGui import QImage, QPainter
+from PySide6.QtGui import QColor, QImage, QPainter, QRadialGradient
 from PySide6.QtWidgets import QWidget
 
 import pet_geometry as geometry
@@ -34,6 +34,8 @@ LYING = frozenset({'sleep', 'star_sleep', 'dragged', 'star_dragged', 'landing', 
 SCALE = .42 / 336             # A Stars-rarity hat (336 px wide) is .42 of her sprite box; all pieces share it.
 BEHIND = ('ground', 'back', 'weapon')
 FRONT = ('buddy', 'head', 'weapon')
+# A whole set worn (outfit, weapon and decoration of one theme): a soft glow behind her in its colour.
+SET_GLOW = dict(starsea=(196, 176, 255), frost=(160, 214, 255), sakura=(255, 196, 222), moon=(240, 228, 176))
 # How each piece sits on her, beyond the kind's rule: scale, nudge (fractions of her sprite box),
 # turn (degrees) and, for clips and flowers, 'side' (pinned at the side of her head, not on top).
 # Checked one by one on her idle, wave, typing and thinking poses.
@@ -328,7 +330,11 @@ class Decor:
         global STAR
         self.items = worn_items(self.pet.panel)
         STAR = self.items.get('star')
-        wanted = {'back': any(s in self.items for s in BEHIND), 'front': any(s in self.items for s in FRONT)}
+        store = getattr(self.pet.panel, 'shop', None)
+        bonuses = store.set_bonuses() if store is not None else []
+        self.glow = SET_GLOW.get(bonuses[0]) if bonuses else None
+        wanted = {'back': self.glow is not None or any(s in self.items for s in BEHIND),
+                  'front': any(s in self.items for s in FRONT)}
         self.pet.update()                                   # A new outfit shows at once.
         shown = self.pet.isVisible() and not getattr(self.pet, 'veiled', False)
         for name, front in (('back', False), ('front', True)):
@@ -467,6 +473,17 @@ class Decor:
         now = time.monotonic()
         lying = lies_down(state)
         self._lying = lying
+        glow = getattr(self, 'glow', None)
+        if glow is not None and not layer.front:
+            centre = QPointF(rect.center().x(), rect.y() + rect.height() * .52)
+            radius = rect.width() * .72
+            light = QRadialGradient(centre, radius)
+            light.setColorAt(0, QColor(*glow, 135))
+            light.setColorAt(.5, QColor(*glow, 60))
+            light.setColorAt(1, QColor(*glow, 0))
+            p.setPen(Qt.NoPen)
+            p.setBrush(light)
+            p.drawEllipse(centre, radius, radius)
         for slot in (FRONT if layer.front else BEHIND):
             item = self.items.get(slot)
             if item is None or (lying and slot in ('head', 'back')):

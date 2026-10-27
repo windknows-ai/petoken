@@ -8,7 +8,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB) ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![License](https://img.shields.io/badge/code-MIT-91E4F2)
 
-**Petoken Community** — the free, open-source edition of Petoken. v1.7.0 keeps itself up to date, welcomes new users, takes todos to Claude Code or Codex now or at a set time, and brings Codex notices and approvals onto the character. Since v1.6 it is a time-saving assistant: it predicts when your limits run out, lets you approve Claude Code's requests, answer its questions and accept its plans right on the character, jumps to a task's window in one click, starts new tasks from anywhere and reports what AI did for you today and this week — beside the Codex and Claude Code usage tracking, notifications and local workbench of earlier versions.
+**Petoken Community** — the free, open-source edition of Petoken. v2.5.0 adds the Stardust Wardrobe: outfits, weapons and decorations she really wears, bought or wished for with the stardust your work earns. Since v1.7 it keeps itself up to date, welcomes new users, takes todos to Claude Code or Codex now or at a set time, and brings Codex notices and approvals onto the character. Since v1.6 it is a time-saving assistant: it predicts when your limits run out, lets you approve Claude Code's requests, answer its questions and accept its plans right on the character, jumps to a task's window in one click, starts new tasks from anywhere and reports what AI did for you today and this week — beside the Codex and Claude Code usage tracking, notifications and local workbench of earlier versions.
 
 ## What it does
 
@@ -31,9 +31,9 @@ Petoken is a small Windows desktop companion for Codex and Claude Code. It follo
 - **Honest unknowns**: unknown model remains Unknown, unavailable numbers remain `N/A`, actual zero remains zero, and partial coverage stays explicit.
 - Daily / Token modes, Full / Compact number formats, Simplified Chinese / English UI, pinning, always-on-top, resizable panel, adjustable character size.
 
-## Latest stable release: v2.3.0
+## Latest stable release: v2.5.0
 
-Download the **one-click installer** [Petoken-Setup-v2.3.0.exe](https://github.com/windknows-ai/petoken/releases/download/v2.3.0/Petoken-Setup-v2.3.0.exe) from the [v2.3.0 release](https://github.com/windknows-ai/petoken/releases/tag/v2.3.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Download the **one-click installer** [Petoken-Setup-v2.5.0.exe](https://github.com/windknows-ai/petoken/releases/download/v2.5.0/Petoken-Setup-v2.5.0.exe) from the [v2.5.0 release](https://github.com/windknows-ai/petoken/releases/tag/v2.5.0) and verify its SHA-256 against the release checksum file. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Supported sources
 
@@ -117,6 +117,29 @@ back when Petoken exits).
   reply), files changed, tokens, API-equivalent cost and the change against the
   previous period, followed by a searchable history of Claude sessions and Codex
   threads. Double-click a row to jump to its window.
+
+### New in v2.5: the Stardust Wardrobe
+
+- **Stardust Wardrobe.** Right-click her (or the tray) › Stardust Wardrobe
+  opens its own window. In the **Closet** a mirror shows her trying anything
+  on at once, owned or not; wear or take off pieces, adjust a piece's size
+  and angle by hand and save whole looks. The **Shop** has 88 items — 8
+  outfits, 20 weapons and 60 decorations (head, back, ground, a floating
+  buddy, task-star styles) — in five rarities (Stars 200, Moon 800, Sun 1800,
+  Galaxy 4500 stardust; Starsea only from wishes), with four daily picks at a
+  discount you draw yourself. **Milestones** keep the Meteor and Aurora rings
+  and the Starsea form; spending never takes them back.
+- **She really wears them.** Outfits have their own pictures for her actions,
+  weapons sit in her hand, decorations follow her head, back and feet; a
+  whole matching set adds a soft glow behind her.
+- **Wishes.** Fly her to falling stars to catch them (one for 300, ten for
+  3000); odds are shown in the window, a Starsea piece comes within 60
+  wishes and a duplicate gives 100 stardust back. Stardust also comes from a
+  daily sign-in, three AI tasks in a day, a kept weekly goal and completed
+  collections.
+- **Also:** the whole app redrawn in one calm Qt Quick look; every action
+  drawn for the night, game and Starsea forms; about half the CPU while idle;
+  no freeze when an AI task finishes.
 
 ### New in v2.2: game mode and phone notifications
 
@@ -222,7 +245,7 @@ If a source is missing or stale, its views show that limitation honestly. No oth
 
 ## Install and use
 
-1. Download **Petoken-Setup-v1.7.1.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v1.7.1) (v1.7.0 and later update themselves) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps. Upgrading keeps your settings and workbench.
+1. Download **Petoken-Setup-v2.5.0.exe** from [GitHub Releases](https://github.com/windknows-ai/petoken/releases/tag/v2.5.0) (v1.7.0 and later update themselves) and run it: click through, no administrator rights needed. It adds a Start menu (and optional desktop) shortcut and an uninstaller under Windows Settings → Apps. Upgrading keeps your settings and workbench.
    - Windows may show "Windows protected your PC" because the installer is not code-signed yet: choose **More info → Run anyway**.
 2. Use Codex or Claude Code as usual; Petoken follows their running tasks. In **Settings → Claude** you can turn on Sync Claude usage (quotas), Claude instant notifications and Approve Claude on the pet. The interface starts in English; switch to Simplified Chinese in Settings → General → Language.
 
@@ -271,6 +294,7 @@ Build the one-click installer (`dist\Petoken-Setup-v<version>.exe`, needs [Inno 
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Third-party components: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
+- v2.5.0 release notes: [`docs/RELEASE_NOTES_v2.5.0.md`](docs/RELEASE_NOTES_v2.5.0.md); all versions: [CHANGELOG.md](CHANGELOG.md)
 - v1.7.1 release notes: [`docs/RELEASE_NOTES_v1.7.1.md`](docs/RELEASE_NOTES_v1.7.1.md) (fix); v1.7.0: [`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
 - Previous release notes: [`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md), [`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md), [`docs/RELEASE_NOTES_v1.4.0.md`](docs/RELEASE_NOTES_v1.4.0.md), [`docs/RELEASE_NOTES_v1.3.0.md`](docs/RELEASE_NOTES_v1.3.0.md)
 - Historical v1.2.0 release notes: [`docs/RELEASE_NOTES_v1.2.0.md`](docs/RELEASE_NOTES_v1.2.0.md)

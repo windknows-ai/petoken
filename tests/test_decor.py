@@ -162,6 +162,33 @@ class DecorTests(unittest.TestCase):
             lit = any(image.pixelColor(x, y).alpha() for x in range(0, 400, 4) for y in range(0, 170, 4))
             self.assertEqual(lit, drawn, state)
 
+    def test_a_whole_set_glows_softly_behind_her(self):
+        class Pet:
+            pet_scale = 100
+
+            def pos(self):
+                from PySide6.QtCore import QPoint
+                return QPoint(0, 0)
+
+        class Layer(Pet):
+            front = False
+        d = decor.Decor(Pet())
+        d.items = {}
+        from PySide6.QtGui import QTransform
+        for glow, lit in ((None, False), (decor.SET_GLOW['frost'], True)):
+            d.glow = glow
+            image = QImage(400, 400, QImage.Format_ARGB32_Premultiplied)
+            image.fill(0)
+            p = QPainter(image)
+            d.pose = ('idle', QPixmap(100, 100), QTransform(), QRectF(150, 150, 100, 100))
+            d.paint(p, Layer())
+            p.end()
+            centre = image.pixelColor(200, 202)
+            self.assertEqual(centre.alpha() > 0, lit)
+            if lit:
+                self.assertLess(centre.alpha(), 160)                 # Soft, not a solid disc.
+                self.assertEqual(image.pixelColor(120, 120).alpha(), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

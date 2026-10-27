@@ -2,6 +2,26 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.5.0 — 2026-10-26
+
+### Added
+- **Stardust Wardrobe** in its own window: a mirror to try anything on, a shop of 88 items (8 outfits, 20 weapons, 60 decorations) in five rarities with four daily picks at a discount you draw, and the milestones (Meteor, Aurora, Starsea).
+- Outfits drawn for her actions, weapons in her hand, decorations on her head, back and feet; a whole matching set glows softly behind her.
+- **Wishes** you play: fly her to the falling stars; odds shown, a Starsea piece within 60 wishes, 100 stardust back for a duplicate.
+- Stardust from a daily sign-in, three AI tasks a day, a kept weekly goal and completed collections.
+- Every action drawn for the night, game and Starsea forms.
+
+### Changed
+- The whole app redrawn in Qt Quick with one calm, readable look.
+- About half the CPU while idle; the workbench and wardrobe open faster; reports are read in their own process.
+
+### Fixed
+- No freeze when an AI task finishes; quitting during a report read no longer hangs.
+- Outfits no longer flicker while she is dragged; decorations sit right when she lies down or reads.
+- Closing the wardrobe mid-wish ends the show; only one Settings or focus dialog at a time.
+
+See [release notes](docs/RELEASE_NOTES_v2.5.0.md).
+
 ## V2.4.1 — 2026-10-11
 
 ### Changed
