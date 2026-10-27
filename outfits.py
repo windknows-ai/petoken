@@ -2,11 +2,14 @@
 (assets/v2_5/outfits/<series>/<rarity>/<pose>_<n>.png, plus blinks). Worn, every pose shows the
 outfit's picture of that pose, or of the nearest core pose (a cheer uses its celebrate frames, a
 morning greeting its wave). Her Starsea form, night pajamas and game form keep their own art.
+The package holds only the mirror's pictures of each outfit; the rest comes once she owns it
+(outfit_packs.py), and until then she keeps her own look.
 """
 from __future__ import annotations
 
 import functools
 
+import outfit_packs
 import pet_assets
 
 OUTFIT_DIR = pet_assets.ASSETS_DIR / 'v2_5' / 'outfits'
@@ -58,26 +61,39 @@ def core_pose(state):
     return NEAREST.get(state, 'idle')
 
 
+def _name(path):
+    try:
+        return str(path.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/')
+    except ValueError:
+        return str(path)                                    # A downloaded pack, outside the program.
+
+
 @functools.lru_cache(maxsize=256)
 def _frames(series, tier, pose):
-    folder = OUTFIT_DIR / series / tier
+    folder = outfit_packs.folder(series, tier)
     found = sorted(folder.glob(f'{pose}_[0-9].webp')) or sorted(folder.glob(f'{pose}_[0-9].png'))
     kept = [p for p in found if int(p.stem.rsplit('_', 1)[1]) not in LEFT_OUT.get(pose, ())]
     found = kept or found
-    return tuple(str(p.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/') for p in found)
+    return tuple(_name(p) for p in found)
 
 
-def frame_path(item, state, index=0, blink=False):
-    """The outfit picture for ``state`` (frame ``index``, or its blink), or None to keep her own."""
+def forget():
+    """A pack was just unpacked: read the outfits' folders again."""
+    _frames.cache_clear()
+
+
+def frame_path(item, state, index=0, blink=False, preview=False):
+    """The outfit picture for ``state`` (frame ``index``, or its blink), or None to keep her own.
+    Until the outfit is all here she keeps her own look; the mirror (``preview``) shows what there is."""
     pose = core_pose(state)
-    if item is None or pose is None:
+    if item is None or pose is None or not (preview or outfit_packs.ready(item)):
         return None
     if blink:
         for name in ((state, pose) if state in pet_assets.FULL_POSES else (pose,)):
             for suffix in ('.webp', '.png'):                # WebP in the package, PNG in the repository.
-                path = OUTFIT_DIR / item['series'] / item['tier'] / f'{name}_blink{suffix}'
+                path = outfit_packs.folder(item['series'], item['tier']) / f'{name}_blink{suffix}'
                 if path.is_file():
-                    return str(path.relative_to(pet_assets.ASSETS_DIR.parent)).replace('\\', '/')
+                    return _name(path)
     exact = state if state in pet_assets.FULL_POSES else None     # Its own picture of this very action.
     frames = ((exact and _frames(item['series'], item['tier'], exact)) or _frames(item['series'], item['tier'], pose)
               or _frames(item['series'], item['tier'], 'idle'))

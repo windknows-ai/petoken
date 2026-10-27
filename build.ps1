@@ -107,6 +107,12 @@ foreach ($folder in 'assets/v2_5/forms', 'assets/v2_5/outfits') {
         } | Remove-Item -Force
     }
 }
+# 2.5.1: each outfit becomes its own download (outfit-packs\, uploaded to the outfits-v1 pre-release);
+# the package keeps only the mirror's pictures of it.
+if (Test-Path -LiteralPath $outfitRoot) {
+    & $python (Join-Path $repo 'tools\pack_outfits.py') $outfitRoot (Join-Path $distributionDirectory 'outfit-packs')
+    if ($LASTEXITCODE -ne 0) { throw 'Packing the outfits failed.' }
+}
 Copy-Item -LiteralPath (Join-Path $repo 'README.md') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'LICENSE') -Destination $app -Force
 Copy-Item -LiteralPath (Join-Path $repo 'THIRD_PARTY_NOTICES.md') -Destination $app -Force

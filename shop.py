@@ -199,6 +199,9 @@ class Shop:
         owned.append(item_id)
         self.state.setdefault('log', []).append(dict(item=item_id, at=self.clock(), source=source))
         self._check_collection(BY_ID[item_id]['set'])
+        hook = getattr(self.panel, 'shop_owned', None)               # An outfit's pictures come now.
+        if hook is not None:
+            hook(item_id)
         return 0
 
     def equipped(self):

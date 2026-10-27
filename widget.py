@@ -5359,6 +5359,11 @@ class Panel(QWidget):
         # 2.5 Stardust Shop (its state sits beside the settings).
         from shop import Shop
         self.shop = Shop(self, PREF_DIR / 'shop.json')
+        # 2.5.1: an outfit's pictures are downloaded once she owns it (the installer has only the mirror's).
+        from outfit_packs import OutfitPacks
+        self.outfit_packs = OutfitPacks(self, enabled=live)
+        if live:
+            QTimer.singleShot(5000, self.outfit_packs.ensure)
         QTimer.singleShot(0, self.apply_ring_skin)
         QTimer.singleShot(0, self.starsea.apply)
         self.goal_clock = QTimer(self)
@@ -6462,8 +6467,12 @@ class Panel(QWidget):
         # Room for every skin once one is unlocked, so switching never flashes.
         halo_scene.set_skin(skin, reserve=skin != 'default' or bool(self.prefs.get('ring_skins_unlocked')))
 
+    def shop_owned(self, item_id):
+        self.outfit_packs.want(item_id)
+
     def shop_worn_changed(self):
         """Something from the shop was put on or taken off: she wears it at once."""
+        self.outfit_packs.ensure()                          # A pack that failed before is tried again.
         pet = getattr(self, 'pet', None)
         if pet is not None:
             pet.decor.refresh()

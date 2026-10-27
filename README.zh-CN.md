@@ -30,9 +30,9 @@ Petoken 是住在 Windows 桌面上的小伙伴。它会跟踪 Codex 和 Claude 
 - **诚实显示未知**：未知的模型就写「未知」，拿不到的数字就写 `N/A`，真正的 0 才写 0，不完整的数据会明确标出。
 - 日常 / Token 两种模式，完整 / 简洁两种数字格式，简体中文 / 英文界面，固定显示、始终置顶、人物大小可调。
 
-## 最新版本：v2.5.0
+## 最新版本：v2.5.1
 
-在 [v2.5.0 发布页](https://github.com/windknows-ai/petoken/releases/tag/v2.5.0) 下载 **一键安装程序** [Petoken-Setup-v2.5.0.exe](https://github.com/windknows-ai/petoken/releases/download/v2.5.0/Petoken-Setup-v2.5.0.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
+在 [v2.5.1 发布页](https://github.com/windknows-ai/petoken/releases/tag/v2.5.1) 下载 **一键安装程序** [Petoken-Setup-v2.5.1.exe](https://github.com/windknows-ai/petoken/releases/download/v2.5.1/Petoken-Setup-v2.5.1.exe)，可以用发布页里的校验文件核对 SHA-256。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 支持的来源
 
@@ -67,7 +67,7 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 ### v2.5 新增：星辉衣柜
 
 - **星辉衣柜。** 在她身上右键（或托盘）→「星辉衣柜」，打开一个单独的窗口。**衣柜**页有一面镜子，点任何一件她都会马上试穿，没拥有的也能试；可以穿上、卸下，手动调每件的大小和角度，把整套搭配存下来。**商店**有 88 件：8 套服装、20 把武器、60 件装饰（头顶、身后、脚下、漂浮伙伴、任务星造型），分五种稀有度（繁星 200、明月 800、皓日 1800、银河 4500 星辉；星海只能许愿获得），每天 4 件精选，折扣由你自己翻牌抽。**里程碑**页是流星星环、极光星环和星海形态，花星辉不会让它们退回。
-- **真的穿在她身上。** 服装每个动作都有自己的图，武器拿在手上，装饰跟着她的头、背和脚；穿齐同一主题的一整套，她身后会亮起一圈柔光。
+- **真的穿在她身上。** 服装每个动作都有自己的图（从 v2.5.1 起拥有之后才下载，试穿不需要），武器拿在手上，装饰跟着她的头、背和脚；穿齐同一主题的一整套，她身后会亮起一圈柔光。
 - **许愿。** 带她飞去摘流星（单抽 300，十连 3000）；窗口里公示概率，60 次内必得星海级，抽到重复返还 100 星辉。每日签到、一天完成 3 个 AI 任务、守住每周目标、集齐一类也都能得星辉。
 - **另外：** 整个程序换成统一、清爽的 Qt Quick 界面；深夜、游戏、星海三种形态的每个动作都画齐了；待机时 CPU 占用约减半；AI 任务完成时界面不再卡住。
 
@@ -113,7 +113,7 @@ Petoken 只跟踪 Codex 和 Claude Code 两个来源。「自动」模式会跟�
 
 ## 安装和使用
 
-1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v2.5.0) 下载 **Petoken-Setup-v2.5.0.exe**（v1.7.0 及以后的版本会自动更新），双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。升级时会保留你的设置和工作台。
+1. 从 [GitHub 发布页](https://github.com/windknows-ai/petoken/releases/tag/v2.5.1) 下载 **Petoken-Setup-v2.5.1.exe**（v1.7.0 及以后的版本会自动更新），双击安装：一路「Next」即可，不需要管理员权限，会自动创建开始菜单（可选桌面）快捷方式，可以在 Windows「设置 → 应用」里卸载。升级时会保留你的设置和工作台。
    - Windows 可能提示「Windows 已保护你的电脑」，因为安装程序还没有数字签名。点「更多信息」→「仍要运行」即可。
 2. 像平常一样使用 Codex 或 Claude Code，Petoken 会自动跟随正在运行的任务。在 **设置 → Claude** 里可以打开「同步 Claude 用量」（显示额度）、「Claude 即时通知」和「在桌宠上批准 Claude」。界面默认是英文，可以在 设置 → 常规 → 界面语言 里切换成简体中文。
 
@@ -162,7 +162,7 @@ py -3.13 -m venv .venv
 - 安全策略：[`SECURITY.md`](SECURITY.md)
 - 参与贡献：[`CONTRIBUTING.md`](CONTRIBUTING.md)
 - 第三方组件：[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- v2.5.0 发布说明：[`docs/RELEASE_NOTES_v2.5.0.md`](docs/RELEASE_NOTES_v2.5.0.md)；全部版本见 [CHANGELOG.md](CHANGELOG.md)
+- v2.5.1 发布说明：[`docs/RELEASE_NOTES_v2.5.1.md`](docs/RELEASE_NOTES_v2.5.1.md)；v2.5.0：[`docs/RELEASE_NOTES_v2.5.0.md`](docs/RELEASE_NOTES_v2.5.0.md)；全部版本见 [CHANGELOG.md](CHANGELOG.md)
 - v1.7.1 发布说明：[`docs/RELEASE_NOTES_v1.7.1.md`](docs/RELEASE_NOTES_v1.7.1.md)（修复）；v1.7.0：[`docs/RELEASE_NOTES_v1.7.0.md`](docs/RELEASE_NOTES_v1.7.0.md)
 - 之前的发布说明：[`docs/RELEASE_NOTES_v1.6.0.md`](docs/RELEASE_NOTES_v1.6.0.md)、[`docs/RELEASE_NOTES_v1.5.0.md`](docs/RELEASE_NOTES_v1.5.0.md)
 

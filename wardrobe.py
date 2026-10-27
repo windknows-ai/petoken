@@ -79,7 +79,7 @@ def portrait(panel, items, pose, width, height):
     state = pose
     if starsea is not None and getattr(starsea, 'active', False):
         state = starsea.pose(pose)                          # Her Starsea look in the mirror too.
-    path = (outfits.frame_path(outfit, state) if outfit is not None else None) or decor.frame_file(state, 0) \
+    path = (outfits.frame_path(outfit, state, preview=True) if outfit is not None else None) or decor.frame_file(state, 0) \
         or decor.frame_file('idle', 0)
     sx, sy, sw, sh = geometry.scaled_sprite_rect(100)
     k = min(height / (sh * 1.16), width / (sw * 1.45))       # Her box, with room for what she wears.
@@ -314,6 +314,12 @@ class WardrobeBridge(HostBridge):
         worn = store.equipped().get(item['slot']) == item['id']
         price = store.price(item['id'])
         detail = self._t(f'shop_slot_{item["slot"]}') + ('' if item.get('art') else self._t('wardrobe_no_art'))
+        packs = getattr(self.panel, 'outfit_packs', None)
+        status = packs.status(item) if packs is not None and owned else None
+        if status == 'failed':
+            detail += self._t('wardrobe_pack_failed')
+        elif status is not None:
+            detail += self._t('wardrobe_pack_loading', percent=int(status * 100))
         if worn:
             action = dict(actionText=self._t('wardrobe_take_off'), actionKind='ghost', actionIcon='arrow-u-up-left',
                           actionEnabled=True)

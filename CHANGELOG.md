@@ -2,6 +2,13 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.5.1 — 2026-10-26
+
+### Changed
+- The installer carries only Petoken itself: an outfit's pictures beyond the mirror's download once she owns it (checked by SHA-256, kept in `%LOCALAPPDATA%\CodexWisp\outfits`); she keeps her own look until it is all here. Updating from 2.5.0 removes its outfit pictures and downloads the owned ones again.
+
+See [release notes](docs/RELEASE_NOTES_v2.5.1.md).
+
 ## V2.5.0 — 2026-10-26
 
 ### Added

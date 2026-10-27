@@ -1,6 +1,6 @@
 ; Petoken one-click installer (Inno Setup 6).
 ; Built by build.ps1 -Installer, or by hand:
-;   ISCC.exe /DAppVersion=2.5.0 /DSourceDir=dist\petoken /DOutputDir=dist installer\petoken.iss
+;   ISCC.exe /DAppVersion=2.5.1 /DSourceDir=dist\petoken /DOutputDir=dist installer\petoken.iss
 ; Installs per user (no administrator rights) into %LOCALAPPDATA%\Programs\Petoken,
 ; adds Start menu / optional desktop shortcuts and an uninstaller. Settings and
 ; workbench data in %LOCALAPPDATA%\CodexWisp are kept on uninstall.
@@ -49,6 +49,10 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "startup"; Description: "Start Petoken when Windows starts"; GroupDescription: "Startup:"; Flags: unchecked
+
+[InstallDelete]
+; 2.5.0 carried every outfit picture; from 2.5.1 they are downloaded once owned (outfit_packs.py).
+Type: filesandordirs; Name: "{app}\_internal\assets\v2_5\outfits"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
