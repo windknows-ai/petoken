@@ -2,6 +2,13 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.5.2 — 2026-10-28
+
+### Added
+- +10 stardust for every 5 minutes Petoken runs, on top of the daily work limit.
+
+See [release notes](docs/RELEASE_NOTES_v2.5.2.md).
+
 ## V2.5.1 — 2026-10-26
 
 ### Changed
