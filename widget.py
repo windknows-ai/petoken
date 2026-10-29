@@ -5359,6 +5359,11 @@ class Panel(QWidget):
         # 2.5 Stardust Shop (its state sits beside the settings).
         from shop import Shop
         self.shop = Shop(self, PREF_DIR / 'shop.json')
+        from stardust import RUNNING_STEP_S
+        self.running_clock = QTimer(self)                   # Stardust for every 5 minutes she is running.
+        self.running_clock.timeout.connect(self.stardust.on_running)
+        if live:
+            self.running_clock.start(RUNNING_STEP_S * 1000)
         # 2.5.1: an outfit's pictures are downloaded once she owns it (the installer has only the mirror's).
         from outfit_packs import OutfitPacks
         self.outfit_packs = OutfitPacks(self, enabled=live)

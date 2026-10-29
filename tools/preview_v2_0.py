@@ -98,6 +98,7 @@ class Preview(QWidget):
             self.panel.pet = self.pet = DesktopPet(self.panel)
         self.panel.preview_toasts = True
         self.panel.outfit_packs.enabled = True      # Outfits bought or wished for here download for real.
+        self.panel.running_clock.start(300 * 1000)  # +10 stardust every 5 minutes it runs, as in the app.
         self.panel.prefs.update(language=language)
         self.store = WorkbenchStore(root / 'workbench.sqlite3')
         self.panel.workbench_store = lambda: self.store

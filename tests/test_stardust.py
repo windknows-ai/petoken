@@ -66,6 +66,18 @@ class StardustTests(unittest.TestCase):
         self.assertEqual(self.dust.work_today(), stardust.WORK_DAILY_CAP)
         self.dust.gain('star_signin', 'today', 10)              # Sign-in comes on top.
         self.assertEqual(self.dust.total(), stardust.WORK_DAILY_CAP + 10)
+        self.dust.on_running()                                  # So does running time.
+        self.assertEqual(self.dust.total(), stardust.WORK_DAILY_CAP + 20)
+
+    def test_every_five_minutes_running_gives_ten_once(self):
+        now = [NOW]
+        dust = Stardust(self.panel, clock=lambda: now[0])
+        dust.on_running()
+        dust.on_running()                                       # The same five minutes: nothing more.
+        now[0] += stardust.RUNNING_STEP_S
+        dust.on_running()
+        self.assertEqual(dust.total(), 20)
+        self.assertEqual(stardust.RUNNING_STEP_S, 300)
 
     def test_unlocks_fire_once_in_order(self):
         self.assertEqual(next_unlock(0), ('skin_meteor', 150))

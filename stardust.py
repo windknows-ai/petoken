@@ -3,7 +3,8 @@
 Like companionship points it rewards work that helped you, never tokens
 spent: a finished AI task (+10, +4 when it took under a minute), AI work you
 accepted after review (+24), a focus round (+16), and the AI's working time
-(+1 per 3 minutes of a finished task, at most +120 a day). A heavy day of work
+(+1 per 3 minutes of a finished task, at most +120 a day), and +10 for every 5 minutes Petoken runs
+(on top of work). A heavy day of work
 earns about 600, and work never earns more than WORK_DAILY_CAP a day (sign-in,
 streaks and collection bonuses come on top). Each award counts
 once (by reason and a reference), stored with the points under a ``star_``
@@ -18,7 +19,8 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
-GAINS = dict(star_task=10, star_task_short=4, star_review=24, star_focus=16)
+GAINS = dict(star_task=10, star_task_short=4, star_review=24, star_focus=16, star_running=10)
+RUNNING_STEP_S = 5 * 60              # Every 5 minutes Petoken runs: +10 (the person's rule), on top of work.
 TIME_STEP_S = 3 * 60
 TIME_DAILY_CAP = 120
 WORK = ('star_task', 'star_task_short', 'star_review', 'star_focus', 'star_time', 'star_daily')
@@ -77,6 +79,10 @@ class Stardust:
         for name in fresh:
             self._celebrate(name)
         return fresh
+
+    def on_running(self):
+        """Another RUNNING_STEP_S of Petoken running (once per such span of the clock)."""
+        return self.gain('star_running', int(self.clock() // RUNNING_STEP_S))
 
     def on_finished(self, event):
         """A finished AI task: stardust for it and for its working time."""
