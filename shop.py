@@ -42,7 +42,7 @@ PITY = 60                     # A Starsea item at the latest on this wish.
 REFUND = 100                  # A duplicate from a wish gives back this much stardust, whatever its rarity.
 DISCOUNTS = (.6, .65, .7, .75, .8, .85, .9, .95)
 FEATURED = 4
-SIGNIN, STREAK_DAYS, STREAK_BONUS = 10, 7, 50
+SIGNIN = (500, 650, 500, 650, 500, 650, 500)    # Days 1..7 in a row, then round again (the person's numbers).
 DAILY_TASKS, DAILY_BONUS = 3, 20
 COLLECTION_BONUS = 100
 WEEK_GOAL_BONUS = 30
@@ -329,21 +329,26 @@ class Shop:
         return results
 
     # Earning ------------------------------------------------------------------------------
-    def sign_in(self):
-        """Today's sign-in: SIGNIN stardust, plus a bonus every STREAK_DAYS days in a row."""
+    def _next_streak(self):
+        """How many days in a row today's sign-in makes (a missed day starts the week's round again)."""
         day = self.today()
         last = self.state.get('signin_day')
-        if last == day.isoformat():
+        return self.state.get('streak', 0) + 1 if last == (day - timedelta(days=1)).isoformat() else 1
+
+    def signin_reward(self):
+        """What signing in today gives."""
+        return SIGNIN[(self._next_streak() - 1) % len(SIGNIN)]
+
+    def sign_in(self):
+        """Today's sign-in: the stardust of this day of the week-long round."""
+        day = self.today()
+        if self.state.get('signin_day') == day.isoformat():
             return None
-        streak = self.state.get('streak', 0) + 1 if last == (day - timedelta(days=1)).isoformat() else 1
+        streak, gained = self._next_streak(), self.signin_reward()
         self.state.update(signin_day=day.isoformat(), streak=streak)
         self._save()
-        gained = SIGNIN
         if self.dust is not None:
-            self.dust.gain('star_signin', day.isoformat(), SIGNIN)
-            if streak % STREAK_DAYS == 0:
-                self.dust.gain('star_streak', day.isoformat(), STREAK_BONUS)
-                gained += STREAK_BONUS
+            self.dust.gain('star_signin', day.isoformat(), gained)
         return dict(streak=streak, gained=gained)
 
     def _check_collection(self, kind):

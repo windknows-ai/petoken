@@ -187,6 +187,23 @@ def head_top(pixmap):
 
 _PROFILES = {}
 _BANDS = {}
+_TOPS = {}
+CARD_STEP = 6                 # The usage card moves only when her top moves more than this (no jitter).
+
+
+def opaque_top(picture):
+    """Fraction of ``picture``'s height where its first clearly visible row is (0 when unknown)."""
+    key = picture.cacheKey()
+    if key not in _TOPS:
+        source = picture.toImage() if hasattr(picture, 'toImage') else picture
+        found = 0.0
+        if not source.isNull():
+            w, h, rows = _alpha_rows(source.scaledToWidth(96, Qt.FastTransformation))
+            found = next((y / h for y, row in enumerate(rows) if max(row, default=0) > 60), 0.0)
+        if len(_TOPS) > 512:
+            _TOPS.clear()
+        _TOPS[key] = found
+    return _TOPS[key]
 
 
 def _alpha_rows(image):
@@ -320,15 +337,39 @@ class Decor:
         self.items = {}
         self.back = self.front = None
         self.pose = None              # (state, pixmap, transform, drawn rect) of her last paint.
+        self.her_top = None           # (head centre x, top y) of her picture, without hops or breathing.
+        self.piece_tops = {}          # Layer (front?) -> top y of what it drew over her, on the same footing.
+        self._fits = {}               # (action, piece, size) -> how a head piece sits (see _steady).
 
     # Which pieces, and the two layers ---------------------------------------------------
     def layers(self):
         return [w for w in (self.back, self.front) if w is not None and w.isVisible()]
 
+    def _rest(self, rect):
+        """How far her picture sits off its resting place this frame (a hop, breathing)."""
+        box = geometry.scaled_sprite_rect(self.pet.pet_scale)
+        return box[1] + box[3] - rect.height() - rect.y()
+
+    def _card_anchor(self):
+        """The top of her and what she wears; tell her when it moved enough for the usage card."""
+        if self.her_top is None:
+            return
+        x, y = self.her_top
+        tops = [t for front, t in self.piece_tops.items() if t is not None]
+        anchor = (round(x), round(min([y] + tops)))
+        old = getattr(self.pet, 'card_anchor', None)
+        if old is None or max(abs(anchor[0] - old[0]), abs(anchor[1] - old[1])) > CARD_STEP:
+            self.pet.card_anchor = anchor
+            moved = getattr(self.pet, 'card_anchor_moved', None)
+            if moved is not None:
+                moved()
+
     def refresh(self):
         """Re-read what she wears and show or hide the layers."""
         global STAR
         self.items = worn_items(self.pet.panel)
+        self.piece_tops = {}                                # Re-measured on the layers' next paint.
+        self._fits = {}
         STAR = self.items.get('star')
         store = getattr(self.pet.panel, 'shop', None)
         bonuses = store.set_bonuses() if store is not None else []
@@ -403,6 +444,10 @@ class Decor:
     # Her picture --------------------------------------------------------------------------
     def pet_painted(self, state, pixmap, transform, rect, source=None):
         """Called from her paint with what she drew (``source``: its file), and how it was placed."""
+        rest = self._rest(rect)
+        fx = head_box(pixmap)[0]
+        self.her_top = (rect.x() + fx * rect.width(), rect.y() + opaque_top(pixmap) * rect.height() + rest)
+        self._card_anchor()
         if not self.layers():
             return
         self.source = source
@@ -473,6 +518,7 @@ class Decor:
         now = time.monotonic()
         lying = lies_down(state)
         self._lying = lying
+        self._tops = []
         glow = getattr(self, 'glow', None)
         if glow is not None and not layer.front:
             centre = QPointF(rect.center().x(), rect.y() + rect.height() * .52)
@@ -508,21 +554,13 @@ class Decor:
                 self._draw(p, art, point + shift, (ax, ay),
                            rect.width() / 1254 * grow * WEAPON_SCALE.get(item['name'], 1.0) * grown, turn_to + turned)
                 continue
-            if slot == 'head' and item['name'] in WORN:
-                placed = worn_on_head(pixmap, rect, art, item['name'], size)
-                if placed is not None:
-                    point, anchor, size = placed
-                    shift, grown, turned = own_fit(item, rect)
-                    self._draw(p, art, point + nudge + shift, anchor, size * grown, turn + turned)
-                    continue
             if slot == 'head':
-                fx, fy, fw = head_box(pixmap)
-                size *= max(.85, min(1.2, fw / .5))         # As wide as her head is in this pose.
-                if fit.get('side'):                         # Pinned at the side of her head, away from her feather.
-                    point = QPointF(rect.x() + (fx - fw * .38) * rect.width(), rect.y() + (fy + .13) * rect.height())
-                else:
-                    point = QPointF(rect.x() + fx * rect.width(), rect.y() + (fy + .07) * rect.height())
-            elif slot == 'back':
+                point, anchor, size = self._steady(state, item, pixmap, rect, lambda base=size: self._on_head(
+                    item, art, pixmap, rect, fit, base))
+                shift, grown, turned = own_fit(item, rect)
+                self._draw(p, art, point + nudge + shift, anchor, size * grown, turn + turned)
+                continue
+            if slot == 'back':
                 point = QPointF(rect.center().x(), rect.y() + rect.height() * .5)
             elif slot == 'ground':
                 point = QPointF(rect.center().x(), rect.bottom() + rect.height() * .01)
@@ -531,12 +569,47 @@ class Decor:
                 point = QPointF(rect.left() - side * .06, rect.y() + rect.height() * .4 + math.sin(now * 2.3) * side * .03)
                 size *= .8
             shift, grown, turned = own_fit(item, rect)
-            self._draw(p, art, point + nudge + shift, (ax, ay), size * grown, turn + turned)
+            self._draw(p, art, point + nudge + shift, (ax, ay), size * grown, turn + turned,
+                       slot not in ('buddy', 'ground'))
+        self.piece_tops[layer.front] = min(self._tops) + self._rest(rect) if self._tops else None
+        self._card_anchor()
+
+    @staticmethod
+    def _on_head(item, art, pixmap, rect, fit, size):
+        """(point, anchor, scale) of a head piece on this very picture of her."""
+        placed = worn_on_head(pixmap, rect, art, item['name'], size) if item['name'] in WORN else None
+        if placed is not None:
+            return placed
+        fx, fy, fw = head_box(pixmap)
+        size *= max(.85, min(1.2, fw / .5))                 # As wide as her head is in this pose.
+        if fit.get('side'):                                 # Pinned at the side of her head, away from her feather.
+            point = QPointF(rect.x() + (fx - fw * .38) * rect.width(), rect.y() + (fy + .13) * rect.height())
+        else:
+            point = QPointF(rect.x() + fx * rect.width(), rect.y() + (fy + .07) * rect.height())
+        return point, item['anchor'], size
+
+    def _steady(self, state, item, pixmap, rect, place):
+        """A head piece keeps the fit of the action's first picture and then moves only as far as her
+        head does: measured afresh on every frame it shook on its own between two typing frames."""
+        fx, fy, _ = head_box(pixmap)
+        key = (state, item['name'], round(rect.width()))
+        kept = self._fits.get(key)
+        if kept is None:
+            point, anchor, size = place()
+            if len(self._fits) > 256:
+                self._fits.clear()
+            kept = self._fits[key] = ((point.x() - rect.x()) / rect.width(), (point.y() - rect.y()) / rect.height(),
+                                      anchor, size, fx, fy)
+        x, y, anchor, size, x0, y0 = kept
+        return QPointF(rect.x() + (x + fx - x0) * rect.width(), rect.y() + (y + fy - y0) * rect.height()), anchor, size
 
     _SCALED = {}
 
-    def _draw(self, p, art, point, anchor, scale, angle=0.0):
-        """``art`` with its anchor at ``point`` (turned ``angle`` about it); scaled once per size."""
+    def _draw(self, p, art, point, anchor, scale, angle=0.0, above=True):
+        """``art`` with its anchor at ``point`` (turned ``angle`` about it); scaled once per size.
+        ``above``: a piece the usage card should clear (not the buddy beside her or the ground)."""
+        if above and getattr(self, '_tops', None) is not None:
+            self._tops.append(point.y() + (opaque_top(art) * art.height() - anchor[1]) * scale)
         ratio = self.pet.devicePixelRatioF()
         key = (art.cacheKey(), round(scale * ratio, 4))
         if key not in self._SCALED:

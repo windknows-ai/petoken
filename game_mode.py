@@ -368,14 +368,16 @@ class GameHalo(QWidget):
         self.follow()
         self.update()
         # Her windows keep one order, together (as the usual ring does): the
-        # ring at the back, her, the transformation, then her displays; all
+        # ring at the back, what she wears and her, the transformation, then her displays; all
         # of them stay above other windows like her usual ring. Never over an open menu.
         if QApplication.activePopupWidget() is None and self.frames_since_raise() >= 30:
             self.restack()
 
     def restack(self):
         pet = self.pet
-        order = [self, pet, getattr(pet, 'transform_stage', None), getattr(pet, 'game_usage', None),
+        decor = getattr(pet, 'decor', None)                 # What she wears stays right behind and over her.
+        order = [self, getattr(decor, 'back', None), pet, getattr(decor, 'front', None),
+                 getattr(pet, 'transform_stage', None), getattr(pet, 'game_usage', None),
                  getattr(pet, 'focus_tag', None)]
         for window in order:
             raise_quietly(window)

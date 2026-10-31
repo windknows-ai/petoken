@@ -390,7 +390,7 @@ class ShopPage(QWidget):
         self.earned.setText(self.tr('shop_earned', points=s.earned()))
         signed = s.state.get('signin_day') == s.today().isoformat()
         self.signin.setText(self.tr('shop_signed', streak=s.state.get('streak', 0)) if signed
-                            else self.tr('shop_signin', points=shop.SIGNIN))
+                            else self.tr('shop_signin', points=s.signin_reward()))
         self.signin.setEnabled(not signed)
         self._clear(self.featured_row)
         for item, discount in s.featured():

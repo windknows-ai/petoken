@@ -2,6 +2,17 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.5.3 — 2026-10-31
+
+### Changed
+- The usage card sits over her head just above the highest thing she shows (a crown, antlers, wings), eases with new poses and moves beside her when there is no room above.
+- Daily sign-in as a week-long round: days 1, 3, 5, 7 in a row give 500 stardust, days 2, 4, 6 give 650.
+
+### Fixed
+- Game mode: decorations no longer slip behind her or the ring; head pieces no longer shake between frames of one action.
+
+See [release notes](docs/RELEASE_NOTES_v2.5.3.md).
+
 ## V2.5.2 — 2026-10-28
 
 ### Added

@@ -114,6 +114,7 @@ class DesktopPet(QWidget):
             self.presence.start()
         # Created on first use: most pets never enter Token Mode.
         self.usage_overlay=None
+        self.card_anchor=None             # (x, y) over her head the usage card sits above (decor.py).
         # 2.1 game mode: the ring behind her, the compact display, her place.
         self.game_halo=None
         self.game_usage=None
@@ -457,6 +458,11 @@ class DesktopPet(QWidget):
 
     def usage_overlay_visible(self):
         return self.usage_overlay is not None and self.usage_overlay.isVisible()
+
+    def card_anchor_moved(self):
+        """A new pose or headpiece changed how tall she is: the usage card eases above it."""
+        if self.usage_overlay_visible():
+            self.usage_overlay.follow(glide=True)
 
     def sync_usage_overlay(self):
         """Show, refresh or hide the usage card to match Token Mode."""

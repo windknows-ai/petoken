@@ -17,7 +17,7 @@ from __future__ import annotations
 import threading
 import time
 
-from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt, QTimer
+from PySide6.QtCore import QEasingCurve, QPoint, QPointF, QPropertyAnimation, QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QConicalGradient, QFont, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QWidget
 
@@ -310,6 +310,9 @@ class UsageOverlay(QWidget):
         self.clock = QTimer(self)
         self.clock.setInterval(1000)
         self.clock.timeout.connect(self.refresh)
+        self.glide = QPropertyAnimation(self, b'pos', self)  # A new pose or headpiece: it eases to its place.
+        self.glide.setDuration(220)
+        self.glide.setEasingCurve(QEasingCurve.OutCubic)
 
     def _u(self, value):
         """Overlay layout units to logical pixels."""
@@ -339,17 +342,39 @@ class UsageOverlay(QWidget):
         self.follow()
         self.update()
 
-    def follow(self):
-        """Centre above the pet's sprite box, kept on the pet's screen."""
+    def follow(self, glide=False):
+        """Centred over her head, just above the highest thing she shows (her hair, a crown, antlers,
+        wings: decor.Decor measures it), kept on the pet's screen. Dragged, it keeps up at once; a new
+        pose or headpiece eases it there (``glide``)."""
         pet = self.pet
-        top = pet.pos().y() + pet._px(64 - GAP_ABOVE_SPRITE)
-        x = pet.pos().x() + (pet.width() - self.width()) // 2
-        y = top - self.height()
+        anchor = getattr(pet, 'card_anchor', None)
+        if anchor is None:                                  # Not painted yet: above her sprite box.
+            centre, top = pet.width() // 2, pet._px(64 - GAP_ABOVE_SPRITE)
+        else:
+            centre, top = anchor[0], anchor[1] - pet._px(GAP_ABOVE_SPRITE)
+        x = pet.pos().x() + centre - self.width() // 2
+        y = pet.pos().y() + top - self.height()
         screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()
+        if y < screen.top():                                # No room above her: beside her instead.
+            gap = pet._px(8)
+            right = pet.pos().x() + pet.width() + gap
+            x = right if right + self.width() - 1 <= screen.right() else pet.pos().x() - self.width() - gap
         x = max(screen.left(), min(x, screen.right() - self.width() + 1))
         y = max(screen.top(), min(y, screen.bottom() - self.height() + 1))
-        if self.pos() != QPoint(x, y):
-            self.move(x, y)
+        target = QPoint(x, y)
+        if glide and self.isVisible() and self.pos() != target:
+            if self.glide.endValue() != target or self.glide.state() != QPropertyAnimation.Running:
+                self.glide.stop()
+                self.glide.setStartValue(self.pos())
+                self.glide.setEndValue(target)
+                self.glide.start()
+            return
+        if self.glide.state() == QPropertyAnimation.Running:
+            if self.glide.endValue() == target:
+                return
+            self.glide.stop()
+        if self.pos() != target:
+            self.move(target)
 
     def refresh(self):
         try:

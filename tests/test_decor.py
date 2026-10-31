@@ -1,6 +1,7 @@
 """2.5 decorations: the drawn catalogue, where pieces sit on her, the task-star style."""
 import unittest
 from collections import Counter
+from unittest import mock
 
 from PySide6.QtCore import QPointF, QRectF
 from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
@@ -161,6 +162,43 @@ class DecorTests(unittest.TestCase):
             p.end()
             lit = any(image.pixelColor(x, y).alpha() for x in range(0, 400, 4) for y in range(0, 170, 4))
             self.assertEqual(lit, drawn, state)
+
+    def test_a_head_piece_moves_only_as_far_as_her_head(self):
+        class Pet:
+            pet_scale = 100
+        d = decor.Decor(Pet())
+        item = shop.BY_ID['decor.head_star_bow']
+        rect = QRectF(0, 0, 256, 256)
+        first, second = QPixmap(64, 64), QPixmap(64, 64)
+        boxes = {first.cacheKey(): (.5, .1, .4), second.cacheKey(): (.55, .1, .4)}
+        fits = iter([(QPointF(128, 40), (1, 2), .5), (QPointF(150, 70), (9, 9), .9)])  # A fresh measure would jump.
+        with mock.patch.object(decor, 'head_box', lambda pixmap: boxes[pixmap.cacheKey()]):
+            one = d._steady('typing', item, first, rect, lambda: next(fits))
+            two = d._steady('typing', item, second, rect, lambda: next(fits))
+        self.assertEqual(one[1:], ((1, 2), .5))
+        self.assertEqual(two[1:], ((1, 2), .5))                     # The same fit.
+        self.assertAlmostEqual(two[0].x() - one[0].x(), .05 * 256)  # Her head's move, nothing more.
+        self.assertAlmostEqual(two[0].y(), one[0].y())
+
+    def test_the_card_clears_the_highest_thing_she_shows(self):
+        class Pet:
+            pet_scale = 100
+            card_anchor = None
+            moved = 0
+
+            def card_anchor_moved(self):
+                self.moved += 1
+        pet = Pet()
+        d = decor.Decor(pet)
+        d.her_top = (130.0, 70.0)
+        d._card_anchor()
+        self.assertEqual(pet.card_anchor, (130, 70))
+        d.piece_tops[True] = 20.0                                   # Antlers rise above her.
+        d._card_anchor()
+        self.assertEqual(pet.card_anchor, (130, 20))
+        d.piece_tops[True] = 23.0                                   # A little breathing: the card stays.
+        d._card_anchor()
+        self.assertEqual((pet.card_anchor, pet.moved), ((130, 20), 2))
 
     def test_a_whole_set_glows_softly_behind_her(self):
         class Pet:

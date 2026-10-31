@@ -94,13 +94,16 @@ class ShopTests(unittest.TestCase):
         self.assertFalse(self.shop.buy(shop.CATALOG[-1]['id']))
 
     def test_sign_in_streak_and_daily_goal(self):
-        for day in range(shop.STREAK_DAYS):
+        for day in range(len(shop.SIGNIN)):
             result = self.shop.sign_in()
             self.assertIsNone(self.shop.sign_in())                     # Once a day.
             self.now[0] += 86400
-        self.assertEqual(result['streak'], shop.STREAK_DAYS)
-        self.assertEqual(self.store.stardust(reason='star_signin'), shop.SIGNIN * shop.STREAK_DAYS)
-        self.assertEqual(self.store.stardust(reason='star_streak'), shop.STREAK_BONUS)
+        self.assertEqual(result['streak'], len(shop.SIGNIN))
+        self.assertEqual(self.store.stardust(reason='star_signin'), 500 * 4 + 650 * 3)
+        self.now[0] += 86400
+        self.assertEqual(self.shop.signin_reward(), 500)                # Day 8: the week starts over.
+        self.now[0] += 86400 * 2
+        self.assertEqual(self.shop.signin_reward(), 500)                # A missed day: day 1 again.
         for n in range(3):
             self.panel.stardust.on_finished(dict(provider='claude', task_key=f't{n}', at=self.now[0] + n, detail=''))
         self.assertEqual(self.store.stardust(reason='star_daily'), shop.DAILY_BONUS)

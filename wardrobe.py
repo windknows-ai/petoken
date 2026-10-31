@@ -263,7 +263,7 @@ class WardrobeBridge(HostBridge):
     def signText(self):
         if self.shop.state.get('signin_day') == self.shop.today().isoformat():
             return self._t('shop_signed', streak=self.shop.state.get('streak', 0))
-        return self._t('shop_signin', points=shop.SIGNIN)
+        return self._t('shop_signin', points=self.shop.signin_reward())
 
     @Property(int, notify=changed)
     def page(self):
