@@ -352,6 +352,10 @@ class UsageOverlay(QWidget):
             centre, top = pet.width() // 2, pet._px(64 - GAP_ABOVE_SPRITE)
         else:
             centre, top = anchor[0], anchor[1] - pet._px(GAP_ABOVE_SPRITE)
+        ring = getattr(getattr(pet.panel, 'task_manager', None), '_halo_pose', None)
+        layer = getattr(getattr(pet.panel, 'task_manager', None), 'back_overlay', None)
+        if ring is not None and layer is not None and layer.isVisible():   # Clear the star ring too.
+            top = min(top, round(ring.cy - ring.ry - 12) - pet.pos().y())
         x = pet.pos().x() + centre - self.width() // 2
         y = pet.pos().y() + top - self.height()
         screen = (pet.screen() or QApplication.primaryScreen()).availableGeometry()

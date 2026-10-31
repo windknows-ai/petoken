@@ -2,6 +2,13 @@
 
 Concise summaries of released versions. Version-specific detail lives in the release documentation; do not turn this file into full technical documentation.
 
+## V2.5.4 — 2026-10-31
+
+### Changed
+- The usage card also clears the star ring around her.
+
+See [release notes](docs/RELEASE_NOTES_v2.5.4.md).
+
 ## V2.5.3 — 2026-10-31
 
 ### Changed
